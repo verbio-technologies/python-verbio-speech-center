@@ -36,7 +36,7 @@ pip install -r requirements.txt
 ### Generate grpc code with python
 In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. 
 ```commandline
-$ /generate_grpc_code.sh 
+./src/>$ /generate_grpc_code.sh 
 
 use: ./generate_grpc_code.sh <protobuf_definition_file> <python_output_path> <grpc_output_path>
 ```
@@ -53,7 +53,7 @@ csr_grpc_gateway_pb2_grpc.py
 
 The cli-client will use the generated code to connect to the speech center cloud to process your speech file.
 ```commandline
-$ ./cli-client.py --help
+./src/>$ ./cli-client.py --help
 usage: cli-client.py [-h] --audiofile AUDIOFILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING}) --token TOKEN [--host HOST]
 
 Perform speech recognition on an audio file
