@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package csr_grpc_gateway;
+
+service SpeechRecognizer {
+  rpc RecognizeStream (stream RecognitionRequest) returns (RecognitionResponse);
+}
+
+message RecognitionRequest {
+  oneof request_union {
+    RecognitionInit init = 1;
+    bytes audio = 2;
+  }
+}
+
+message RecognitionInit {
+  RecognitionParameters parameters = 1;
+  RecognitionResource resource = 2;
+}
+
+message RecognitionParameters {
+  string language = 1;
+}
+
+message RecognitionResource {
+  enum Model {
+    GENERIC = 0;
+    BANKING = 1;
+    TELCO = 2;
+  }
+
+  oneof resource_union {
+    string inline_grammar = 1;
+    Model topic = 2;
+  }
+}
+
+message RecognitionResponse {
+  string text = 1;
+}
