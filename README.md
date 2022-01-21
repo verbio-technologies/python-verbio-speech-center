@@ -27,6 +27,11 @@ The grpc and protobuf packages are necessary to automatically generate from the 
 ##  Step by step
 The steps needed are very similar to the ones described in the grpc official guide.
 
+### Install dependencies
+You can the standard pip call to install all the necessary dependencies:
+```commandline
+pip install -r requirements.txt
+```
 
 ### Generate grpc code with python
 In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. 
