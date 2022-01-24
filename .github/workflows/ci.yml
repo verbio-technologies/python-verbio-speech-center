@@ -33,4 +33,4 @@ jobs:
       - name: Execute client help
         run: |
           ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto src/cli-client src/cli-client
-          ./src/cli-client/cli-client.py --help
+          ./src/cli-client/cli_client.py --help
