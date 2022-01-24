@@ -29,7 +29,8 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10  --statistics
       - name: gRPC code generation
         run: |
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto ./ ./
+          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto py grpc
       - name: Execute client help
         run: |
+          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto ./ ./
           ./src/cli-client/cli-client.py
