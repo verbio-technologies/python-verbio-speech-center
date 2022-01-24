@@ -8,8 +8,8 @@ import argparse
 from typing import Iterable
 
 import grpc
-import csr_grpc_gateway_pb2
-import csr_grpc_gateway_pb2_grpc
+import verbio_speech_center_pb2
+import verbio_speech_center_pb2_grpc
 
 
 class Options:
