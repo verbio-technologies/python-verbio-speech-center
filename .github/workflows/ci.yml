@@ -30,3 +30,6 @@ jobs:
       - name: gRPC code generation
         run: |
           ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto py grpc
+      - name: Execute client help
+        run: |
+          ./src/cli-client/cli-client.py
