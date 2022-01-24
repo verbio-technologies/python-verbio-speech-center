@@ -93,7 +93,7 @@ class SpeechCenterClient:
                 logging.critical(ex)
 
     @staticmethod
-    def __generate_inferences(self, wav_audio: bytes, topic: str = "", grammar: str = "") -> Iterable[
+    def __generate_inferences(wav_audio: bytes, topic: str = "", grammar: str = "") -> Iterable[
         verbio_speech_center_pb2.RecognitionRequest]:
         """
         Inferences always start with a grammar/topic and a language, then audio is passed in a second message
