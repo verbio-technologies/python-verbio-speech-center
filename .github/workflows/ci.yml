@@ -29,7 +29,7 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10  --statistics
       - name: gRPC code generation
         run: |
-          ./src/generated_grpc_code.sh src/verbio-speech-center.proto py grpc
+          ./src/generate_grpc_code.sh src/verbio-speech-center.proto py grpc
       - name: Test with pytest
         run: |
           pytest
