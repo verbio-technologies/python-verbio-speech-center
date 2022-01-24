@@ -51,10 +51,10 @@ csr_grpc_gateway_pb2_grpc.py
 
 ### Run the client
 
-The cli-client will use the generated code to connect to the speech center cloud to process your speech file.
+The cli_client will use the generated code to connect to the speech center cloud to process your speech file.
 ```commandline
-./src/>$ ./cli-client.py --help
-usage: cli-client.py [-h] --audiofile AUDIOFILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING}) --token TOKEN [--host HOST]
+./src/>$ ./cli_client.py --help
+usage: cli_client.py [-h] --audiofile AUDIOFILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING}) --token TOKEN [--host HOST]
 
 Perform speech recognition on an audio file
 
