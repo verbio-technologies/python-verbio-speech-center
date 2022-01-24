@@ -30,6 +30,3 @@ jobs:
       - name: gRPC code generation
         run: |
           ./src/generate_grpc_code.sh src/verbio-speech-center.proto py grpc
-      - name: Test with pytest
-        run: |
-          pytest
