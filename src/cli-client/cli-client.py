@@ -72,7 +72,7 @@ class SpeechCenterClient:
         with grpc.secure_channel(self.host, credentials=self.credentials,
                                  options=(('grpc.ssl_target_name_override', 'speech-center.verbio.com'),)) as channel:
             # Instantiate a speech_recognizer to manage grpc calls to backend.
-            speech_recognizer = csr_grpc_gateway_pb2_grpc.SpeechRecognizerStub(channel)
+            speech_recognizer = verbio_speech_center_pb2_grpc.SpeechRecognizerStub(channel)
             try:
                 # Send inference requests with for the audio.
                 # if a grammar is provided:
@@ -94,21 +94,21 @@ class SpeechCenterClient:
 
     @staticmethod
     def __generate_inferences(self, wav_audio: bytes, topic: str = "", grammar: str = "") -> Iterable[
-        csr_grpc_gateway_pb2.RecognitionRequest]:
+        verbio_speech_center_pb2.RecognitionRequest]:
         """
         Inferences always start with a grammar/topic and a language, then audio is passed in a second message
         """
         if len(topic):
-            var_resource = csr_grpc_gateway_pb2.RecognitionResource(topic=topic)
+            var_resource = verbio_speech_center_pb2.RecognitionResource(topic=topic)
         elif len(grammar):
-            var_resource = csr_grpc_gateway_pb2.RecognitionResource(inline_grammar=grammar)
+            var_resource = verbio_speech_center_pb2.RecognitionResource(inline_grammar=grammar)
         else:
             raise Exception("Grammar or topic must be declared in order to perform the recognition")
 
         messages = [
-            csr_grpc_gateway_pb2.RecognitionRequest(init=csr_grpc_gateway_pb2.RecognitionInit(
-                parameters=csr_grpc_gateway_pb2.RecognitionParameters(language="en-US"), resource=var_resource)),
-            csr_grpc_gateway_pb2.RecognitionRequest(audio=wav_audio),
+            verbio_speech_center_pb2.RecognitionRequest(init=verbio_speech_center_pb2.RecognitionInit(
+                parameters=verbio_speech_center_pb2.RecognitionParameters(language="en-US"), resource=var_resource)),
+            verbio_speech_center_pb2.RecognitionRequest(audio=wav_audio),
         ]
         for msg in messages:
             logging.info("Sending message...")
