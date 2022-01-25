@@ -126,8 +126,8 @@ def parse_command_line() -> Options:
     argGroup.add_argument('--grammar', '-g', help='Path to a file containing an ABNF grammar')
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING'], help='A valid topic')
     parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
-    parser.add_argument('--host', '-H', help='The URL of the host trying to reach',
-                        default='speechcenter.verbio.com:2424')
+    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
+                        default=options.host)
     args = parser.parse_args()
     options.token_file = args.token
     options.host = args.host
