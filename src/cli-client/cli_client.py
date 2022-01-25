@@ -17,6 +17,7 @@ class Options:
         self.audio_file = None
         self.grammar_file = None
         self.topic = None
+        self.language = 'en-US'
 
     def check(self):
         if self.grammar_file is not None and self.topic is not None:
@@ -63,6 +64,7 @@ class SpeechCenterClient:
         self.resources = Resources(options)
         self.host = options.host
         self.topic = options.topic
+        self.language = options.language
 
     def run(self):
         logging.info("Running CSR inference example...")
@@ -76,12 +78,11 @@ class SpeechCenterClient:
                 # if a grammar is provided:
                 if self.resources.grammar:
                     response, call = speech_recognizer.RecognizeStream.with_call(
-                        self.__generate_inferences(grammar=self.resources.grammar, wav_audio=self.resources.audio))
+                        self.__generate_inferences(grammar=self.resources.grammar, wav_audio=self.resources.audio, language=self.language))
                 # or if a topic is provided:
                 else:
                     response, call = speech_recognizer.RecognizeStream.with_call(
-                        self.__generate_inferences(topic=self.topic, wav_audio=self.resources.audio))
-
+                        self.__generate_inferences(topic=self.topic, wav_audio=self.resources.audio, language=self.language))
                 # Print out inference response and call status
                 logging.info("Inference response: '%s'", response.text)
                 logging.info("Inference call status: ")
@@ -91,7 +92,7 @@ class SpeechCenterClient:
                 logging.critical(ex)
 
     @staticmethod
-    def __generate_inferences(wav_audio: bytes, topic: str = "", grammar: str = "") -> Iterable[
+    def __generate_inferences(wav_audio: bytes, topic: str = "", grammar: str = "", language: str = "") -> Iterable[
         verbio_speech_center_pb2.RecognitionRequest]:
         """
         Inferences always start with a grammar/topic and a language, then audio is passed in a second message
@@ -125,6 +126,7 @@ def parse_command_line() -> Options:
     argGroup = parser.add_mutually_exclusive_group(required=True)
     argGroup.add_argument('--grammar', '-g', help='Path to a file containing an ABNF grammar')
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING'], help='A valid topic')
+    argGroup.add_argument('--language','-l', choices=['en-US', 'pt-BR', 'es-ES'], help='Language Id. (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
@@ -134,6 +136,7 @@ def parse_command_line() -> Options:
     options.audio_file = args.audiofile
     options.grammar_file = args.grammar
     options.topic = args.topic
+    options.language = args.language
 
     return options
 
