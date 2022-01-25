@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import os
-import string
 import wave
 import logging
 import argparse
