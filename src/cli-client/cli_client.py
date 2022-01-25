@@ -12,7 +12,7 @@ import verbio_speech_center_pb2_grpc
 
 class Options:
     def __init__(self):
-        self.token = None
+        self.token_file = None
         self.host = 'speechcenter.verbio.com:2424'
         self.audio_file = None
         self.grammar_file = None
@@ -59,7 +59,7 @@ class Resources:
 class SpeechCenterClient:
     def __init__(self, options: Options):
         options.check()
-        self.credentials = Credentials(options.token)
+        self.credentials = Credentials(self.__read_token(options.token_file))
         self.resources = Resources(options)
         self.host = options.host
         self.topic = options.topic
@@ -67,7 +67,7 @@ class SpeechCenterClient:
     def run(self):
         logging.info("Running CSR inference example...")
         # Open connection to grpc channel to provided host.
-        with grpc.secure_channel(self.host, credentials=self.credentials,
+        with grpc.secure_channel(self.host, credentials=self.credentials.get_channel_credentials(),
                                  options=(('grpc.ssl_target_name_override', 'speech-center.verbio.com'),)) as channel:
             # Instantiate a speech_recognizer to manage grpc calls to backend.
             speech_recognizer = verbio_speech_center_pb2_grpc.SpeechRecognizerStub(channel)
@@ -112,6 +112,11 @@ class SpeechCenterClient:
             logging.info("Sending message...")
             yield msg
 
+    @staticmethod
+    def __read_token(toke_file: str) -> str:
+        with open(toke_file) as token_hdl:
+            return ''.join(token_hdl.read().splitlines())
+
 
 def parse_command_line() -> Options:
     options = Options()
@@ -124,7 +129,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach',
                         default='speechcenter.verbio.com:2424')
     args = parser.parse_args()
-    options.token = args.token
+    options.token_file = args.token
     options.host = args.host
     options.audio_file = args.audiofile
     options.grammar_file = args.grammar
