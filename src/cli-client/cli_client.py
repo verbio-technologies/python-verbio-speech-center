@@ -85,8 +85,7 @@ class SpeechCenterClient:
                         self.__generate_inferences(topic=self.topic, wav_audio=self.resources.audio, language=self.language))
                 # Print out inference response and call status
                 logging.info("Inference response: '%s'", response.text)
-                logging.info("Inference call status: ")
-                logging.info(call)
+                logging.info("Inference call status: " + str(call))
 
             except Exception as ex:
                 logging.critical(ex)
@@ -105,13 +104,14 @@ class SpeechCenterClient:
             raise Exception("Grammar or topic must be declared in order to perform the recognition")
 
         messages = [
-            verbio_speech_center_pb2.RecognitionRequest(init=verbio_speech_center_pb2.RecognitionInit(
-                parameters=verbio_speech_center_pb2.RecognitionParameters(language="en-US"), resource=var_resource)),
-            verbio_speech_center_pb2.RecognitionRequest(audio=wav_audio),
+            ("RegonitionInit", verbio_speech_center_pb2.RecognitionRequest(init=verbio_speech_center_pb2.RecognitionInit(
+                parameters=verbio_speech_center_pb2.RecognitionParameters(language=language), resource=var_resource))),
+            ("Audio", verbio_speech_center_pb2.RecognitionRequest(audio=wav_audio)),
         ]
-        for msg in messages:
-            logging.info("Sending message...")
-            yield msg
+
+        for message_type, message in messages:
+            logging.info("Sending message " + message_type)
+            yield message
 
     @staticmethod
     def __read_token(toke_file: str) -> str:
