@@ -69,8 +69,7 @@ class SpeechCenterClient:
     def run(self):
         logging.info("Running CSR inference example...")
         # Open connection to grpc channel to provided host.
-        with grpc.secure_channel(self.host, credentials=self.credentials.get_channel_credentials(),
-                                 options=(('grpc.ssl_target_name_override', 'speech-center.verbio.com'),)) as channel:
+        with grpc.secure_channel(self.host, credentials=self.credentials.get_channel_credentials()) as channel:
             # Instantiate a speech_recognizer to manage grpc calls to backend.
             speech_recognizer = verbio_speech_center_pb2_grpc.SpeechRecognizerStub(channel)
             try:
