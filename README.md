@@ -71,6 +71,11 @@ optional arguments:
   --host HOST, -H HOST  The URL of the host trying to reach
 ```
 
+#### Example
+```commandline
+python3 ./cli_client.py --audiofile file.wav --topic GENERIC --token you.speech-center.token --host speechcenter.verbio.com:2424
+```
+
 This code will generate the following terminal output on success:
 ```commandline
 INFO:root:Sending message...
