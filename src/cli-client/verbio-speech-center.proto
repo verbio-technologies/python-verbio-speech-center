@@ -2,39 +2,43 @@ syntax = "proto3";
 
 package csr_grpc_gateway;
 
+
 service SpeechRecognizer {
-  rpc RecognizeStream (stream RecognitionRequest) returns (RecognitionResponse);
+  rpc RecognizeStream (stream RecognitionRequest) returns (RecognitionResponse); //Send audio as bytes and recieve the transcription of the audio.
 }
 
 message RecognitionRequest {
   oneof request_union {
-    RecognitionInit init = 1;
-    bytes audio = 2;
+    RecognitionInit init = 1; //Init message with the recognition data
+    bytes audio = 2; //Raw bytes in signed 16-bit little endian PCM, 8kHz
   }
 }
 
+// An init message with the recognition data
 message RecognitionInit {
-  RecognitionParameters parameters = 1;
-  RecognitionResource resource = 2;
+  RecognitionParameters parameters = 1; //General parameters for the recognition, such as language
+  RecognitionResource resource = 2; //The request must specify either a topic or an ABNF grammar
 }
 
+// This message will contain the language locale of your audio in IETF BCP 47 format
 message RecognitionParameters {
-  string language = 1;
+  string language = 1; //Currently supported: en-US, es-ES, pt-BR
 }
 
+// The request must specify either a topic or an ABNF grammar
 message RecognitionResource {
   enum Model {
-    GENERIC = 0;
-    BANKING = 1;
-    TELCO = 2;
+    GENERIC = 0; //Suitable for any generic speech
+    BANKING = 1; //Transcription will be optimized for banking recordings
+    TELCO = 2; //Transcription will be optimized for telecommunications companies
   }
 
   oneof resource_union {
-    string inline_grammar = 1;
-    Model topic = 2;
+    string inline_grammar = 1; //An inline ABNF grammar used for the recognition
+    Model topic = 2; //The topic will determine the statistic language model used for the recognition 
   }
 }
 
 message RecognitionResponse {
-  string text = 1;
+  string text = 1; //The full transcription of the audio.
 }
