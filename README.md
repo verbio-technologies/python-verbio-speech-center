@@ -34,9 +34,10 @@ pip install -r requirements.txt
 ```
 
 ### Generate grpc code with python
-In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. 
+In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. You can find it at `src/cli-client` folder.
 ```commandline
-./src/>$ /generate_grpc_code.sh 
+.>$ cd src/cli-client/
+./src/cli-client>$ /generate_grpc_code.sh 
 
 use: ./generate_grpc_code.sh <protobuf_definition_file> <python_output_path> <grpc_output_path>
 ```
@@ -45,15 +46,16 @@ On a directory containing the .proto file provided by Verbio, run the following 
 
 This will generate a set of python files with grpc calls:
 ```commandline
-csr_grpc_gateway_pb2.py
-csr_grpc_gateway_pb2_grpc.py
+verbio_speech_center_pb2.py
+verbio_speech_center_pb2_grpc.py
 ```
 
 ### Run the client
 
 The cli_client will use the generated code to connect to the speech center cloud to process your speech file.
 ```commandline
-./src/>$ ./cli_client.py --help
+.>$ cd src/cli-client/
+./src/cli-client>$ ./cli_client.py --help
 usage: cli_client.py [-h] --audiofile AUDIOFILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING}) --token TOKEN [--host HOST]
 
 Perform speech recognition on an audio file
