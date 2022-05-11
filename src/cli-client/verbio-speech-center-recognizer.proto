@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package csr_grpc_gateway;
 
-
 service SpeechRecognizer {
   rpc RecognizeStream (stream RecognitionRequest) returns (RecognitionResponse); //Send audio as bytes and recieve the transcription of the audio.
 }

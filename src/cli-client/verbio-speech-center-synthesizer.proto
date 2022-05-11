@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package speechcenter.tts.v1;
+
+service SpeechSynthesizer {
+  rpc Synthesize(SynthesisRequest) returns (SynthesisResponse); // Synthesize the given text to audio.
+}
+
+message SynthesisRequest {
+    SynthesisVoice voice = 1; // Voice to use for the synthesis request.
+    string text = 2; // Text to synthesize to audio.
+    VoiceSamplingRate voice_sampling_rate = 3; // Voice sampling rate (VOICE_SAMPLING_RATE_8KHZ by default).
+    AudioFormat audio_format = 4; // Audio format for the synthesized audio (AUDIO_FORMAT_WAV_LPCM_S16LE by default).
+}
+
+
+enum AudioFormat {
+    AUDIO_FORMAT_WAV_LPCM_S16LE = 0; // Linear Pulse-Code Modulation with signed 16 bit samples, little endian byte order, with a WAV header.
+    AUDIO_FORMAT_RAW_LPCM_S16LE = 1; // Linear Pulse-Code Modulation with signed 16 bit samples, little endian byte order, without any header.
+}
+
+enum VoiceSamplingRate {
+    VOICE_SAMPLING_RATE_8KHZ = 0; // Voice sampling rate is 8 kHz.
+}
+
+message SynthesisVoice {
+  // Voices supported by language and name.
+  enum Voice {
+    // American English male voice.
+    EN_US_TOMMY = 0;
+    // American English female voice.
+    EN_US_ANNIE = 1;
+    // Spanish female voice.
+    ES_ES_AURORA = 2;
+    // Spanish male voice.
+    ES_ES_DAVID = 3;
+    // Brazilian female voice.
+    PT_BR_LUMA = 4;
+    // Catalan male voice.
+    CA_CA_DAVID = 5;
+  }
+
+  oneof synthesis_union {
+    // Client custom voice. Currently not implemented.
+    string custom_voice = 1;
+    // One of the voices from Voice.
+    Voice voice = 2;
+  }
+}
+
+message SynthesisResponse {
+  // Returned audio data in the requested AudioFormat.
+  bytes audio = 1;
+}
