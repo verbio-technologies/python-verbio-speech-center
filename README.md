@@ -44,10 +44,10 @@ use: ./generate_grpc_code.sh <protobuf_definition_file> <python_output_path> <gr
 On a directory containing the .proto file provided by Verbio, run the following shell commands:
 ```commandline
 # In case you want to use our Speech Center Recognizer
-generate_grpc_code.sh verbio-speech-center-recognizer.proto ./ ./
+./generate_grpc_code.sh verbio-speech-center-recognizer.proto ./ ./
 
 # In case you want to use our Speech Center Synthesizer
-generate_grpc_code.sh verbio-speech-center-synthesizer.proto ./ ./
+./generate_grpc_code.sh verbio-speech-center-synthesizer.proto ./ ./
 ```
 
 This will generate a set of python files with grpc calls:
