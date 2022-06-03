@@ -12,7 +12,7 @@ import verbio_speech_center_synthesizer_pb2_grpc
 class Options:
     def __init__(self):
         self.token_file = None
-        self.host = 'speechcenter.verbio.com:2424'
+        self.host = 'tts.api.speechcenter.verbio.com'
         self.text = None
         self.voice = None
         self.sample_rate = 8000
@@ -157,7 +157,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--sample-rate', '-s', type=int, choices=[8000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
     parser.add_argument('--encoding', '-e', choices=['PCM'], help='Output audio encoding algorithm (default: ' + options.encoding + ' [Signed 16-bit little endian PCM])', default=options.encoding)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio header (default: ' + options.header + ')', default=options.header)
-    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES', 'ca-CA'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
@@ -169,6 +169,7 @@ def parse_command_line() -> Options:
     options.text = args.text
     options.voice = args.voice
     options.language = args.language
+    print(args.language, options.language)
     options.sample_rate = args.sample_rate
     options.encoding = args.encoding
     options.header = args.format

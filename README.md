@@ -130,11 +130,11 @@ optional arguments:
                         Output audio encoding algorithm (default: PCM [Signed 16-bit little endian PCM])
   --format {wav,raw}, -f {wav,raw}
                         Output audio header. (default: wav)
-  --language {en-US,pt-BR,es-ES}, -l {en-US,pt-BR,es-ES}
+  --language {en-US,pt-BR,es-ES,ca-CA}, -l {en-US,pt-BR,es-ES,ca-CA}
                         A Language ID (default: en-US)
   --token TOKEN, -t TOKEN
                         A string with the authentication token
-  --host HOST, -H HOST  The URL of the host trying to reach (default: speechcenter.verbio.com:2424)
+  --host HOST, -H HOST  The URL of the host trying to reach (default: tts.api.speechcenter.verbio.com)
   --audio-file AUDIO_FILE, -a AUDIO_FILE
                         Path to store the resulting audio
 ```
