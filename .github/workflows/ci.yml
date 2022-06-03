@@ -29,12 +29,15 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10  --statistics
       - name: gRPC code generation
         run: |
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto src/cli-client src/cli-client
+          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-recognizer.proto src/cli-client src/cli-client
+          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-synthesizer.proto src/cli-client src/cli-client
       - name: Unit tests
         run: |
           cd ./src/cli-client 
           python3 -m unittest discover -v test
       - name: Execute client help
         run: |
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center.proto src/cli-client src/cli-client
-          ./src/cli-client/cli_client.py --help
+          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-recognizer.proto src/cli-client src/cli-client
+          ./src/cli-client/recognizer.py --help
+          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-synthesizer.proto src/cli-client src/cli-client
+          ./src/cli-client/synthesizer.py --help

@@ -6,8 +6,8 @@ import argparse
 from typing import Iterable
 
 import grpc
-import verbio_speech_center_pb2
-import verbio_speech_center_pb2_grpc
+import verbio_speech_center_recognizer_pb2
+import verbio_speech_center_recognizer_pb2_grpc
 
 
 class Options:
@@ -57,7 +57,7 @@ class Resources:
             return audio_data
 
 
-class SpeechCenterClient:
+class SpeechCenterRecognitionClient:
     def __init__(self, options: Options):
         options.check()
         self.credentials = Credentials(self.__read_token(options.token_file))
@@ -67,13 +67,13 @@ class SpeechCenterClient:
         self.language = options.language
 
     def run(self):
-        logging.info("Running CSR inference example...")
+        logging.info("Running Recognizer inference example...")
         # Open connection to grpc channel to provided host.
         with grpc.secure_channel(self.host, credentials=self.credentials.get_channel_credentials()) as channel:
             # Instantiate a speech_recognizer to manage grpc calls to backend.
-            speech_recognizer = verbio_speech_center_pb2_grpc.SpeechRecognizerStub(channel)
+            speech_recognizer = verbio_speech_center_recognizer_pb2_grpc.SpeechRecognizerStub(channel)
             try:
-                # Send inference requests with for the audio.
+                # Send inference requests for the audio.
                 # if a grammar is provided:
                 if self.resources.grammar:
                     response, call = speech_recognizer.RecognizeStream.with_call(
@@ -83,29 +83,32 @@ class SpeechCenterClient:
                     response, call = speech_recognizer.RecognizeStream.with_call(
                         self.__generate_inferences(topic=self.topic, wav_audio=self.resources.audio, language=self.language))
                 # Print out inference response and call status
-                logging.info("Inference response: '%s'", response.text)
-                logging.info("Inference call status: " + str(call))
+                logging.info("Inference response: '%s' [status=%s]", response.text, str(call.code()))
 
             except Exception as ex:
                 logging.critical(ex)
 
     @staticmethod
-    def __generate_inferences(wav_audio: bytes, topic: str = "", grammar: str = "", language: str = "") -> Iterable[
-        verbio_speech_center_pb2.RecognitionRequest]:
+    def __generate_inferences(
+        wav_audio: bytes,
+        topic: str = "",
+        grammar: str = "",
+        language: str = ""
+    ) -> Iterable[verbio_speech_center_recognizer_pb2.RecognitionRequest]:
         """
         Inferences always start with a grammar/topic and a language, then audio is passed in a second message
         """
         if len(topic):
-            var_resource = verbio_speech_center_pb2.RecognitionResource(topic=topic)
+            var_resource = verbio_speech_center_recognizer_pb2.RecognitionResource(topic=topic)
         elif len(grammar):
-            var_resource = verbio_speech_center_pb2.RecognitionResource(inline_grammar=grammar)
+            var_resource = verbio_speech_center_recognizer_pb2.RecognitionResource(inline_grammar=grammar)
         else:
             raise Exception("Grammar or topic must be declared in order to perform the recognition")
 
         messages = [
-            ("RegonitionInit", verbio_speech_center_pb2.RecognitionRequest(init=verbio_speech_center_pb2.RecognitionInit(
-                parameters=verbio_speech_center_pb2.RecognitionParameters(language=language), resource=var_resource))),
-            ("Audio", verbio_speech_center_pb2.RecognitionRequest(audio=wav_audio)),
+            ("RegonitionInit", verbio_speech_center_recognizer_pb2.RecognitionRequest(init=verbio_speech_center_recognizer_pb2.RecognitionInit(
+                parameters=verbio_speech_center_recognizer_pb2.RecognitionParameters(language=language), resource=var_resource))),
+            ("Audio", verbio_speech_center_recognizer_pb2.RecognitionRequest(audio=wav_audio)),
         ]
 
         for message_type, message in messages:
@@ -121,18 +124,18 @@ class SpeechCenterClient:
 def parse_command_line() -> Options:
     options = Options()
     parser = argparse.ArgumentParser(description='Perform speech recognition on an audio file')
-    parser.add_argument('--audiofile', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
+    parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     argGroup = parser.add_mutually_exclusive_group(required=True)
     argGroup.add_argument('--grammar', '-g', help='Path to a file containing an ABNF grammar')
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING'], help='A valid topic')
-    parser.add_argument('--language','-l', choices=['en-US', 'pt-BR', 'es-ES'], help='Language Id. (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     args = parser.parse_args()
     options.token_file = args.token
     options.host = args.host
-    options.audio_file = args.audiofile
+    options.audio_file = args.audio_file
     options.grammar_file = args.grammar
     options.topic = args.topic
     options.language = args.language
@@ -144,4 +147,4 @@ if __name__ == '__main__':
     # Setup minimal logger and run example.
     logging.basicConfig(level=logging.INFO)
 
-    SpeechCenterClient(parse_command_line()).run()
+    SpeechCenterRecognitionClient(parse_command_line()).run()
