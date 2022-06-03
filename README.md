@@ -11,7 +11,7 @@ Before to start you will need:
 
 1. Speech Center proto file (provided in this repository)
 2. Platform access token (provided to you by Verbio Technologies)
-3. Speech Center endpoint (https://www.speech-center.verbio.com:2424)
+3. Speech Center endpoint (speechcenter.verbio.com:2424)
 
 
 ### Python packages:
