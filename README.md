@@ -14,6 +14,7 @@ Before to start you will need:
 3. Speech Center endpoint (csr.api.speechcenter.verbio.com)
 
 
+
 ### Python packages:
 ```requirements.txt
 protobuf==3.19.1
