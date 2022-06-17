@@ -13,7 +13,7 @@ import verbio_speech_center_recognizer_pb2_grpc
 class Options:
     def __init__(self):
         self.token_file = None
-        self.host = 'speechcenter.verbio.com:2424'
+        self.host = 'csr.api.speechcenter.verbio.com'
         self.audio_file = None
         self.grammar_file = None
         self.topic = None

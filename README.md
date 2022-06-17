@@ -11,7 +11,7 @@ Before to start you will need:
 
 1. Speech Center proto file (provided in this repository)
 2. Platform access token (provided to you by Verbio Technologies)
-3. Speech Center endpoint (https://www.speech-center.verbio.com:2424)
+3. Speech Center endpoint (csr.api.speechcenter.verbio.com)
 
 
 ### Python packages:
@@ -89,7 +89,7 @@ optional arguments:
                         A Language ID (default: en-US)
   --token TOKEN, -t TOKEN
                         A string with the authentication token
-  --host HOST, -H HOST  The URL of the host trying to reach (default: speechcenter.verbio.com:2424)
+  --host HOST, -H HOST  The URL of the host trying to reach (default: csr.api.speechcenter.verbio.com)
 ```
 
 **Example**
@@ -117,7 +117,7 @@ Our Synthesizer will convert your text into speech. In order to run the CLI Spee
 ./src/cli-client>$ ./synthesizer.py --help
 usage: synthesizer.py [-h] --text TEXT --voice {Tommy,Annie,Aurora,Luma,David} [--sample-rate {8000}] [--encoding {PCM}] [--format {wav,raw}] [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST] --audio-file AUDIO_FILE
 
-Perform speech recognition on an audio file
+Perform speech synthesis on a sample text
 
 optional arguments:
   -h, --help            show this help message and exit
