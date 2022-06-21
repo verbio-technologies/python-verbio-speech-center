@@ -9,7 +9,7 @@ class TestRecognizerOptions(unittest.TestCase):
     def test_empty(self):
 
         options = RecognizerOptions()
-        self.assertEqual(options.host, "speechcenter.verbio.com:2424")
+        self.assertEqual(options.host, "csr.api.speechcenter.verbio.com")
 
         with self.assertRaises(Exception) as cm:
             options.check()
