@@ -30,6 +30,7 @@ message RecognitionResource {
     GENERIC = 0; //Suitable for any generic speech
     BANKING = 1; //Transcription will be optimized for banking recordings
     TELCO = 2; //Transcription will be optimized for telecommunications companies
+    INSURANCE = 3; //Transcription will be optimized for insurance companies
   }
 
   oneof resource_union {

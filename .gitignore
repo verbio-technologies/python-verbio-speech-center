@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Proto-related auto-generated files
+src/cli-client/verbio_speech_center_synthesizer_pb2.py
+src/cli-client/verbio_speech_center_synthesizer_pb2_grpc.py
+src/cli-client/verbio_speech_center_recognizer_pb2.py
+src/cli-client/verbio_speech_center_recognizer_pb2_grpc.py
+

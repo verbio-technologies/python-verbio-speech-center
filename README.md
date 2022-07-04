@@ -74,7 +74,7 @@ Our Recognizer will allow you to easily convert an audio resource into its assoc
 ```commandline
 .>$ cd src/cli-client/
 ./src/cli-client>$ ./recognizer.py --help
-usage: recognizer.py [-h] --audio-file AUDIO_FILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING}) [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST]
+usage: recognizer.py [-h] --audio-file AUDIO_FILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING,INSURANCE}) [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST]
 
 Perform speech recognition on an audio file
 
@@ -84,7 +84,7 @@ optional arguments:
                         Path to a .wav audio in 8kHz and PCM16 encoding
   --grammar GRAMMAR, -g GRAMMAR
                         Path to a file containing an ABNF grammar
-  --topic {GENERIC,TELCO,BANKING}, -T {GENERIC,TELCO,BANKING}
+  --topic {GENERIC,TELCO,BANKING,INSURANCE}, -T {GENERIC,TELCO,BANKING,INSURANCE}
                         A valid topic
   --language {en-US,pt-BR,es-ES}, -l {en-US,pt-BR,es-ES}
                         A Language ID (default: en-US)

@@ -127,7 +127,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     argGroup = parser.add_mutually_exclusive_group(required=True)
     argGroup.add_argument('--grammar', '-g', help='Path to a file containing an ABNF grammar')
-    argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING'], help='A valid topic')
+    argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
     parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
