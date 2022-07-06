@@ -1,0 +1,166 @@
+stages:
+  - lint
+  - test
+  - test
+  - build
+  - docker
+  - testing
+  - testing-promote
+  - staging
+  - staging-promote
+  - release
+  - cleanup
+
+
+variables:
+  RUSTC_WRAPPER: sccache
+  RUST_BACKTRACE: "FULL"
+  DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
+  DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
+  DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
+  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
+
+image: docker.registry.verbio.com/rust/centos:stable
+
+lint:stable:
+  stage: lint
+  script:
+    - cargo --version
+    - rustc --version
+    - cargo fmt --all -- --check
+    - cargo clippy --all --all-targets -- -D warnings
+
+lint:nightly:
+  stage: lint
+  allow_failure: true
+  script:
+    - cargo +nightly --version
+    - cargo fmt --all -- --check
+    - cargo +nightly clippy --all --all-targets -- -D warnings
+
+
+test:all:
+  stage: test
+  script:
+    - echo "unit/integration tests for application"
+    - cargo --version
+    - cargo test --all
+
+test:coverage:
+  stage: test
+  before_script:
+    - cargo install cargo-tarpaulin
+  script:
+    - cargo tarpaulin -o Html --all --avoid-cfg-tarpaulin
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - tarpaulin-report.html
+  coverage: '/^(\d+\.\d*)\% coverage, .+$/'
+
+build:latest_bin:
+  stage: build
+  only:
+    - tags
+  script:
+    - cargo --version
+    - cargo build --release
+#    - cpack -G "DEB;RPM" ./
+#    - cargo deb -v
+#    - mv *.deb ../
+#    - mv *.rpm ../
+  artifacts:
+    expire_in: 2 days
+    paths:
+      - "*.deb"
+      - "*.rpm"
+
+
+testing:docker:
+  stage: docker
+  image: docker:stable
+  only:
+    - tags
+  dependencies:
+    - build:latest_bin     
+  script:
+    - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - echo "IMAGE_NAME=${IMAGE_NAME}"
+    - touch test.deb
+    - mv *.deb deploy/docker/
+    - cd deploy/docker/
+    - docker build . -f Dockerfile.debian -t "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME}"
+
+
+testing:test_images:integration:
+  stage: testing
+  image: "${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+  only:
+    - tags
+  script:
+    - echo "integration tests here"
+
+testing:deploy:
+  stage: testing-promote
+  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+  only:
+    - tags
+  script:
+    - echo "deploy new release in staging"
+    - cd deploy/nomad
+#    - ./stop.sh asr4
+#    - nomad job run asr4.nomad
+
+testing:promote:
+  stage: testing-promote
+  image: docker:stable
+  only:
+    - tags
+  script:
+    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker push $NEW_NAME
+
+
+staging:test_images:functional:
+  stage: staging
+  image: "${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+  only:
+    - tags
+  script:
+    - echo "functional tests for new release"
+
+staging:promote:
+  stage: staging-promote
+  image: docker:stable
+  only:
+    - tags
+  script:
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker push $NEW_NAME
+
+release:deploy:
+  stage: release
+  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+  only:
+    - tags
+  script:
+    - echo "deploy new release in pre-production"
+    - cd deploy/nomad
+#    - ./stop.sh asr4
+#    - nomad job run asr4.nomad
+
+
+cleanup:
+  image: docker:stable
+  stage: cleanup
+  only:
+    - tags
+  script:
+    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"

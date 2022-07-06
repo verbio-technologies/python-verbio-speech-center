@@ -1,0 +1,38 @@
+target
+*/target
+**/*.rs.bk
+.env
+*.rs~
+*~
+**/conan_cargo_build.rs
+**/__pycache__/
+
+coverage
+cobertura.xml
+tarpaulin-report.html
+configuration.json
+conan.lock
+conanbuildinfo.txt
+
+
+# Custom config files
+# *.asr4.toml
+# ...
+
+# CMake stuff
+cmake-build-debug/
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+Makefile
+cmake_install.cmake
+CMakeFiles
+_CPack_Packages/
+install_manifest.txt
+*.deb
+*.rpm
+build/
+
+*.so
+*.so.2
+lib*.so.*
