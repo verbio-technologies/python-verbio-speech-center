@@ -8,7 +8,7 @@ publish = false
 [package.metadata.release]
 pre-release-replacements = [
     {file="CMakeLists.txt", search="        VERSION .*", replace="        VERSION {{version}}"},
-    {file="VERSION", search=".*", replace="\"{{version}}\""}
+    {file="VERSION", search=".*", replace="{{version}}"}
 ]
 
 
