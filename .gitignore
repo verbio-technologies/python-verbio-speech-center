@@ -36,3 +36,9 @@ build/
 *.so
 *.so.2
 lib*.so.*
+
+# Python
+*.egg-info/**
+.coverage
+asr4/version.py
+results.xml
