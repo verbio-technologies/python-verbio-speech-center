@@ -57,6 +57,8 @@ rust:test:all:
 python:test:all:
   stage: test
   image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  before_script:
+    - pip install pytest==6.2.5
   script:
     - python --version
     - pytest --junit-xml=report.xml
@@ -81,7 +83,7 @@ python:test:coverage:
   stage: test
   image: docker.registry.verbio.com/voice-center/python3:0.0.1
   before_script:
-    - cargo install pytest==6.2.5 pytest-cov==3.0.0
+    - pip install pytest==6.2.5 pytest-cov==3.0.0
   script:
     - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term
   artifacts:
