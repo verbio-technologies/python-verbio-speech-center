@@ -5,4 +5,11 @@ authors = ["Jordi Adell <jadell@verbio.com>", "Leo Fanzeres <lfanzeres@verbio.co
 edition = "2021"
 publish = false
 
+[package.metadata.release]
+pre-release-replacements = [
+    {file="CMakeLists.txt", search="        VERSION .*", replace="        VERSION {{version}}"},
+    {file="VERSION", search=".*", replace="{{version}}"}
+]
+
+
 [dependencies]
