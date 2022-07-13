@@ -22,7 +22,7 @@ variables:
 
 image: docker.registry.verbio.com/rust/centos:stable
 
-lint:stable:
+rust:lint:stable:
   stage: lint
   script:
     - cargo --version
@@ -30,7 +30,7 @@ lint:stable:
     - cargo fmt --all -- --check
     - cargo clippy --all --all-targets -- -D warnings
 
-lint:nightly:
+rust:lint:nightly:
   stage: lint
   allow_failure: true
   script:
@@ -38,15 +38,36 @@ lint:nightly:
     - cargo fmt --all -- --check
     - cargo +nightly clippy --all --all-targets -- -D warnings
 
+python:lint:
+  stage: lint
+  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  before_script:
+    - pip install flake8==3.9.2 black==22.6.0
+  script:
+    - black --check .
+    - flake8 --exit-zero --show-source --statistics
 
-test:all:
+
+rust:test:all:
   stage: test
   script:
-    - echo "unit/integration tests for application"
     - cargo --version
     - cargo test --all
 
-test:coverage:
+python:test:all:
+  stage: test
+  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  before_script:
+    - pip install pytest==6.2.5
+  script:
+    - python --version
+    - pytest --junit-xml=report.xml
+  artifacts:
+    expire_in: 5 days
+    reports:
+      junit: report.xml
+
+rust:test:coverage:
   stage: test
   before_script:
     - cargo install cargo-tarpaulin
@@ -58,7 +79,21 @@ test:coverage:
       - tarpaulin-report.html
   coverage: '/^(\d+\.\d*)\% coverage, .+$/'
 
-build:latest_bin:
+python:test:coverage:
+  stage: test
+  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  before_script:
+    - pip install pytest==6.2.5 pytest-cov==3.0.0
+  script:
+    - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - coverage/**
+  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
+
+
+rust:build:latest_bin:
   stage: build
   only:
     - tags
@@ -75,6 +110,14 @@ build:latest_bin:
       - "*.deb"
       - "*.rpm"
 
+python:build:latest_bin:
+  stage: build
+  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  only:
+    - tags
+  script:
+    - python setup.py build
+
 
 testing:docker:
   stage: docker
@@ -82,7 +125,7 @@ testing:docker:
   only:
     - tags
   dependencies:
-    - build:latest_bin     
+    - rust:build:latest_bin     
   script:
     - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
     - echo "IMAGE_NAME=${IMAGE_NAME}"
