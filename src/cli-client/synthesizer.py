@@ -31,8 +31,8 @@ class Options:
             raise Exception("Only Aurora and David are available for es-ES.")
         elif language == "pt-BR" and voice not in ["Luma"]:
             raise Exception("Only Luma is available for pt-BR.")
-        elif language == "ca-CA" and voice not in ["David"]:
-            raise Exception("Only David is available for ca-CA.")
+        elif language == "ca-ES" and voice not in ["David"]:
+            raise Exception("Only David is available for ca-ES.")
 
     def __check_audio_format(header: str, encoding: str) -> str:
         if encoding == "PCM" and header not in ["wav", "raw"]:
@@ -157,7 +157,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--sample-rate', '-s', type=int, choices=[8000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
     parser.add_argument('--encoding', '-e', choices=['PCM'], help='Output audio encoding algorithm (default: ' + options.encoding + ' [Signed 16-bit little endian PCM])', default=options.encoding)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio header (default: ' + options.header + ')', default=options.header)
-    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES', 'ca-CA'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES', 'ca-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)

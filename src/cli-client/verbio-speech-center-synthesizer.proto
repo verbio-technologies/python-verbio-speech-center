@@ -37,7 +37,7 @@ message SynthesisVoice {
     // Brazilian female voice.
     PT_BR_LUMA = 4;
     // Catalan male voice.
-    CA_CA_DAVID = 5;
+    CA_ES_DAVID = 5;
   }
 
   oneof synthesis_union {

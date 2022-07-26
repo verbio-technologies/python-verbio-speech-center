@@ -100,9 +100,9 @@ class TestSynthesizerOptions(unittest.TestCase):
         options.voice = "Luma"
         options.check()
 
-    def test_voice_ca_ca(self):
+    def test_voice_ca_es(self):
         options = SynthesizerOptions()
-        options.language = 'ca-CA'
+        options.language = 'ca-ES'
         with self.assertRaises(Exception) as cm:
             options.check()
         with self.assertRaises(Exception) as cm:
@@ -186,8 +186,8 @@ class TestAudio(unittest.TestCase):
         self.assertEqual(Audio(options).speaker, 'ES_ES_AURORA')
         options.voice = "David"
         self.assertEqual(Audio(options).speaker, 'ES_ES_DAVID')
-        options.language = "ca-CA"
-        self.assertEqual(Audio(options).speaker, 'CA_CA_DAVID')
+        options.language = "ca-ES"
+        self.assertEqual(Audio(options).speaker, 'CA_ES_DAVID')
         options.language = "pt-BR"
         options.voice = "Luma"
         self.assertEqual(Audio(options).speaker, 'PT_BR_LUMA')
