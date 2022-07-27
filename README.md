@@ -131,7 +131,7 @@ optional arguments:
                         Output audio encoding algorithm (default: PCM [Signed 16-bit little endian PCM])
   --format {wav,raw}, -f {wav,raw}
                         Output audio header. (default: wav)
-  --language {en-US,pt-BR,es-ES,ca-CA}, -l {en-US,pt-BR,es-ES,ca-CA}
+  --language {en-US,pt-BR,es-ES,ca-ES}, -l {en-US,pt-BR,es-ES,ca-ES}
                         A Language ID (default: en-US)
   --token TOKEN, -t TOKEN
                         A string with the authentication token
@@ -163,4 +163,4 @@ As a notice of the Speech Center Synthesizer, not all Voice / Language combinati
 * Annie [en-US]
 * Aurora [es-ES]
 * Luma [pt-BR]
-* David [es-ES, ca-CA]
+* David [es-ES, ca-ES]
