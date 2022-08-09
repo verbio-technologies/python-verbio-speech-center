@@ -17,16 +17,18 @@ _THREAD_CONCURRENCY = _PROCESS_COUNT
 
 def serve() -> None:
     with _reserve_port() as port:
-        bind_address = 'localhost:{}'.format(port)
+        bind_address = "localhost:{}".format(port)
         _LOGGER.info("Binding to '%s'", bind_address)
         workers = []
         for _ in range(_PROCESS_COUNT):
-            worker = multiprocessing.Process(target=_async_run_server,
-                                            args=(bind_address,))
+            worker = multiprocessing.Process(
+                target=_async_run_server, args=(bind_address,)
+            )
             worker.start()
             workers.append(worker)
         for worker in workers:
             worker.join()
+
 
 @contextlib.contextmanager
 def _reserve_port():
@@ -35,21 +37,21 @@ def _reserve_port():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     if sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT) == 0:
         raise RuntimeError("Failed to set SO_REUSEPORT.")
-    sock.bind(('', 0))
+    sock.bind(("", 0))
     try:
         yield sock.getsockname()[1]
     finally:
         sock.close()
 
+
 def _async_run_server(bind_address: str):
     asyncio.run(_run_server(bind_address))
 
+
 async def _run_server(bind_address: str):
     server = grpc.aio.server(
-        futures.ThreadPoolExecutor(
-            max_workers=_THREAD_CONCURRENCY
-        ),
-        options=(('grpc.so_reuseport', 1),)
+        futures.ThreadPoolExecutor(max_workers=_THREAD_CONCURRENCY),
+        options=(("grpc.so_reuseport", 1),),
     )
     add_RecognizerServicer_to_server(RecognizerServiceAsync(), server)
     server.add_insecure_port(bind_address)
@@ -61,7 +63,7 @@ async def _run_server(bind_address: str):
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format='[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     serve()
