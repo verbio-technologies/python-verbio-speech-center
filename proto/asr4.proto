@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package asr4.recognizer.v1;
+
+// Service that implements ASR4 Recognition API.
+service Recognizer {
+  rpc Recognize(RecognizeRequest) returns (RecognizeResponse); // Send audio as bytes and recieve the transcription of the audio.
+}
+
+message RecognizeRequest {
+  RecognitionConfig config = 1; // Init message with the recognition data.
+  bytes audio = 2; // Raw bytes in signed 16-bit little endian PCM.
+}
+
+// An init message with the recognition data.
+message RecognitionConfig {
+  RecognitionParameters parameters = 1; // General parameters for the recognition, such as language.
+  RecognitionResource resource = 2; // The request must specify a topic.
+}
+
+// This message will contain the language locale of your audio in IETF BCP 47 format.
+message RecognitionParameters {
+  string language = 1; // Currently supported: en-US, es-ES, pt-BR.
+  uint32 sample_rate_hz = 2; // Audio sample rate in Hertz. Currently supported: 8000, 16000.
+}
+
+// The request must specify a topic.
+message RecognitionResource {
+  enum Model {
+    GENERIC = 0; // Suitable for any generic speech.
+  }
+
+  Model topic = 1; // The topic will determine the statistic language model used for the recognition.
+}
+
+message RecognizeResponse {
+  string text = 1; // Full transcription of the audio.
+}
