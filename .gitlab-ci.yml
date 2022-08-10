@@ -156,7 +156,7 @@ testing:deploy:
   script:
     - echo "deploy new release in testing"
     - cd deploy/nomad
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} nomad job run asr4.nomad
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} nomad job run asr4-staging.nomad
 
 testing:promote:
   stage: testing-promote
@@ -197,8 +197,7 @@ release:deploy:
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
-#    - ./stop.sh asr4
-#    - nomad job run asr4.nomad
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
 
 
 cleanup:

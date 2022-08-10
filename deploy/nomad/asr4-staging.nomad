@@ -5,7 +5,7 @@ variables {
 }
 
 
-job "asr4" {
+job "asr4-staging" {
   datacenters = ["dc1"]
   type        = "service"
 
@@ -48,7 +48,7 @@ job "asr4" {
       }
 
       service {
-        name = "asr4-service"
+        name = "asr4-staging-service"
         port = "grpc-port"
 
         check {
