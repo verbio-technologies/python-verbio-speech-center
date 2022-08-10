@@ -117,7 +117,7 @@ python:build:latest_bin:
     - tags
   script:
     - python setup.py sdist bdist_wheel
-    - mv dist/*.whl ../
+    - mv dist/*.whl .
   artifacts:
     expire_in: 2 days
     paths:
