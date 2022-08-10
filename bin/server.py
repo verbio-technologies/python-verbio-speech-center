@@ -15,13 +15,11 @@ _PROCESS_COUNT = multiprocessing.cpu_count()
 _THREAD_CONCURRENCY = _PROCESS_COUNT
 
 
-def serve(bind_address: str = '[::]:50051') -> None:
+def serve(bind_address: str = "[::]:50051") -> None:
     _LOGGER.info("Binding to '%s'", bind_address)
     workers = []
     for _ in range(_PROCESS_COUNT):
-        worker = multiprocessing.Process(
-            target=_async_run_server, args=(bind_address,)
-        )
+        worker = multiprocessing.Process(target=_async_run_server, args=(bind_address,))
         worker.start()
         workers.append(worker)
     for worker in workers:
