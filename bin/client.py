@@ -23,17 +23,17 @@ CHANNEL_OPTIONS = [
     ("grpc.keepalive_timeout_ms", 10000),
 ]
 
-_worker_channel_singleton = None
-_worker_stub_singleton = None
+_workerChannelSingleton = None
+_workerStubSingleton = None
 
 
 def main() -> None:
-    args = _parse_arguments()
+    args = _parseArguments()
     responses = _process(args.server_address)
     _LOGGER.info(f"Returned responses: {responses}")
 
 
-def _parse_arguments() -> argparse.Namespace:
+def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A Speech Recognition client.")
     parser.add_argument(
         "server_address", help="The address of the server (e.g. localhost:50051)"
@@ -41,34 +41,34 @@ def _parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _process(server_address: str) -> List[RecognizeResponse]:
-    worker_pool = multiprocessing.Pool(
+def _process(serverAddress: str) -> List[RecognizeResponse]:
+    workerPool = multiprocessing.Pool(
         processes=_PROCESS_COUNT,
-        initializer=_initialize_worker,
-        initargs=(server_address,),
+        initializer=_initializeWorker,
+        initargs=(serverAddress,),
     )
-    responses = [worker_pool.apply(_run_worker_query)]
+    responses = [workerPool.apply(_runWorkerQuery)]
     return list(map(RecognizeResponse.FromString, responses))
 
 
-def _initialize_worker(server_address: str):
-    global _worker_channel_singleton  # pylint: disable=global-statement
-    global _worker_stub_singleton  # pylint: disable=global-statement
+def _initializeWorker(serverAddress: str):
+    global _workerChannelSingleton  # pylint: disable=global-statement
+    global _workerStubSingleton  # pylint: disable=global-statement
     _LOGGER.info("Initializing worker process.")
-    _worker_channel_singleton = grpc.insecure_channel(
-        server_address, options=CHANNEL_OPTIONS
+    _workerChannelSingleton = grpc.insecure_channel(
+        serverAddress, options=CHANNEL_OPTIONS
     )
-    _worker_stub_singleton = RecognizerStub(_worker_channel_singleton)
-    atexit.register(_shutdown_worker)
+    _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
+    atexit.register(_shutdownWorker)
 
 
-def _shutdown_worker():
+def _shutdownWorker():
     _LOGGER.info("Shutting worker process down.")
-    if _worker_channel_singleton is not None:
-        _worker_channel_singleton.stop()
+    if _workerChannelSingleton is not None:
+        _workerStubSingleton.stop()
 
 
-def _run_worker_query() -> bytes:
+def _runWorkerQuery() -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
             parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
@@ -77,7 +77,7 @@ def _run_worker_query() -> bytes:
         audio=b"",
     )
     _LOGGER.info("Running recognition.")
-    return _worker_stub_singleton.Recognize(request, timeout=10).SerializeToString()
+    return _workerStubSingleton.Recognize(request, timeout=10).SerializeToString()
 
 
 if __name__ == "__main__":

@@ -16,13 +16,13 @@ _THREAD_CONCURRENCY = _PROCESS_COUNT
 
 
 def serve() -> None:
-    with _reserve_port() as port:
-        bind_address = "localhost:{}".format(port)
-        _LOGGER.info("Binding to '%s'", bind_address)
+    with _reservePort() as port:
+        bindAddress = "localhost:{}".format(port)
+        _LOGGER.info("Binding to '%s'", bindAddress)
         workers = []
         for _ in range(_PROCESS_COUNT):
             worker = multiprocessing.Process(
-                target=_async_run_server, args=(bind_address,)
+                target=_asyncRunServer, args=(bindAddress,)
             )
             worker.start()
             workers.append(worker)
@@ -31,7 +31,7 @@ def serve() -> None:
 
 
 @contextlib.contextmanager
-def _reserve_port():
+def _reservePort():
     """Find and reserve a port for all subprocesses to use."""
     sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -44,18 +44,18 @@ def _reserve_port():
         sock.close()
 
 
-def _async_run_server(bind_address: str):
-    asyncio.run(_run_server(bind_address))
+def _asyncRunServer(bindAddress: str):
+    asyncio.run(_runServer(bindAddress))
 
 
-async def _run_server(bind_address: str):
+async def _runServer(bindAddress: str):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=_THREAD_CONCURRENCY),
         options=(("grpc.so_reuseport", 1),),
     )
     add_RecognizerServicer_to_server(RecognizerServiceAsync(), server)
-    server.add_insecure_port(bind_address)
-    _LOGGER.info(f"Server listening on {bind_address}")
+    server.add_insecure_port(bindAddress)
+    _LOGGER.info(f"Server listening on {bindAddress}")
     await server.start()
     await server.wait_for_termination()
 
