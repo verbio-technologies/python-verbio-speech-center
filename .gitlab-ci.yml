@@ -158,7 +158,7 @@ testing:deploy:
     action: start
   script:
     - cd deploy/nomad
-    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3)
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
     - export NOMAD_ADDR=http://$NOMAD_IP:4646
     - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} nomad job run asr4-staging.nomad
