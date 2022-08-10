@@ -153,9 +153,14 @@ testing:deploy:
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
+  environment:
+    name: pre-production/asr4 
+    action: start
   script:
-    - echo "deploy new release in testing"
     - cd deploy/nomad
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3)
+    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+    - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} nomad job run asr4-staging.nomad
 
 testing:promote:
