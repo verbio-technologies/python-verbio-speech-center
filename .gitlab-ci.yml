@@ -40,7 +40,7 @@ rust:lint:nightly:
 
 python:lint:
   stage: lint
-  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  image: docker.registry.verbio.com/python:3.10-slim
   before_script:
     - pip install flake8==3.9.2 black==22.6.0
   script:
@@ -56,7 +56,7 @@ rust:test:all:
 
 python:test:all:
   stage: test
-  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  image: docker.registry.verbio.com/python:3.10-slim
   before_script:
     - pip install pytest==6.2.5
   script:
@@ -81,7 +81,7 @@ rust:test:coverage:
 
 python:test:coverage:
   stage: test
-  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  image: docker.registry.verbio.com/python:3.10-slim
   before_script:
     - pip install pytest==6.2.5 pytest-cov==3.0.0
   script:
@@ -112,12 +112,16 @@ rust:build:latest_bin:
 
 python:build:latest_bin:
   stage: build
-  image: docker.registry.verbio.com/voice-center/python3:0.0.1
+  image: docker.registry.verbio.com/python:3.10-slim
   only:
     - tags
   script:
-    - python setup.py build
-
+    - python setup.py sdist bdist_wheel
+    - mv dist/*.whl .
+  artifacts:
+    expire_in: 2 days
+    paths:
+      - "*.whl"
 
 testing:docker:
   stage: docker
@@ -125,14 +129,14 @@ testing:docker:
   only:
     - tags
   dependencies:
-    - rust:build:latest_bin     
+    - python:build:latest_bin     
   script:
     - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
     - echo "IMAGE_NAME=${IMAGE_NAME}"
-    - touch test.deb
-    - mv *.deb deploy/docker/
+    - mv *.whl deploy/docker/
+    - cp bin/server.py deploy/docker/
     - cd deploy/docker/
-    - docker build . -f Dockerfile.debian -t "${IMAGE_NAME}"
+    - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
 
@@ -149,11 +153,15 @@ testing:deploy:
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
+  environment:
+    name: pre-production/asr4 
+    action: start
   script:
-    - echo "deploy new release in staging"
     - cd deploy/nomad
-#    - ./stop.sh asr4
-#    - nomad job run asr4.nomad
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+    - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} nomad job run asr4-staging.nomad
 
 testing:promote:
   stage: testing-promote
@@ -194,8 +202,7 @@ release:deploy:
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
-#    - ./stop.sh asr4
-#    - nomad job run asr4.nomad
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
 
 
 cleanup:
