@@ -1,5 +1,3 @@
-from time import sleep
-from unittest import IsolatedAsyncioTestCase
 import unittest
 
 import grpc
@@ -13,7 +11,6 @@ from asr4.recognizer import RecognizeRequest
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
-from asr4.recognizer import RecognizeResponse
 from asr4.recognizer import add_RecognizerServicer_to_server
 
 
@@ -31,11 +28,11 @@ async def runServerAsync(serverAddress: str):
 
 
 class TestRecognizerService(unittest.TestCase):
-    def setUp(self):
-        print("a")
-        self._serverAddress = "[::]:50060"
-        self._worker = multiprocessing.Process(target=runServer, args=(self._serverAddress,))
-        self._worker.start()
+    @classmethod
+    def setUpClass(cls):
+        cls._serverAddress = "[::]:50060"
+        cls._worker = multiprocessing.Process(target=runServer, args=(cls._serverAddress,))
+        cls._worker.start()
 
         
     def testRecognizeRequestEnUs(self):
@@ -46,7 +43,7 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"SOMETHING",
         )
-        channel = grpc.insecure_channel(self._serverAddress)
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(response.text, "Hello, I am up and running. Received a message from you!")
 
@@ -59,7 +56,7 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"SOMETHING",
         )
-        channel = grpc.insecure_channel(self._serverAddress)
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(response.text, "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!")
 
@@ -72,11 +69,10 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"SOMETHING",
         )
-        channel = grpc.insecure_channel(self._serverAddress)
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(response.text, "Olá, estou de pé, recebi uma mensagem sua!")
 
-    
-    def tearDown(self):
-        print("b")
-        self._worker.kill()
+    @classmethod
+    def tearDownClass(cls):
+        cls._worker.kill()

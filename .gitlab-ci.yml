@@ -61,7 +61,7 @@ python:test:all:
     - pip install pytest==6.2.5
   script:
     - python --version
-    - pytest --junit-xml=report.xml
+    - pytest --junit-xml=report.xml --verbose
   artifacts:
     expire_in: 5 days
     reports:
