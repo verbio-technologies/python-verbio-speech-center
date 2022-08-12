@@ -1,12 +1,10 @@
 import grpc
-import socket
 import asyncio
 import logging
-import contextlib
 import multiprocessing
 from concurrent import futures
 
-from asr4.recognizer import RecognizerServiceAsync
+from asr4.recognizer import RecognizerService
 from asr4.recognizer import add_RecognizerServicer_to_server
 
 
@@ -35,7 +33,7 @@ async def _run_server(bind_address: str):
         futures.ThreadPoolExecutor(max_workers=_THREAD_CONCURRENCY),
         options=(("grpc.so_reuseport", 1),),
     )
-    add_RecognizerServicer_to_server(RecognizerServiceAsync(), server)
+    add_RecognizerServicer_to_server(RecognizerService(), server)
     server.add_insecure_port(bind_address)
     _LOGGER.info(f"Server listening on {bind_address}")
     await server.start()

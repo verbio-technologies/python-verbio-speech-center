@@ -9,7 +9,6 @@ from .types import RecognizerServicer
 from .types import add_RecognizerServicer_to_server
 
 from .service import RecognizerService
-from .async_service import RecognizerServiceAsync
 
 
 __all__ = (
@@ -22,5 +21,4 @@ __all__ = (
     "RecognizerServicer",
     "add_RecognizerServicer_to_server",
     "RecognizerService",
-    "RecognizerServiceAsync",
 )
