@@ -4,8 +4,13 @@ import logging
 import multiprocessing
 from concurrent import futures
 
+from asr4.recognizer import SERVICES_NAMES
 from asr4.recognizer import RecognizerServiceAsync
 from asr4.recognizer import add_RecognizerServicer_to_server
+
+from grpc_health.v1 import health
+from grpc_health.v1.health_pb2 import HealthCheckResponse
+from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,20 +29,41 @@ def serve(bindAddress: str = "[::]:50051") -> None:
         worker.join()
 
 
-def _asyncRunServer(bindAddress: str):
+def _asyncRunServer(bindAddress: str) -> None:
     asyncio.run(_runServer(bindAddress))
 
 
-async def _runServer(bindAddress: str):
+async def _runServer(bindAddress: str) -> None:
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=_THREAD_CONCURRENCY),
         options=(("grpc.so_reuseport", 1),),
     )
-    add_RecognizerServicer_to_server(RecognizerServiceAsync(), server)
+    _addRecognizerService(server)
+    _addHealthCheckService(server)
     server.add_insecure_port(bindAddress)
     _LOGGER.info(f"Server listening on {bindAddress}")
     await server.start()
     await server.wait_for_termination()
+
+
+def _addRecognizerService(server: grpc.aio.Server) -> None:
+    add_RecognizerServicer_to_server(RecognizerServiceAsync(), server)
+
+
+def _addHealthCheckService(server: grpc.aio.Server) -> None:
+    healthServicer = health.HealthServicer(
+        experimental_non_blocking=True,
+        experimental_thread_pool=futures.ThreadPoolExecutor(
+            max_workers=_THREAD_CONCURRENCY
+        ),
+    )
+    _markAllServicesAsHealthy(healthServicer)
+    add_HealthServicer_to_server(healthServicer, server)
+
+
+def _markAllServicesAsHealthy(healthServicer: health.HealthServicer) -> None:
+    for service in SERVICES_NAMES + [health.SERVICE_NAME]:
+        healthServicer.set(service, HealthCheckResponse.SERVING)
 
 
 if __name__ == "__main__":

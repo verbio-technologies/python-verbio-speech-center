@@ -1,3 +1,5 @@
+from .types import SERVICES_NAMES
+
 from .types import RecognizeRequest
 from .types import RecognizeResponse
 from .types import RecognitionConfig
@@ -13,6 +15,7 @@ from .async_service import RecognizerServiceAsync
 
 
 __all__ = (
+    "SERVICES_NAMES",
     "RecognizeRequest",
     "RecognizeResponse",
     "RecognitionConfig",

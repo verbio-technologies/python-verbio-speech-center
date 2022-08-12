@@ -57,6 +57,7 @@ if __name__ == "__main__":
         install_requires=[
             "google > =3.0.0",
             "grpcio >= 1.47.0",
+            "grpcio-health-checking >= 1.47.0",
             "logger >= 1.4",
             "protobuf >= 3.20.1",
         ],
