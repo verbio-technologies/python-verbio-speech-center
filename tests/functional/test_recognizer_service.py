@@ -14,28 +14,31 @@ from asr4.recognizer import RecognitionResource
 from asr4.recognizer import add_RecognizerServicer_to_server
 
 
-def runServer(serverAddress: str):
-    asyncio.run(runServerAsync(serverAddress))
+def runServer(serverAddress: str, event: multiprocessing.Event):
+    asyncio.run(runServerAsync(serverAddress, event))
 
 
-async def runServerAsync(serverAddress: str):
+async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=1),
     )
     add_RecognizerServicer_to_server(RecognizerService(), server)
     server.add_insecure_port(serverAddress)
     await server.start()
+    event.set()
     await server.wait_for_termination()
 
 
 class TestRecognizerService(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._serverAddress = "[::]:50060"
+        event = multiprocessing.Event()
+        cls._serverAddress = "localhost:50060"
         cls._worker = multiprocessing.Process(
-            target=runServer, args=(cls._serverAddress,)
+            target=runServer, args=(cls._serverAddress, event)
         )
         cls._worker.start()
+        event.wait(timeout=180)
 
     def testRecognizeRequestEnUs(self):
         request = RecognizeRequest(
