@@ -59,6 +59,9 @@ python:test:all:
   image: docker.registry.verbio.com/python:3.10-slim
   before_script:
     - pip install pytest==6.2.5
+    # Install dependencies without installing the package itself
+    - python setup.py egg_info
+    - pip install `grep -v '^\[' *.egg-info/requires.txt`
   script:
     - python --version
     - pytest --junit-xml=report.xml --verbose
@@ -84,8 +87,11 @@ python:test:coverage:
   image: docker.registry.verbio.com/python:3.10-slim
   before_script:
     - pip install pytest==6.2.5 pytest-cov==3.0.0
+    # Install dependencies without installing the package itself
+    - python setup.py egg_info
+    - pip install `grep -v '^\[' *.egg-info/requires.txt`
   script:
-    - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term
+    - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 30 days
     paths:
