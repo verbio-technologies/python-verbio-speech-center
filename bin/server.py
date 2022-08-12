@@ -13,29 +13,29 @@ _PROCESS_COUNT = multiprocessing.cpu_count()
 _THREAD_CONCURRENCY = _PROCESS_COUNT
 
 
-def serve(bind_address: str = "[::]:50051") -> None:
-    _LOGGER.info("Binding to '%s'", bind_address)
+def serve(bindAddress: str = "[::]:50051") -> None:
+    _LOGGER.info("Binding to '%s'", bindAddress)
     workers = []
     for _ in range(_PROCESS_COUNT):
-        worker = multiprocessing.Process(target=_async_run_server, args=(bind_address,))
+        worker = multiprocessing.Process(target=_asyncRunServer, args=(bindAddress,))
         worker.start()
         workers.append(worker)
     for worker in workers:
         worker.join()
 
 
-def _async_run_server(bind_address: str):
-    asyncio.run(_run_server(bind_address))
+def _asyncRunServer(bindAddress: str):
+    asyncio.run(_runServer(bindAddress))
 
 
-async def _run_server(bind_address: str):
+async def _runServer(bindAddress: str):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=_THREAD_CONCURRENCY),
         options=(("grpc.so_reuseport", 1),),
     )
     add_RecognizerServicer_to_server(RecognizerService(), server)
-    server.add_insecure_port(bind_address)
-    _LOGGER.info(f"Server listening on {bind_address}")
+    server.add_insecure_port(bindAddress)
+    _LOGGER.info(f"Server listening on {bindAddress}")
     await server.start()
     await server.wait_for_termination()
 
