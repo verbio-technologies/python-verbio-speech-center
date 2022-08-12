@@ -21,16 +21,10 @@ class SourceSinkService(abc.ABC):
     ) -> None:
         raise NotImplementedError()
 
-    def eventHandle(
-        self,
-        _request: GeneratedProtocolMessageType
-    ) -> str:
+    def eventHandle(self, _request: GeneratedProtocolMessageType) -> str:
         raise NotImplementedError()
 
-    def eventSink(
-        self,
-        _response: str
-    ) -> GeneratedProtocolMessageType:
+    def eventSink(self, _response: str) -> GeneratedProtocolMessageType:
         raise NotImplementedError()
 
 
@@ -72,9 +66,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         parameters: RecognitionParameters,
     ) -> None:
         if not Language.check(parameters.language):
-            raise ValueError(f"Invalid value '{parameters.language}' for language parameter")
+            raise ValueError(
+                f"Invalid value '{parameters.language}' for language parameter"
+            )
         if not SampleRate.check(parameters.sample_rate_hz):
-            raise ValueError(f"Invalid value '{parameters.sample_rate_hz}' for sample_rate_hz parameter")
+            raise ValueError(
+                f"Invalid value '{parameters.sample_rate_hz}' for sample_rate_hz parameter"
+            )
 
     def _validateResource(
         self,
@@ -92,10 +90,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def eventHandle(
-        self,
-        request: RecognizeRequest
-    ) -> str:
+    def eventHandle(self, request: RecognizeRequest) -> str:
         language = Language.parse(request.config.parameters.language)
         if language == Language.EN_US:
             return "Hello, I am up and running. Received a message from you!"
@@ -104,9 +99,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         elif language == Language.PT_BR:
             return "Olá, estou de pé, recebi uma mensagem sua!"
 
-    def eventSink(
-        self,
-        response: str
-    ) -> RecognizeResponse:
+    def eventSink(self, response: str) -> RecognizeResponse:
         result = {"text": response}
         return RecognizeResponse(**result)

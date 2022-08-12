@@ -15,7 +15,9 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService()
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"",
@@ -23,19 +25,19 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-
     def testInvalidTopic(self):
         service = RecognizerService()
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000
+                ),
                 resource=RecognitionResource(topic=-1),
             ),
             audio=b"SOMETHING",
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
-
 
     def testInvalidLanguage(self):
         service = RecognizerService()
@@ -48,10 +50,12 @@ class TestRecognizerService(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
-        
+
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="INVALID", sample_rate_hz=16000),
+                parameters=RecognitionParameters(
+                    language="INVALID", sample_rate_hz=16000
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
@@ -59,19 +63,20 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidSampleRate(self):
         service = RecognizerService()
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=16001),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16001
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
-        
+
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
@@ -82,32 +87,26 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidRecognizeRequestEmpty(self):
         service = RecognizerService()
         request = RecognizeRequest()
         with self.assertRaises(ValueError):
             service.eventSource(request)
-        
-    
+
     def testInvalidRecognizeRequestAudio(self):
         service = RecognizerService()
         request = RecognizeRequest(audio=b"SOMETHING")
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidRecognizeRequestResource(self):
         service = RecognizerService()
         request = RecognizeRequest(
-            config=RecognitionConfig(
-                resource=RecognitionResource(topic="GENERIC")
-            )
+            config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidRecognizeRequestLanguage(self):
         service = RecognizerService()
         request = RecognizeRequest(
@@ -118,7 +117,6 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidRecognizeRequestSampleRate(self):
         service = RecognizerService()
         request = RecognizeRequest(
@@ -129,41 +127,43 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidRecognizeRequestParameters(self):
         service = RecognizerService()
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000
+                ),
             )
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    
     def testInvalidRecognizeRequestConfig(self):
         service = RecognizerService()
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             )
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
-
 
     def testRecognizeRequest(self):
         service = RecognizerService()
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
         )
         self.assertFalse(service.eventSource(request))
-
 
     def testInvalidRecognizeRequestHandle(self):
         service = RecognizerService()
@@ -174,7 +174,6 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertFalse(service.eventHandle(request))
 
-    
     def testRecognizeRequestHandleEnUs(self):
         service = RecognizerService()
         request = RecognizeRequest(
@@ -182,8 +181,10 @@ class TestRecognizerService(unittest.TestCase):
                 parameters=RecognitionParameters(language="en-US"),
             )
         )
-        self.assertEqual(service.eventHandle(request), "Hello, I am up and running. Received a message from you!")
-
+        self.assertEqual(
+            service.eventHandle(request),
+            "Hello, I am up and running. Received a message from you!",
+        )
 
     def testRecognizeRequestHandleEsEs(self):
         service = RecognizerService()
@@ -192,9 +193,11 @@ class TestRecognizerService(unittest.TestCase):
                 parameters=RecognitionParameters(language="es-ES"),
             )
         )
-        self.assertEqual(service.eventHandle(request), "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!")
+        self.assertEqual(
+            service.eventHandle(request),
+            "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!",
+        )
 
-    
     def testRecognizeRequestHandlePtBr(self):
         service = RecognizerService()
         request = RecognizeRequest(
@@ -202,10 +205,11 @@ class TestRecognizerService(unittest.TestCase):
                 parameters=RecognitionParameters(language="pt-BR"),
             )
         )
-        self.assertEqual(service.eventHandle(request), "Olá, estou de pé, recebi uma mensagem sua!")
+        self.assertEqual(
+            service.eventHandle(request), "Olá, estou de pé, recebi uma mensagem sua!"
+        )
 
-    
     def testRecognizeRequestSink(self):
         service = RecognizerService()
-        response = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
         self.assertEqual(service.eventSink(response), RecognizeResponse(text=response))
