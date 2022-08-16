@@ -71,7 +71,7 @@ def _shutdownWorker():
 def _runWorkerQuery() -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
-            parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+            parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
             resource=RecognitionResource(topic="GENERIC"),
         ),
         audio=b"",
