@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import asr4.recognizer_v1.types.asr4_pb2 as asr4__pb2
+from . import asr4_pb2 as asr4__pb2
 
 
 class RecognizerStub(object):
