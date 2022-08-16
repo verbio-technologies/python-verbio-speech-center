@@ -60,6 +60,7 @@ if __name__ == "__main__":
             "grpcio-health-checking >= 1.47.0",
             "logger >= 1.4",
             "protobuf >= 3.20.1",
+            "typing_extensions >= 4.3.0",
         ],
         packages=find_packages(
             exclude=[

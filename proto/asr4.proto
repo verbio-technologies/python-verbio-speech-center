@@ -21,7 +21,7 @@ message RecognitionConfig {
 // This message will contain the language locale of your audio in IETF BCP 47 format.
 message RecognitionParameters {
   string language = 1; // Currently supported: en-US, es-ES, pt-BR.
-  uint32 sample_rate_hz = 2; // Audio sample rate in Hertz. Currently supported: 8000, 16000.
+  uint32 sample_rate_hz = 2; // Audio sample rate in Hertz. Currently supported: 16000.
 }
 
 // The request must specify a topic.

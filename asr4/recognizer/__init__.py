@@ -10,7 +10,6 @@ from asr4.recognizer_v1 import RecognizerServicer
 from asr4.recognizer_v1 import add_RecognizerServicer_to_server
 
 from asr4.recognizer_v1 import RecognizerService
-from asr4.recognizer_v1 import RecognizerServiceAsync
 
 
 __all__ = (
@@ -24,5 +23,4 @@ __all__ = (
     "RecognizerServicer",
     "add_RecognizerServicer_to_server",
     "RecognizerService",
-    "RecognizerServiceAsync",
 )

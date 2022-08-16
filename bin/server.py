@@ -5,7 +5,7 @@ import multiprocessing
 from concurrent import futures
 
 from asr4.recognizer import SERVICES_NAMES
-from asr4.recognizer import RecognizerServiceAsync
+from asr4.recognizer import RecognizerService
 from asr4.recognizer import add_RecognizerServicer_to_server
 
 from grpc_health.v1 import health
@@ -47,7 +47,7 @@ async def _runServer(bindAddress: str) -> None:
 
 
 def _addRecognizerService(server: grpc.aio.Server) -> None:
-    add_RecognizerServicer_to_server(RecognizerServiceAsync(), server)
+    add_RecognizerServicer_to_server(RecognizerService(), server)
 
 
 def _addHealthCheckService(server: grpc.aio.Server) -> None:
