@@ -54,6 +54,7 @@ job "asr4-staging" {
         check {
           name = "up-and-running"
           type = "grpc"
+          port = "grpc-port"
           interval = "30s"
           timeout = "2s"
         }

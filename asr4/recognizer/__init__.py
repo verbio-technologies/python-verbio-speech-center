@@ -1,3 +1,5 @@
+from asr4.recognizer_v1 import SERVICES_NAMES
+
 from asr4.recognizer_v1 import RecognizeRequest
 from asr4.recognizer_v1 import RecognizeResponse
 from asr4.recognizer_v1 import RecognitionConfig
@@ -11,6 +13,7 @@ from asr4.recognizer_v1 import RecognizerService
 
 
 __all__ = (
+    "SERVICES_NAMES",
     "RecognizeRequest",
     "RecognizeResponse",
     "RecognitionConfig",
