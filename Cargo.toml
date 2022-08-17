@@ -1,6 +1,6 @@
 [package]
 name = "asr4"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Jordi Adell <jadell@verbio.com>", "Leo Fanzeres <lfanzeres@verbio.com>", "Lluís Formiga <lformiga@verbio.com>", "Lara Gil <lgil@verbio.com>", "Pere Comas <pcomas@verbio.com>", "Vero Lopez <vlopez@verbio.com>", "Roger Marrugat <rmarrugat@verbio.com>" ]
 edition = "2021"
 publish = false
