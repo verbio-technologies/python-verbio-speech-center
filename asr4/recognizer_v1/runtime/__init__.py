@@ -1,4 +1,4 @@
-from base import Runtime
+from .base import Runtime
 
 from .onnx import Session, OnnxSession, OnnxRuntime, OnnxRuntimeResult
 

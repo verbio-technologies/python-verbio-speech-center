@@ -6,13 +6,12 @@ import simple_ctc
 
 import abc
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
-from base import Runtime
+from asr4.recognizer_v1.runtime.base import Runtime
 
 
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
-    timesteps: List[int]
 
 
 class _DecodeResult(NamedTuple):
@@ -23,6 +22,7 @@ class _DecodeResult(NamedTuple):
 
 class Session(abc.ABC):
     def __init__(
+        self,
         _path_or_bytes: Union[str, bytes],
         *,
         _sess_options: Optional[onnxruntime.SessionOptions] = None,
@@ -123,15 +123,18 @@ class OnnxRuntime(Runtime):
         self._inputName = self._session.get_inputs_names()[0]
         self._decoder = simple_ctc.BeamSearchDecoder(
             vocabulary,
-            cutoff_top_n=40,
+            cutoff_top_n=32,
             cutoff_prob=0.8,
             beam_size=100,
-            num_processes=1,
             blank_id=0,
-            is_nll=True,
+            is_nll=False,
         )
 
     def run(self, input: bytes) -> OnnxRuntimeResult:
+        if not input:
+            raise ValueError(
+                "Input audio cannot be empty!"
+            )
         x = self._preprocess(input)
         y = self._runOnnxruntimeSession(x)
         return self._postprocess(y)
@@ -147,35 +150,17 @@ class OnnxRuntime(Runtime):
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         y = self._session.run(None, {self._inputName: input.numpy()})
-        print(y[0].shape)
-        return self._decoder.decode(torch.from_numpy(y[0]))
+        normalized_y = F.softmax(torch.from_numpy(y[0]), dim=2)
+        return self._decoder.decode(normalized_y)
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
-        sequence = "".join(output.label_sequences[0][0]).replace("|", " ").strip()
-        timesteps = output.timesteps[0][0] if len(output.timesteps) else []
+        sequence = "".join(output.label_sequences[0][0]) \
+            .replace("|", " ") \
+            .replace("<s>", "") \
+            .replace("</s>", "") \
+            .replace("<pad>", "").strip()
+        score = 1/np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
         return OnnxRuntimeResult(
             sequence=sequence,
-            score=output.scores[0][0],
-            timesteps=timesteps,
+            score=score,
         )
-
-
-if __name__ == "__main__":
-    import wave
-    import time
-    with wave.open(
-        "/home/rmarrugat/Escritorio/verbio/microservices/csr/20111024135504101-12125201610-2980_E_N-read.wav"
-    ) as f:
-        n = f.getnframes()
-        audio_bytes = f.readframes(n)
-    start = time.time()
-    runtime = OnnxRuntime(
-        OnnxSession(
-            "/home/rmarrugat/Escritorio/verbio/microservices/csr/asr4/asr4-en-us.onnx"
-        )
-    )
-    print("Init:", time.time() - start)
-    start = time.time()
-    result = runtime.run(audio_bytes)
-    print("Run:", time.time() - start)
-    print(result)

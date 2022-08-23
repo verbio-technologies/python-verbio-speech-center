@@ -1,5 +1,10 @@
 from asr4.recognizer_v1 import SERVICES_NAMES
 
+from asr4.recognizer_v1 import Session
+from asr4.recognizer_v1 import OnnxSession
+from asr4.recognizer_v1 import OnnxRuntime
+from asr4.recognizer_v1 import OnnxRuntimeResult
+
 from asr4.recognizer_v1 import RecognizeRequest
 from asr4.recognizer_v1 import RecognizeResponse
 from asr4.recognizer_v1 import RecognitionConfig
@@ -14,6 +19,10 @@ from asr4.recognizer_v1 import RecognizerService
 
 __all__ = (
     "SERVICES_NAMES",
+    "Session",
+    "OnnxSession",
+    "OnnxRuntime",
+    "OnnxRuntimeResult",
     "RecognizeRequest",
     "RecognizeResponse",
     "RecognitionConfig",

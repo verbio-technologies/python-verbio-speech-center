@@ -1,5 +1,10 @@
 from .types import SERVICES_NAMES
 
+from .runtime import Session
+from .runtime import OnnxSession
+from .runtime import OnnxRuntime
+from .runtime import OnnxRuntimeResult
+
 from .types import RecognizeRequest
 from .types import RecognizeResponse
 from .types import RecognitionConfig
@@ -15,6 +20,10 @@ from .service import RecognizerService
 
 __all__ = (
     "SERVICES_NAMES",
+    "Session",
+    "OnnxSession",
+    "OnnxRuntime",
+    "OnnxRuntimeResult",
     "RecognizeRequest",
     "RecognizeResponse",
     "RecognitionConfig",
