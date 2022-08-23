@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import pip
 from setuptools import find_packages, setup
 
 
@@ -24,7 +25,22 @@ def description():
     return description
 
 
+def installTorchCpuPreDependency():
+    # Installing PyTorch CPU this way is hacky and extremely ugly,
+    # but was the only way to do it with setuptools and before other
+    # dependencies which rely on PyTorch as well.
+    pip.main(
+        [
+            "install",
+            "torch",
+            "--extra-index-url",
+            "https://download.pytorch.org/whl/cpu",
+        ]
+    )
+
+
 if __name__ == "__main__":
+    installTorchCpuPreDependency()
     setup(
         name="asr4",
         version=version(),
@@ -61,6 +77,9 @@ if __name__ == "__main__":
             "logger >= 1.4",
             "protobuf >= 3.20.1",
             "typing_extensions >= 4.3.0",
+            "torch >= 1.12.0",
+            "onnxruntime >= 1.12.1",
+            "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23",
         ],
         packages=find_packages(
             exclude=[
