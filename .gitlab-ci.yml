@@ -58,9 +58,10 @@ python:test:all:
   stage: test
   image: docker.registry.verbio.com/python:3.10-slim
   before_script:
-    - pip install pytest==6.2.5
+    - pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     # Install dependencies without installing the package itself
     - python setup.py egg_info
+    - sed -i 's/@ /@/g' *.egg-info/requires.txt
     - pip install `grep -v '^\[' *.egg-info/requires.txt`
   script:
     - python --version
@@ -86,9 +87,10 @@ python:test:coverage:
   stage: test
   image: docker.registry.verbio.com/python:3.10-slim
   before_script:
-    - pip install pytest==6.2.5 pytest-cov==3.0.0
+    - pip install pytest==6.2.5 pytest-cov==3.0.0 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     # Install dependencies without installing the package itself
     - python setup.py egg_info
+    - sed -i 's/@ /@/g' *.egg-info/requires.txt
     - pip install `grep -v '^\[' *.egg-info/requires.txt`
   script:
     - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
