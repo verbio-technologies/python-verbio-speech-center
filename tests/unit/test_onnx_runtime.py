@@ -20,54 +20,53 @@ class MockOnnxSession(Session):
         **kwargs
     ) -> None:
         pass
-    
-    def run(self,
-        _output_names : Optional[List[str]],
-        input_feed : Dict[str, Any],
+
+    def run(
+        self,
+        _output_names: Optional[List[str]],
+        input_feed: Dict[str, Any],
         *,
-        _run_options : Optional[onnxruntime.RunOptions] = None
+        _run_options: Optional[onnxruntime.RunOptions] = None
     ) -> np.ndarray:
         batch = input_feed[self.get_inputs_names()[0]].shape[0]
         sequence = randint(1, 5000)
-        x = np.random.dirichlet(np.ones(32),size=(batch, sequence))
+        x = np.random.dirichlet(np.ones(32), size=(batch, sequence))
         x = x.astype(np.float32)
         return [x]
 
     def get_inputs_names(self) -> List[str]:
-        return ['input']
+        return ["input"]
 
 
 class TestOnnxRuntime(unittest.TestCase):
     def testEmptyInput(self):
         with self.assertRaises(ValueError):
-            runtime = OnnxRuntime(MockOnnxSession(''))
-            runtime.run(b'')
+            runtime = OnnxRuntime(MockOnnxSession(""))
+            runtime.run(b"")
 
     def testRandomInput(self):
-        runtime = OnnxRuntime(MockOnnxSession(''))
-        result = runtime.run(b'0000')
-        vocabulary = set(
-            runtime.DEFAULT_VOCABULARY[5:] +  # letters
-            [' ', '<', '>']
-        )
+        runtime = OnnxRuntime(MockOnnxSession(""))
+        result = runtime.run(b"0000")
+        vocabulary = set(runtime.DEFAULT_VOCABULARY[5:] + [" ", "<", ">"])  # letters
         self.assertEqual(set(result.sequence) - vocabulary, set())
         self.assertTrue(result.score <= 1.0 and result.score >= 0.0)
 
     def testPreProcess(self):
-        runtime = OnnxRuntime(MockOnnxSession(''))
-        tensor = runtime._preprocess(b'0123')
+        runtime = OnnxRuntime(MockOnnxSession(""))
+        tensor = runtime._preprocess(b"0123")
         self.assertTrue(isinstance(tensor, torch.Tensor))
-        self.assertTrue(tensor.shape[0], 1) # batch size
-        self.assertTrue(tensor.shape[1], 2) # n samples
+        self.assertTrue(tensor.shape[0], 1)  # batch size
+        self.assertTrue(tensor.shape[1], 2)  # n samples
 
     def testPostProcess(self):
         results = _DecodeResult(
-            label_sequences=[[['<s>', 'h', 'e', 'l', 'l', 'o', '<unk>', '<pad>', '</s>']]], 
-            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 
-            timesteps=[[[]]]
+            label_sequences=[
+                [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
+            ],
+            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            timesteps=[[[]]],
         )
-        runtime = OnnxRuntime(MockOnnxSession(''))
+        runtime = OnnxRuntime(MockOnnxSession(""))
         onnxResult = runtime._postprocess(results)
-        self.assertEqual(onnxResult.sequence, 'hello<unk>')
+        self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0)
-

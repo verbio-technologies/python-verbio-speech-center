@@ -31,12 +31,13 @@ class Session(abc.ABC):
         **kwargs
     ) -> None:
         raise NotImplementedError()
-    
-    def run(self,
-        _output_names : Optional[List[str]],
-        _input_feed : Dict[str, Any],
+
+    def run(
+        self,
+        _output_names: Optional[List[str]],
+        _input_feed: Dict[str, Any],
         *,
-        _run_options : Optional[onnxruntime.RunOptions] = None
+        _run_options: Optional[onnxruntime.RunOptions] = None
     ) -> List[np.ndarray]:
         raise NotImplementedError()
 
@@ -55,18 +56,19 @@ class OnnxSession(abc.ABC):
         **kwargs
     ) -> None:
         self._session = onnxruntime.InferenceSession(
-            path_or_bytes, 
-            sess_options=sess_options, 
-            providers=providers, 
-            provider_options=provider_options, 
+            path_or_bytes,
+            sess_options=sess_options,
+            providers=providers,
+            provider_options=provider_options,
             **kwargs
         )
-    
-    def run(self,
-        output_names : Optional[List[str]],
-        input_feed : Dict[str, Any],
+
+    def run(
+        self,
+        output_names: Optional[List[str]],
+        input_feed: Dict[str, Any],
         *,
-        run_options : Optional[onnxruntime.RunOptions] = None
+        run_options: Optional[onnxruntime.RunOptions] = None
     ) -> List[np.ndarray]:
         return self._session.run(output_names, input_feed, run_options)
 
@@ -111,14 +113,10 @@ class OnnxRuntime(Runtime):
     ]
 
     def __init__(
-        self, 
-        session: Session, 
-        vocabulary: List[str] = DEFAULT_VOCABULARY
+        self, session: Session, vocabulary: List[str] = DEFAULT_VOCABULARY
     ) -> None:
         if not session.get_inputs_names():
-            raise ValueError(
-                "Recognition Model inputs list cannot be empty!"
-            )
+            raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
         self._decoder = simple_ctc.BeamSearchDecoder(
@@ -132,9 +130,7 @@ class OnnxRuntime(Runtime):
 
     def run(self, input: bytes) -> OnnxRuntimeResult:
         if not input:
-            raise ValueError(
-                "Input audio cannot be empty!"
-            )
+            raise ValueError("Input audio cannot be empty!")
         x = self._preprocess(input)
         y = self._runOnnxruntimeSession(x)
         return self._postprocess(y)
@@ -154,12 +150,15 @@ class OnnxRuntime(Runtime):
         return self._decoder.decode(normalized_y)
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
-        sequence = "".join(output.label_sequences[0][0]) \
-            .replace("|", " ") \
-            .replace("<s>", "") \
-            .replace("</s>", "") \
-            .replace("<pad>", "").strip()
-        score = 1/np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+        sequence = (
+            "".join(output.label_sequences[0][0])
+            .replace("|", " ")
+            .replace("<s>", "")
+            .replace("</s>", "")
+            .replace("<pad>", "")
+            .strip()
+        )
+        score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
         return OnnxRuntimeResult(
             sequence=sequence,
             score=score,

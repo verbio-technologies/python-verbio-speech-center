@@ -29,7 +29,14 @@ def installTorchCpuPreDependency():
     # Installing PyTorch CPU this way is hacky and extremely ugly,
     # but was the only way to do it with setuptools and before other
     # dependencies which rely on PyTorch as well.
-    pip.main(['install', 'torch', '--extra-index-url', 'https://download.pytorch.org/whl/cpu'])
+    pip.main(
+        [
+            "install",
+            "torch",
+            "--extra-index-url",
+            "https://download.pytorch.org/whl/cpu",
+        ]
+    )
 
 
 if __name__ == "__main__":
