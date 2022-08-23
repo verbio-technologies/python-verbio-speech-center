@@ -58,9 +58,10 @@ python:test:all:
   stage: test
   image: docker.registry.verbio.com/python:3.10-slim
   before_script:
-    - apt-get update && apt-get install -y git
+    - apt-get update && apt-get install -y git cmake build-essential
     - pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     # Install dependencies without installing the package itself
+    - export MAKEFLAGS="-j$(nproc)"
     - python setup.py egg_info
     - sed -i 's/@ /@/g' *.egg-info/requires.txt
     - pip install `grep -v '^\[' *.egg-info/requires.txt`
@@ -88,9 +89,10 @@ python:test:coverage:
   stage: test
   image: docker.registry.verbio.com/python:3.10-slim
   before_script:
-    - apt-get update && apt-get install -y git
+    - apt-get update && apt-get install -y git cmake build-essential
     - pip install pytest==6.2.5 pytest-cov==3.0.0 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     # Install dependencies without installing the package itself
+    - export MAKEFLAGS="-j$(nproc)"
     - python setup.py egg_info
     - sed -i 's/@ /@/g' *.egg-info/requires.txt
     - pip install `grep -v '^\[' *.egg-info/requires.txt`
@@ -126,6 +128,8 @@ python:build:latest_bin:
   only:
     - tags
   script:
+    - apt-get update && apt-get install -y git cmake build-essential
+    - export MAKEFLAGS="-j$(nproc)"
     - python setup.py sdist bdist_wheel
     - mv dist/*.whl .
   artifacts:
