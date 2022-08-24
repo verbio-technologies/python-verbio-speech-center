@@ -4,20 +4,15 @@ from asr4.recognizer_v1.runtime.onnx import _DecodeResult
 
 import torch
 import numpy as np
-import onnxruntime
 from random import randint
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 class MockOnnxSession(Session):
     def __init__(
         self,
         _path_or_bytes: Union[str, bytes],
-        *,
-        _sess_options: Optional[onnxruntime.SessionOptions] = None,
-        _providers: Optional[Union[List[str], List[Tuple[str, Dict[str, Any]]]]] = None,
-        _provider_options: Optional[List[Dict[str, Any]]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         pass
 
@@ -25,8 +20,7 @@ class MockOnnxSession(Session):
         self,
         _output_names: Optional[List[str]],
         input_feed: Dict[str, Any],
-        *,
-        _run_options: Optional[onnxruntime.RunOptions] = None
+        **kwargs,
     ) -> np.ndarray:
         batch = input_feed[self.get_inputs_names()[0]].shape[0]
         sequence = randint(1, 5000)

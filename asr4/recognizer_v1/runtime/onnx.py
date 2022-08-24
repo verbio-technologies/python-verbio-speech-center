@@ -24,11 +24,7 @@ class Session(abc.ABC):
     def __init__(
         self,
         _path_or_bytes: Union[str, bytes],
-        *,
-        _sess_options: Optional[onnxruntime.SessionOptions] = None,
-        _providers: Optional[Union[List[str], List[Tuple[str, Dict[str, Any]]]]] = None,
-        _provider_options: Optional[List[Dict[str, Any]]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         raise NotImplementedError()
 
@@ -36,8 +32,7 @@ class Session(abc.ABC):
         self,
         _output_names: Optional[List[str]],
         _input_feed: Dict[str, Any],
-        *,
-        _run_options: Optional[onnxruntime.RunOptions] = None
+        **kwargs,
     ) -> List[np.ndarray]:
         raise NotImplementedError()
 
@@ -49,17 +44,13 @@ class OnnxSession(abc.ABC):
     def __init__(
         self,
         path_or_bytes: Union[str, bytes],
-        *,
-        sess_options: Optional[onnxruntime.SessionOptions] = None,
-        providers: Optional[Union[List[str], List[Tuple[str, Dict[str, Any]]]]] = None,
-        provider_options: Optional[List[Dict[str, Any]]] = None,
         **kwargs
     ) -> None:
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
-            sess_options=sess_options,
-            providers=providers,
-            provider_options=provider_options,
+            sess_options=kwargs.get('sess_options'),
+            providers=kwargs.get('providers'),
+            provider_options=kwargs.get('provider_options'),
             **kwargs
         )
 
@@ -67,10 +58,9 @@ class OnnxSession(abc.ABC):
         self,
         output_names: Optional[List[str]],
         input_feed: Dict[str, Any],
-        *,
-        run_options: Optional[onnxruntime.RunOptions] = None
+        **kwargs,
     ) -> List[np.ndarray]:
-        return self._session.run(output_names, input_feed, run_options)
+        return self._session.run(output_names, input_feed, kwargs.get('run_options'))
 
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]

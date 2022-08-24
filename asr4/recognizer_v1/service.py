@@ -2,6 +2,8 @@ import abc
 import grpc
 import logging
 
+from .runtime import OnnxRuntime, Session
+
 from .types import RecognizerServicer
 from .types import RecognizeRequest
 from .types import RecognitionConfig
@@ -29,6 +31,12 @@ class SourceSinkService(abc.ABC):
 
 
 class RecognizerService(RecognizerServicer, SourceSinkService):
+    def __init__(
+        self,
+        session: Session,
+    ) -> None:
+        self._runtime = OnnxRuntime(session)
+
     async def Recognize(
         self,
         request: RecognizeRequest,
@@ -45,6 +53,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         self.eventSource(request)
         response = self.eventHandle(request)
+        logging.info(f"Recognition result: '{response}'")
         return self.eventSink(response)
 
     def eventSource(
@@ -93,7 +102,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def eventHandle(self, request: RecognizeRequest) -> str:
         language = Language.parse(request.config.parameters.language)
         if language == Language.EN_US:
-            return "Hello, I am up and running. Received a message from you!"
+            return self._runtime.run(request.audio).sequence
         elif language == Language.ES_ES:
             return "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
         elif language == Language.PT_BR:
