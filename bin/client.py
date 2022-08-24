@@ -19,12 +19,7 @@ from asr4.recognizer import RecognitionResource
 
 _LOGGER = logging.getLogger(__name__)
 _PROCESS_COUNT = 8
-_LOG_LEVELS = {
-    1: logging.ERROR,
-    2: logging.WARNING,
-    3: logging.INFO,
-    4: logging.DEBUG
-}
+_LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
 CHANNEL_OPTIONS = [
     ("grpc.lb_policy_name", "pick_first"),
     ("grpc.enable_retries", 0),
@@ -80,44 +75,44 @@ def _runWorkerQuery(audio: bytes) -> bytes:
         ),
         audio=audio,
     )
-    _LOGGER.info("Running recognition. "
-    "If the length of the audio is one minute or more, the process may take several seconds to complete. ")
+    _LOGGER.info(
+        "Running recognition. "
+        "If the length of the audio is one minute or more, the process may take several seconds to complete. "
+    )
     try:
         return _workerStubSingleton.Recognize(request, timeout=30).SerializeToString()
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
-        return b''
+        return b""
 
 
 def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A Speech Recognition client.")
     parser.add_argument(
-        '-a',
-        '--audio-path',
+        "-a",
+        "--audio-path",
         required=True,
-        dest='audio',
-        help='Path to the audio file.',
+        dest="audio",
+        help="Path to the audio file.",
     )
     parser.add_argument(
-        '--host',
-        default='localhost:50051',
-        help='Hostname address of the ASR4 server.'
+        "--host", default="localhost:50051", help="Hostname address of the ASR4 server."
     )
     parser.add_argument(
-        '-j',
-        '--jobs',
+        "-j",
+        "--jobs",
         type=int,
-        dest='jobs',
+        dest="jobs",
         default=_PROCESS_COUNT,
-        help='Number of parallel workers; if not specified, defaults to CPU count.',
+        help="Number of parallel workers; if not specified, defaults to CPU count.",
     )
     _PROCESS_COUNT
     parser.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
+        "-v",
+        "--verbose",
+        action="count",
         default=3,
-        help='Give more output. Option is additive, and can be used up to 4 times.',
+        help="Give more output. Option is additive, and can be used up to 4 times.",
     )
     return parser.parse_args()
 

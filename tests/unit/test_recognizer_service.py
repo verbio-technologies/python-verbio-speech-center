@@ -13,9 +13,11 @@ from asr4.recognizer import Session, OnnxRuntime
 
 from typing import Any, Dict, List, Optional, Union
 
-DEFAULT_ENGLISH_MESSAGE : str = "hello i am up and running received a message from you"
-DEFAULT_SPANISH_MESSAGE : str = "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
-DEFAULT_PORTUGUESE_MESSAGE : str = "Olá, estou de pé, recebi uma mensagem sua!"
+DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
+DEFAULT_SPANISH_MESSAGE: str = (
+    "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
+)
+DEFAULT_PORTUGUESE_MESSAGE: str = "Olá, estou de pé, recebi uma mensagem sua!"
 
 
 class MockOnnxSession(Session):
@@ -32,28 +34,40 @@ class MockOnnxSession(Session):
         input_feed: Dict[str, Any],
         **kwargs,
     ) -> np.ndarray:
-        englishMessage = list(DEFAULT_ENGLISH_MESSAGE.replace(' ', '|'))
+        englishMessage = list(DEFAULT_ENGLISH_MESSAGE.replace(" ", "|"))
         return [self._generateDefaultMessageArray(englishMessage)]
 
     def _generateDefaultMessageArray(self, defaultMessage: List[str]) -> np.ndarray:
-        defaultMessageArray = np.full((1, len(defaultMessage), len(OnnxRuntime.DEFAULT_VOCABULARY)), -10.0, np.float32)
+        defaultMessageArray = np.full(
+            (1, len(defaultMessage), len(OnnxRuntime.DEFAULT_VOCABULARY)),
+            -10.0,
+            np.float32,
+        )
         for (i, letter) in enumerate(defaultMessage):
-            defaultMessageArray[0, i, OnnxRuntime.DEFAULT_VOCABULARY.index(letter)] = 10.0
-        return self._insertBlankBetweenRepeatedLetters(defaultMessage, defaultMessageArray)
+            defaultMessageArray[
+                0, i, OnnxRuntime.DEFAULT_VOCABULARY.index(letter)
+            ] = 10.0
+        return self._insertBlankBetweenRepeatedLetters(
+            defaultMessage, defaultMessageArray
+        )
 
-    def _insertBlankBetweenRepeatedLetters(self, defaultMessage: List[str], defaultMessageArray: np.ndarray) -> np.ndarray:
-        lastLetter, offset = '', 0
+    def _insertBlankBetweenRepeatedLetters(
+        self, defaultMessage: List[str], defaultMessageArray: np.ndarray
+    ) -> np.ndarray:
+        lastLetter, offset = "", 0
         blank_row = self._getBlankArray()
         for (i, letter) in enumerate(defaultMessage):
             if lastLetter == letter:
-                defaultMessageArray = np.insert(defaultMessageArray, i + offset, blank_row, axis=1)
+                defaultMessageArray = np.insert(
+                    defaultMessageArray, i + offset, blank_row, axis=1
+                )
                 offset += 1
             lastLetter = letter
         return defaultMessageArray
 
     def _getBlankArray(self) -> np.ndarray:
         blank_row = np.zeros(len(OnnxRuntime.DEFAULT_VOCABULARY), dtype=np.float32)
-        blank_row[OnnxRuntime.DEFAULT_VOCABULARY.index('<s>')] = 10.0
+        blank_row[OnnxRuntime.DEFAULT_VOCABULARY.index("<s>")] = 10.0
         return blank_row
 
     def get_inputs_names(self) -> List[str]:
@@ -230,7 +244,7 @@ class TestRecognizerService(unittest.TestCase):
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="en-US"),
             ),
-            audio=b"0000"
+            audio=b"0000",
         )
         self.assertEqual(
             service.eventHandle(request),
@@ -256,10 +270,7 @@ class TestRecognizerService(unittest.TestCase):
                 parameters=RecognitionParameters(language="pt-BR"),
             )
         )
-        self.assertEqual(
-            service.eventHandle(request),
-            DEFAULT_PORTUGUESE_MESSAGE
-        )
+        self.assertEqual(service.eventHandle(request), DEFAULT_PORTUGUESE_MESSAGE)
 
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockOnnxSession(""))

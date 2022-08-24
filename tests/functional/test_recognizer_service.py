@@ -15,9 +15,11 @@ from asr4.recognizer import add_RecognizerServicer_to_server
 
 from tests.unit.test_recognizer_service import MockOnnxSession
 
-DEFAULT_ENGLISH_MESSAGE : str = "hello i am up and running received a message from you"
-DEFAULT_SPANISH_MESSAGE : str = "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
-DEFAULT_PORTUGUESE_MESSAGE : str = "Olá, estou de pé, recebi uma mensagem sua!"
+DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
+DEFAULT_SPANISH_MESSAGE: str = (
+    "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
+)
+DEFAULT_PORTUGUESE_MESSAGE: str = "Olá, estou de pé, recebi uma mensagem sua!"
 
 
 def runServer(serverAddress: str, event: multiprocessing.Event):
@@ -93,7 +95,7 @@ class TestRecognizerService(unittest.TestCase):
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(
-            response.text, 
+            response.text,
             DEFAULT_PORTUGUESE_MESSAGE,
         )
 

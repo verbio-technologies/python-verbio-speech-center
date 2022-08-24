@@ -17,21 +17,23 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 
 _PROCESS_COUNT = multiprocessing.cpu_count()
 _LOGGER = logging.getLogger(__name__)
-_LOG_LEVELS = {
-    1: logging.ERROR,
-    2: logging.WARNING,
-    3: logging.INFO,
-    4: logging.DEBUG
-}
+_LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
 
 
 def serve(
     args: argparse.Namespace,
-    ) -> None:
+) -> None:
     _LOGGER.info("Binding to '%s'", args.bindAddress)
     workers = []
     for _ in range(args.jobs):
-        worker = multiprocessing.Process(target=_asyncRunServer, args=(args.bindAddress, args.model, args.jobs,))
+        worker = multiprocessing.Process(
+            target=_asyncRunServer,
+            args=(
+                args.bindAddress,
+                args.model,
+                args.jobs,
+            ),
+        )
         worker.start()
         workers.append(worker)
     for worker in workers:
@@ -77,9 +79,7 @@ def _addHealthCheckService(
 ) -> None:
     healthServicer = health.HealthServicer(
         experimental_non_blocking=True,
-        experimental_thread_pool=futures.ThreadPoolExecutor(
-            max_workers=jobs
-        ),
+        experimental_thread_pool=futures.ThreadPoolExecutor(max_workers=jobs),
     )
     _markAllServicesAsHealthy(healthServicer)
     add_HealthServicer_to_server(healthServicer, server)
@@ -91,35 +91,35 @@ def _markAllServicesAsHealthy(healthServicer: health.HealthServicer) -> None:
 
 
 def _parseArguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='Python ASR4 Server')
+    parser = argparse.ArgumentParser(description="Python ASR4 Server")
     parser.add_argument(
-        '-m',
-        '--model-path',
+        "-m",
+        "--model-path",
         required=True,
-        dest='model',
-        help='Path to the model file.',
+        dest="model",
+        help="Path to the model file.",
     )
     parser.add_argument(
-        '--host',
-        dest='bindAddress',
-        default='[::]:50051',
-        help='Hostname address to bind the server to.',
+        "--host",
+        dest="bindAddress",
+        default="[::]:50051",
+        help="Hostname address to bind the server to.",
     )
     parser.add_argument(
-        '-j',
-        '--jobs',
+        "-j",
+        "--jobs",
         type=int,
-        dest='jobs',
+        dest="jobs",
         default=_PROCESS_COUNT,
-        help='Number of parallel workers; if not specified, defaults to CPU count.',
+        help="Number of parallel workers; if not specified, defaults to CPU count.",
     )
     _PROCESS_COUNT
     parser.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
+        "-v",
+        "--verbose",
+        action="count",
         default=3,
-        help='Give more output. Option is additive, and can be used up to 4 times.',
+        help="Give more output. Option is additive, and can be used up to 4 times.",
     )
     return parser.parse_args()
 

@@ -41,17 +41,13 @@ class Session(abc.ABC):
 
 
 class OnnxSession(abc.ABC):
-    def __init__(
-        self,
-        path_or_bytes: Union[str, bytes],
-        **kwargs
-    ) -> None:
+    def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
-            sess_options=kwargs.get('sess_options'),
-            providers=kwargs.get('providers'),
-            provider_options=kwargs.get('provider_options'),
-            **kwargs
+            sess_options=kwargs.get("sess_options"),
+            providers=kwargs.get("providers"),
+            provider_options=kwargs.get("provider_options"),
+            **kwargs,
         )
 
     def run(
@@ -60,7 +56,7 @@ class OnnxSession(abc.ABC):
         input_feed: Dict[str, Any],
         **kwargs,
     ) -> List[np.ndarray]:
-        return self._session.run(output_names, input_feed, kwargs.get('run_options'))
+        return self._session.run(output_names, input_feed, kwargs.get("run_options"))
 
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]
