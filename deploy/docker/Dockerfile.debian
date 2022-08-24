@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y locales wget
 COPY init.sh /init.sh
 COPY server.py /server.py
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
+COPY asr4-en-us-$VERSION.onnx /asr4-en-us.onnx
 
 RUN pip install asr4-$VERSION-py3-none-any.whl
 
