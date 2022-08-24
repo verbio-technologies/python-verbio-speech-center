@@ -15,6 +15,7 @@ stages:
 variables:
   RUSTC_WRAPPER: sccache
   RUST_BACKTRACE: "FULL"
+  MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
@@ -151,6 +152,7 @@ testing:docker:
     - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
+    - cp ${MODELS_PATH}/asr4-en-us-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
     - cp bin/server.py deploy/docker/
     - cd deploy/docker/
     - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} -t "${IMAGE_NAME}"

@@ -43,10 +43,6 @@ job "asr4-staging" {
         max_file_size = 10
       }
 
-      resources {
-        memory = 250
-      }
-
       service {
         name = "asr4-staging-service"
         port = "grpc-port"
