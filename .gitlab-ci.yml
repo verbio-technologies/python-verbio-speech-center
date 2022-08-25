@@ -143,7 +143,7 @@ python:build:latest_bin:
 
 testing:docker:
   stage: docker
-  image: docker:stable
+  image: docker:20.10.15
   only:
     - tags
   dependencies:
@@ -184,7 +184,7 @@ testing:deploy:
 
 testing:promote:
   stage: testing-promote
-  image: docker:stable
+  image: docker:20.10.15
   only:
     - tags
   script:
@@ -204,7 +204,7 @@ staging:test_images:functional:
 
 staging:promote:
   stage: staging-promote
-  image: docker:stable
+  image: docker:20.10.15
   only:
     - tags
   script:
@@ -225,7 +225,7 @@ release:deploy:
 
 
 cleanup:
-  image: docker:stable
+  image: docker:20.10.15
   stage: cleanup
   only:
     - tags
