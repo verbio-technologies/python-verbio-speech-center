@@ -80,7 +80,7 @@ def _runWorkerQuery(audio: bytes) -> bytes:
         "If the length of the audio is one minute or more, the process may take several seconds to complete. "
     )
     try:
-        return _workerStubSingleton.Recognize(request, timeout=30).SerializeToString()
+        return _workerStubSingleton.Recognize(request, timeout=60).SerializeToString()
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""

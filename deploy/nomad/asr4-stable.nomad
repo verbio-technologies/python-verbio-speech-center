@@ -42,6 +42,10 @@ job "asr4-stable" {
         max_file_size = 10
       }
 
+      resources {
+        memory = 5000
+      }
+
       service {
         name = "asr4-stable-service"
         port = "grpc-port"
