@@ -80,6 +80,7 @@ if __name__ == "__main__":
             "torch >= 1.12.0",
             "onnxruntime >= 1.12.1",
             "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23",
+            "pyformatter",
         ],
         packages=find_packages(
             exclude=[

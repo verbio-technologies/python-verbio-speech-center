@@ -15,7 +15,10 @@ from typing import Any, Dict, List, Optional, Union
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 DEFAULT_SPANISH_MESSAGE: str = (
-    "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
+    "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
+)
+FORMATTED_SPANISH_MESSAGE: str = (
+    "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
 )
 DEFAULT_PORTUGUESE_MESSAGE: str = "Olá, estou de pé, recebi uma mensagem sua!"
 
@@ -114,7 +117,6 @@ class TestRecognizerService(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
-
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -276,3 +278,20 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
         self.assertEqual(service.eventSink(response), RecognizeResponse(text=response))
+
+    def testRecognizeFormatter(self):
+        service = RecognizerService(
+            MockOnnxSession(""),
+            "/opt/verbio/data/Asr/verbio8k.es-es/formatter/es-es.fm",
+            "es-es",
+        )
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(language="es-ES"),
+            ),
+            audio=b"SOMETHING",
+        )
+        self.assertEqual(
+            service.eventHandle(request),
+            FORMATTED_SPANISH_MESSAGE,
+        )
