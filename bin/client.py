@@ -106,7 +106,6 @@ def _parseArguments() -> argparse.Namespace:
         default=_PROCESS_COUNT,
         help="Number of parallel workers; if not specified, defaults to CPU count.",
     )
-    _PROCESS_COUNT
     parser.add_argument(
         "-v",
         "--verbose",

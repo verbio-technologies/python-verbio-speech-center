@@ -17,7 +17,7 @@ from tests.unit.test_recognizer_service import MockOnnxSession
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 DEFAULT_SPANISH_MESSAGE: str = (
-    "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
+    "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
 )
 DEFAULT_PORTUGUESE_MESSAGE: str = "Olá, estou de pé, recebi uma mensagem sua!"
 

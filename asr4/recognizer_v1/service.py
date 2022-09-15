@@ -1,6 +1,7 @@
 import abc
 import grpc
 import logging
+import pyformatter
 
 from .runtime import OnnxRuntime, Session
 
@@ -34,8 +35,12 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def __init__(
         self,
         session: Session,
+        formatterPath: str = None,
+        language: str = "en-us",
     ) -> None:
+        self._language = language
         self._runtime = OnnxRuntime(session)
+        self._createFormatter(formatterPath)
 
     async def Recognize(
         self,
@@ -99,14 +104,34 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
+    def _createFormatter(
+        self,
+        path: str,
+    ):
+        if path == None:
+            self._formatter = None
+        else:
+            self._formatter = pyformatter.PyFormatter(
+                self._language, path, b"", b"", dict()
+            )
+
     def eventHandle(self, request: RecognizeRequest) -> str:
+        return self.formatWords(self.runASR(request))
+
+    def runASR(self, request: RecognizeRequest) -> str:
         language = Language.parse(request.config.parameters.language)
         if language == Language.EN_US:
             return self._runtime.run(request.audio).sequence
         elif language == Language.ES_ES:
-            return "Hola, estoy levantado y en marcha. ¡He recibido un mensaje tuyo!"
+            return "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
         elif language == Language.PT_BR:
             return "Olá, estou de pé, recebi uma mensagem sua!"
+
+    def formatWords(self, words) -> str:
+        if self._formatter:
+            return " ".join(self._formatter.classify(words.split(" ")))
+        else:
+            return words
 
     def eventSink(self, response: str) -> RecognizeResponse:
         result = {"text": response}

@@ -30,7 +30,9 @@ def serve(
             target=_asyncRunServer,
             args=(
                 args.bindAddress,
+                algs.lang,
                 args.model,
+                args.formatter,
                 args.jobs,
             ),
         )
@@ -42,22 +44,27 @@ def serve(
 
 def _asyncRunServer(
     bindAddress: str,
+    language,
+    str,
     model: str,
+    formatter: str,
     jobs: int,
 ) -> None:
-    asyncio.run(_runServer(bindAddress, model, jobs))
+    asyncio.run(_runServer(bindAddress, language, model, formatter, jobs))
 
 
 async def _runServer(
     bindAddress: str,
+    language: str,
     model: str,
+    formatterPath: str,
     jobs: int,
 ) -> None:
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=jobs),
         options=(("grpc.so_reuseport", 1),),
     )
-    _addRecognizerService(server, model)
+    _addRecognizerService(server, language, model, formatterPath)
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
     _LOGGER.info(f"Server listening on {bindAddress}")
@@ -67,10 +74,14 @@ async def _runServer(
 
 def _addRecognizerService(
     server: grpc.aio.Server,
+    language: str,
     model: str,
+    formatterPath: str,
 ) -> None:
     session = OnnxSession(model)
-    add_RecognizerServicer_to_server(RecognizerService(session), server)
+    add_RecognizerServicer_to_server(
+        RecognizerService(session, formatterPath, language), server
+    )
 
 
 def _addHealthCheckService(
@@ -93,11 +104,25 @@ def _markAllServicesAsHealthy(healthServicer: health.HealthServicer) -> None:
 def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Python ASR4 Server")
     parser.add_argument(
+        "-l",
+        "--lang",
+        required=True,
+        dest="lang",
+        help="Language of the formatter model",
+    )
+    parser.add_argument(
         "-m",
         "--model-path",
         required=True,
         dest="model",
         help="Path to the model file.",
+    )
+    parser.add_argument(
+        "-f",
+        "--formatter-model-path",
+        required=False,
+        dest="formatter",
+        help="Path to the formatter model file.",
     )
     parser.add_argument(
         "--host",
@@ -113,7 +138,6 @@ def _parseArguments() -> argparse.Namespace:
         default=_PROCESS_COUNT,
         help="Number of parallel workers; if not specified, defaults to CPU count.",
     )
-    _PROCESS_COUNT
     parser.add_argument(
         "-v",
         "--verbose",

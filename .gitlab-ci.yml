@@ -11,6 +11,7 @@ stages:
   - release
   - cleanup
 
+image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
 
 variables:
   RUSTC_WRAPPER: sccache
@@ -21,10 +22,10 @@ variables:
   DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
   DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
 
-image: docker.registry.verbio.com/rust/centos:stable
 
 rust:lint:stable:
   stage: lint
+  image: docker.registry.verbio.com/rust/centos:stable
   script:
     - cargo --version
     - rustc --version
@@ -33,6 +34,7 @@ rust:lint:stable:
 
 rust:lint:nightly:
   stage: lint
+  image: docker.registry.verbio.com/rust/centos:stable
   allow_failure: true
   script:
     - cargo +nightly --version
@@ -41,7 +43,6 @@ rust:lint:nightly:
 
 python:lint:
   stage: lint
-  image: docker.registry.verbio.com/python:3.10-slim
   before_script:
     - pip install flake8==3.9.2 black==22.6.0
   script:
@@ -51,22 +52,22 @@ python:lint:
 
 rust:test:all:
   stage: test
+  image: docker.registry.verbio.com/rust/centos:stable
   script:
     - cargo --version
     - cargo test --all
 
 python:test:all:
   stage: test
-  image: docker.registry.verbio.com/python:3.10-slim
   before_script:
-    - apt-get update && apt-get install -y git cmake
-    - apt-get install -y build-essential
     - pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install -r requirements.txt
     # Install dependencies without installing the package itself
     - export MAKEFLAGS="-j4"
     - python setup.py egg_info
     - sed -i 's/@ /@/g' *.egg-info/requires.txt
     - pip install `grep -v '^\[' *.egg-info/requires.txt`
+    - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
     - pytest --junit-xml=report.xml --verbose
@@ -89,16 +90,15 @@ rust:test:coverage:
 
 python:test:coverage:
   stage: test
-  image: docker.registry.verbio.com/python:3.10-slim
   before_script:
-    - apt-get update && apt-get install -y git cmake
-    - apt-get install -y build-essential
     - pip install pytest==6.2.5 pytest-cov==3.0.0 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install -r requirements.txt
     # Install dependencies without installing the package itself
     - export MAKEFLAGS="-j4"
     - python setup.py egg_info
     - sed -i 's/@ /@/g' *.egg-info/requires.txt
     - pip install `grep -v '^\[' *.egg-info/requires.txt`
+    - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
@@ -127,12 +127,9 @@ rust:build:latest_bin:
 
 python:build:latest_bin:
   stage: build
-  image: docker.registry.verbio.com/python:3.10-slim
   only:
     - tags
   script:
-    - apt-get update && apt-get install -y git cmake
-    - apt-get install -y build-essential
     - export MAKEFLAGS="-j4"
     - python setup.py sdist bdist_wheel
     - mv dist/*.whl .
