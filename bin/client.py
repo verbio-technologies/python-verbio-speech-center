@@ -6,6 +6,7 @@ import resampy
 import logging
 import argparse
 import multiprocessing
+import numpy as np
 
 from typing import List
 
@@ -45,9 +46,11 @@ def _getAudio(audio_file: str) -> bytes:
     with wave.open(audio_file) as f:
         n = f.getnframes()
         audio = f.readframes(n)
-        if f.getframerate() != 16000:
-            audio = resampy.resample(audio, f.getframerate(), 16000)
-    return audio
+        sample_rate = f.getframerate()
+    audio = np.frombuffer(audio, dtype=np.int16)
+    y = resampy.resample(audio, sample_rate, 16000)
+    audio = y.astype(audio.dtype)
+    return audio.tobytes()
 
 
 def _initializeWorker(serverAddress: str):
