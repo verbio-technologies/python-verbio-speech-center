@@ -2,8 +2,8 @@ FROM docker.registry.verbio.com/python:3.10-slim
 
 ARG VERSION=0.0.1
 
-RUN apt-get update && apt-get install -y git
-RUN apt-get install -y build-essential
+RUN apt-get update && apt-get install -y git build-essential
+RUN apt-get install -y verbio-verbio8k-en-us-am verbio-verbio8k-es-es-am verbio-verbio8k-pt-br-am
 
 COPY init.sh /init.sh
 COPY server.py /server.py
@@ -11,6 +11,7 @@ COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-en-us-$VERSION.onnx /asr4-en-us.onnx
 
 RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+RUN pip install -r requirements.txt
 ENV MAKEFLAGS="-j4"
 RUN pip install asr4-$VERSION-py3-none-any.whl
 
