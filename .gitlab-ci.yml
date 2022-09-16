@@ -131,6 +131,7 @@ python:build:latest_bin:
     - tags
   script:
     - export MAKEFLAGS="-j4"
+    - pip install wheel
     - python setup.py sdist bdist_wheel
     - mv dist/*.whl .
   artifacts:
