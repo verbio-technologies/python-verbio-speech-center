@@ -2,8 +2,11 @@ FROM docker.registry.verbio.com/python:3.10-slim
 
 ARG VERSION=0.0.1
 
-RUN apt-get update && apt-get install -y git build-essential
-RUN apt-get install -y verbio-verbio8k-en-us-am verbio-verbio8k-es-es-am verbio-verbio8k-pt-br-am
+RUN apt-get update && apt-get install -y git build-essential wget apt-transport-https gnupg sudo
+RUN wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | sudo apt-key add - && \
+    echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | sudo tee /etc/apt/sources.list.d/verbio-internal.list && \
+    echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie staging' | sudo tee /etc/apt/sources.list.d/verbio-internal.list
+RUN apt-get update && apt-get install -y verbio-verbio8k-en-us-am verbio-verbio8k-es-es-am verbio-verbio8k-pt-br-am
 
 COPY init.sh /init.sh
 COPY server.py /server.py
