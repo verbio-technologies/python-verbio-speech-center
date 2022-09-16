@@ -30,7 +30,7 @@ def serve(
             target=_asyncRunServer,
             args=(
                 args.bindAddress,
-                algs.lang,
+                args.lang,
                 args.model,
                 args.formatter,
                 args.jobs,
@@ -44,8 +44,7 @@ def serve(
 
 def _asyncRunServer(
     bindAddress: str,
-    language,
-    str,
+    language: str,
     model: str,
     formatter: str,
     jobs: int,
