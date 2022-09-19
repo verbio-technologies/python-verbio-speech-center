@@ -14,9 +14,9 @@ COPY server.py /server.py
 COPY requirements.txt /requirements.txt
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-en-us-$VERSION.onnx /asr4-en-us.onnx
-COPY deploy/docker/format-model.en-us-1.0.1.fm /
-COPY deploy/docker/format-model.es-es-1.1.0.fm /
-COPY deploy/docker/format-model.pt-br-1.1.0.fm /
+COPY format-model.en-us-1.0.1.fm /format-model.en-us-1.0.1.fm
+COPY format-model.es-es-1.1.0.fm /format-model.es-es-1.1.0.fm
+COPY format-model.pt-br-1.1.0.fm /format-model.pt-br-1.1.0.fm
 
 
 RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu

@@ -151,10 +151,10 @@ testing:docker:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-en-us-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
+    - cp ${MODELS_PATH}/formatter/format-model.* deploy/docker/
     - cp bin/server.py deploy/docker/
     - cp requirements.txt deploy/docker/
     - cd deploy/docker/
-    - cp /mnt/shared/squad2/projects/asr4models/formatter/format-model.* .
     - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
