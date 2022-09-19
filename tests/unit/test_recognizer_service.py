@@ -282,7 +282,7 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeFormatter(self):
         service = RecognizerService(
             MockOnnxSession(""),
-            "/opt/verbio/data/Asr/verbio8k.es-es/formatter/es-es.fm",
+            "/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
             "es-es",
         )
         request = RecognizeRequest(

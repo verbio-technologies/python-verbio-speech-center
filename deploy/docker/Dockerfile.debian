@@ -6,13 +6,18 @@ RUN apt-get update && apt-get install -y git build-essential wget apt-transport-
 RUN wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | sudo apt-key add - && \
     echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | sudo tee /etc/apt/sources.list.d/verbio-internal.list && \
     echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie staging' | sudo tee /etc/apt/sources.list.d/verbio-internal.list
-RUN apt-get update && apt-get install -y verbio-verbio8k-en-us-am verbio-verbio8k-es-es-am verbio-verbio8k-pt-br-am
+RUN apt-get update && apt-get install -y git build-essential
+
 
 COPY init.sh /init.sh
 COPY server.py /server.py
 COPY requirements.txt /requirements.txt
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-en-us-$VERSION.onnx /asr4-en-us.onnx
+COPY /mnt/shared/squad2/projects/asr4models/formatter/format-model.en-us-1.0.1.fm /
+COPY /mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm /
+COPY /mnt/shared/squad2/projects/asr4models/formatter/format-model.pt-br-1.1.0.fm /
+
 
 RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 RUN pip install -r requirements.txt
