@@ -10,6 +10,7 @@ import numpy as np
 
 from typing import List
 
+from asr4.recognizer import Language
 from asr4.recognizer import RecognizerStub
 from asr4.recognizer import RecognizeRequest
 from asr4.recognizer import RecognizeResponse
@@ -38,7 +39,15 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
         initializer=_initializeWorker,
         initargs=(args.host,),
     )
-    responses = [workerPool.apply(_runWorkerQuery, (audio,))]
+    responses = [
+        workerPool.apply(
+            _runWorkerQuery,
+            (
+                audio,
+                args.language,
+            ),
+        )
+    ]
     return list(map(RecognizeResponse.FromString, responses))
 
 
@@ -70,10 +79,12 @@ def _shutdownWorker():
         _workerStubSingleton.stop()
 
 
-def _runWorkerQuery(audio: bytes) -> bytes:
+def _runWorkerQuery(audio: bytes, language: Language) -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
-            parameters=RecognitionParameters(language="en-US", sample_rate_hz=16000),
+            parameters=RecognitionParameters(
+                language=language.value, sample_rate_hz=16000
+            ),
             resource=RecognitionResource(topic="GENERIC"),
         ),
         audio=audio,
@@ -83,7 +94,9 @@ def _runWorkerQuery(audio: bytes) -> bytes:
         "If the length of the audio is one minute or more, the process may take several seconds to complete. "
     )
     try:
-        return _workerStubSingleton.Recognize(request, timeout=60).SerializeToString()
+        return _workerStubSingleton.Recognize(
+            request, metadata=(("accept-language", language.value),), timeout=60
+        ).SerializeToString()
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
@@ -97,6 +110,14 @@ def _parseArguments() -> argparse.Namespace:
         required=True,
         dest="audio",
         help="Path to the audio file.",
+    )
+    parser.add_argument(
+        "-l",
+        "--language",
+        dest="language",
+        default=Language.EN_US.value,
+        choices=[l.value for l in Language],
+        help="Language of the recognizer service.",
     )
     parser.add_argument(
         "--host", default="localhost:50051", help="Hostname address of the ASR4 server."

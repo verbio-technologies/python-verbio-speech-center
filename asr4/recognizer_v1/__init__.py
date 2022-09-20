@@ -15,6 +15,8 @@ from .types import RecognizerStub
 from .types import RecognizerServicer
 from .types import add_RecognizerServicer_to_server
 
+from .types import Language
+
 from .service import RecognizerService
 
 
@@ -32,5 +34,6 @@ __all__ = (
     "RecognizerStub",
     "RecognizerServicer",
     "add_RecognizerServicer_to_server",
+    "Language",
     "RecognizerService",
 )

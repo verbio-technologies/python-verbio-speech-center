@@ -5,6 +5,9 @@ import argparse
 import multiprocessing
 from concurrent import futures
 
+from typing import Optional
+
+from asr4.recognizer import Language
 from asr4.recognizer import SERVICES_NAMES
 from asr4.recognizer import OnnxSession
 from asr4.recognizer import RecognizerService
@@ -30,8 +33,9 @@ def serve(
             target=_asyncRunServer,
             args=(
                 args.bindAddress,
-                args.lang,
                 args.model,
+                Language.parse(args.language),
+                args.vocabulary,
                 args.formatter,
                 args.jobs,
             ),
@@ -44,26 +48,28 @@ def serve(
 
 def _asyncRunServer(
     bindAddress: str,
-    language: str,
     model: str,
-    formatter: str,
+    language: Language,
+    vocabulary: Optional[str],
+    formatter: Optional[str],
     jobs: int,
 ) -> None:
-    asyncio.run(_runServer(bindAddress, language, model, formatter, jobs))
+    asyncio.run(_runServer(bindAddress, model, language, vocabulary, formatter, jobs))
 
 
 async def _runServer(
     bindAddress: str,
-    language: str,
     model: str,
-    formatterPath: str,
+    language: Language,
+    vocabularyPath: Optional[str],
+    formatterPath: Optional[str],
     jobs: int,
 ) -> None:
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=jobs),
         options=(("grpc.so_reuseport", 1),),
     )
-    _addRecognizerService(server, language, model, formatterPath)
+    _addRecognizerService(server, model, language, vocabularyPath, formatterPath)
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
     _LOGGER.info(f"Server listening on {bindAddress}")
@@ -73,13 +79,14 @@ async def _runServer(
 
 def _addRecognizerService(
     server: grpc.aio.Server,
-    language: str,
     model: str,
-    formatterPath: str,
+    language: Language,
+    vocabularyPath: Optional[str],
+    formatterPath: Optional[str],
 ) -> None:
     session = OnnxSession(model)
     add_RecognizerServicer_to_server(
-        RecognizerService(session, formatterPath, language), server
+        RecognizerService(session, language, vocabularyPath, formatterPath), server
     )
 
 
@@ -103,13 +110,6 @@ def _markAllServicesAsHealthy(healthServicer: health.HealthServicer) -> None:
 def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Python ASR4 Server")
     parser.add_argument(
-        "-l",
-        "--lang",
-        required=True,
-        dest="lang",
-        help="Language of the formatter model",
-    )
-    parser.add_argument(
         "-m",
         "--model-path",
         required=True,
@@ -117,9 +117,22 @@ def _parseArguments() -> argparse.Namespace:
         help="Path to the model file.",
     )
     parser.add_argument(
+        "-d",
+        "--dictionary-path",
+        dest="vocabulary",
+        help="Path to the model's dictionary file, containing all the possible outputs from the model.",
+    )
+    parser.add_argument(
+        "-l",
+        "--language",
+        dest="language",
+        default=Language.EN_US.value,
+        choices=[l.value for l in Language],
+        help="Language of the recognizer service.",
+    )
+    parser.add_argument(
         "-f",
         "--formatter-model-path",
-        required=False,
         dest="formatter",
         help="Path to the formatter model file.",
     )
@@ -154,4 +167,6 @@ if __name__ == "__main__":
         format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    if not Language.check(args.language):
+        raise ValueError(f"Invalid language '{args.language}'")
     serve(args)
