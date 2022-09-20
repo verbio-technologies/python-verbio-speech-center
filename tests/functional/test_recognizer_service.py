@@ -68,9 +68,7 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeRequestEsEs(self):
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(
-                    language="es-ES", sample_rate_hz=16000
-                ),
+                parameters=RecognitionParameters(language="es", sample_rate_hz=16000),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",

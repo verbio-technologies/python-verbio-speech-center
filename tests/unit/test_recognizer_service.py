@@ -257,7 +257,7 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es-ES"),
+                parameters=RecognitionParameters(language="es"),
             )
         )
         self.assertEqual(
@@ -282,12 +282,12 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeFormatter(self):
         service = RecognizerService(
             MockOnnxSession(""),
-            "/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
-            "es-es",
+            "es",
+            formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es-ES"),
+                parameters=RecognitionParameters(language="es"),
             ),
             audio=b"SOMETHING",
         )

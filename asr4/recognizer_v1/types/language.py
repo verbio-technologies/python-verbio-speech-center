@@ -6,7 +6,7 @@ from typing_extensions import Self
 @unique
 class Language(Enum):
     EN_US = "en-US"
-    ES_ES = "es-ES"
+    ES = "es"
     PT_BR = "pt-BR"
 
     @classmethod
@@ -19,3 +19,6 @@ class Language(Enum):
     @classmethod
     def check(cls, language: str) -> bool:
         return cls.parse(language) is not None
+
+    def asFormatter(self) -> str:
+        return self.value.lower()
