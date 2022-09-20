@@ -16,10 +16,6 @@ from asr4.recognizer import add_RecognizerServicer_to_server
 from tests.unit.test_recognizer_service import MockOnnxSession
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
-DEFAULT_SPANISH_MESSAGE: str = (
-    "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
-)
-DEFAULT_PORTUGUESE_MESSAGE: str = "Olá, estou de pé, recebi uma mensagem sua!"
 
 
 def runServer(serverAddress: str, event: multiprocessing.Event):
@@ -65,7 +61,7 @@ class TestRecognizerService(unittest.TestCase):
             DEFAULT_ENGLISH_MESSAGE,
         )
 
-    def testRecognizeRequestEsEs(self):
+    def testRecognizeRequestEs(self):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="es", sample_rate_hz=16000),
@@ -74,11 +70,8 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).Recognize(request, timeout=10)
-        self.assertEqual(
-            response.text,
-            DEFAULT_SPANISH_MESSAGE,
-        )
+        with self.assertRaises(ValueError):
+            RecognizerStub(channel).Recognize(request, timeout=10)
 
     def testRecognizeRequestPtBr(self):
         request = RecognizeRequest(
@@ -91,11 +84,8 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).Recognize(request, timeout=10)
-        self.assertEqual(
-            response.text,
-            DEFAULT_PORTUGUESE_MESSAGE,
-        )
+        with self.assertRaises(ValueError):
+            RecognizerStub(channel).Recognize(request, timeout=10)
 
     @classmethod
     def tearDownClass(cls):

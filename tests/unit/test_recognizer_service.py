@@ -9,7 +9,7 @@ from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
-from asr4.recognizer import Session, OnnxRuntime
+from asr4.recognizer import Session, OnnxRuntime, Language
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -238,7 +238,8 @@ class TestRecognizerService(unittest.TestCase):
                 parameters=RecognitionParameters(),
             )
         )
-        self.assertFalse(service.eventHandle(request))
+        with self.assertRaises(ValueError):
+            service.eventHandle(request)
 
     def testRecognizeRequestHandleEnUs(self):
         service = RecognizerService(MockOnnxSession(""))
@@ -282,7 +283,7 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeFormatter(self):
         service = RecognizerService(
             MockOnnxSession(""),
-            "es",
+            Language.ES,
             formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
         )
         request = RecognizeRequest(
