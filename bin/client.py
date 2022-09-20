@@ -44,7 +44,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             _runWorkerQuery,
             (
                 audio,
-                args.language,
+                Language.parse(args.language),
             ),
         )
     ]
@@ -148,5 +148,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
+    if not Language.check(args.language):
+        raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
     _LOGGER.info(f"Returned responses: {responses}")

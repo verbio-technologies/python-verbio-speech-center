@@ -142,23 +142,20 @@ python:build:latest_bin:
 testing:docker:
   stage: docker
   image: docker:20.10.15
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   dependencies:
     - python:build:latest_bin     
   script:
-    - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
-    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
-    - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
+    - cp ${MODELS_PATH}/asr4-en-us-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
+    - cp ${MODELS_PATH}/formatter/format-model.* deploy/docker/
     - cp bin/server.py deploy/docker/
     - cp requirements.txt deploy/docker/
     - cd deploy/docker/
-    - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
+    - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
 
@@ -188,14 +185,11 @@ testing:deploy:
 testing:promote:
   stage: testing-promote
   image: docker:20.10.15
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
-    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
@@ -211,14 +205,11 @@ staging:test_images:functional:
 staging:promote:
   stage: staging-promote
   image: docker:20.10.15
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
-    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
@@ -234,14 +225,11 @@ release:deploy:
 
 
 cleanup:
-  stage: cleanup
   image: docker:20.10.15
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
+  stage: cleanup
   only:
     - tags
   script:
-    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
