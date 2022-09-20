@@ -70,7 +70,7 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(grpc._channel._InactiveRpcError):
             RecognizerStub(channel).Recognize(request, timeout=10)
 
     def testRecognizeRequestPtBr(self):
@@ -84,7 +84,7 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(grpc._channel._InactiveRpcError):
             RecognizerStub(channel).Recognize(request, timeout=10)
 
     @classmethod
