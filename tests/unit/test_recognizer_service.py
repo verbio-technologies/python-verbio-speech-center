@@ -1,6 +1,7 @@
 import unittest
 import random
 import string
+import tempfile
 import numpy as np
 
 from asr4.recognizer import RecognizerService
@@ -82,6 +83,17 @@ class MockOnnxSession(Session):
 
 
 class TestRecognizerService(unittest.TestCase):
+    def testVocabulary(self):
+        labels = ['|', '<s>', '</s>', '<pad>']
+        with self.assertRaises(FileNotFoundError):
+            RecognizerService(MockOnnxSession(""), vocabularyPath='')
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+            vocabularyPath = f.name
+            for l in labels:
+                f.write(f'{l}\n')
+        service = RecognizerService(MockOnnxSession(""), vocabularyPath=vocabularyPath)
+        self.assertEqual(service._runtime._decoder.labels, labels)
+
     def testInvalidAudio(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
