@@ -84,13 +84,13 @@ class MockOnnxSession(Session):
 
 class TestRecognizerService(unittest.TestCase):
     def testVocabulary(self):
-        labels = ['|', '<s>', '</s>', '<pad>']
+        labels = ["|", "<s>", "</s>", "<pad>"]
         with self.assertRaises(FileNotFoundError):
-            RecognizerService(MockOnnxSession(""), vocabularyPath='')
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+            RecognizerService(MockOnnxSession(""), vocabularyPath="")
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             vocabularyPath = f.name
             for l in labels:
-                f.write(f'{l}\n')
+                f.write(f"{l}\n")
         service = RecognizerService(MockOnnxSession(""), vocabularyPath=vocabularyPath)
         self.assertEqual(service._runtime._decoder.labels, labels)
 
