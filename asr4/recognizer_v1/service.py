@@ -14,6 +14,7 @@ from .types import RecognizeResponse
 from .types import Language
 from .types import SampleRate
 
+from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
 
@@ -35,12 +36,42 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def __init__(
         self,
         session: Session,
-        formatterPath: str = None,
-        language: str = "en-us",
+        language: Language = Language.EN_US,
+        vocabularyPath: Optional[str] = None,
+        formatterPath: Optional[str] = None,
     ) -> None:
         self._language = language
-        self._runtime = OnnxRuntime(session)
+        self._createRuntime(session, vocabularyPath)
         self._createFormatter(formatterPath)
+
+    def _createRuntime(
+        self,
+        session: Session,
+        vocabularyPath: Optional[str],
+    ):
+        if vocabularyPath != None:
+            vocabulary = self._readVocabulary(vocabularyPath)
+            self._runtime = OnnxRuntime(session, vocabulary)
+        else:
+            self._runtime = OnnxRuntime(session)
+
+    def _readVocabulary(
+        self,
+        vocabularyPath: str,
+    ) -> List[str]:
+        with open(vocabularyPath) as f:
+            vocabulary = f.read().splitlines()
+        return vocabulary
+
+    def _createFormatter(
+        self,
+        path: Optional[str],
+    ):
+        self._formatter = None
+        if path != None:
+            self._formatter = pyformatter.PyFormatter(
+                self._language.asFormatter(), path, b"", b"", dict()
+            )
 
     async def Recognize(
         self,
@@ -104,34 +135,24 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def _createFormatter(
-        self,
-        path: str,
-    ):
-        if path == None:
-            self._formatter = None
+    def eventHandle(self, request: RecognizeRequest) -> str:
+        transcription = self._runRecognition(request)
+        return self._formatWords(transcription)
+
+    def _runRecognition(self, request: RecognizeRequest) -> str:
+        language = Language.parse(request.config.parameters.language)
+        if language == self._language:
+            return self._runtime.run(request.audio).sequence
         else:
-            self._formatter = pyformatter.PyFormatter(
-                self._language, path, b"", b"", dict()
+            raise ValueError(
+                f"Invalid language '{language}'. Only '{self._language}' is supported."
             )
 
-    def eventHandle(self, request: RecognizeRequest) -> str:
-        return self.formatWords(self.runASR(request))
-
-    def runASR(self, request: RecognizeRequest) -> str:
-        language = Language.parse(request.config.parameters.language)
-        if language == Language.EN_US:
-            return self._runtime.run(request.audio).sequence
-        elif language == Language.ES_ES:
-            return "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
-        elif language == Language.PT_BR:
-            return "Olá, estou de pé, recebi uma mensagem sua!"
-
-    def formatWords(self, words) -> str:
+    def _formatWords(self, transcription: str) -> str:
         if self._formatter:
-            return " ".join(self._formatter.classify(words.split(" ")))
+            return " ".join(self._formatter.classify(transcription.split(" ")))
         else:
-            return words
+            return transcription
 
     def eventSink(self, response: str) -> RecognizeResponse:
         result = {"text": response}

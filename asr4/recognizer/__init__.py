@@ -14,6 +14,8 @@ from asr4.recognizer_v1 import RecognizerStub
 from asr4.recognizer_v1 import RecognizerServicer
 from asr4.recognizer_v1 import add_RecognizerServicer_to_server
 
+from asr4.recognizer_v1 import Language
+
 from asr4.recognizer_v1 import RecognizerService
 
 
@@ -31,5 +33,6 @@ __all__ = (
     "RecognizerStub",
     "RecognizerServicer",
     "add_RecognizerServicer_to_server",
+    "Language",
     "RecognizerService",
 )

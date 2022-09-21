@@ -1,6 +1,7 @@
 import unittest
 import random
 import string
+import tempfile
 import numpy as np
 
 from asr4.recognizer import RecognizerService
@@ -9,7 +10,7 @@ from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
-from asr4.recognizer import Session, OnnxRuntime
+from asr4.recognizer import Session, OnnxRuntime, Language
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -20,7 +21,7 @@ DEFAULT_SPANISH_MESSAGE: str = (
 FORMATTED_SPANISH_MESSAGE: str = (
     "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
 )
-DEFAULT_PORTUGUESE_MESSAGE: str = "Olá, estou de pé, recebi uma mensagem sua!"
+DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
 
 
 class MockOnnxSession(Session):
@@ -29,7 +30,11 @@ class MockOnnxSession(Session):
         _path_or_bytes: Union[str, bytes],
         **kwargs,
     ) -> None:
-        pass
+        self._message = {
+            Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
+            Language.ES: DEFAULT_SPANISH_MESSAGE,
+            Language.PT_BR: DEFAULT_PORTUGUESE_MESSAGE,
+        }.get(kwargs.get("language"), DEFAULT_ENGLISH_MESSAGE)
 
     def run(
         self,
@@ -37,8 +42,8 @@ class MockOnnxSession(Session):
         input_feed: Dict[str, Any],
         **kwargs,
     ) -> np.ndarray:
-        englishMessage = list(DEFAULT_ENGLISH_MESSAGE.replace(" ", "|"))
-        return [self._generateDefaultMessageArray(englishMessage)]
+        defaultMessage = list(self._message.replace(" ", "|"))
+        return [self._generateDefaultMessageArray(defaultMessage)]
 
     def _generateDefaultMessageArray(self, defaultMessage: List[str]) -> np.ndarray:
         defaultMessageArray = np.full(
@@ -78,6 +83,17 @@ class MockOnnxSession(Session):
 
 
 class TestRecognizerService(unittest.TestCase):
+    def testVocabulary(self):
+        labels = ["|", "<s>", "</s>", "<pad>"]
+        with self.assertRaises(FileNotFoundError):
+            RecognizerService(MockOnnxSession(""), vocabularyPath="")
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            vocabularyPath = f.name
+            for l in labels:
+                f.write(f"{l}\n")
+        service = RecognizerService(MockOnnxSession(""), vocabularyPath=vocabularyPath)
+        self.assertEqual(service._runtime._decoder.labels, labels)
+
     def testInvalidAudio(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
@@ -238,7 +254,8 @@ class TestRecognizerService(unittest.TestCase):
                 parameters=RecognitionParameters(),
             )
         )
-        self.assertFalse(service.eventHandle(request))
+        with self.assertRaises(ValueError):
+            service.eventHandle(request)
 
     def testRecognizeRequestHandleEnUs(self):
         service = RecognizerService(MockOnnxSession(""))
@@ -253,12 +270,15 @@ class TestRecognizerService(unittest.TestCase):
             DEFAULT_ENGLISH_MESSAGE,
         )
 
-    def testRecognizeRequestHandleEsEs(self):
-        service = RecognizerService(MockOnnxSession(""))
+    def testRecognizeRequestHandleEs(self):
+        service = RecognizerService(
+            MockOnnxSession("", language=Language.ES), Language.ES
+        )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es-ES"),
-            )
+                parameters=RecognitionParameters(language="es"),
+            ),
+            audio=b"0000",
         )
         self.assertEqual(
             service.eventHandle(request),
@@ -266,11 +286,15 @@ class TestRecognizerService(unittest.TestCase):
         )
 
     def testRecognizeRequestHandlePtBr(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(
+            MockOnnxSession("", language=Language.PT_BR),
+            Language.PT_BR,
+        )
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="pt-BR"),
-            )
+            ),
+            audio=b"0000",
         )
         self.assertEqual(service.eventHandle(request), DEFAULT_PORTUGUESE_MESSAGE)
 
@@ -281,15 +305,15 @@ class TestRecognizerService(unittest.TestCase):
 
     def testRecognizeFormatter(self):
         service = RecognizerService(
-            MockOnnxSession(""),
-            "/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
-            "es-es",
+            MockOnnxSession("", language=Language.ES),
+            Language.ES,
+            formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es-ES"),
+                parameters=RecognitionParameters(language="es"),
             ),
-            audio=b"SOMETHING",
+            audio=b"0000",
         )
         self.assertEqual(
             service.eventHandle(request),

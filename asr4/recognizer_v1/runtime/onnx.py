@@ -5,7 +5,7 @@ import onnxruntime
 import simple_ctc
 
 import abc
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
 
 
