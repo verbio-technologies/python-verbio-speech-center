@@ -164,7 +164,10 @@ testing:docker:
 
 testing:test_images:integration:
   stage: testing
-  image: "${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+  image: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
