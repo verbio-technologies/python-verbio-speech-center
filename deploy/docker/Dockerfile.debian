@@ -15,6 +15,7 @@ COPY server.py /server.py
 COPY requirements.txt /requirements.txt
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
+COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
 RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
