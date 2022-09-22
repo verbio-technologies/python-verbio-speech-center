@@ -205,7 +205,10 @@ testing:promote:
 
 staging:test_images:functional:
   stage: staging
-  image: "${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+  image: "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
