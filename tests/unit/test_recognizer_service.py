@@ -10,7 +10,8 @@ from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
-from asr4.recognizer import Session, OnnxRuntime, Language
+from asr4.recognizer import Session, OnnxRuntime
+from asr4.types.language import Language
 
 from typing import Any, Dict, List, Optional, Union
 
