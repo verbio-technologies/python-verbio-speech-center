@@ -6,7 +6,7 @@ variables {
 variable "envoy_config" {
   type = string
   description = "Custom envoy config"
-  default = "deploy/nomad/envoy.yaml"
+  default = "envoy.yaml"
 }
 
 
