@@ -61,6 +61,10 @@ job "asr4-staging" {
         max_file_size = 10
       }
 
+      env {
+        LANGUAGE = "en-us"
+      }
+
       resources {
         memory = 5000
       }
@@ -92,6 +96,10 @@ job "asr4-staging" {
         max_file_size = 10
       }
 
+      env {
+        LANGUAGE = "es"
+      }
+
       resources {
         memory = 5000
       }
@@ -121,6 +129,10 @@ job "asr4-staging" {
       logs {
         max_files     = 10
         max_file_size = 10
+      }
+
+      env {
+        LANGUAGE = "pt-br"
       }
 
       resources {

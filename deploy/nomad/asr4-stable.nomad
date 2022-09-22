@@ -60,6 +60,10 @@ job "asr4-stable" {
         max_file_size = 10
       }
 
+      env {
+        LANGUAGE = "en-us"
+      }
+
       resources {
         memory = 5000
       }
@@ -91,6 +95,10 @@ job "asr4-stable" {
         max_file_size = 10
       }
 
+      env {
+        LANGUAGE = "es"
+      }
+
       resources {
         memory = 5000
       }
@@ -120,6 +128,10 @@ job "asr4-stable" {
       logs {
         max_files     = 10
         max_file_size = 10
+      }
+
+      env {
+        LANGUAGE = "pt-br"
       }
 
       resources {
