@@ -1,6 +1,6 @@
-disable-push = true
+push = true
 consolidate-commits = true
 pre-release-commit-message = "(cargo-release) Bump version"
-disable-tag = true
-no-dev-version = true
-disable-publish = true
+tag = true
+dev-version = true
+publish = true
