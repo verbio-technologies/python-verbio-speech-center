@@ -2,6 +2,18 @@
 
 ASR based on Transformer DNNs, with multilingual and unsupervised information.
 
+## Installation and test
+
+Installation separed in three parts: testing, using the server, using the client.
+
+### Client installation
+
+This installation assumes you are working on python 3.9.
+
+pip install -r requirements.client.txt
+
+PYTHONPATH=/asr4/ python bin/client.py --host 192.168.2.4:50051 -a <path to your file>.wav
+
 ## Formatting & Linting
 
 As a general note, you should always apply proper formatting and linting before pushing a commit. To do so, please run the following:
