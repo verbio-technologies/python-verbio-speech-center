@@ -161,7 +161,7 @@ job "asr4-stable" {
       }
 
       config {
-        image              = "${var.DOCKER_REGISTRY}/envoyproxy/envoy:v1.23.1"
+        image              = "${var.DOCKER_REGISTRY}/envoy:v1.23.1"
         volumes            = ["tmp/envoy.yaml:/etc/envoy/envoy.yaml"]
         ports              = ["grpc-port"]
       }
