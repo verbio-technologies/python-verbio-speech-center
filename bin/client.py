@@ -32,6 +32,10 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 
+def _repr(responses: List[RecognizeRequest]) -> List[str]:
+    return [f'<RecognizeRequest text: "{r.text}">' for r in responses]
+
+
 def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
     audio = _getAudio(args.audio)
     workerPool = multiprocessing.Pool(
@@ -152,4 +156,4 @@ if __name__ == "__main__":
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
-    _LOGGER.info(f"Returned responses: {responses}")
+    _LOGGER.info(f"Returned responses: {_repr(responses)}")
