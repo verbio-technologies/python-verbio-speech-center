@@ -4,15 +4,40 @@ ASR based on Transformer DNNs, with multilingual and unsupervised information.
 
 ## Installation and test
 
-Installation separed in three parts: testing, using the server, using the client.
+Installation separed in two parts: installing the server, and installing the client. The client having many less dependencies than the server.
 
 ### Client installation
 
-This installation assumes you are working on python 3.9.
+The client requires python version at least 3.9. To install the requirementes do this from the root of the `asr4` repo:
 
+```sh
 pip install -r requirements.client.txt
+```
 
-PYTHONPATH=/asr4/ python bin/client.py --host 192.168.2.4:50051 -a <path to your file>.wav
+Once installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
+
+```sh
+PYTHONPATH=<path to asr4> python bin/client.py --host 192.168.2.4:50051 -a <path to your file>.wav
+```
+
+Note that it needs to define `PYTHONPATH` to the root of the repo to work.
+
+
+
+### Server installation
+
+The server requires python version at least 3.9. To install the requirementes do this from the root of the `asr4` repo:
+
+```sh
+pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+export MAKEFLAGS="-j4"
+python setup.py egg_info
+sed -i 's/@ /@/g' *.egg-info/requires.txt
+pip install `grep -v '^\[' *.egg-info/requires.txt`
+pip install .
+```
+
 
 ## Formatting & Linting
 
