@@ -19,7 +19,10 @@ from .types import RecognizerStub
 from .types import RecognizerServicer
 from .types import add_RecognizerServicer_to_server
 
-from .service import RecognizerService
+try:
+    from .service import RecognizerService
+except:
+    pass
 
 
 __all__ = (

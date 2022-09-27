@@ -76,6 +76,14 @@ python:test:all:
     reports:
       junit: report.xml
 
+python:test:client:
+  stage: test
+  before_script:
+    - pip install -r requirements.client.txt
+  script:
+    - python --version
+    - PYTHONPATH=/asr4 python bin/client.py --host 192.168.2.4:50051 -a  /mnt/db/CSR/en-us/8_kHz/test_db/multidomain/ITmaintenance/HH/gdit_cut/0a357d4b-c065-46d3-bbb4-16c4808fe974_transcription-00:11:30_490-00:11:34_270.wav
+
 rust:test:coverage:
   stage: test
   before_script:
