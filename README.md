@@ -10,15 +10,17 @@ The installation is divided into two parts: installing the server or the client.
 
 ### Client installation (HTTP) - **Quickest**
 
-The only requirements for the HTTP client are `cURL` and `base64`. In case your system does not include `cURL` by default run the following command:
+The only requirements for the HTTP client are `cURL`, `jq` and `base64`. In case your system does not include `cURL` or `jq` by default run the following command:
 
 ```sh
 # Ubuntu/Debian
-apt-get install -y curl
+apt-get install -y curl jq
 
 # RHEL/CentOS/Fedora
-yum install -y curl
+yum install -y curl jq
 ```
+
+:warning: `jq` is highly recommended but not actually required. You could for instance store the base64-encoded audio contents into a variable and use it on the `cURL` command, but you would have to face UNIX maximum length permitted for a command.
 
 ### Client installation (gRPC)
 
@@ -49,40 +51,21 @@ Again, separated instructions are provided to either run the client or the serve
 Once its dependencies are installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
 
 ```sh
-AUDIO=$(cat <WAV_FILE_PATH> | base64) && \                        
-curl "http://tanzania:50051/v1/recognize?config.parameters.language=en-US&config.parameters.sampleRateHz=16000&config.resource.topic=GENERIC" \
-    -H 'Accept-Language: en-US' \
-    -d '{"audio": "'$AUDIO'"}'
+base64 <WAV_FILE_PATH> -w 0 | jq -Rs '{audio: .}' | curl -d @- \
+  --url "http://tanzania:50051/v1/recognize?config.parameters.language=en-US&config.parameters.sampleRateHz=16000&config.resource.topic=GENERIC" \
+  -H 'Accept-Language: en-US'
 ```
 
 Notice the URL encodes the following parameters: `language` (en-US), `sampleRateHz` (16000) and `topic` (GENERIC). **Additionally, `Accept-Language` header is used to indicate the content's language to the traffic router**.
 
-Optionally, you can create a JSON file containing all the data:
+Alternatively, you can create a JSON file containing all the data:
 
 ```sh
-# Use jq, a CLI JSON processor to create the payload JSON file
-jq -n --arg audio "$(cat <WAV_FILE_PATH> | base64)" '{config: {parameters: {language: "en-US", sampleRateHz: 16000}, resource: {topic: "GENERIC"}}, audio: $audio}' > payload.json
-
-# Send request using the JSON file as POST body
-curl http://tanzania:50051/v1/recognize -H 'Accept-Language: en-US' -d @payload.json
+jq -n \
+  --slurpfile audio <(base64 <WAV_FILE_PATH> -w 0 | jq -Rs .) \
+  '{config: {parameters: {language: "en-US", sampleRateHz: 16000}, resource: {topic: "GENERIC"}}, audio: $audio[0]}' \
+  | curl http://tanzania:50051/v1/recognize -H 'Accept-Language: en-US' -d @-
 ```
-
-If you inspect the generated `payload.json` file, it will be structured as follows:
-
-```json
-{ "config": 
-  { 
-    "parameters": { 
-      "language": "en-US", "sampleRateHz": 16000 
-    }, 
-    "resource": { 
-      "topic": "GENERIC" 
-    } 
-  },
-  "audio": "<BASE64_ENCODED_AUDIO>"
-}
-```
-
 
 ### Client (gRPC)
 
@@ -90,10 +73,10 @@ Once its dependencies are installed, the client can connect to a running `asr4` 
 
 ```sh
 # Send a recognition request against the asr4 server located at tanzania and obtain the transcription of a WAV audio
-PYTHONPATH=<path to asr4> python bin/client.py --host tanzania:50051 -a <WAV_FILE_PATH>.wav # default language en-US; Supported en-US, es and pt-BR.
+python bin/client.py --host tanzania:50051 -l en-US -a <WAV_FILE_PATH>.wav
 
 # Try again with a Spanish WAV audio
-PYTHONPATH=<path to asr4> python bin/client.py --host tanzania:50051 -l es -a <WAV_FILE_PATH>.wav
+python bin/client.py --host tanzania:50051 -l es -a <WAV_FILE_PATH>.wav
 ```
 
 Note that it needs to define `PYTHONPATH` to the root of the repo to work.
