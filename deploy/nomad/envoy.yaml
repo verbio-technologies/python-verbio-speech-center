@@ -18,7 +18,7 @@ static_resources:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
-          codec_type: HTTP2
+          codec_type: AUTO
           route_config:
             name: asr4_route
             virtual_hosts:
@@ -30,7 +30,8 @@ static_resources:
                     grpc: {}
                     headers:
                     - name: Accept-Language
-                      exact_match: "en-US"
+                      string_match: 
+                        exact: "en-US"
                   route: 
                     cluster: en_us-grpc_service
                 - match: 
@@ -38,7 +39,8 @@ static_resources:
                     grpc: {}
                     headers:
                     - name: Accept-Language
-                      exact_match: "es"
+                      string_match: 
+                        exact: "es"
                   route: 
                     cluster: es-grpc_service
                 - match: 
@@ -46,7 +48,8 @@ static_resources:
                     grpc: {}
                     headers:
                     - name: Accept-Language
-                      exact_match: "pt-BR"
+                      string_match: 
+                        exact: "pt-BR"
                   route: 
                     cluster: pt_br-grpc_service
           access_log:
@@ -54,6 +57,16 @@ static_resources:
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
           http_filters:
+          - name: envoy.filters.http.grpc_json_transcoder
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
+              proto_descriptor: "/etc/asr4.pb" 
+              services: ["asr4.recognizer.v1.Recognizer"]
+              print_options:
+                add_whitespace: true
+                always_print_primitive_fields: true
+                always_print_enums_as_ints: false
+                preserve_proto_field_names: false
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
