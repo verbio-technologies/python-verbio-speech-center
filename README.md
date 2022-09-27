@@ -4,11 +4,11 @@ ASR based on Transformer DNNs, with multilingual and unsupervised information.
 
 ## Installation and test
 
-Installation separed in two parts: installing the server, and installing the client. The client having many less dependencies than the server.
+Installation separed in two parts: installing the server, and installing the client. The client having fewer dependencies than the server.
 
 ### Client installation
 
-The client requires python version at least 3.9. To install the requirementes do this from the root of the `asr4` repo:
+The client requires python version at least 3.7. To install the requirementes do this from the root of the `asr4` repo:
 
 ```sh
 pip install -r requirements.client.txt
