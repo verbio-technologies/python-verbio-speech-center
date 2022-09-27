@@ -2,6 +2,162 @@
 
 ASR based on Transformer DNNs, with multilingual and unsupervised information.
 
+## How to Install
+
+The installation is divided into two parts: installing the server or the client. The client has fewer dependencies than the server.  
+
+**If you only want to quickly perform a test inference, we recommend that you just install the client and run it against the server located in tanzania.**
+
+### Client installation (HTTP) - **Quickest**
+
+The only requirements for the HTTP client are `cURL` and `base64`. In case your system does not include `cURL` by default run the following command:
+
+```sh
+# Ubuntu/Debian
+apt-get install -y curl
+
+# RHEL/CentOS/Fedora
+yum install -y curl
+```
+
+### Client installation (gRPC)
+
+Python version 3.7+ is required to run the client. 
+To install the client's requirements, run the following command from the root of the `asr4` repository:
+
+```sh
+pip install -r requirements.client.txt
+```
+
+### Server installation
+
+Python version 3.7+ is required to run the server. 
+To install the server's requirements, run the following command from the root of the `asr4` repository:
+
+```sh
+pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+pip install .
+```
+
+## How to Run
+
+Again, separated instructions are provided to either run the client or the server. If you wish to perform a quick test inference just take a look at the client sub-section.
+
+### Client (HTTP) - **Quickest**
+
+Once its dependencies are installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
+
+```sh
+AUDIO=$(cat <WAV_FILE_PATH> | base64) && \                        
+curl "http://tanzania:50051/v1/recognize?config.parameters.language=en-US&config.parameters.sampleRateHz=16000&config.resource.topic=GENERIC" \
+    -H 'Accept-Language: en-US' \
+    -d '{"audio": "'$AUDIO'"}'
+```
+
+Notice the URL encodes the following parameters: `language` (en-US), `sampleRateHz` (16000) and `topic` (GENERIC). **Additionally, `Accept-Language` header is used to indicate the content's language to the traffic router**.
+
+Optionally, you can create a JSON file containing all the data:
+
+```sh
+# Use jq, a CLI JSON processor to create the payload JSON file
+jq -n --arg audio "$(cat <WAV_FILE_PATH> | base64)" '{config: {parameters: {language: "en-US", sampleRateHz: 16000}, resource: {topic: "GENERIC"}}, audio: $audio}' > payload.json
+
+# Send request using the JSON file as POST body
+curl http://tanzania:50051/v1/recognize -H 'Accept-Language: en-US' -d @payload.json
+```
+
+If you inspect the generated `payload.json` file, it will be structured as follows:
+
+```json
+{ "config": 
+  { 
+    "parameters": { 
+      "language": "en-US", "sampleRateHz": 16000 
+    }, 
+    "resource": { 
+      "topic": "GENERIC" 
+    } 
+  },
+  "audio": "<BASE64_ENCODED_AUDIO>"
+}
+```
+
+
+### Client (gRPC)
+
+Once its dependencies are installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
+
+```sh
+# Send a recognition request against the asr4 server located at tanzania and obtain the transcription of a WAV audio
+PYTHONPATH=<path to asr4> python bin/client.py --host tanzania:50051 -a <WAV_FILE_PATH>.wav # default language en-US; Supported en-US, es and pt-BR.
+
+# Try again with a Spanish WAV audio
+PYTHONPATH=<path to asr4> python bin/client.py --host tanzania:50051 -l es -a <WAV_FILE_PATH>.wav
+```
+
+Note that it needs to define `PYTHONPATH` to the root of the repo to work.
+
+Additionally, include the `--help` argument to display all available options:
+
+```
+» python bin/client.py --help
+usage: client.py [-h] -a AUDIO [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-v]
+
+A Speech Recognition client.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a AUDIO, --audio-path AUDIO
+                        Path to the audio file.
+  -l {en-us,es,pt-br}, --language {en-us,es,pt-br}
+                        Language of the recognizer service.
+  --host HOST           Hostname address of the ASR4 server.
+  -j JOBS, --jobs JOBS  Number of parallel workers; if not specified, defaults to CPU count.
+  -v, --verbose         Give more output. Option is additive, and can be used up to 4 times.
+```
+
+
+### Server
+
+Once its dependencies are installed, the `asr4` can be executed to accept connections from the clients. This simple command will return the transcription through the standard output channel:
+
+```sh
+# Run a single-threaded asr4 server that serves an ONNX model.
+python bin/server.py -m <ONNX_FILE_PATH>.onnx -j1
+
+# Run a single-threaded asr4 server that servers an ONNX model and formats the transcription.
+python bin/server.py -m <ONNX_FILE_PATH>.onnx -f <FORMATTER_FILE_PATH>.fm -j1
+```
+
+Note that right now both transcription and formatting models can only be obtained from barrayar.
+
+Additionally, include the `--help` argument to display all available options:
+
+```
+» python bin/server.py --help
+usage: server.py [-h] -m MODEL [-d VOCABULARY] [-l {en-us,es,pt-br}] [-f FORMATTER]
+                 [--host BINDADDRESS] [-j JOBS] [-v]
+
+Python ASR4 Server
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MODEL, --model-path MODEL
+                        Path to the model file.
+  -d VOCABULARY, --dictionary-path VOCABULARY
+                        Path to the model's dictionary file, containing all the possible outputs from
+                        the model.
+  -l {en-us,es,pt-br}, --language {en-us,es,pt-br}
+                        Language of the recognizer service.
+  -f FORMATTER, --formatter-model-path FORMATTER
+                        Path to the formatter model file.
+  --host BINDADDRESS    Hostname address to bind the server to.
+  -j JOBS, --jobs JOBS  Number of parallel workers; if not specified, defaults to CPU count.
+  -v, --verbose         Give more output. Option is additive, and can be used up to 4 times.
+```
+
+
 ## Formatting & Linting
 
 As a general note, you should always apply proper formatting and linting before pushing a commit. To do so, please run the following:
