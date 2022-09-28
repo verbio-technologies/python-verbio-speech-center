@@ -4,9 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "asr4"
-dynamic = ["readme", "description"]
+dynamic = ["readme", "description", "version"]
 requires-python = ">=3.7,!=3.11"
-version = "0.0.7"
 keywords = ["ASR", "CSR"]
 license = {text = "BSD 3-Clause License"}
 classifiers = [
@@ -36,6 +35,7 @@ dependencies = [
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"]}
 description = {file = ["DESCRIPTION.md"]}
+version = {file = ["VERSION"]}
 
 [project.optional-dependencies]
 client = [
