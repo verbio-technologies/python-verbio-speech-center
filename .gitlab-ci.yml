@@ -60,8 +60,7 @@ rust:test:all:
 python:test:all:
   stage: test
   before_script:
-    - pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install -r requirements.txt
+    - pip install .[server]
     # Install dependencies without installing the package itself
     - export MAKEFLAGS="-j4"
     - python setup.py egg_info
