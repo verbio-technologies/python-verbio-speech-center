@@ -12,7 +12,6 @@ from .asr4_pb2_grpc import (
     add_RecognizerServicer_to_server,
 )
 
-from .language import Language
 from .sample_rate import SampleRate
 
 SERVICES_NAMES = [
@@ -30,6 +29,5 @@ __all__ = (
     "RecognizerStub",
     "RecognizerServicer",
     "add_RecognizerServicer_to_server",
-    "Language",
     "SampleRate",
 )

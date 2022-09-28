@@ -5,13 +5,13 @@ import pyformatter
 
 from .runtime import OnnxRuntime, Session
 
+from asr4.types.language import Language
 from .types import RecognizerServicer
 from .types import RecognizeRequest
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
 from .types import RecognizeResponse
-from .types import Language
 from .types import SampleRate
 
 from typing import Optional, List

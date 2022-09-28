@@ -10,7 +10,7 @@ import numpy as np
 
 from typing import List
 
-from asr4.recognizer import Language
+from asr4.types.language import Language
 from asr4.recognizer import RecognizerStub
 from asr4.recognizer import RecognizeRequest
 from asr4.recognizer import RecognizeResponse

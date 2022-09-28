@@ -60,13 +60,8 @@ rust:test:all:
 python:test:all:
   stage: test
   before_script:
-    - pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install -r requirements.txt
-    # Install dependencies without installing the package itself
-    - export MAKEFLAGS="-j4"
-    - python setup.py egg_info
-    - sed -i 's/@ /@/g' *.egg-info/requires.txt
-    - pip install `grep -v '^\[' *.egg-info/requires.txt`
+    - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install .[server,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -75,6 +70,14 @@ python:test:all:
     expire_in: 5 days
     reports:
       junit: report.xml
+
+python:test:client:
+  stage: test
+  before_script:
+    - pip install .[client]
+  script:
+    - python --version
+    - python bin/client.py --host 192.168.2.4:50051 -a  /mnt/db/CSR/en-us/8_kHz/test_db/multidomain/ITmaintenance/HH/gdit_cut/0a357d4b-c065-46d3-bbb4-16c4808fe974_transcription-00:11:30_490-00:11:34_270.wav
 
 rust:test:coverage:
   stage: test
@@ -91,13 +94,8 @@ rust:test:coverage:
 python:test:coverage:
   stage: test
   before_script:
-    - pip install pytest==6.2.5 pytest-cov==3.0.0 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install -r requirements.txt
-    # Install dependencies without installing the package itself
-    - export MAKEFLAGS="-j4"
-    - python setup.py egg_info
-    - sed -i 's/@ /@/g' *.egg-info/requires.txt
-    - pip install `grep -v '^\[' *.egg-info/requires.txt`
+    - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install .[server,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose

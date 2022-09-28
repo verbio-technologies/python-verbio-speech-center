@@ -28,7 +28,7 @@ Python version 3.7+ is required to run the client.
 To install the client's requirements, run the following command from the root of the `asr4` repository:
 
 ```sh
-pip install -r requirements.client.txt
+pip install .[client]
 ```
 
 ### Server installation
@@ -38,8 +38,7 @@ To install the server's requirements, run the following command from the root of
 
 ```sh
 pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-pip install -r requirements.txt
-pip install .
+pip install .[server]
 ```
 
 ## How to Run
