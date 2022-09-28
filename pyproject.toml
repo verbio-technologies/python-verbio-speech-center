@@ -32,6 +32,9 @@ dependencies = [
     "protobuf >= 3.20.1",
 ]
 
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*"]
+
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"]}
 description = {file = ["DESCRIPTION.md"]}
@@ -62,6 +65,10 @@ server = [
     "pyformatter @ https://gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/9d7278a1d271c73e1879a8d9e0d1981fbc998625bb3bee68584c0f620a537012/pyformatter-1.3.11-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "pyformatter @ https://gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/7c7b0b4600cf3d5b40d2383ea7c1af31a65940c2cd55df9e88517f5f27bc6ce3/pyformatter-1.3.11-cp36-cp36m-linux_x86_64.whl ; python_version=='3.6' and platform_system=='Linux'",
     "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23"
+]
+test = [
+    "pytest >= 6.2.5",
+    "pytest-cov >= 3.0.0",
 ]
 
 
