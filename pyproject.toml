@@ -32,6 +32,12 @@ dependencies = [
     "protobuf >= 3.20.1",
 ]
 
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.package-data]
+asr4 = ["../DESCRIPTION.md", "../VERSION"]
+
 [tool.setuptools.packages.find]
 exclude = ["tests", "tests.*"]
 
