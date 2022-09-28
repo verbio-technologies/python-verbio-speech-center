@@ -140,26 +140,33 @@ python:build:latest_bin:
 testing:docker:
   stage: docker
   image: docker:20.10.15
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   dependencies:
     - python:build:latest_bin     
   script:
-    - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
-    - cp ${MODELS_PATH}/asr4-en-us-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
-    - cp ${MODELS_PATH}/formatter/format-model.* deploy/docker/
+    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
+    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.dict.ltr.txt deploy/docker/
+    - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
     - cp requirements.txt deploy/docker/
     - cd deploy/docker/
-    - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} -t "${IMAGE_NAME}"
+    - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
 
 testing:test_images:integration:
   stage: testing
-  image: "${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+  image: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
@@ -173,6 +180,12 @@ testing:deploy:
   environment:
     name: pre-production/asr4 
     action: start
+  before_script:
+    - apt-get update && apt-get install -y python3 python3-pip
+    - pip3 install grpcio grpcio-tools
+    # Build asr4.pb
+    - python3 -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4.pb asr4.proto
+    - cp proto/asr4.pb deploy/nomad
   script:
     - cd deploy/nomad
     - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
@@ -183,18 +196,24 @@ testing:deploy:
 testing:promote:
   stage: testing-promote
   image: docker:20.10.15
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
-    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
 
 staging:test_images:functional:
   stage: staging
-  image: "${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+  image: "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
@@ -203,11 +222,14 @@ staging:test_images:functional:
 staging:promote:
   stage: staging-promote
   image: docker:20.10.15
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
-    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
@@ -223,11 +245,15 @@ release:deploy:
 
 
 cleanup:
-  image: docker:20.10.15
   stage: cleanup
+  image: docker:20.10.15
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   script:
-    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+

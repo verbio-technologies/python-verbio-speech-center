@@ -127,7 +127,8 @@ def _parseArguments() -> argparse.Namespace:
         "--language",
         dest="language",
         default=Language.EN_US.value,
-        choices=[l.value for l in Language],
+        choices=[l.value.lower() for l in Language],
+        type=str.lower,
         help="Language of the recognizer service.",
     )
     parser.add_argument(
