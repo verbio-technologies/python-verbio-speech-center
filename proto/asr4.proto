@@ -2,9 +2,17 @@ syntax = "proto3";
 
 package asr4.recognizer.v1;
 
+import "google/api/annotations.proto";
+
 // Service that implements ASR4 Recognition API.
 service Recognizer {
-  rpc Recognize(RecognizeRequest) returns (RecognizeResponse); // Send audio as bytes and recieve the transcription of the audio.
+  // Send audio as bytes and recieve the transcription of the audio.
+  rpc Recognize(RecognizeRequest) returns (RecognizeResponse) {
+    option(google.api.http) = {
+      post: "/v1/recognize"
+      body: "*"
+   };
+  }
 }
 
 message RecognizeRequest {

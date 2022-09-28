@@ -9,6 +9,12 @@ variable "envoy_config" {
   default = "envoy.yaml"
 }
 
+variable "asr4_binary_proto" {
+  type = string
+  description = "Protobufed asr4 gRPC API definition"
+  default = "asr4.pb"
+}
+
 
 job "asr4-stable" {
   datacenters = ["dc1"]
@@ -160,9 +166,15 @@ job "asr4-stable" {
         data = file(var.envoy_config)
       }
 
+      template {
+        destination = "tmp/asr4.pb"
+        data = file(var.asr4_binary_proto)
+      }
+
       config {
         image              = "${var.DOCKER_REGISTRY}/envoy:v1.23.1"
-        volumes            = ["tmp/envoy.yaml:/etc/envoy/envoy.yaml"]
+        volumes            = ["tmp/envoy.yaml:/etc/envoy/envoy.yaml",
+                              "tmp/asr4.pb:/etc/asr4.pb"]
         ports              = ["grpc-port"]
       }
 
