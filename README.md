@@ -11,7 +11,7 @@ Installation separed in two parts: installing the server, and installing the cli
 The client requires python version at least 3.7. To install the requirementes do this from the root of the `asr4` repo:
 
 ```sh
-pip install -r requirements.client.txt
+pip install .[client]
 ```
 
 Once installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
@@ -29,13 +29,8 @@ Note that it needs to define `PYTHONPATH` to the root of the repo to work.
 The server requires python version at least 3.9. To install the requirementes do this from the root of the `asr4` repo:
 
 ```sh
-pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-pip install -r requirements.txt
-export MAKEFLAGS="-j4"
-python setup.py egg_info
-sed -i 's/@ /@/g' *.egg-info/requires.txt
-pip install `grep -v '^\[' *.egg-info/requires.txt`
-pip install .
+pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+pip install .[server]
 ```
 
 

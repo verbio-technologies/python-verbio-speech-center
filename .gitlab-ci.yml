@@ -60,13 +60,8 @@ rust:test:all:
 python:test:all:
   stage: test
   before_script:
-    - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install pytest==6.2.5 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server]
-    # Install dependencies without installing the package itself
-    - export MAKEFLAGS="-j4"
-    - python setup.py egg_info
-    - sed -i 's/@ /@/g' *.egg-info/requires.txt
-    - pip install `grep -v '^\[' *.egg-info/requires.txt`
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -99,13 +94,8 @@ rust:test:coverage:
 python:test:coverage:
   stage: test
   before_script:
-    - pip install pytest-cov==3.0.0 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install pytest==6.2.5 pytest-cov==3.0.0 torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server]
-    # Install dependencies without installing the package itself
-    - export MAKEFLAGS="-j4"
-    - python setup.py egg_info
-    - sed -i 's/@ /@/g' *.egg-info/requires.txt
-    - pip install `grep -v '^\[' *.egg-info/requires.txt`
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
