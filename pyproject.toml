@@ -1,15 +1,14 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry]
+[project]
 name = "asr4"
+dynamic = ["readme", "description"]
+requires-python = ">=3.7,!=3.11"
+version = "0.0.7"
 keywords = ["ASR", "CSR"]
-readme = ["README.md"]
-description = "ASR based on Transformer DNNs, with multilingual and unsupervised information."
-homepage = "www.verbio.com"
-license = "BSD 3-Clause License"
-authors = [ "Pere R. Comas <pcomas@verbio.com>", "Roger Marrugat <rmarrugat@verbio.com>" ]
+license = {text = "BSD 3-Clause License"}
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -28,46 +27,34 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Multimedia :: Sound/Audio :: Speech",
 ]
-version = "0.0.7"
+dependencies = [
+    "google > =3.0.0",
+    "grpcio >= 1.47.0",
+    "protobuf >= 3.20.1",
+]
 
-[tool.setuptools.packages.find]
-exclude=["tests", "tests.*"]
- 
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"]}
+description = {file = ["DESCRIPTION.md"]}
 
-[tool.poetry.dependencies]
-python = "^3.7.0"
-google = "^3.0.0"
-grpcio = "^1.47.0"
-protobuf = "^3.20.1"
-logger   = "^1.4"
-resample = "^0.4.2"
-testpytest  = "~6.2.5"
-onnxruntime = "^1.12.1"
-grpcio-health-checking = "^1.47.0"
-typing_extensions = "^4.3"
-pyformatter = { version = "*", optional = true, source = "verbio" }
-torch = { version = "^1.12.0+cpu", optional = true, source = "pytorch" }
-simple-ctc = { git = "https://github.com/mthrok/ctcdecode.git", rev="b1a30d7a65342012e0d2524d9bae1c5412b24a23", optional = true }
-
-
-[[tool.poetry.source]]
-name = "PyPI"
-url = "https://pypi.org/simple"
-default = true
-
-[[tool.poetry.source]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cpu"
-default = false
-secondary = true
-
-[[tool.poetry.source]]
-name = "verbio"
-url = "https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/simple"
-default = false
-secondary = true
-
-
-[tool.poetry.extras]
-client = ["google", "grpcio", "protobuf", "resampy"]
-server = ["google", "grpcio", "protobuf", "torch", "grpcio-health-checking", "logger", "protobuf", "typing_extensions", "onnxruntime", "pyformatter", "testpytest","simple-ctc"]
+[project.optional-dependencies]
+client = [
+    "resampy >= 0.4.2",
+]
+server = [
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp37-cp37m-win_amd64.whl ; python_version=='3.7' and platform_system=='Windows'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-win_amd64.whl ; python_version=='3.8' and platform_system=='Windows'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp39-cp39-win_amd64.whl ; python_version=='3.9' and platform_system=='Windows'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp310-cp310-win_amd64.whl ; python_version=='3.10' and platform_system=='Windows'",
+    "grpcio-health-checking >= 1.47.0",
+    "logger >= 1.4",
+    "protobuf >= 3.20.1",
+    "typing_extensions >= 4.3.0",
+    "onnxruntime >= 1.12.1",
+    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23",
+    "pyformatter",
+]
