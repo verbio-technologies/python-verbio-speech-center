@@ -129,8 +129,8 @@ python:build:latest_bin:
     - tags
   script:
     - export MAKEFLAGS="-j4"
-    - pip install wheel
-    - python setup.py sdist bdist_wheel
+    - pip install build
+    - python -m build
     - mv dist/*.whl .
   artifacts:
     expire_in: 2 days
