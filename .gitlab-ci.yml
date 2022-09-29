@@ -187,16 +187,14 @@ testing:deploy:
   environment:
     name: pre-production/asr4 
     action: start
-  needs:
-    - job: python:build:latest_bin
-      artifacts: true
+  dependencies:
+    - python:build:latest_bin
   script:
-    - echo "id ${JOB_ID}, token ${GITLAB_TOKEN}"
     - cd deploy/nomad
     - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
     - export NOMAD_ADDR=http://$NOMAD_IP:4646
     - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_ASR4_JOB_ID=${JOB_ID} NOMAD_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
 testing:promote:
   stage: testing-promote
@@ -243,13 +241,12 @@ release:deploy:
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
-  needs:
-    - job: python:build:latest_bin
-      artifacts: true
+  dependencies:
+    - python:build:latest_bin
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
-#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_ASR4_JOB_ID=${JOB_ID} NOMAD_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
 
 
 cleanup:
