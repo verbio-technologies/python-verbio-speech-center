@@ -179,22 +179,6 @@ testing:test_images:integration:
   script:
     - echo "integration tests here"
 
-testing:deploy:
-  stage: testing-promote
-  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
-  only:
-    - tags
-  environment:
-    name: pre-production/asr4 
-    action: start
-  dependencies:
-    - python:build:latest_bin
-  script:
-    - cd deploy/nomad
-    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
-    - export NOMAD_ADDR=http://$NOMAD_IP:4646
-    - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
 testing:promote:
   stage: testing-promote
@@ -209,6 +193,24 @@ testing:promote:
     - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
+
+
+staging:deploy:
+  stage: testing
+  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+  only:
+    - tags
+  environment:
+    name: pre-production/asr4 
+    action: start
+  dependencies:
+    - python:build:latest_bin
+  script:
+    - cd deploy/nomad
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+    - echo "Deploying staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
 
 staging:test_images:functional:
