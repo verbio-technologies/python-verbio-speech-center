@@ -2,6 +2,8 @@ variables {
   DOCKER_REGISTRY = "docker.registry.verbio.com/csr"
   VERSION = "latest"
   GITLAB_TOKEN = ""
+  ASR4_PROJECT_ID = "1361"
+  ASR4_JOB_ID = ""
 }
 
 variable "envoy_config" {
@@ -162,10 +164,10 @@ job "asr4-stable" {
       }
 
       artifact {
-        source      = "https://gitlab.lan.verbio.com/api/v4/projects/1361/jobs/artifacts/${var.VERSION}/raw/asr4-${var.VERSION}.pb?private_token=${var.GITLAB_TOKEN}&job=python:build:latest_bin"
+        source      = "https://gitlab.lan.verbio.com/api/v4/projects/${var.ASR4_PROJECT_ID}/jobs/${var.ASR4_JOB_ID}/artifacts/asr4-${var.VERSION}.pb?private_token=${var.GITLAB_TOKEN}"
         destination = "tmp/asr4.pb"
         options {
-          checksum = "md5:8cb6d335789e54b3f029fcdb8853b5f4"
+          checksum = "md5:f3084ed9c64d7dbae422c41591a35f0d"
         }
       }
 
