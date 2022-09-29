@@ -165,6 +165,7 @@ job "asr4-stable" {
 
       artifact {
         source      = "https://gitlab.lan.verbio.com/api/v4/projects/${var.ASR4_PROJECT_ID}/jobs/${var.ASR4_JOB_ID}/artifacts/asr4-${var.VERSION}.pb?private_token=${var.GITLAB_TOKEN}"
+        mode        = "file"
         destination = "tmp/asr4.pb"
         options {
           checksum = "md5:f3084ed9c64d7dbae422c41591a35f0d"
