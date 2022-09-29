@@ -1,18 +1,13 @@
 variables {
   DOCKER_REGISTRY = "docker.registry.verbio.com/csr"
   VERSION = "latest"
+  GITLAB_TOKEN = ""
 }
 
 variable "envoy_config" {
   type = string
   description = "Custom envoy config"
   default = "envoy.yaml"
-}
-
-variable "asr4_binary_proto" {
-  type = string
-  description = "Protobufed asr4 gRPC API definition"
-  default = "asr4.pb"
 }
 
 
@@ -166,9 +161,12 @@ job "asr4-stable" {
         data = file(var.envoy_config)
       }
 
-      template {
+      artifact {
+        source      = "https://gitlab.lan.verbio.com/api/v4/projects/1361/jobs/artifacts/${var.VERSION}/raw/asr4-${var.VERSION}.pb?private_token=${var.GITLAB_TOKEN}&job=python:build:latest_bin"
         destination = "tmp/asr4.pb"
-        data = file(var.asr4_binary_proto)
+        options {
+          checksum = "md5:8cb6d335789e54b3f029fcdb8853b5f4"
+        }
       }
 
       config {
