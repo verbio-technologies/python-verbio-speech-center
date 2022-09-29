@@ -129,8 +129,8 @@ python:build:latest_bin:
     - tags
   script:
     - export MAKEFLAGS="-j4"
-    - pip install wheel grpcio grpcio-tools
-    - python setup.py sdist bdist_wheel
+    - pip install build grpcio grpcio-tools
+    - python -m build
     - python -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4-${DOCKER_IMAGE_VERSION}.pb asr4.proto
     - mv dist/*.whl .
     - mv proto/*.pb .
@@ -158,7 +158,6 @@ testing:docker:
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
-    - cp requirements.txt deploy/docker/
     - cd deploy/docker/
     - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
