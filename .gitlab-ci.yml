@@ -127,15 +127,23 @@ python:build:latest_bin:
   stage: build
   only:
     - tags
+  before_script:
+    - echo JOB_ID=$CI_JOB_ID >> job.env
   script:
     - export MAKEFLAGS="-j4"
-    - pip install build
+    - pip install build grpcio grpcio-tools
     - python -m build
+    - python -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4-${DOCKER_IMAGE_VERSION}.pb asr4.proto
     - mv dist/*.whl .
+    - mv proto/*.pb .
   artifacts:
     expire_in: 2 days
+    untracked: true
     paths:
       - "*.whl"
+      - "*.pb"
+    reports:
+      dotenv: job.env
 
 testing:docker:
   stage: docker
@@ -179,18 +187,14 @@ testing:deploy:
   environment:
     name: pre-production/asr4 
     action: start
-  before_script:
-    - apt-get update && apt-get install -y python3 python3-pip
-    - pip3 install grpcio grpcio-tools
-    # Build asr4.pb
-    - python3 -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4.pb asr4.proto
-    - cp proto/asr4.pb deploy/nomad
+  dependencies:
+    - python:build:latest_bin
   script:
     - cd deploy/nomad
     - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
     - export NOMAD_ADDR=http://$NOMAD_IP:4646
     - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} nomad job run asr4-staging.nomad
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
 testing:promote:
   stage: testing-promote
@@ -237,10 +241,12 @@ release:deploy:
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
+  dependencies:
+    - python:build:latest_bin
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
-#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
 
 
 cleanup:
