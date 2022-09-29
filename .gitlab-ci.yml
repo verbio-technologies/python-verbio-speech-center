@@ -138,6 +138,7 @@ python:build:latest_bin:
     - mv proto/*.pb .
   artifacts:
     expire_in: 2 days
+    untracked: true
     paths:
       - "*.whl"
       - "*.pb"
@@ -190,11 +191,12 @@ testing:deploy:
     - job: python:build:latest_bin
       artifacts: true
   script:
+    - echo "id ${JOB_ID}, token ${GITLAB_TOKEN}"
     - cd deploy/nomad
     - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
     - export NOMAD_ADDR=http://$NOMAD_IP:4646
     - echo "Deploying testing version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_ASR4_JOB_ID=${JOB_ID} nomad job run asr4-staging.nomad
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_ASR4_JOB_ID=${JOB_ID} NOMAD_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
 testing:promote:
   stage: testing-promote
@@ -247,7 +249,7 @@ release:deploy:
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
-#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_ASR4_JOB_ID=${JOB_ID} NOMAD_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
 
 
 cleanup:
