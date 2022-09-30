@@ -1,13 +1,9 @@
 stages:
   - lint
   - test
-  - test
   - build
-  - docker
   - testing
-  - testing-promote
   - staging
-  - staging-promote
   - release
   - cleanup
 
@@ -65,19 +61,11 @@ python:test:all:
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
-    - pytest --junit-xml=report.xml --verbose
+    - pytest tests/unit tests/functional --junit-xml=report.xml --verbose
   artifacts:
     expire_in: 5 days
     reports:
       junit: report.xml
-
-python:test:client:
-  stage: test
-  before_script:
-    - pip install .[client]
-  script:
-    - python --version
-    - python bin/client.py --host 192.168.2.4:50051 -a  /mnt/db/CSR/en-us/8_kHz/test_db/multidomain/ITmaintenance/HH/gdit_cut/0a357d4b-c065-46d3-bbb4-16c4808fe974_transcription-00:11:30_490-00:11:34_270.wav
 
 rust:test:coverage:
   stage: test
@@ -98,7 +86,7 @@ python:test:coverage:
     - pip install .[server,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
-    - pytest --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
+    - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 30 days
     paths:
@@ -113,10 +101,10 @@ rust:build:latest_bin:
   script:
     - cargo --version
     - cargo build --release
-#    - cpack -G "DEB;RPM" ./
-#    - cargo deb -v
-#    - mv *.deb ../
-#    - mv *.rpm ../
+    # - cpack -G "DEB;RPM" ./
+    # - cargo deb -v
+    # - mv *.deb ../
+    # - mv *.rpm ../
   artifacts:
     expire_in: 2 days
     paths:
@@ -145,8 +133,9 @@ python:build:latest_bin:
     reports:
       dotenv: job.env
 
-testing:docker:
-  stage: docker
+
+testing:promote:
+  stage: testing
   image: docker:20.10.15
   parallel:
     matrix:
@@ -167,36 +156,46 @@ testing:docker:
     - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
-
-testing:test_images:integration:
+testing:integration:
   stage: testing
-  image: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
+  needs: ["testing:promote"]
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      command: ["python3", "server.py", "-j1", "-m", "asr4-${LANGUAGE}.onnx", "-d", "dict.ltr.txt", "-l", "${LANGUAGE}"]
+  before_script:
+    - pip install .[client,test]
   script:
-    - echo "integration tests here"
+    - python --version
+    - pytest tests/unit --junit-xml=report.xml --verbose
+  artifacts:
+    expire_in: 5 days
+    reports:
+      junit: report.xml
 
 
-testing:promote:
-  stage: testing-promote
+staging:promote:
+  stage: staging
   image: docker:20.10.15
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
+  needs: ["testing:integration"]
   script:
     - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
-
 staging:deploy:
-  stage: testing
+  stage: staging
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
@@ -205,6 +204,7 @@ staging:deploy:
     action: start
   dependencies:
     - python:build:latest_bin
+  needs: ["staging:promote"]
   script:
     - cd deploy/nomad
     - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
@@ -212,8 +212,7 @@ staging:deploy:
     - echo "Deploying staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
-
-staging:test_images:functional:
+staging:e2e:
   stage: staging
   image: "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
   parallel:
@@ -221,17 +220,20 @@ staging:test_images:functional:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
+  needs: ["staging:deploy"]
   script:
-    - echo "functional tests for new release"
+    - echo "E2E tests for new release"
 
-staging:promote:
-  stage: staging-promote
+
+release:promote:
+  stage: release
   image: docker:20.10.15
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
+  needs: ["staging:e2e"]
   script:
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
@@ -245,10 +247,11 @@ release:deploy:
     - tags
   dependencies:
     - python:build:latest_bin
+  needs: ["release:promote"]
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
-#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
+    # - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
 
 
 cleanup:
