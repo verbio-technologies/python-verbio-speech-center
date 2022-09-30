@@ -14,6 +14,7 @@ The only requirements for the HTTP client are `cURL`, `jq` and `base64`. In case
 
 ```sh
 # Ubuntu/Debian
+apt-get update
 apt-get install -y curl jq
 
 # RHEL/CentOS/Fedora
@@ -24,11 +25,22 @@ yum install -y curl jq
 
 ### Client installation (gRPC)
 
-Python version 3.7+ is required to run the client. 
+Python version 3.7+ is required to run the client. It is recommended to update the pip package:
+
+```sh
+pip install --upgrade pip
+```
+
 To install the client's requirements, run the following command from the root of the `asr4` repository:
 
 ```sh
 pip install .[client]
+```
+
+Check if asr4 is correctly installed by printing its version.
+
+```sh
+python -c 'import asr4; print(asr4.__version__)'
 ```
 
 ### Server installation
@@ -39,6 +51,13 @@ To install the server's requirements, run the following command from the root of
 ```sh
 pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 pip install .[server]
+```
+
+### Uninstall asr4
+
+First remove the folder "asr4.egg-info" from the asr4 repository root and then run:
+```sh
+pip uninstall asr4
 ```
 
 ## How to Run
