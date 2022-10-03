@@ -15,7 +15,7 @@ from asr4.recognizer import add_RecognizerServicer_to_server
 
 from tests.unit.test_recognizer_service import MockOnnxSession
 
-DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
+DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a  message from you"
 
 
 def runServer(serverAddress: str, event: multiprocessing.Event):

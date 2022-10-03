@@ -150,7 +150,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def _formatWords(self, transcription: str) -> str:
         if self._formatter:
-            return " ".join(self._formatter.classify(transcription.split(" ")))
+            words = list(filter(lambda x: len(x)>0, transcription.split(" ")))
+            return " ".join(self._formatter.classify(words))
         else:
             return transcription
 

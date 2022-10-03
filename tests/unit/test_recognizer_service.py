@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Union
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 DEFAULT_SPANISH_MESSAGE: str = (
-    "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
+    "hola estoy levantado y en marcha  y he recibido un mensaje tuyo"
 )
 FORMATTED_SPANISH_MESSAGE: str = (
     "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
