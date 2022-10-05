@@ -210,7 +210,7 @@ staging:promote:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
-  needs: ["testing:integration"]
+  needs: ["testing:integration:en-us", "testing:integration:es", "testing:integration:pt-br"]
   script:
     - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
