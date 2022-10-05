@@ -168,7 +168,7 @@ testing:promote:
     - pip install .[client,test]
   script:
     - python --version
-    - pytest tests/integration --junit-xml=report.xml --verbose
+    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
     reports:
