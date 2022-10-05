@@ -75,6 +75,7 @@ server = [
 test = [
     "pytest >= 6.2.5",
     "pytest-cov >= 3.0.0",
+    "jiwer >= 2.5.1"
 ]
 
 

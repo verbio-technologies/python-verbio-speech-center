@@ -1,6 +1,5 @@
 variables {
   DOCKER_REGISTRY = "docker.registry.verbio.com/csr"
-  STAGE = "testing"
   VERSION = "latest"
   GITLAB_TOKEN = ""
   ASR4_PROJECT_ID = "1361"
@@ -55,7 +54,7 @@ job "asr4-staging" {
       driver = "docker"
 
       config {
-        image              = "${var.DOCKER_REGISTRY}/${var.STAGE}/asr4-en-us:${var.VERSION}"
+        image              = "${var.DOCKER_REGISTRY}/staging/asr4-en-us:${var.VERSION}"
         ports              = ["grpc-port-en-us"]
       }
 
@@ -90,7 +89,7 @@ job "asr4-staging" {
       driver = "docker"
 
       config {
-        image              = "${var.DOCKER_REGISTRY}/${var.STAGE}/asr4-es:${var.VERSION}"
+        image              = "${var.DOCKER_REGISTRY}/staging/asr4-es:${var.VERSION}"
         ports              = ["grpc-port-es"]
       }
 
@@ -125,7 +124,7 @@ job "asr4-staging" {
       driver = "docker"
 
       config {
-        image              = "${var.DOCKER_REGISTRY}/${var.STAGE}/asr4-pt-br:${var.VERSION}"
+        image              = "${var.DOCKER_REGISTRY}/staging/asr4-pt-br:${var.VERSION}"
         ports              = ["grpc-port-pt-br"]
       }
 
