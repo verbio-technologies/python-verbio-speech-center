@@ -59,13 +59,6 @@ rust:test:all:
 
 python:test:all:
   stage: test
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:0.0.11
-      alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-$$LANGUAGE.onnx", "-d", "dict.ltr.txt", "-l", "$(echo \"$LANGUAGE\")"]
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,test]
@@ -166,18 +159,11 @@ testing:promote:
     - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
-testing:integration:
+.testing:integration:
   stage: testing-integration
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
   needs: ["testing:promote"]
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-${LANGUAGE}.onnx", "-d", "dict.ltr.txt", "-l", "${LANGUAGE}"]
   before_script:
     - pip install .[client,test]
   script:
@@ -187,6 +173,33 @@ testing:integration:
     expire_in: 5 days
     reports:
       junit: report.xml
+
+testing:integration:en-us:
+  extends: .testing:integration
+  variables:
+    LANGUAGE: en-us
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
+
+testing:integration:es:
+  extends: .testing:integration
+  variables:
+    LANGUAGE: es
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      command: ["python3", "server.py", "-j1", "-m", "asr4-es.onnx", "-d", "dict.ltr.txt", "-l", "es"]
+
+testing:integration:pt-br:
+  extends: .testing:integration
+  variables:
+    LANGUAGE: pt-br
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      command: ["python3", "server.py", "-j1", "-m", "asr4-pt-br.onnx", "-d", "dict.ltr.txt", "-l", "pt-br"]
 
 
 staging:promote:
