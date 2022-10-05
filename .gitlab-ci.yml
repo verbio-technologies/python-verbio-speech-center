@@ -65,7 +65,7 @@ python:test:all:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:0.0.11
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-$$LANGUAGE.onnx", "-d", "dict.ltr.txt", "-l", "$$LANGUAGE"]
+      command: ["python3", "server.py", "-j1", "-m", "asr4-$$LANGUAGE.onnx", "-d", "dict.ltr.txt", "-l", "$(echo \"$LANGUAGE\")"]
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,test]
