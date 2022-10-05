@@ -17,12 +17,16 @@ from typing import Any, Dict, List, Optional, Union
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 DEFAULT_SPANISH_MESSAGE: str = (
+    "hola estoy  levantado y en marcha  y he recibido un mensaje tuyo"
+)
+DEFAULT_CORRECT_SPANISH_MESSAGE: str = (
     "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
 )
 FORMATTED_SPANISH_MESSAGE: str = (
     "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
 )
-DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
+DEFAULT_PORTUGUESE_MESSAGE: str = "ola  estou de pe recebi uma mensagem sua"
+DEFAULT_CORRECT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
 
 
 class MockOnnxSession(Session):
@@ -283,7 +287,7 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.eventHandle(request),
-            DEFAULT_SPANISH_MESSAGE,
+            DEFAULT_CORRECT_SPANISH_MESSAGE,
         )
 
     def testRecognizeRequestHandlePtBr(self):
@@ -297,7 +301,9 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"0000",
         )
-        self.assertEqual(service.eventHandle(request), DEFAULT_PORTUGUESE_MESSAGE)
+        self.assertEqual(
+            service.eventHandle(request), DEFAULT_CORRECT_PORTUGUESE_MESSAGE
+        )
 
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockOnnxSession(""))
