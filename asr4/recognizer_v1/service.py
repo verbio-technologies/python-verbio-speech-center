@@ -149,11 +149,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             )
 
     def _formatWords(self, transcription: str) -> str:
+        words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
         if self._formatter:
-            words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
             return " ".join(self._formatter.classify(words))
         else:
-            return transcription
+            return " ".join(words)
 
     def eventSink(self, response: str) -> RecognizeResponse:
         result = {"text": response}
