@@ -8,7 +8,7 @@ The installation is divided into two parts: installing the server or the client.
 
 **If you only want to quickly perform a test inference, we recommend that you just install the client and run it against the server located in tanzania.**
 
-### Client installation (HTTP) - **Quickest**
+### Client installation (HTTP)
 
 The only requirements for the HTTP client are `cURL`, `jq` and `base64`. In case your system does not include `cURL` or `jq` by default run the following command:
 
@@ -64,7 +64,8 @@ pip uninstall asr4
 
 Again, separated instructions are provided to either run the client or the server. If you wish to perform a quick test inference just take a look at the client sub-section.
 
-### Client (HTTP) - **Quickest**
+### Client (HTTP)
+
 
 Once its dependencies are installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
 
@@ -84,6 +85,14 @@ jq -n \
   '{config: {parameters: {language: "en-US", sampleRateHz: 16000}, resource: {topic: "GENERIC"}}, audio: $audio[0]}' \
   | curl http://tanzania:50051/v1/recognize -H 'Accept-Language: en-US' -d @-
 ```
+
+Find supported configuration options in the table below:
+
+|Option|Supported Values|
+|-|-|
+|Language|en-US, es, pt-BR|
+|Sample Rate (Hz)| 16000|
+|Recognition Topic| GENERIC|
 
 ### Client (gRPC)
 
@@ -118,6 +127,15 @@ optional arguments:
   -v, --verbose         Give more output. Option is additive, and can be used up to 4 times.
 ```
 
+Find supported configuration options in the table below:
+
+|Option|Supported Values|
+|-|-|
+|Language|*en-US, *es, *pt-BR|
+|Sample Rate (Hz)| 8000, 16000|
+|Recognition Topic| GENERIC|
+
+\***Case Insensitive**
 
 ### Server
 
