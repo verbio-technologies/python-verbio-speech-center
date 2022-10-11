@@ -1,0 +1,38 @@
+FROM docker.registry.verbio.com/python:3.10-slim
+
+ARG VERSION=0.0.1
+ARG LANGUAGE=en-us
+
+RUN apt-get update && apt-get install -y git build-essential
+
+# Install CUDA 11.7.0
+
+RUN wget https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux.run && \
+    sh cuda_11.7.0_515.43.04_linux.run --silent --toolkit && \
+    rm -rf cuda_11.7.0_515.43.04_linux.run
+
+# Install CuDNN 8.4.1
+
+RUN mkdir cudnn && \
+    cd cudnn && \
+    wget https://europe.mirror.pkgbuild.com/community/os/x86_64/cudnn-8.5.0.96-1-x86_64.pkg.tar.zst && \
+    tar --use-compress-program=unzstd -xvf cudnn-8.5.0.96-1-x86_64.pkg.tar.zst && \
+    mv usr/include/* /usr/local/cuda/include/ && \
+    mv usr/lib/* /usr/local/cuda/lib64/ && \
+    cd .. && \
+    rm -rf cudnn
+
+COPY init.sh /init.sh
+COPY server.py /server.py
+COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
+COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
+COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
+COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
+
+RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+ENV MAKEFLAGS="-j4"
+RUN pip install asr4-$VERSION-py3-none-any.whl[server]
+
+CMD [ "/init.sh" ]
+
+
