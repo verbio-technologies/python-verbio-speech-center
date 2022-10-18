@@ -184,7 +184,7 @@ python:build:0.0.1_bin:
   needs: ["python:build:0.0.1_bin"]
   script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
-    - mv *.whl deploy/docker/
+    - cp *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
