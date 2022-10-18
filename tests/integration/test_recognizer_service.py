@@ -31,6 +31,23 @@ class TestRecognizerUtils(object):
             universal_newlines=True,
         )
 
+    def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
+        return Popen(
+            [
+                "python",
+                f"{self.rootdir}/bin/client.py",
+                "--gui-path",
+                guiPath,
+                "--language",
+                language,
+                "--host",
+                self._host,
+            ],
+            stdout=PIPE,
+            stderr=PIPE,
+            universal_newlines=True,
+        )
+
     def checkStatus(self, status: int, stderr: str) -> None:
         try:
             assert status == 0
@@ -42,7 +59,7 @@ class TestRecognizerUtils(object):
         measures = jiwer.compute_measures(reference, hypothesis)
         cer = jiwer.cer(reference, hypothesis)
         print("\nHypothesis =", hypothesis)
-        print("\nReference =", hypothesis)
+        print("\nReference =", reference)
         print("\nCharacter Error Rate (CER) =", round(cer, 3))
         print("Word Error Rate (WER) =", round(measures["wer"], 3))
         print("Match Error Rate (MER) =", round(measures["mer"], 3))
@@ -70,6 +87,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
         self._audio = f"{os.path.join(self.datadir, self._language)}.wav"
+        self._gui = f"{os.path.join(self.datadir, self._language)}.gui"
         referencePath = f"{os.path.join(self.datadir, self._language)}.txt"
         self._reference = self.readReference(referencePath)
 
@@ -84,6 +102,14 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
         if match != None and match.lastindex != None:
             self.evaluateHypothesis(self._reference, hypothesis)
+
+    def testRecognizeGuiRequest(self):
+        process = self.runGuiRecognition(self._gui, self._language)
+        status = process.wait(timeout=60)
+        self.checkStatus(status, process.stderr.read())
+
+        output = process.stdout.read()
+        hypothesis = re.findall('RecognizeRequest text: "(.+?)"', output)
 
     def testRecognizeRequestWithOtherLanguages(self):
         currentLanguage = Language.parse(self._language)
