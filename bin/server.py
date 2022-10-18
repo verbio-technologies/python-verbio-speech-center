@@ -84,7 +84,7 @@ def _addRecognizerService(
     vocabularyPath: Optional[str],
     formatterPath: Optional[str],
 ) -> None:
-    session = OnnxSession(model)
+    session = OnnxSession(model, providers=['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider'])
     add_RecognizerServicer_to_server(
         RecognizerService(session, language, vocabularyPath, formatterPath), server
     )

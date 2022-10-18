@@ -263,7 +263,7 @@ testing:integration:en-us:gpu:
   variables:
     LANGUAGE: en-us
   services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
 
@@ -275,7 +275,7 @@ testing:integration:es:gpu:
   variables:
     LANGUAGE: es
   services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       command: ["python3", "server.py", "-j1", "-m", "asr4-es.onnx", "-d", "dict.ltr.txt", "-l", "es"]
 
@@ -287,7 +287,7 @@ testing:integration:pt-br:gpu:
   variables:
     LANGUAGE: pt-br
   services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       command: ["python3", "server.py", "-j1", "-m", "asr4-pt-br.onnx", "-d", "dict.ltr.txt", "-l", "pt-br"]
 
