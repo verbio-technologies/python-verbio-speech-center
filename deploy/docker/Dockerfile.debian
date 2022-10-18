@@ -3,7 +3,7 @@ FROM docker.registry.verbio.com/python:3.10-slim
 ARG VERSION=0.0.1
 ARG LANGUAGE=en-us
 
-RUN apt-get update && apt-get install -y git build-essential
+RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
 
 
 COPY init.sh /init.sh
@@ -15,6 +15,9 @@ COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
 RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 ENV MAKEFLAGS="-j4"
+
 RUN pip install asr4-$VERSION-py3-none-any.whl[server]
+RUN apt-get purge -y git build-essential ninja-build cmake
+RUN apt-get autoremove -y
 
 CMD [ "/init.sh" ]
