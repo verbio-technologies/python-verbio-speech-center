@@ -201,7 +201,7 @@ testing:promote:cpu:
 
 testing:promote:gpu:
   variables:
-    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DOCKERFILE: "Dockerfile.debian-gpu"
   extends: .testing:promote
 
