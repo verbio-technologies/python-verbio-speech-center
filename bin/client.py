@@ -37,22 +37,35 @@ def _repr(responses: List[RecognizeRequest]) -> List[str]:
 
 
 def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
-    audio = _getAudio(args.audio)
+    audios = []
+    responses = []
+
+    if args.gui:
+        audios = _getAudiosList(args.gui)
+    else:
+        audios.append(args.audio)
+
     workerPool = multiprocessing.Pool(
         processes=args.jobs,
         initializer=_initializeWorker,
-        initargs=(args.host,),
+            initargs=(args.host,),
     )
-    responses = [
-        workerPool.apply(
-            _runWorkerQuery,
-            (
-                audio,
-                Language.parse(args.language),
-            ),
-        )
-    ]
+
+    for audio_path in audios:
+        audio = _getAudio(audio_path)
+        response = workerPool.apply(
+                _runWorkerQuery,
+                (
+                    audio,
+                    Language.parse(args.language),
+                ),
+            )
+        responses.append(response)
+
     return list(map(RecognizeResponse.FromString, responses))
+
+def _getAudiosList(gui_file: str) -> List[str]:
+    return [audio for audio in open(args.gui, 'r').read().split('\n') if audio != ""]
 
 
 def _getAudio(audio_file: str) -> bytes:
@@ -111,9 +124,16 @@ def _parseArguments() -> argparse.Namespace:
     parser.add_argument(
         "-a",
         "--audio-path",
-        required=True,
+        required=False,
         dest="audio",
         help="Path to the audio file.",
+    )
+    parser.add_argument(
+        "-g",
+        "--gui-path",
+        required=False,
+        dest="gui",
+        help="Path to the gui file with audio paths.",
     )
     parser.add_argument(
         "-l",
@@ -147,6 +167,8 @@ def _parseArguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = _parseArguments()
+    if not (args.audio or args.gui):
+        raise ValueError(f"Audio path (-a) or audios gui file (-g) is required")
     logging.basicConfig(
         level=_LOG_LEVELS.get(args.verbose, logging.INFO),
         format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
