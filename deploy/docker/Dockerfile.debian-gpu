@@ -13,10 +13,9 @@ COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
-RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 ENV MAKEFLAGS="-j4"
 
-RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server-gpu]
+RUN cd / && CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server-gpu]
 RUN apt-get purge -y git build-essential ninja-build cmake
 RUN apt-get autoremove -y
 
