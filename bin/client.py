@@ -48,24 +48,25 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
     workerPool = multiprocessing.Pool(
         processes=args.jobs,
         initializer=_initializeWorker,
-            initargs=(args.host,),
+        initargs=(args.host,),
     )
 
     for audio_path in audios:
         audio = _getAudio(audio_path)
         response = workerPool.apply(
-                _runWorkerQuery,
-                (
-                    audio,
-                    Language.parse(args.language),
-                ),
-            )
+            _runWorkerQuery,
+            (
+                audio,
+                Language.parse(args.language),
+            ),
+        )
         responses.append(response)
 
     return list(map(RecognizeResponse.FromString, responses))
 
+
 def _getAudiosList(gui_file: str) -> List[str]:
-    return [audio for audio in open(args.gui, 'r').read().split('\n') if audio != ""]
+    return [audio for audio in open(args.gui, "r").read().split("\n") if audio != ""]
 
 
 def _getAudio(audio_file: str) -> bytes:
