@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(asr4
-        VERSION 0.0.11
+        VERSION 0.0.13
         LANGUAGES NONE
 )
 
