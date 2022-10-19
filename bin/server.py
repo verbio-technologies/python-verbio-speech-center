@@ -87,7 +87,6 @@ def _addRecognizerService(
     session = OnnxSession(
         model,
         providers=[
-            "TensorrtExecutionProvider",
             "CUDAExecutionProvider",
             "CPUExecutionProvider",
         ],

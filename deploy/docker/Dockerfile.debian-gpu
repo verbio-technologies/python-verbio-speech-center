@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
 
 
 COPY init.sh /init.sh
-COPY server.py /root/server.py
+COPY server.py /server.py
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
@@ -15,7 +15,8 @@ COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
 ENV MAKEFLAGS="-j4"
 
-RUN cd / && CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server-gpu]
+RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server-gpu]
+
 RUN apt-get purge -y git build-essential ninja-build cmake
 RUN apt-get autoremove -y
 
