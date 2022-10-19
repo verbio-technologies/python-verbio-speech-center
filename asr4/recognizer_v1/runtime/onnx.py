@@ -43,7 +43,7 @@ class Session(abc.ABC):
 class OnnxSession(abc.ABC):
     def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
         providers = kwargs.get("providers")
-        del kwargs['providers']
+        del kwargs["providers"]
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
             sess_options=kwargs.get("sess_options"),
