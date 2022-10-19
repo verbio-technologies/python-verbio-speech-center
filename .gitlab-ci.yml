@@ -257,21 +257,16 @@ testing:integration:pt-br:cpu:
 
 testing:integration:en-us:gpu:
   extends: .testing:integration:gpu
-  tags: 
-    - gpu
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   variables:
     LANGUAGE: en-us
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
+      tags: gpu
 
 testing:integration:es:gpu:
   extends: .testing:integration:gpu
-  tags: 
-    - gpu
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   variables:
     LANGUAGE: es
   services:
@@ -281,9 +276,6 @@ testing:integration:es:gpu:
 
 testing:integration:pt-br:gpu:
   extends: .testing:integration:gpu
-  tags: 
-    - gpu
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   variables:
     LANGUAGE: pt-br
   services:
