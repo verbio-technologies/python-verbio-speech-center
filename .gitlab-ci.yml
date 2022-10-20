@@ -264,7 +264,9 @@ testing:integration:en-us:gpu:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
+      #command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
+      variables:
+        LANGUAGE: en-us
 
 testing:integration:es:gpu:
   extends: .testing:integration:gpu
@@ -275,7 +277,9 @@ testing:integration:es:gpu:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-es.onnx", "-d", "dict.ltr.txt", "-l", "es"]
+      #command: ["python3", "server.py", "-j1", "-m", "asr4-es.onnx", "-d", "dict.ltr.txt", "-l", "es"]
+      variables:
+        LANGUAGE: es
 
 testing:integration:pt-br:gpu:
   extends: .testing:integration:gpu
@@ -286,7 +290,9 @@ testing:integration:pt-br:gpu:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-pt-br.onnx", "-d", "dict.ltr.txt", "-l", "pt-br"]
+      #command: ["python3", "server.py", "-j1", "-m", "asr4-pt-br.onnx", "-d", "dict.ltr.txt", "-l", "pt-br"]
+      variables:
+        LANGUAGE: pt-br
 
 
 

@@ -53,6 +53,7 @@ RUN git clone --recursive https://github.com/pytorch/pytorch -b 1_12_torchgen_up
     rm -rf pytorch
 
 RUN git clone https://github.com/microsoft/onnxruntime.git && cd onnxruntime && \
+    pip install packaging && \
     ./build.sh --cuda_home /usr/local/cuda --cudnn_home /usr/local/cuda/lib64/ --use_cuda --config Release --build_wheel --update --build --parallel --cmake_extra_defines ONNXRUNTIME_VERSION=$(cat ./VERSION_NUMBER) 'CMAKE_CUDA_ARCHITECTURES=52;60;61;70;75;86' && \
     pip install ./build/Linux/Release/dist/*whl && \
     rm -rf onnxruntime

@@ -20,4 +20,4 @@ RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" p
 RUN apt-get purge -y git build-essential ninja-build cmake
 RUN apt-get autoremove -y
 
-CMD [ "/init.sh" ]
+CMD "source /root/.bashrc && /init.sh"
