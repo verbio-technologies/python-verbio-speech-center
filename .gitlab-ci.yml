@@ -240,7 +240,7 @@ testing:promote:gpu:
 
 .testing:integration:gpu:
   extends: .testing:integration
-  needs: ["testing:promote:gpu"]
+#  needs: ["testing:promote:gpu"]
 
 #testing:integration:en-us:cpu:
 #  extends: .testing:integration:cpu
