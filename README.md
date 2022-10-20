@@ -102,8 +102,12 @@ Once its dependencies are installed, the client can connect to a running `asr4` 
 # Send a recognition request against the asr4 server located at tanzania and obtain the transcription of a WAV audio
 python bin/client.py --host tanzania:50051 -l en-US -a <WAV_FILE_PATH>.wav
 
+# Or the transcription of several audios in a .gui file
+python bin/client.py --host tanzania:50051 -l en-US -g <GUI_FILE_PATH>.gui
+
 # Try again with a Spanish WAV audio
 python bin/client.py --host tanzania:50051 -l es -a <WAV_FILE_PATH>.wav
+
 ```
 
 Note that it needs to define `PYTHONPATH` to the root of the repo to work.
@@ -112,7 +116,7 @@ Additionally, include the `--help` argument to display all available options:
 
 ```
 » python bin/client.py --help
-usage: client.py [-h] -a AUDIO [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-v]
+usage: client.py [-h] [-a AUDIO] [-g GUI] [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-v]
 
 A Speech Recognition client.
 
@@ -120,6 +124,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -a AUDIO, --audio-path AUDIO
                         Path to the audio file.
+  -g GUI, --gui-path GUI
+                        Path to the gui file with audio paths.
   -l {en-us,es,pt-br}, --language {en-us,es,pt-br}
                         Language of the recognizer service.
   --host HOST           Hostname address of the ASR4 server.
