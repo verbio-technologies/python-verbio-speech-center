@@ -99,6 +99,8 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         output = process.stdout.read()
         match = re.search('RecognizeRequest text: "(.+?)"', output)
         hypothesis = match.group(match.lastindex)
+        assert len(hypothesis), 1
+        assert len(hypothesis[0]) > 1
 
         if match != None and match.lastindex != None:
             self.evaluateHypothesis(self._reference, hypothesis)
@@ -110,6 +112,10 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
         output = process.stdout.read()
         hypothesis = re.findall('RecognizeRequest text: "(.+?)"', output)
+        assert len(hypothesis), 3
+        assert len(hypothesis[0]) > 1
+        assert len(hypothesis[1]) > 1
+        assert len(hypothesis[2]) > 1
 
     def testRecognizeRequestWithOtherLanguages(self):
         currentLanguage = Language.parse(self._language)
