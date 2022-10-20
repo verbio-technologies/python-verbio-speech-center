@@ -279,7 +279,7 @@ testing:integration:en-us:gpu:
 #    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
     - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:0.0.13
       alias: asr4-server
-      command: nvidia-smi
+      command: ["nvidia-smi"]
 #      variables:
 #        LANGUAGE: en-us
 
