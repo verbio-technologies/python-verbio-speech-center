@@ -276,7 +276,8 @@ testing:integration:en-us:gpu:
   variables:
     LANGUAGE: en-us
   services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+#    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:0.0.13
       alias: asr4-server
       #command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
       variables:
