@@ -5,7 +5,6 @@ ARG LANGUAGE=en-us
 
 RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
 
-
 COPY init.sh /init.sh
 COPY server.py /server.py
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
@@ -20,4 +19,4 @@ RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" p
 RUN apt-get purge -y git build-essential ninja-build cmake
 RUN apt-get autoremove -y
 
-CMD "source /root/.bashrc && /init.sh"
+CMD /bin/bash -c "source /root/.bashrc && /init.sh"
