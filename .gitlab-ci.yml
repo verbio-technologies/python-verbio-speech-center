@@ -12,6 +12,7 @@ stages:
   - cleanup
 
 image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
+when: never
 
 variables:
   RUSTC_WRAPPER: sccache
@@ -257,6 +258,7 @@ testing:integration:pt-br:cpu:
 
 testing:integration:en-us:gpu:
   extends: .testing:integration:gpu
+  when: always
   tags:
     - gpu
   variables:
