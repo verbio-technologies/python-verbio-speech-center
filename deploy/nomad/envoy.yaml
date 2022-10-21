@@ -34,6 +34,7 @@ static_resources:
                         exact: "en-US"
                   route: 
                     cluster: en_us-grpc_service
+                    timeout: 0s
                 - match: 
                     prefix: "/asr4.recognizer.v1.Recognizer/Recognize"
                     grpc: {}
@@ -43,6 +44,7 @@ static_resources:
                         exact: "es"
                   route: 
                     cluster: es-grpc_service
+                    timeout: 0s
                 - match: 
                     prefix: "/asr4.recognizer.v1.Recognizer/Recognize"
                     grpc: {}
@@ -52,6 +54,7 @@ static_resources:
                         exact: "pt-BR"
                   route: 
                     cluster: pt_br-grpc_service
+                    timeout: 0s
           access_log:
           - name: envoy.access_loggers.stdout
             typed_config:
