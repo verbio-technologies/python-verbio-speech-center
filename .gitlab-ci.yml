@@ -61,7 +61,7 @@ python:test:cpu:
   stage: test
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install .[server,test]
+    - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -78,7 +78,7 @@ python:test:gpu:
   image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   before_script:
     - source ~/.bashrc
-    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server-gpu,test]
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -105,7 +105,7 @@ python:test:coverage:
   stage: test
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install .[server,test]
+    - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
@@ -122,7 +122,7 @@ python-gpu:test:coverage:
   image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   before_script:
     - source ~/.bashrc
-    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server-gpu,test]
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
