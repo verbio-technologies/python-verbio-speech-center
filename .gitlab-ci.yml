@@ -133,7 +133,7 @@ python:test:coverage:gpu:
   coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
 
 
-rust:build:0.0.1_bin:
+rust:build:latest_bin:
   stage: build
   only:
     - tags
@@ -150,7 +150,7 @@ rust:build:0.0.1_bin:
       - "*.deb"
       - "*.rpm"
 
-python:build:0.0.1_bin:
+python:build:latest_bin:
   stage: build
   only:
     - tags
@@ -181,7 +181,7 @@ python:build:0.0.1_bin:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
-  needs: ["python:build:0.0.1_bin"]
+  needs: ["python:build:latest_bin"]
   script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
@@ -323,7 +323,7 @@ staging:deploy:
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
-  needs: ["staging:promote", "python:build:0.0.1_bin"]
+  needs: ["staging:promote", "python:build:latest_bin"]
   environment:
     name: pre-production/asr4
     action: start
@@ -384,7 +384,7 @@ release:deploy:
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
-  needs: ["release:promote", "python:build:0.0.1_bin"]
+  needs: ["release:promote", "python:build:latest_bin"]
   script:
     - echo "deploy new release in pre-production"
     - cd deploy/nomad
