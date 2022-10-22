@@ -43,12 +43,14 @@ RUN conda install -c pytorch magma-cuda117 -y
 
 # Build PyTorch from scratch
 
+ENV CUDACXX=/usr/local/cuda/bin/nvcc
+
 RUN git clone --recursive https://github.com/pytorch/pytorch -b 1_12_torchgen_update && \
     cd pytorch && \
     git submodule sync && \
     git submodule update --init --recursive --jobs 0 && \
     export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"} && \
-    CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc python setup.py install && \
+    CMAKE_CUDA_COMPILER=$CUDACXX python setup.py install && \
     cd .. && \
     rm -rf pytorch
 
