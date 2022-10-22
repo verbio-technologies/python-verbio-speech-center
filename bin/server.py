@@ -28,12 +28,12 @@ def serve(
 ) -> None:
     _LOGGER.info("Binding to '%s'", args.bindAddress)
     workers = []
+    providers = ["CPUExecutionProvider"]
+    if args.gpu:
+        providers = ["CUDAExecutionProvider"] + providers
     session = OnnxSession(
         args.model,
-        providers=[
-            "CUDAExecutionProvider",
-            "CPUExecutionProvider",
-        ],
+        providers=providers,
     )
     for _ in range(args.jobs):
         worker = multiprocessing.Process(
@@ -142,6 +142,14 @@ def _parseArguments() -> argparse.Namespace:
         "--formatter-model-path",
         dest="formatter",
         help="Path to the formatter model file.",
+    )
+    parser.add_argument(
+        "-g",
+        "--gpu",
+        dest="gpu",
+        default=False,
+        type=bool,
+        help="Whether to use GPU instead of CPU",
     )
     parser.add_argument(
         "--host",

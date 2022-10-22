@@ -5,7 +5,7 @@ ARG LANGUAGE=en-us
 
 RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
 
-COPY init.sh /init.sh
+COPY init-gpu.sh /init.sh
 COPY server.py /server.py
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
