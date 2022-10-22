@@ -115,7 +115,7 @@ python:test:coverage:
       - coverage/**
   coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
 
-python-gpu:test:coverage:
+python:test:coverage:gpu:
   stage: test
   tags:
     - gpu
@@ -311,8 +311,8 @@ staging:promote:
     - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
-    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
@@ -350,7 +350,7 @@ staging:e2e:gpu:
   stage: staging-e2e
   tags:
     - gpu
-  image: "${DOCKER_STAGING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  image: "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
@@ -374,8 +374,8 @@ release:promote:
     - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
-    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
@@ -403,6 +403,6 @@ cleanup:
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-GPU-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
