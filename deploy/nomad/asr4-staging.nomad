@@ -103,7 +103,7 @@ job "asr4-staging" {
       }
 
       resources {
-        memory = 5000
+        memory = 8000
       }
 
       service {
