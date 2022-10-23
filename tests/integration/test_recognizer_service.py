@@ -108,7 +108,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)
-        status = process.wait(timeout=100)
+        status = process.wait(timeout=600)
         self.checkStatus(status, process.stderr.read())
 
         output = process.stdout.read()
