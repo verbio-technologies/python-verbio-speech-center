@@ -59,7 +59,9 @@ def _asyncRunServer(
     formatter: Optional[str],
     jobs: int,
 ) -> None:
-    asyncio.run(_runServer(bindAddress, model, providers, language, vocabulary, formatter, jobs))
+    asyncio.run(
+        _runServer(bindAddress, model, providers, language, vocabulary, formatter, jobs)
+    )
 
 
 async def _runServer(
@@ -75,7 +77,9 @@ async def _runServer(
         futures.ThreadPoolExecutor(max_workers=jobs),
         options=(("grpc.so_reuseport", 1),),
     )
-    _addRecognizerService(server, model, providers, language, vocabularyPath, formatterPath)
+    _addRecognizerService(
+        server, model, providers, language, vocabularyPath, formatterPath
+    )
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
     _LOGGER.info(f"Server listening on {bindAddress}")
@@ -180,7 +184,9 @@ def _parseArguments() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method('spawn')  # This is important and MUST be inside the name==main block
+    multiprocessing.set_start_method(
+        "spawn"
+    )  # This is important and MUST be inside the name==main block
     args = _parseArguments()
     logging.basicConfig(
         level=_LOG_LEVELS.get(args.verbose, logging.INFO),
