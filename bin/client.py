@@ -113,7 +113,7 @@ def _runWorkerQuery(audio: bytes, language: Language) -> bytes:
     )
     try:
         return _workerStubSingleton.Recognize(
-            request, metadata=(("accept-language", language.value),), timeout=60
+            request, metadata=(("accept-language", language.value),), timeout=100
         ).SerializeToString()
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")

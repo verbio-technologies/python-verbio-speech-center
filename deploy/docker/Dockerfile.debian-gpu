@@ -1,23 +1,22 @@
-FROM docker.registry.verbio.com/python:3.10-slim
+FROM docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
 
 ARG VERSION=0.0.1
 ARG LANGUAGE=en-us
 
 RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
 
-
-COPY init.sh /init.sh
+COPY init-gpu.sh /init.sh
 COPY server.py /server.py
 COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
-RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 ENV MAKEFLAGS="-j4"
 
-RUN pip install asr4-$VERSION-py3-none-any.whl[server,cpu]
+RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server,gpu]
+
 RUN apt-get purge -y git build-essential ninja-build cmake
 RUN apt-get autoremove -y
 
-CMD [ "/init.sh" ]
+CMD /bin/bash -c "source /root/.bashrc && /init.sh"

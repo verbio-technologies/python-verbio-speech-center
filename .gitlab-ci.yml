@@ -57,11 +57,11 @@ rust:test:all:
     - cargo --version
     - cargo test --all
 
-python:test:all:
+python:test:cpu:
   stage: test
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install .[server,test]
+    - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -70,6 +70,24 @@ python:test:all:
     expire_in: 5 days
     reports:
       junit: report.xml
+
+python:test:gpu:
+  stage: test
+  tags:
+    - gpu
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
+  before_script:
+    - source ~/.bashrc
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
+    - citbx install packages verbio-verbio8k-es-es-am
+  script:
+    - python --version
+    - pytest tests/unit tests/functional --junit-xml=report.xml --verbose
+  artifacts:
+    expire_in: 5 days
+    reports:
+      junit: report.xml
+
 
 rust:test:coverage:
   stage: test
@@ -87,7 +105,24 @@ python:test:coverage:
   stage: test
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    - pip install .[server,test]
+    - pip install .[server,cpu,test]
+    - citbx install packages verbio-verbio8k-es-es-am
+  script:
+    - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - coverage/**
+  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
+
+python:test:coverage:gpu:
+  stage: test
+  tags:
+    - gpu
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
+  before_script:
+    - source ~/.bashrc
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
@@ -138,7 +173,7 @@ python:build:latest_bin:
       dotenv: job.env
 
 
-testing:promote:
+.testing:promote:
   stage: testing-promote
   image: docker:20.10.15
   parallel:
@@ -148,7 +183,6 @@ testing:promote:
     - tags
   needs: ["python:build:latest_bin"]
   script:
-    - IMAGE_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${DOCKER_IMAGE_VERSION}.onnx deploy/docker/
@@ -156,14 +190,26 @@ testing:promote:
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
     - cd deploy/docker/
-    - docker build . -f Dockerfile.debian --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
+    - docker build . -f ${DOCKERFILE} --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
+
+testing:promote:cpu:
+  variables:
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    DOCKERFILE: "Dockerfile.debian"
+  extends: .testing:promote
+
+testing:promote:gpu:
+  variables:
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    DOCKERFILE: "Dockerfile.debian-gpu"
+  extends: .testing:promote
+
 
 .testing:integration:
   stage: testing-integration
   only:
     - tags
-  needs: ["testing:promote"]
   before_script:
     - pip install .[client,test]
   script:
@@ -174,33 +220,80 @@ testing:promote:
     reports:
       junit: report.xml
 
-testing:integration:en-us:
+testing:integration:en-us:cpu:
   extends: .testing:integration
+  needs: ["testing:promote:cpu"]
   variables:
     LANGUAGE: en-us
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-en-us.onnx", "-d", "dict.ltr.txt", "-l", "en-us"]
+      variables:
+        LANGUAGE: en-us
 
-testing:integration:es:
+testing:integration:es:cpu:
   extends: .testing:integration
+  needs: ["testing:promote:cpu"]
   variables:
     LANGUAGE: es
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-es.onnx", "-d", "dict.ltr.txt", "-l", "es"]
+      variables:
+        LANGUAGE: es
 
-testing:integration:pt-br:
+testing:integration:pt-br:cpu:
   extends: .testing:integration
+  needs: [ "testing:promote:cpu" ]
   variables:
     LANGUAGE: pt-br
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "asr4-pt-br.onnx", "-d", "dict.ltr.txt", "-l", "pt-br"]
+      variables:
+        LANGUAGE: pt-br
 
+testing:integration:en-us:gpu:
+  extends: .testing:integration
+  needs: [ "testing:promote:gpu" ]
+  tags:
+    - gpu
+  allow_failure: true
+  variables:
+    LANGUAGE: en-us
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      variables:
+        LANGUAGE: en-us
+
+testing:integration:es:gpu:
+  extends: .testing:integration
+  needs: [ "testing:promote:gpu" ]
+  tags:
+    - gpu
+  allow_failure: true
+  variables:
+    LANGUAGE: es
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      variables:
+        LANGUAGE: es
+
+testing:integration:pt-br:gpu:
+  extends: .testing:integration
+  needs: [ "testing:promote:gpu" ]
+  tags:
+    - gpu
+  allow_failure: true
+  variables:
+    LANGUAGE: pt-br
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      variables:
+        LANGUAGE: pt-br
 
 staging:promote:
   stage: staging-promote
@@ -210,30 +303,54 @@ staging:promote:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
-  needs: ["testing:integration:en-us", "testing:integration:es", "testing:integration:pt-br"]
+  needs: ["testing:integration:en-us:cpu", "testing:integration:es:cpu", "testing:integration:pt-br:cpu", "testing:integration:en-us:gpu", "testing:integration:es:gpu", "testing:integration:pt-br:gpu"]
   script:
     - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
+    - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker push $NEW_NAME
 
-staging:deploy:
+#tbd: where do we deploy with GPU
+
+staging:deploy:cpu:
   stage: staging-deploy
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
   needs: ["staging:promote", "python:build:latest_bin"]
   environment:
-    name: pre-production/asr4 
+    name: pre-production/asr4
     action: start
   script:
     - cd deploy/nomad
     - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
     - export NOMAD_ADDR=http://$NOMAD_IP:4646
-    - echo "Deploying staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+    - echo "Deploying CPU staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
 
-staging:e2e:
+staging:deploy:gpu:
+  stage: staging-deploy
+  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+  only:
+    - tags
+  needs: ["staging:promote", "python:build:latest_bin"]
+  environment:
+    name: pre-production/asr4
+    action: start
+  script:
+    - cd deploy/nomad
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+    - echo "Deploying GPU staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging-gpu.nomad
+
+
+
+staging:e2e:cpu:
   stage: staging-e2e
   image: "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
   parallel:
@@ -241,10 +358,23 @@ staging:e2e:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
-  needs: ["staging:deploy"]
+  needs: ["staging:deploy:cpu"]
   script:
     - echo "E2E tests for new release"
 
+staging:e2e:gpu:
+  stage: staging-e2e
+  tags:
+    - gpu
+  image: "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
+  only:
+    - tags
+  needs: ["staging:deploy:gpu"]
+  script:
+    - echo "E2E tests for GPU new release"
 
 release:promote:
   stage: release-promote
@@ -254,10 +384,14 @@ release:promote:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
-  needs: ["staging:e2e"]
+  needs: ["staging:e2e:cpu", "staging:e2e:gpu"]
   script:
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker push $NEW_NAME
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
@@ -285,4 +419,6 @@ cleanup:
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-
+    - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"

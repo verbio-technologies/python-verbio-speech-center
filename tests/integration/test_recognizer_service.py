@@ -93,12 +93,13 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testRecognizeRequest(self):
         process = self.runRecognition(self._audio, self._language)
-        status = process.wait(timeout=60)
+        status = process.wait(timeout=100)
         self.checkStatus(status, process.stderr.read())
 
         output = process.stdout.read()
         match = re.search('RecognizeRequest text: "(.+?)"', output)
-        hypothesis = match.group(match.lastindex)
+        hypothesis = [match.group(match.lastindex)]
+
         assert len(hypothesis), 1
         assert len(hypothesis[0]) > 1
 
@@ -107,7 +108,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)
-        status = process.wait(timeout=60)
+        status = process.wait(timeout=600)
         self.checkStatus(status, process.stderr.read())
 
         output = process.stdout.read()
@@ -122,7 +123,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         for otherLanguage in Language:
             if otherLanguage != currentLanguage:
                 process = self.runRecognition(self._audio, otherLanguage.value)
-                _status = process.wait(timeout=60)
+                _status = process.wait(timeout=100)
                 output = process.stdout.read()
                 match = re.search(
                     f"Invalid language '{otherLanguage}'. Only '{currentLanguage}' is supported.",
@@ -132,5 +133,5 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testEmptyRecognizeRequest(self):
         process = self.runRecognition(f"{self.datadir}/empty.wav", self._language)
-        status = process.wait(timeout=60)
+        status = process.wait(timeout=100)
         self.assertEqual(status, 1)

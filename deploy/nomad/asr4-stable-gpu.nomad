@@ -1,0 +1,200 @@
+variables {
+  DOCKER_REGISTRY = "docker.registry.verbio.com/csr"
+  VERSION = "latest"
+  GITLAB_TOKEN = ""
+  ASR4_PROJECT_ID = "1361"
+  ASR4_JOB_ID = ""
+}
+
+variable "envoy_config" {
+  type = string
+  description = "Custom envoy config"
+  default = "envoy.yaml"
+}
+
+
+job "asr4-stable-gpu" {
+  datacenters = ["dc1"]
+  type        = "service"
+
+  meta {
+    ASR4_VERSION = "${var.VERSION}"
+  }
+
+  group "asr4-group" {
+    count = 1
+
+    restart {
+      attempts = 10
+      interval = "5m"
+      delay    = "25s"
+      mode     = "delay"
+    }
+
+    network {
+      port "grpc-port" {
+        static = 50061
+        to = 10000
+      }
+      port "grpc-port-en-us" {
+        static = 50062
+        to = 50051
+      }
+      port "grpc-port-es" {
+        static = 50063
+        to = 50051
+      }
+      port "grpc-port-pt-br" {
+        static = 50064
+        to = 50051
+      }
+    }
+
+    task "asr4-gpu-en-us-service" {
+      driver = "docker"
+
+      config {
+        image              = "${var.DOCKER_REGISTRY}/stable/asr4-gpu-en-us:${var.VERSION}"
+        ports              = ["grpc-port-en-us"]
+      }
+
+      logs {
+        max_files     = 10
+        max_file_size = 10
+      }
+
+      env {
+        LANGUAGE = "en-us"
+      }
+
+      resources {
+        memory = 5000
+        device "nvidia/gpu" {
+          count = 1
+        }
+      }
+
+      service {
+        name = "asr4-gpu-en-us-stable-service"
+        port = "grpc-port-en-us"
+
+        check {
+          name = "up-and-running"
+          type = "grpc"
+          port = "grpc-port-en-us"
+          interval = "30s"
+          timeout = "2s"
+        }
+      }
+    }
+
+    task "asr4-gpu-es-service" {
+      driver = "docker"
+
+      config {
+        image              = "${var.DOCKER_REGISTRY}/stable/asr4-gpu-es:${var.VERSION}"
+        ports              = ["grpc-port-es"]
+      }
+
+      logs {
+        max_files     = 10
+        max_file_size = 10
+      }
+
+      env {
+        LANGUAGE = "es"
+      }
+
+      resources {
+        memory = 5000
+        device "nvidia/gpu" {
+          count = 1
+        }
+      }
+
+
+      service {
+        name = "asr4-gpu-es-stable-service"
+        port = "grpc-port-es"
+
+        check {
+          name = "up-and-running"
+          type = "grpc"
+          port = "grpc-port-es"
+          interval = "30s"
+          timeout = "2s"
+        }
+      }
+    }
+
+    task "asr4-gpu-pt-br-service" {
+      driver = "docker"
+
+      config {
+        image              = "${var.DOCKER_REGISTRY}/stable/asr4-gpu-pt-br:${var.VERSION}"
+        ports              = ["grpc-port-pt-br"]
+      }
+
+      logs {
+        max_files     = 10
+        max_file_size = 10
+      }
+
+      env {
+        LANGUAGE = "pt-br"
+      }
+
+      resources {
+        memory = 5000
+        device "nvidia/gpu" {
+          count = 1
+        }
+      }
+
+
+      service {
+        name = "asr4-gpu-pt-br-stable-service"
+        port = "grpc-port-pt-br"
+
+        check {
+          name = "up-and-running"
+          type = "grpc"
+          port = "grpc-port-pt-br"
+          interval = "30s"
+          timeout = "2s"
+        }
+      }
+    }
+
+    task "traffic-routing-service" {
+      driver = "docker"
+
+      template {
+        destination = "tmp/envoy.yaml"
+        data = file(var.envoy_config)
+      }
+
+      artifact {
+        source      = "https://gitlab.lan.verbio.com/api/v4/projects/${var.ASR4_PROJECT_ID}/jobs/${var.ASR4_JOB_ID}/artifacts/asr4-${var.VERSION}.pb?private_token=${var.GITLAB_TOKEN}"
+        mode        = "file"
+        destination = "tmp/asr4.pb"
+        options {
+          checksum = "md5:f3084ed9c64d7dbae422c41591a35f0d"
+        }
+      }
+
+      config {
+        image              = "${var.DOCKER_REGISTRY}/envoy:v1.23.1"
+        volumes            = ["tmp/envoy.yaml:/etc/envoy/envoy.yaml",
+                              "tmp/asr4.pb:/etc/asr4.pb"]
+        ports              = ["grpc-port"]
+      }
+
+      service {
+        name = "envoy-stable-service"
+        port = "grpc-port"
+      }
+    }
+  }
+}
+
