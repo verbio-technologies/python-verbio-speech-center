@@ -195,11 +195,11 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             f"{self._output }/trnReferences.trn"
         ), "trnReferences does not exists"
         assert os.path.exists(
-            f"{self._output }/wer/test_{self.language}.pra.analysis"
+            f"{self._output }/wer/test_{self._language}.pra.analysis"
         ), "analysis file does not exists"
         assert os.path.exists(
-            f"{self._output }/wer/test_{self.language}.dtl"
+            f"{self._output }/wer/test_{self._language}.dtl"
         ), "analysis file does not exists"
         assert os.path.exists(
-            f"{self._output }/test_{self.language}_results.json"
+            f"{self._output }/test_{self._language}_results.json"
         ), "analysis file does not exists"
