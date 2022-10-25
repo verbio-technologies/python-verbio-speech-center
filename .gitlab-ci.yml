@@ -114,7 +114,7 @@ python:test:coverage:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       variables:
         LANGUAGE: en-us
