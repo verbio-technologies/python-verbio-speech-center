@@ -1,4 +1,5 @@
 import os
+from os import walk
 import re
 import sys
 import jiwer
@@ -63,7 +64,7 @@ class TestRecognizerUtils(object):
                 "--host",
                 self._host,
                 "--metrics",
-                "--output-dir",
+                "--output",
                 output,
             ],
             stdout=PIPE,
@@ -125,7 +126,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self.datadir = f"{pytestconfig.rootdir}/tests/integration/data"
 
     def setUp(self) -> None:
-        self._language = os.getenv("LANGUAGE", "en-us")
+        self._language = os.getenv("LANGUAGE", "es")
         self._hostName = os.getenv("ASR4_HOSTNAME", "asr4-server")
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
@@ -193,6 +194,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         assert os.path.exists(
             f"{self._output }/trnReferences.trn"
         ), "trnReferences does not exists"
+        print(os.listdir(f"{self._output }/wer"))
         assert os.path.exists(
             f"{self._output }/wer/id.pra.analysis"
         ), "analysis file does not exists"
