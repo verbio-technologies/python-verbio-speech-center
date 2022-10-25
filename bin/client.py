@@ -58,7 +58,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             trnHypothesis,
             trnReferences,
             args.output,
-            datetime.now().strftime("%Y%m-%d%H-%M%S-"),
+            "test_"+args.language,
             _ENCODING,
             args.language,
         )

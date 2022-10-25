@@ -126,7 +126,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self.datadir = f"{pytestconfig.rootdir}/tests/integration/data"
 
     def setUp(self) -> None:
-        self._language = os.getenv("LANGUAGE", "es")
+        self._language = os.getenv("LANGUAGE", "en-us")
         self._hostName = os.getenv("ASR4_HOSTNAME", "asr4-server")
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
@@ -194,13 +194,12 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         assert os.path.exists(
             f"{self._output }/trnReferences.trn"
         ), "trnReferences does not exists"
-        print(os.listdir(f"{self._output }/wer"))
         assert os.path.exists(
-            f"{self._output }/wer/*.pra.analysis"
+            f"{self._output }/wer/test_{self.language}.pra.analysis"
         ), "analysis file does not exists"
         assert os.path.exists(
-            f"{self._output }/wer/*.dtl"
+            f"{self._output }/wer/test_{self.language}.dtl"
         ), "analysis file does not exists"
         assert os.path.exists(
-            f"{self._output }/*._results.json"
+            f"{self._output }/test_{self.language}_results.json"
         ), "analysis file does not exists"
