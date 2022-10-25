@@ -163,10 +163,6 @@ def _getAudiosList(gui_file: str) -> List[str]:
     return [audio for audio in open(args.gui, "r").read().split("\n") if audio != ""]
 
 
-def _getAudiosList(gui_file: str) -> List[str]:
-    return [audio for audio in open(args.gui, "r").read().split("\n") if audio != ""]
-
-
 def _getAudio(audio_file: str) -> bytes:
     with wave.open(audio_file) as f:
         n = f.getnframes()
