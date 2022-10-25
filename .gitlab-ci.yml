@@ -20,7 +20,7 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: 0.0.13
+  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
 
 
 rust:lint:stable:
@@ -107,8 +107,12 @@ python:test:coverage:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
+    - yum-config-manager --enable verbio-internal-staging
+    - yum install -y asrtest-tools
+    - pip install .[client,test]
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
+    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 30 days
     paths:
@@ -208,6 +212,8 @@ testing:promote:gpu:
 
 .testing:integration:
   stage: testing-integration
+  only:
+    - tags
   before_script:
     - yum-config-manager --enable verbio-internal-staging
     - yum install -y asrtest-tools
