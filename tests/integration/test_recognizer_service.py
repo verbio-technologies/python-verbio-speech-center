@@ -196,11 +196,11 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         ), "trnReferences does not exists"
         print(os.listdir(f"{self._output }/wer"))
         assert os.path.exists(
-            f"{self._output }/wer/id.pra.analysis"
+            f"{self._output }/wer/*.pra.analysis"
         ), "analysis file does not exists"
         assert os.path.exists(
-            f"{self._output }/wer/id.dtl"
+            f"{self._output }/wer/*.dtl"
         ), "analysis file does not exists"
         assert os.path.exists(
-            f"{self._output }/id_results.json"
+            f"{self._output }/*._results.json"
         ), "analysis file does not exists"

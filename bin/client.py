@@ -86,8 +86,6 @@ def _getMetrics(
     with open(trnReferencesFile, "w") as r:
         r.write("\n".join(trnReferences))
 
-    print("llamo a popen")
-
     Popen(
         [
             "python3",
