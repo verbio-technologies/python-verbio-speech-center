@@ -58,7 +58,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             trnHypothesis,
             trnReferences,
             args.output,
-            "test_"+args.language,
+            "test_" + args.language,
             _ENCODING,
             args.language,
         )
