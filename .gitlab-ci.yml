@@ -20,7 +20,7 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
+  DOCKER_IMAGE_VERSION: 0.0.13
 
 
 rust:lint:stable:
@@ -208,10 +208,11 @@ testing:promote:gpu:
 
 .testing:integration:
   stage: testing-integration
-  only:
-    - tags
   before_script:
+    - yum-config-manager --enable verbio-internal-staging
+    - yum install -y asrtest-tools
     - pip install .[client,test]
+
   script:
     - python --version
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
