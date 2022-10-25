@@ -10,9 +10,10 @@ import numpy as np
 from datetime import datetime
 import re
 import os
+import sys
 
-import call_sclite_process
 from subprocess import Popen, PIPE
+import call_sclite_process
 
 from typing import List
 
@@ -85,10 +86,12 @@ def _getMetrics(
     with open(trnReferencesFile, "w") as r:
         r.write("\n".join(trnReferences))
 
+    print("llamo a popen")
+
     Popen(
         [
             "python3",
-            "src/call_sclite_process.py",
+            (call_sclite_process.__file__),
             "--csr_file",
             trnHypothesisFile,
             "--reference",
@@ -102,8 +105,8 @@ def _getMetrics(
             "--test_id",
             id,
         ],
-        stdout=PIPE,
-        stderr=PIPE,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
         universal_newlines=True,
     )
 
