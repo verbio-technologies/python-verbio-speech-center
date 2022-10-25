@@ -20,7 +20,7 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
+  DOCKER_IMAGE_VERSION: 0.0.12
 
 
 rust:lint:stable:
