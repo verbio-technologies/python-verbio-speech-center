@@ -218,23 +218,22 @@ def _runWorkerQuery(audio: bytes, language: Language) -> bytes:
 def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A Speech Recognition client.")
     parser.add_argument(
-        "-a",
-        "--audio-path",
-        required=False,
-        dest="audio",
-        help="Path to the audio file.",
-    )
-    parser.add_argument(
         "-o",
         "--output-dir",
         default=".",
         dest="output",
         help="Output path for the results.",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "-a",
+        "--audio-path",
+        dest="audio",
+        help="Path to the audio file.",
+    )
+    group.add_argument(
         "-g",
         "--gui-path",
-        required=False,
         dest="gui",
         help="Path to the gui file with audio paths.",
     )
