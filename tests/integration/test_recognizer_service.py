@@ -190,16 +190,16 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         time.sleep(40)
         assert os.path.exists(
             f"{self._output }/trnHypothesis.trn"
-        ), "trnHypothesis does not exists"
+        ), "trnHypothesis does not exist"
         assert os.path.exists(
             f"{self._output }/trnReferences.trn"
-        ), "trnReferences does not exists"
+        ), "trnReferences does not exist"
         assert os.path.exists(
             f"{self._output }/wer/test_{self._language}.pra.analysis"
-        ), "analysis file does not exists"
+        ), "analysis file does not exist"
         assert os.path.exists(
             f"{self._output }/wer/test_{self._language}.dtl"
-        ), "analysis file does not exists"
+        ), "analysis file does not exist"
         assert os.path.exists(
             f"{self._output }/test_{self._language}_results.json"
-        ), "analysis file does not exists"
+        ), "analysis file does not exist"
