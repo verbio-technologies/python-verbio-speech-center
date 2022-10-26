@@ -7,6 +7,13 @@ import logging
 import argparse
 import multiprocessing
 import numpy as np
+from datetime import datetime
+import re
+import os
+import sys
+
+from subprocess import Popen, PIPE
+import call_sclite_process
 
 from typing import List
 
@@ -31,14 +38,96 @@ CHANNEL_OPTIONS = [
 _workerChannelSingleton = None
 _workerStubSingleton = None
 
+_ENCODING = "utf-8"
+
 
 def _repr(responses: List[RecognizeRequest]) -> List[str]:
     return [f'<RecognizeRequest text: "{r.text}">' for r in responses]
 
 
 def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
+    responses, trnHypothesis = _inferenceProcess(args)
+    trnReferences = []
+    if args.metrics:
+        if args.gui:
+            trnReferences = _getTrnReferences(args.gui)
+        else:
+            trn_file = args.audio.replace(".wav", ".txt")
+            trnReferences.append(open(trn_file, "r").read())
+        _getMetrics(
+            trnHypothesis,
+            trnReferences,
+            args.output,
+            "test_" + args.language,
+            _ENCODING,
+            args.language,
+        )
+
+    return list(map(RecognizeResponse.FromString, responses))
+
+
+def _getMetrics(
+    trnHypothesis: List[str],
+    trnReferences: List[str],
+    outputDir: str,
+    id: str,
+    encoding: str,
+    language: str,
+) -> Popen:
+
+    _LOGGER.info("Running evaluation.")
+
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
+    trnHypothesisFile = os.path.join(outputDir, "trnHypothesis.trn")
+    trnReferencesFile = os.path.join(outputDir, "trnReferences.trn")
+    with open(trnHypothesisFile, "w") as h:
+        h.write("\n".join(trnHypothesis))
+    with open(trnReferencesFile, "w") as r:
+        r.write("\n".join(trnReferences))
+
+    Popen(
+        [
+            "python3",
+            (call_sclite_process.__file__),
+            "--csr_file",
+            trnHypothesisFile,
+            "--reference",
+            trnReferencesFile,
+            "--output",
+            outputDir,
+            "--language",
+            language,
+            "--encoding",
+            encoding,
+            "--test_id",
+            id,
+        ],
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        universal_newlines=True,
+    )
+
+    _LOGGER.info("You can find the files of results in path: " + outputDir)
+
+
+def _getTrnReferences(gui: str) -> List[str]:
+    trn = []
+    for line in open(args.gui).read().split("\n"):
+        referenceFile = line.replace(".wav", ".txt")
+        if line != "":
+            try:
+                reference = open(referenceFile, "r").read()
+            except:
+                raise FileNotFoundError(f"Reference file not found.")
+            trn.append(reference + " (" + referenceFile.replace(".txt", "") + ")")
+    return trn
+
+
+def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
     audios = []
     responses = []
+    trnHypothesis = []
 
     if args.gui:
         audios = _getAudiosList(args.gui)
@@ -61,8 +150,14 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             ),
         )
         responses.append(response)
+        trnHypothesis.append(_getTrnHypothesis(response, audio_path))
 
-    return list(map(RecognizeResponse.FromString, responses))
+    return responses, trnHypothesis
+
+
+def _getTrnHypothesis(response: RecognizeResponse, audio_path: str) -> str:
+    filename = audio_path.replace(".wav", "")
+    return f"{RecognizeResponse.FromString(response).text} ({filename})"
 
 
 def _getAudiosList(gui_file: str) -> List[str]:
@@ -123,16 +218,22 @@ def _runWorkerQuery(audio: bytes, language: Language) -> bytes:
 def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A Speech Recognition client.")
     parser.add_argument(
+        "-o",
+        "--output-dir",
+        default=".",
+        dest="output",
+        help="Output path for the results.",
+    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "-a",
         "--audio-path",
-        required=False,
         dest="audio",
         help="Path to the audio file.",
     )
-    parser.add_argument(
+    group.add_argument(
         "-g",
         "--gui-path",
-        required=False,
         dest="gui",
         help="Path to the gui file with audio paths.",
     )
@@ -155,6 +256,12 @@ def _parseArguments() -> argparse.Namespace:
         dest="jobs",
         default=_PROCESS_COUNT,
         help="Number of parallel workers; if not specified, defaults to CPU count.",
+    )
+    parser.add_argument(
+        "-m",
+        "--metrics",
+        action="store_true",
+        help="Calculate metrics using the audio transcription references.",
     )
     parser.add_argument(
         "-v",
