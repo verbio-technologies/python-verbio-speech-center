@@ -79,8 +79,8 @@ def _getMetrics(
 
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
-    trnHypothesisFile = outputDir + "/trnHypothesis.trn"
-    trnReferencesFile = outputDir + "/trnReferences.trn"
+    trnHypothesisFile = os.path.join(outputDir, "trnHypothesis.trn")
+    trnReferencesFile = os.path.join(outputDir, "trnReferences.trn")
     with open(trnHypothesisFile, "w") as h:
         h.write("\n".join(trnHypothesis))
     with open(trnReferencesFile, "w") as r:
