@@ -20,7 +20,7 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: 0.0.12
+  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
 
 
 rust:lint:stable:
@@ -107,20 +107,8 @@ python:test:coverage:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
-    - echo 'deb [ arch=amd64,any ] https://pkg-repos.lan.verbio.com/deb/internal jessie staging' >> /etc/apt/sources.list
-    - apt-get update && apt-get install -y -t jessie asrtest-tools libffi-dev jq
-    - pip install .[client,test]
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
-    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
-  variables:
-      LANGUAGE: en-us
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: en-us
-
   artifacts:
     expire_in: 30 days
     paths:
@@ -223,13 +211,19 @@ testing:promote:gpu:
   only:
     - tags
   before_script:
-    - yum-config-manager --enable verbio-internal-staging
-    - yum install -y asrtest-tools
+    - echo 'deb [ arch=amd64,any ] https://pkg-repos.lan.verbio.com/deb/internal jessie staging' >> /etc/apt/sources.list
+    - apt-get update && apt-get install -y -t jessie asrtest-tools libffi-dev jq
     - pip install .[client,test]
-
   script:
     - python --version
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
+  variables:
+      LANGUAGE: en-us
+  services:
+    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      variables:
+        LANGUAGE: en-us
   artifacts:
     expire_in: 5 days
     reports:
