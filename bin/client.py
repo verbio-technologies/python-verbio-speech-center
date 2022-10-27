@@ -52,7 +52,13 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             trnReferences = _getTrnReferences(args.gui)
         else:
             referenceFile = args.audio.replace(".wav", ".txt")
-            trnReferences.append(open(referenceFile, "r").read() + " (" + referenceFile.replace(".txt", "") + ")" )
+            trnReferences.append(
+                open(referenceFile, "r").read()
+                + " ("
+                + referenceFile.replace(".txt", "")
+                + ")"
+            )
+            trnReferences.append("")
         _getMetrics(
             trnHypothesis,
             trnReferences,
@@ -120,6 +126,7 @@ def _getTrnReferences(gui: str) -> List[str]:
             except:
                 raise FileNotFoundError(f"Reference file not found.")
             trn.append(reference + " (" + referenceFile.replace(".txt", "") + ")")
+    trn.append("")
     return trn
 
 
@@ -151,6 +158,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
+    trnHypothesis.append("")
 
     return responses, trnHypothesis
 
