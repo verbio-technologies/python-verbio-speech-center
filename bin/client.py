@@ -14,7 +14,6 @@ import sys
 
 from subprocess import Popen, PIPE
 from examples import run_evaluator
-#import call_sclite_process
 
 from typing import List
 
@@ -90,7 +89,6 @@ def _getMetrics(
     Popen(
         [
             "python3",
-            #(call_sclite_process.__file__),
             (run_evaluator.__file__),
             "--hypothesis",
             trnHypothesisFile,
