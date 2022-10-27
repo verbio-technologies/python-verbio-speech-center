@@ -53,7 +53,12 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             trnReferences = _getTrnReferences(args.gui)
         else:
             referenceFile = args.audio.replace(".wav", ".txt")
-            trnReferences.append(open(referenceFile, "r").read() + " (" + referenceFile.replace(".txt", "") + ")" )
+            trnReferences.append(
+                open(referenceFile, "r").read()
+                + " ("
+                + referenceFile.replace(".txt", "")
+                + ")"
+            )
             trnReferences.append("")
         _getMetrics(
             trnHypothesis,
