@@ -114,7 +114,6 @@ def _getTrnReferences(gui: str) -> List[str]:
     trn = []
     for line in open(args.gui).read().split("\n"):
         referenceFile = line.replace(".wav", ".txt")
-        print(referenceFile)
         if line != "":
             try:
                 reference = open(referenceFile, "r").read()
