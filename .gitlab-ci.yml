@@ -211,8 +211,7 @@ testing:promote:gpu:
   only:
     - tags
   before_script:
-    - echo 'deb [ arch=amd64,any ] https://pkg-repos.lan.verbio.com/deb/internal jessie staging' >> /etc/apt/sources.list
-    - apt-get update && apt-get install -y -t jessie asrtest-tools libffi-dev jq
+    - apt-get update && apt-get install -y asrtest-tools libffi-dev
     - pip install .[client,test]
   script:
     - python --version
