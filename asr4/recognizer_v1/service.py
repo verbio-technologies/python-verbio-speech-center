@@ -135,14 +135,21 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
+    def _checkSampleRate(
+        self,
+        audio: bytes,
+    ) -> bytes:
+        return audio.tobytes()
+
     def eventHandle(self, request: RecognizeRequest) -> str:
         transcription = self._runRecognition(request)
         return self._formatWords(transcription)
 
     def _runRecognition(self, request: RecognizeRequest) -> str:
         language = Language.parse(request.config.parameters.language)
+        sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
-            return self._runtime.run(request.audio).sequence
+            return self._runtime.run(request.audio, sample_rate_hz).sequence
         else:
             raise ValueError(
                 f"Invalid language '{language}'. Only '{self._language}' is supported."

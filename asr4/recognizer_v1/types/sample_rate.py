@@ -6,6 +6,7 @@ from typing_extensions import Self
 @unique
 class SampleRate(Enum):
     HZ_16000 = 16000
+    HZ_8000 = 8000
 
     @classmethod
     def parse(cls, sample_rate_hz: int) -> Optional[Self]:
