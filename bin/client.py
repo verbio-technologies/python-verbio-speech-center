@@ -51,8 +51,8 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
         if args.gui:
             trnReferences = _getTrnReferences(args.gui)
         else:
-            trn_file = args.audio.replace(".wav", ".txt")
-            trnReferences.append(open(trn_file, "r").read())
+            referenceFile = args.audio.replace(".wav", ".txt")
+            trnReferences.append(open(referenceFile, "r").read() + " (" + referenceFile.replace(".txt", "") + ")" )
         _getMetrics(
             trnHypothesis,
             trnReferences,
@@ -114,6 +114,7 @@ def _getTrnReferences(gui: str) -> List[str]:
     trn = []
     for line in open(args.gui).read().split("\n"):
         referenceFile = line.replace(".wav", ".txt")
+        print(referenceFile)
         if line != "":
             try:
                 reference = open(referenceFile, "r").read()
