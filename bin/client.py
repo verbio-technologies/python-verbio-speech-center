@@ -158,7 +158,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
-        trnHypothesis.append("")
+    trnHypothesis.append("")
 
     return responses, trnHypothesis
 
