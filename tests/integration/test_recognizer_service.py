@@ -253,5 +253,5 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             f"{self._output }/wer/test_{self._language}.dtl"
         ), "analysis file does not exist"
         assert os.path.exists(
-            f"{self._output }/test_{self._language}_results.json"
+            f"{self._output }/test_{self._language}_results.tsv"
         ), "analysis file does not exist"
