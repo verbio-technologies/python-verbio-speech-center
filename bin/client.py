@@ -13,7 +13,7 @@ import os
 import sys
 
 from subprocess import Popen, PIPE
-import call_sclite_process
+from examples import run_evaluator
 
 from typing import List
 
@@ -52,8 +52,14 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
         if args.gui:
             trnReferences = _getTrnReferences(args.gui)
         else:
-            trn_file = args.audio.replace(".wav", ".txt")
-            trnReferences.append(open(trn_file, "r").read())
+            referenceFile = args.audio.replace(".wav", ".txt")
+            trnReferences.append(
+                open(referenceFile, "r").read()
+                + " ("
+                + referenceFile.replace(".txt", "")
+                + ")"
+            )
+            trnReferences.append("")
         _getMetrics(
             trnHypothesis,
             trnReferences,
@@ -89,8 +95,8 @@ def _getMetrics(
     Popen(
         [
             "python3",
-            (call_sclite_process.__file__),
-            "--csr_file",
+            (run_evaluator.__file__),
+            "--hypothesis",
             trnHypothesisFile,
             "--reference",
             trnReferencesFile,
@@ -121,6 +127,7 @@ def _getTrnReferences(gui: str) -> List[str]:
             except:
                 raise FileNotFoundError(f"Reference file not found.")
             trn.append(reference + " (" + referenceFile.replace(".txt", "") + ")")
+            trn.append("")
     return trn
 
 
@@ -151,6 +158,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
+    trnHypothesis.append("")
 
     return responses, trnHypothesis
 
