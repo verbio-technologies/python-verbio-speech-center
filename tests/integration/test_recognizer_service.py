@@ -161,7 +161,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def setUp(self) -> None:
         self._language = os.getenv("LANGUAGE", "en-us")
-        self._hostName = os.getenv("ASR4_HOSTNAME", "[::]")
+        self._hostName = os.getenv("ASR4_HOSTNAME", "asr4-server")
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
         self._audio = f"{os.path.join(self.datadir, self._language)}-1.wav"

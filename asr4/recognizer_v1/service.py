@@ -135,12 +135,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def _checkSampleRate(
-        self,
-        audio: bytes,
-    ) -> bytes:
-        return audio.tobytes()
-
     def eventHandle(self, request: RecognizeRequest) -> str:
         transcription = self._runRecognition(request)
         return self._formatWords(transcription)

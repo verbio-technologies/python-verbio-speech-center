@@ -328,7 +328,7 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(
             MockOnnxSession("", language=Language.ES),
             Language.ES,
-            formatterPath="format-model.es-es-1.1.0.fm",
+            formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
