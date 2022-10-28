@@ -36,18 +36,18 @@ class TestOnnxRuntime(unittest.TestCase):
     def testEmptyInput(self):
         with self.assertRaises(ValueError):
             runtime = OnnxRuntime(MockOnnxSession(""))
-            runtime.run(b"")
+            runtime.run(b"", 8000)
 
     def testRandomInput(self):
         runtime = OnnxRuntime(MockOnnxSession(""))
-        result = runtime.run(b"0000")
+        result = runtime.run(b"0000", 8000)
         vocabulary = set(runtime.DEFAULT_VOCABULARY[5:] + [" ", "<", ">"])  # letters
         self.assertEqual(set(result.sequence) - vocabulary, set())
         self.assertTrue(result.score <= 1.0 and result.score >= 0.0)
 
     def testPreProcess(self):
         runtime = OnnxRuntime(MockOnnxSession(""))
-        tensor = runtime._preprocess(b"0123")
+        tensor = runtime._preprocess(b"0123", 8000)
         self.assertTrue(isinstance(tensor, torch.Tensor))
         self.assertTrue(tensor.shape[0], 1)  # batch size
         self.assertTrue(tensor.shape[1], 2)  # n samples

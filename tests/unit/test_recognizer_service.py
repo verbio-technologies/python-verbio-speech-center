@@ -166,7 +166,7 @@ class TestRecognizerService(unittest.TestCase):
 
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8001),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
@@ -208,7 +208,7 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(sample_rate_hz=16000),
+                parameters=RecognitionParameters(sample_rate_hz=4000),
             )
         )
         with self.assertRaises(ValueError):
@@ -239,13 +239,24 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    def testRecognizeRequest(self):
+    def testRecognizeRequestSampleRate16000(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
                     language="en-US", sample_rate_hz=16000
                 ),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+            audio=b"SOMETHING",
+        )
+        self.assertFalse(service.eventSource(request))
+
+    def testRecognizeRequestSampleRate8000(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
@@ -266,7 +277,8 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US"),
+                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
         )
@@ -281,7 +293,8 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es"),
+                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
         )
@@ -297,7 +310,8 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="pt-BR"),
+                parameters=RecognitionParameters(language="pt-BR", sample_rate_hz=8000),
+                resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
         )
@@ -318,7 +332,8 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es"),
+                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
         )

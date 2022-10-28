@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import resampy
 import torch.nn.functional as F
 import onnxruntime
 import simple_ctc
@@ -116,15 +117,20 @@ class OnnxRuntime(Runtime):
             is_nll=False,
         )
 
-    def run(self, input: bytes) -> OnnxRuntimeResult:
+    def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
             raise ValueError("Input audio cannot be empty!")
-        x = self._preprocess(input)
+        x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
         return self._postprocess(y)
 
-    def _preprocess(self, input: bytes) -> torch.Tensor:
+    def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         x = np.frombuffer(input, dtype=np.int16)
+        try:
+            y = resampy.resample(x, sample_rate_hz, 16000)
+        except:
+            raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
+        x = y.astype(x.dtype)
         x = x.astype(np.float32)
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)

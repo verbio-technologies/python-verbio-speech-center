@@ -2,7 +2,6 @@ import sys
 import grpc
 import wave
 import atexit
-import resampy
 import logging
 import argparse
 import multiprocessing
@@ -127,7 +126,7 @@ def _getTrnReferences(gui: str) -> List[str]:
             except:
                 raise FileNotFoundError(f"Reference file not found.")
             trn.append(reference + " (" + referenceFile.replace(".txt", "") + ")")
-            trn.append("")
+    trn.append("")
     return trn
 
 
@@ -148,11 +147,12 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
     )
 
     for audio_path in audios:
-        audio = _getAudio(audio_path)
+        audio, sample_rate_hz = _getAudio(audio_path)
         response = workerPool.apply(
             _runWorkerQuery,
             (
                 audio,
+                sample_rate_hz,
                 Language.parse(args.language),
             ),
         )
@@ -176,11 +176,9 @@ def _getAudio(audio_file: str) -> bytes:
     with wave.open(audio_file) as f:
         n = f.getnframes()
         audio = f.readframes(n)
-        sample_rate = f.getframerate()
+        sample_rate_hz = f.getframerate()
     audio = np.frombuffer(audio, dtype=np.int16)
-    y = resampy.resample(audio, sample_rate, 16000)
-    audio = y.astype(audio.dtype)
-    return audio.tobytes()
+    return audio.tobytes(), sample_rate_hz
 
 
 def _initializeWorker(serverAddress: str):
@@ -200,11 +198,11 @@ def _shutdownWorker():
         _workerStubSingleton.stop()
 
 
-def _runWorkerQuery(audio: bytes, language: Language) -> bytes:
+def _runWorkerQuery(audio: bytes, sample_rate_hz: int, language: Language) -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
             parameters=RecognitionParameters(
-                language=language.value, sample_rate_hz=16000
+                language=language.value, sample_rate_hz=sample_rate_hz
             ),
             resource=RecognitionResource(topic="GENERIC"),
         ),
