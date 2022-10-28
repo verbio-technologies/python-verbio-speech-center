@@ -165,8 +165,8 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
         self._audio = f"{os.path.join(self.datadir, self._language)}-1.wav"
-        self._audio8k = f"{os.path.join(self.datadir)}en-us.8k.wav"
-        self._audio16k = f"{os.path.join(self.datadir)}en-us.16k.wav"
+        self._audio8k = f"{os.path.join(self.datadir)}/en-us.8k.wav"
+        self._audio16k = f"{os.path.join(self.datadir)}/en-us.16k.wav"
         self._gui = f"{os.path.join(self.datadir, self._language)}.gui"
         referencePath = f"{os.path.join(self.datadir, self._language)}-1.txt"
         self._reference = self.readReference(referencePath)
