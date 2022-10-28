@@ -33,6 +33,40 @@ class TestRecognizerUtils(object):
             universal_newlines=True,
         )
 
+    def runRecognitionAudio8k(self, audioPath: str, language: str) -> Popen:
+        return Popen(
+            [
+                "python",
+                f"{self.rootdir}/bin/client.py",
+                "--audio-path",
+                audioPath,
+                "--language",
+                language,
+                "--host",
+                self._host,
+            ],
+            stdout=PIPE,
+            stderr=PIPE,
+            universal_newlines=True,
+        )
+
+    def runRecognitionAudio16k(self, audioPath: str, language: str) -> Popen:
+        return Popen(
+            [
+                "python",
+                f"{self.rootdir}/bin/client.py",
+                "--audio-path",
+                audioPath,
+                "--language",
+                language,
+                "--host",
+                self._host,
+            ],
+            stdout=PIPE,
+            stderr=PIPE,
+            universal_newlines=True,
+        )
+
     def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
         return Popen(
             [
@@ -127,10 +161,12 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def setUp(self) -> None:
         self._language = os.getenv("LANGUAGE", "en-us")
-        self._hostName = os.getenv("ASR4_HOSTNAME", "asr4-server")
+        self._hostName = os.getenv("ASR4_HOSTNAME", "[::]")
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
         self._audio = f"{os.path.join(self.datadir, self._language)}-1.wav"
+        self._audio8k = f"{os.path.join(self.datadir)}en-us.8k.wav"
+        self._audio16k = f"{os.path.join(self.datadir)}en-us.16k.wav"
         self._gui = f"{os.path.join(self.datadir, self._language)}.gui"
         referencePath = f"{os.path.join(self.datadir, self._language)}-1.txt"
         self._reference = self.readReference(referencePath)
@@ -148,6 +184,22 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
         if match != None and match.lastindex != None:
             self.evaluateHypothesis(self._reference, hypothesis)
+
+    def testRecognitionAudioDifferentSampleRate(self):
+        process = self.runRecognitionAudio8k(self._audio8k, "en-US")
+        status = process.wait(timeout=100)
+        self.checkStatus(status, process.stderr.read())
+        output = process.stdout.read()
+        match = re.search('RecognizeRequest text: "(.+?)"', output)
+        hypothesis8k = match.group(match.lastindex)
+        process = self.runRecognitionAudio8k(self._audio16k, "en-US")
+        status = process.wait(timeout=100)
+        self.checkStatus(status, process.stderr.read())
+        output = process.stdout.read()
+        match = re.search('RecognizeRequest text: "(.+?)"', output)
+        hypothesis16k = match.group(match.lastindex)
+
+        assert hypothesis8k == hypothesis16k
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)
