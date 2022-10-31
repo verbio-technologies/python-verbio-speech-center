@@ -91,7 +91,7 @@ Find supported configuration options in the table below:
 |Option|Supported Values|
 |-|-|
 |Language|en-US, es, pt-BR|
-|Sample Rate (Hz)| 16000|
+|Sample Rate (Hz)| 16000, 8000|
 |Recognition Topic| GENERIC|
 
 ### Client (gRPC)
@@ -100,13 +100,16 @@ Once its dependencies are installed, the client can connect to a running `asr4` 
 
 ```sh
 # Send a recognition request against the asr4 server located at tanzania and obtain the transcription of a WAV audio
-python bin/client.py --host tanzania:50051 -l en-US -a <WAV_FILE_PATH>.wav
+python bin/client.py --host tanzania:50051 -l en-US -a <WAV_FILE_PATH>.wav -o <OUTPUT_PATH>
 
 # Or the transcription of several audios in a .gui file
-python bin/client.py --host tanzania:50051 -l en-US -g <GUI_FILE_PATH>.gui
+python bin/client.py --host tanzania:50051 -l en-US -g <GUI_FILE_PATH>.gui -o <OUTPUT_PATH>
+
+# Get metrics after the trascription process has finished
+python bin/client.py --host tanzania:50051 -l en-US -g <GUI_FILE_PATH>.gui -o <OUTPUT_PATH> -m
 
 # Try again with a Spanish WAV audio
-python bin/client.py --host tanzania:50051 -l es -a <WAV_FILE_PATH>.wav
+python bin/client.py --host tanzania:50051 -l es -a <WAV_FILE_PATH>.wav -o <OUTPUT_PATH>
 
 ```
 
@@ -116,12 +119,14 @@ Additionally, include the `--help` argument to display all available options:
 
 ```
 » python bin/client.py --help
-usage: client.py [-h] [-a AUDIO] [-g GUI] [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-v]
+usage: client.py [-h] [-o OUTPUT] (-a AUDIO | -g GUI) [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-m] [-v]
 
 A Speech Recognition client.
 
 optional arguments:
   -h, --help            show this help message and exit
+  -o OUTPUT, --output-dir OUTPUT
+                        Output path for the results.
   -a AUDIO, --audio-path AUDIO
                         Path to the audio file.
   -g GUI, --gui-path GUI
@@ -130,7 +135,9 @@ optional arguments:
                         Language of the recognizer service.
   --host HOST           Hostname address of the ASR4 server.
   -j JOBS, --jobs JOBS  Number of parallel workers; if not specified, defaults to CPU count.
+  -m, --metrics         Calculate metrics using the audio transcription references.
   -v, --verbose         Give more output. Option is additive, and can be used up to 4 times.
+
 ```
 
 Find supported configuration options in the table below:
