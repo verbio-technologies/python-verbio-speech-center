@@ -53,7 +53,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
         else:
             referenceFile = args.audio.replace(".wav", ".txt")
             trnReferences.append(
-                open(referenceFile, "r").read()
+                open(referenceFile, "r").read().replace("\n", "")
                 + " ("
                 + referenceFile.replace(".txt", "")
                 + ")"
@@ -122,7 +122,7 @@ def _getTrnReferences(gui: str) -> List[str]:
         referenceFile = line.replace(".wav", ".txt")
         if line != "":
             try:
-                reference = open(referenceFile, "r").read()
+                reference = open(referenceFile, "r").read().replace("\n", "")
             except:
                 raise FileNotFoundError(f"Reference file not found.")
             trn.append(reference + " (" + referenceFile.replace(".txt", "") + ")")
