@@ -6,7 +6,6 @@ import logging
 import argparse
 import multiprocessing
 import numpy as np
-from datetime import datetime
 import re
 import os
 import sys
