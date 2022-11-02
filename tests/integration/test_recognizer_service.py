@@ -186,13 +186,13 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             self.evaluateHypothesis(self._reference, hypothesis)
 
     def testRecognitionAudioDifferentSampleRate(self):
-        process = self.runRecognitionAudio8k(self._audio8k, "en-US")
+        process = self.runRecognitionAudio8k(self._audio8k, self._language)
         status = process.wait(timeout=100)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest text: "(.+?)"', output)
         hypothesis8k = match.group(match.lastindex)
-        process = self.runRecognitionAudio8k(self._audio16k, "en-US")
+        process = self.runRecognitionAudio8k(self._audio16k, self._language)
         status = process.wait(timeout=100)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
