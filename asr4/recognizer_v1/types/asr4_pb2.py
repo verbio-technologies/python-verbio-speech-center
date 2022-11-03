@@ -3,98 +3,647 @@
 # source: asr4.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\nasr4.proto\x12\x12\x61sr4.recognizer.v1"X\n\x10RecognizeRequest\x12\x35\n\x06\x63onfig\x18\x01 \x01(\x0b\x32%.asr4.recognizer.v1.RecognitionConfig\x12\r\n\x05\x61udio\x18\x02 \x01(\x0c"\x8d\x01\n\x11RecognitionConfig\x12=\n\nparameters\x18\x01 \x01(\x0b\x32).asr4.recognizer.v1.RecognitionParameters\x12\x39\n\x08resource\x18\x02 \x01(\x0b\x32\'.asr4.recognizer.v1.RecognitionResource"A\n\x15RecognitionParameters\x12\x10\n\x08language\x18\x01 \x01(\t\x12\x16\n\x0esample_rate_hz\x18\x02 \x01(\r"i\n\x13RecognitionResource\x12<\n\x05topic\x18\x01 \x01(\x0e\x32-.asr4.recognizer.v1.RecognitionResource.Model"\x14\n\x05Model\x12\x0b\n\x07GENERIC\x10\x00"!\n\x11RecognizeResponse\x12\x0c\n\x04text\x18\x01 \x01(\t2f\n\nRecognizer\x12X\n\tRecognize\x12$.asr4.recognizer.v1.RecognizeRequest\x1a%.asr4.recognizer.v1.RecognizeResponseb\x06proto3'
+from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
+from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb2
+from google.rpc import status_pb2 as google_dot_rpc_dot_status__pb2
+
+
+DESCRIPTOR = _descriptor.FileDescriptor(
+  name='asr4.proto',
+  package='asr4.recognizer.v1',
+  syntax='proto3',
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_pb=b'\n\nasr4.proto\x12\x12\x61sr4.recognizer.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x17google/rpc/status.proto\"X\n\x10RecognizeRequest\x12\x35\n\x06\x63onfig\x18\x01 \x01(\x0b\x32%.asr4.recognizer.v1.RecognitionConfig\x12\r\n\x05\x61udio\x18\x02 \x01(\x0c\"z\n\x19StreamingRecognizeRequest\x12\x37\n\x06\x63onfig\x18\x01 \x01(\x0b\x32%.asr4.recognizer.v1.RecognitionConfigH\x00\x12\x0f\n\x05\x61udio\x18\x02 \x01(\x0cH\x00\x42\x13\n\x11streaming_request\"\x8d\x01\n\x11RecognitionConfig\x12=\n\nparameters\x18\x01 \x01(\x0b\x32).asr4.recognizer.v1.RecognitionParameters\x12\x39\n\x08resource\x18\x02 \x01(\x0b\x32\'.asr4.recognizer.v1.RecognitionResource\"\xac\x01\n\x15RecognitionParameters\x12\x10\n\x08language\x18\x01 \x01(\t\x12\x16\n\x0esample_rate_hz\x18\x02 \x01(\r\x12O\n\x0e\x61udio_encoding\x18\x03 \x01(\x0e\x32\x37.asr4.recognizer.v1.RecognitionParameters.AudioEncoding\"\x18\n\rAudioEncoding\x12\x07\n\x03PCM\x10\x00\"i\n\x13RecognitionResource\x12<\n\x05topic\x18\x01 \x01(\x0e\x32-.asr4.recognizer.v1.RecognitionResource.Model\"\x14\n\x05Model\x12\x0b\n\x07GENERIC\x10\x00\"\x82\x01\n\x11RecognizeResponse\x12@\n\x0c\x61lternatives\x18\x01 \x03(\x0b\x32*.asr4.recognizer.v1.RecognitionAlternative\x12+\n\x08\x65nd_time\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x9a\x01\n\x1aStreamingRecognizeResponse\x12#\n\x05\x65rror\x18\x01 \x01(\x0b\x32\x12.google.rpc.StatusH\x00\x12\x41\n\x07results\x18\x02 \x01(\x0b\x32..asr4.recognizer.v1.StreamingRecognitionResultH\x00\x42\x14\n\x12streaming_response\"\x9d\x01\n\x1aStreamingRecognitionResult\x12@\n\x0c\x61lternatives\x18\x01 \x03(\x0b\x32*.asr4.recognizer.v1.RecognitionAlternative\x12+\n\x08\x65nd_time\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x10\n\x08is_final\x18\x03 \x01(\x08\"m\n\x16RecognitionAlternative\x12\x12\n\ntranscript\x18\x01 \x01(\t\x12\x12\n\nconfidence\x18\x02 \x01(\x02\x12+\n\x05words\x18\x03 \x03(\x0b\x32\x1c.asr4.recognizer.v1.WordInfo\"\x88\x01\n\x08WordInfo\x12-\n\nstart_time\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\x12+\n\x08\x65nd_time\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x0c\n\x04word\x18\x03 \x01(\t\x12\x12\n\nconfidence\x18\x04 \x01(\x02\x32\xf9\x01\n\nRecognizer\x12r\n\tRecognize\x12$.asr4.recognizer.v1.RecognizeRequest\x1a%.asr4.recognizer.v1.RecognizeResponse\"\x18\x82\xd3\xe4\x93\x02\x12\"\r/v1/recognize:\x01*\x12w\n\x12StreamingRecognize\x12-.asr4.recognizer.v1.StreamingRecognizeRequest\x1a..asr4.recognizer.v1.StreamingRecognizeResponse(\x01\x30\x01\x62\x06proto3'
+  ,
+  dependencies=[google_dot_api_dot_annotations__pb2.DESCRIPTOR,google_dot_protobuf_dot_duration__pb2.DESCRIPTOR,google_dot_rpc_dot_status__pb2.DESCRIPTOR,])
+
+
+
+_RECOGNITIONPARAMETERS_AUDIOENCODING = _descriptor.EnumDescriptor(
+  name='AudioEncoding',
+  full_name='asr4.recognizer.v1.RecognitionParameters.AudioEncoding',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='PCM', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=628,
+  serialized_end=652,
+)
+_sym_db.RegisterEnumDescriptor(_RECOGNITIONPARAMETERS_AUDIOENCODING)
+
+_RECOGNITIONRESOURCE_MODEL = _descriptor.EnumDescriptor(
+  name='Model',
+  full_name='asr4.recognizer.v1.RecognitionResource.Model',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='GENERIC', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=739,
+  serialized_end=759,
+)
+_sym_db.RegisterEnumDescriptor(_RECOGNITIONRESOURCE_MODEL)
+
+
+_RECOGNIZEREQUEST = _descriptor.Descriptor(
+  name='RecognizeRequest',
+  full_name='asr4.recognizer.v1.RecognizeRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='config', full_name='asr4.recognizer.v1.RecognizeRequest.config', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='audio', full_name='asr4.recognizer.v1.RecognizeRequest.audio', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=121,
+  serialized_end=209,
 )
 
 
-_RECOGNIZEREQUEST = DESCRIPTOR.message_types_by_name["RecognizeRequest"]
-_RECOGNITIONCONFIG = DESCRIPTOR.message_types_by_name["RecognitionConfig"]
-_RECOGNITIONPARAMETERS = DESCRIPTOR.message_types_by_name["RecognitionParameters"]
-_RECOGNITIONRESOURCE = DESCRIPTOR.message_types_by_name["RecognitionResource"]
-_RECOGNIZERESPONSE = DESCRIPTOR.message_types_by_name["RecognizeResponse"]
-_RECOGNITIONRESOURCE_MODEL = _RECOGNITIONRESOURCE.enum_types_by_name["Model"]
-RecognizeRequest = _reflection.GeneratedProtocolMessageType(
-    "RecognizeRequest",
-    (_message.Message,),
-    {
-        "DESCRIPTOR": _RECOGNIZEREQUEST,
-        "__module__": "asr4_pb2"
-        # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognizeRequest)
-    },
+_STREAMINGRECOGNIZEREQUEST = _descriptor.Descriptor(
+  name='StreamingRecognizeRequest',
+  full_name='asr4.recognizer.v1.StreamingRecognizeRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='config', full_name='asr4.recognizer.v1.StreamingRecognizeRequest.config', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='audio', full_name='asr4.recognizer.v1.StreamingRecognizeRequest.audio', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='streaming_request', full_name='asr4.recognizer.v1.StreamingRecognizeRequest.streaming_request',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=211,
+  serialized_end=333,
 )
+
+
+_RECOGNITIONCONFIG = _descriptor.Descriptor(
+  name='RecognitionConfig',
+  full_name='asr4.recognizer.v1.RecognitionConfig',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='parameters', full_name='asr4.recognizer.v1.RecognitionConfig.parameters', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='resource', full_name='asr4.recognizer.v1.RecognitionConfig.resource', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=336,
+  serialized_end=477,
+)
+
+
+_RECOGNITIONPARAMETERS = _descriptor.Descriptor(
+  name='RecognitionParameters',
+  full_name='asr4.recognizer.v1.RecognitionParameters',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='language', full_name='asr4.recognizer.v1.RecognitionParameters.language', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sample_rate_hz', full_name='asr4.recognizer.v1.RecognitionParameters.sample_rate_hz', index=1,
+      number=2, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='audio_encoding', full_name='asr4.recognizer.v1.RecognitionParameters.audio_encoding', index=2,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _RECOGNITIONPARAMETERS_AUDIOENCODING,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=480,
+  serialized_end=652,
+)
+
+
+_RECOGNITIONRESOURCE = _descriptor.Descriptor(
+  name='RecognitionResource',
+  full_name='asr4.recognizer.v1.RecognitionResource',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='topic', full_name='asr4.recognizer.v1.RecognitionResource.topic', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _RECOGNITIONRESOURCE_MODEL,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=654,
+  serialized_end=759,
+)
+
+
+_RECOGNIZERESPONSE = _descriptor.Descriptor(
+  name='RecognizeResponse',
+  full_name='asr4.recognizer.v1.RecognizeResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='alternatives', full_name='asr4.recognizer.v1.RecognizeResponse.alternatives', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='end_time', full_name='asr4.recognizer.v1.RecognizeResponse.end_time', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=762,
+  serialized_end=892,
+)
+
+
+_STREAMINGRECOGNIZERESPONSE = _descriptor.Descriptor(
+  name='StreamingRecognizeResponse',
+  full_name='asr4.recognizer.v1.StreamingRecognizeResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='error', full_name='asr4.recognizer.v1.StreamingRecognizeResponse.error', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='results', full_name='asr4.recognizer.v1.StreamingRecognizeResponse.results', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='streaming_response', full_name='asr4.recognizer.v1.StreamingRecognizeResponse.streaming_response',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=895,
+  serialized_end=1049,
+)
+
+
+_STREAMINGRECOGNITIONRESULT = _descriptor.Descriptor(
+  name='StreamingRecognitionResult',
+  full_name='asr4.recognizer.v1.StreamingRecognitionResult',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='alternatives', full_name='asr4.recognizer.v1.StreamingRecognitionResult.alternatives', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='end_time', full_name='asr4.recognizer.v1.StreamingRecognitionResult.end_time', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='is_final', full_name='asr4.recognizer.v1.StreamingRecognitionResult.is_final', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1052,
+  serialized_end=1209,
+)
+
+
+_RECOGNITIONALTERNATIVE = _descriptor.Descriptor(
+  name='RecognitionAlternative',
+  full_name='asr4.recognizer.v1.RecognitionAlternative',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='transcript', full_name='asr4.recognizer.v1.RecognitionAlternative.transcript', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='confidence', full_name='asr4.recognizer.v1.RecognitionAlternative.confidence', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='words', full_name='asr4.recognizer.v1.RecognitionAlternative.words', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1211,
+  serialized_end=1320,
+)
+
+
+_WORDINFO = _descriptor.Descriptor(
+  name='WordInfo',
+  full_name='asr4.recognizer.v1.WordInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='start_time', full_name='asr4.recognizer.v1.WordInfo.start_time', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='end_time', full_name='asr4.recognizer.v1.WordInfo.end_time', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='word', full_name='asr4.recognizer.v1.WordInfo.word', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='confidence', full_name='asr4.recognizer.v1.WordInfo.confidence', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1323,
+  serialized_end=1459,
+)
+
+_RECOGNIZEREQUEST.fields_by_name['config'].message_type = _RECOGNITIONCONFIG
+_STREAMINGRECOGNIZEREQUEST.fields_by_name['config'].message_type = _RECOGNITIONCONFIG
+_STREAMINGRECOGNIZEREQUEST.oneofs_by_name['streaming_request'].fields.append(
+  _STREAMINGRECOGNIZEREQUEST.fields_by_name['config'])
+_STREAMINGRECOGNIZEREQUEST.fields_by_name['config'].containing_oneof = _STREAMINGRECOGNIZEREQUEST.oneofs_by_name['streaming_request']
+_STREAMINGRECOGNIZEREQUEST.oneofs_by_name['streaming_request'].fields.append(
+  _STREAMINGRECOGNIZEREQUEST.fields_by_name['audio'])
+_STREAMINGRECOGNIZEREQUEST.fields_by_name['audio'].containing_oneof = _STREAMINGRECOGNIZEREQUEST.oneofs_by_name['streaming_request']
+_RECOGNITIONCONFIG.fields_by_name['parameters'].message_type = _RECOGNITIONPARAMETERS
+_RECOGNITIONCONFIG.fields_by_name['resource'].message_type = _RECOGNITIONRESOURCE
+_RECOGNITIONPARAMETERS.fields_by_name['audio_encoding'].enum_type = _RECOGNITIONPARAMETERS_AUDIOENCODING
+_RECOGNITIONPARAMETERS_AUDIOENCODING.containing_type = _RECOGNITIONPARAMETERS
+_RECOGNITIONRESOURCE.fields_by_name['topic'].enum_type = _RECOGNITIONRESOURCE_MODEL
+_RECOGNITIONRESOURCE_MODEL.containing_type = _RECOGNITIONRESOURCE
+_RECOGNIZERESPONSE.fields_by_name['alternatives'].message_type = _RECOGNITIONALTERNATIVE
+_RECOGNIZERESPONSE.fields_by_name['end_time'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
+_STREAMINGRECOGNIZERESPONSE.fields_by_name['error'].message_type = google_dot_rpc_dot_status__pb2._STATUS
+_STREAMINGRECOGNIZERESPONSE.fields_by_name['results'].message_type = _STREAMINGRECOGNITIONRESULT
+_STREAMINGRECOGNIZERESPONSE.oneofs_by_name['streaming_response'].fields.append(
+  _STREAMINGRECOGNIZERESPONSE.fields_by_name['error'])
+_STREAMINGRECOGNIZERESPONSE.fields_by_name['error'].containing_oneof = _STREAMINGRECOGNIZERESPONSE.oneofs_by_name['streaming_response']
+_STREAMINGRECOGNIZERESPONSE.oneofs_by_name['streaming_response'].fields.append(
+  _STREAMINGRECOGNIZERESPONSE.fields_by_name['results'])
+_STREAMINGRECOGNIZERESPONSE.fields_by_name['results'].containing_oneof = _STREAMINGRECOGNIZERESPONSE.oneofs_by_name['streaming_response']
+_STREAMINGRECOGNITIONRESULT.fields_by_name['alternatives'].message_type = _RECOGNITIONALTERNATIVE
+_STREAMINGRECOGNITIONRESULT.fields_by_name['end_time'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
+_RECOGNITIONALTERNATIVE.fields_by_name['words'].message_type = _WORDINFO
+_WORDINFO.fields_by_name['start_time'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
+_WORDINFO.fields_by_name['end_time'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
+DESCRIPTOR.message_types_by_name['RecognizeRequest'] = _RECOGNIZEREQUEST
+DESCRIPTOR.message_types_by_name['StreamingRecognizeRequest'] = _STREAMINGRECOGNIZEREQUEST
+DESCRIPTOR.message_types_by_name['RecognitionConfig'] = _RECOGNITIONCONFIG
+DESCRIPTOR.message_types_by_name['RecognitionParameters'] = _RECOGNITIONPARAMETERS
+DESCRIPTOR.message_types_by_name['RecognitionResource'] = _RECOGNITIONRESOURCE
+DESCRIPTOR.message_types_by_name['RecognizeResponse'] = _RECOGNIZERESPONSE
+DESCRIPTOR.message_types_by_name['StreamingRecognizeResponse'] = _STREAMINGRECOGNIZERESPONSE
+DESCRIPTOR.message_types_by_name['StreamingRecognitionResult'] = _STREAMINGRECOGNITIONRESULT
+DESCRIPTOR.message_types_by_name['RecognitionAlternative'] = _RECOGNITIONALTERNATIVE
+DESCRIPTOR.message_types_by_name['WordInfo'] = _WORDINFO
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+RecognizeRequest = _reflection.GeneratedProtocolMessageType('RecognizeRequest', (_message.Message,), {
+  'DESCRIPTOR' : _RECOGNIZEREQUEST,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognizeRequest)
+  })
 _sym_db.RegisterMessage(RecognizeRequest)
 
-RecognitionConfig = _reflection.GeneratedProtocolMessageType(
-    "RecognitionConfig",
-    (_message.Message,),
-    {
-        "DESCRIPTOR": _RECOGNITIONCONFIG,
-        "__module__": "asr4_pb2"
-        # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionConfig)
-    },
-)
+StreamingRecognizeRequest = _reflection.GeneratedProtocolMessageType('StreamingRecognizeRequest', (_message.Message,), {
+  'DESCRIPTOR' : _STREAMINGRECOGNIZEREQUEST,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.StreamingRecognizeRequest)
+  })
+_sym_db.RegisterMessage(StreamingRecognizeRequest)
+
+RecognitionConfig = _reflection.GeneratedProtocolMessageType('RecognitionConfig', (_message.Message,), {
+  'DESCRIPTOR' : _RECOGNITIONCONFIG,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionConfig)
+  })
 _sym_db.RegisterMessage(RecognitionConfig)
 
-RecognitionParameters = _reflection.GeneratedProtocolMessageType(
-    "RecognitionParameters",
-    (_message.Message,),
-    {
-        "DESCRIPTOR": _RECOGNITIONPARAMETERS,
-        "__module__": "asr4_pb2"
-        # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionParameters)
-    },
-)
+RecognitionParameters = _reflection.GeneratedProtocolMessageType('RecognitionParameters', (_message.Message,), {
+  'DESCRIPTOR' : _RECOGNITIONPARAMETERS,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionParameters)
+  })
 _sym_db.RegisterMessage(RecognitionParameters)
 
-RecognitionResource = _reflection.GeneratedProtocolMessageType(
-    "RecognitionResource",
-    (_message.Message,),
-    {
-        "DESCRIPTOR": _RECOGNITIONRESOURCE,
-        "__module__": "asr4_pb2"
-        # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionResource)
-    },
-)
+RecognitionResource = _reflection.GeneratedProtocolMessageType('RecognitionResource', (_message.Message,), {
+  'DESCRIPTOR' : _RECOGNITIONRESOURCE,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionResource)
+  })
 _sym_db.RegisterMessage(RecognitionResource)
 
-RecognizeResponse = _reflection.GeneratedProtocolMessageType(
-    "RecognizeResponse",
-    (_message.Message,),
-    {
-        "DESCRIPTOR": _RECOGNIZERESPONSE,
-        "__module__": "asr4_pb2"
-        # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognizeResponse)
-    },
-)
+RecognizeResponse = _reflection.GeneratedProtocolMessageType('RecognizeResponse', (_message.Message,), {
+  'DESCRIPTOR' : _RECOGNIZERESPONSE,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognizeResponse)
+  })
 _sym_db.RegisterMessage(RecognizeResponse)
 
-_RECOGNIZER = DESCRIPTOR.services_by_name["Recognizer"]
-if _descriptor._USE_C_DESCRIPTORS == False:
+StreamingRecognizeResponse = _reflection.GeneratedProtocolMessageType('StreamingRecognizeResponse', (_message.Message,), {
+  'DESCRIPTOR' : _STREAMINGRECOGNIZERESPONSE,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.StreamingRecognizeResponse)
+  })
+_sym_db.RegisterMessage(StreamingRecognizeResponse)
 
-    DESCRIPTOR._options = None
-    _RECOGNIZEREQUEST._serialized_start = 34
-    _RECOGNIZEREQUEST._serialized_end = 122
-    _RECOGNITIONCONFIG._serialized_start = 125
-    _RECOGNITIONCONFIG._serialized_end = 266
-    _RECOGNITIONPARAMETERS._serialized_start = 268
-    _RECOGNITIONPARAMETERS._serialized_end = 333
-    _RECOGNITIONRESOURCE._serialized_start = 335
-    _RECOGNITIONRESOURCE._serialized_end = 440
-    _RECOGNITIONRESOURCE_MODEL._serialized_start = 420
-    _RECOGNITIONRESOURCE_MODEL._serialized_end = 440
-    _RECOGNIZERESPONSE._serialized_start = 442
-    _RECOGNIZERESPONSE._serialized_end = 475
-    _RECOGNIZER._serialized_start = 477
-    _RECOGNIZER._serialized_end = 579
+StreamingRecognitionResult = _reflection.GeneratedProtocolMessageType('StreamingRecognitionResult', (_message.Message,), {
+  'DESCRIPTOR' : _STREAMINGRECOGNITIONRESULT,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.StreamingRecognitionResult)
+  })
+_sym_db.RegisterMessage(StreamingRecognitionResult)
+
+RecognitionAlternative = _reflection.GeneratedProtocolMessageType('RecognitionAlternative', (_message.Message,), {
+  'DESCRIPTOR' : _RECOGNITIONALTERNATIVE,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.RecognitionAlternative)
+  })
+_sym_db.RegisterMessage(RecognitionAlternative)
+
+WordInfo = _reflection.GeneratedProtocolMessageType('WordInfo', (_message.Message,), {
+  'DESCRIPTOR' : _WORDINFO,
+  '__module__' : 'asr4_pb2'
+  # @@protoc_insertion_point(class_scope:asr4.recognizer.v1.WordInfo)
+  })
+_sym_db.RegisterMessage(WordInfo)
+
+
+
+_RECOGNIZER = _descriptor.ServiceDescriptor(
+  name='Recognizer',
+  full_name='asr4.recognizer.v1.Recognizer',
+  file=DESCRIPTOR,
+  index=0,
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_start=1462,
+  serialized_end=1711,
+  methods=[
+  _descriptor.MethodDescriptor(
+    name='Recognize',
+    full_name='asr4.recognizer.v1.Recognizer.Recognize',
+    index=0,
+    containing_service=None,
+    input_type=_RECOGNIZEREQUEST,
+    output_type=_RECOGNIZERESPONSE,
+    serialized_options=b'\202\323\344\223\002\022\"\r/v1/recognize:\001*',
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='StreamingRecognize',
+    full_name='asr4.recognizer.v1.Recognizer.StreamingRecognize',
+    index=1,
+    containing_service=None,
+    input_type=_STREAMINGRECOGNIZEREQUEST,
+    output_type=_STREAMINGRECOGNIZERESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+])
+_sym_db.RegisterServiceDescriptor(_RECOGNIZER)
+
+DESCRIPTOR.services_by_name['Recognizer'] = _RECOGNIZER
+
 # @@protoc_insertion_point(module_scope)
