@@ -163,7 +163,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
 
 
 def _getTrnHypothesis(response: RecognizeResponse, audio_path: str) -> str:
-    filename = audio_path.replace(".wav", "")
+    filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
     return f"{RecognizeResponse.FromString(response).text} ({filename})"
 
 
