@@ -3,6 +3,7 @@ import asyncio
 import logging
 import argparse
 import multiprocessing
+import time
 from concurrent import futures
 
 from typing import Optional
@@ -188,6 +189,7 @@ if __name__ == "__main__":
         "spawn"
     )  # This is important and MUST be inside the name==main block
     args = _parseArguments()
+    logging.Formatter.converter = time.gmtime
     logging.basicConfig(
         level=_LOG_LEVELS.get(args.verbose, logging.INFO),
         format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
