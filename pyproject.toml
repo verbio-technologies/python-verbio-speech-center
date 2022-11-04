@@ -27,7 +27,8 @@ classifiers = [
     "Topic :: Multimedia :: Sound/Audio :: Speech",
 ]
 dependencies = [
-    "google > =3.0.0",
+    "google >= 3.0.0",
+    "google-api-core >= 2.10.2",
     "grpcio >= 1.47.0",
     "protobuf >= 3.20.1",
     "typing_extensions >= 4.3.0",
