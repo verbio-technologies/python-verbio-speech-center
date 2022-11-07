@@ -157,5 +157,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return " ".join(words)
 
     def eventSink(self, response: str) -> RecognizeResponse:
-        result = {"text": response}
+        result = { "alternatives": 
+            [
+                {
+                    "transcript": response,
+                    "confidence": 1.0,
+                    "words": response.split(" ")
+                }
+            ]
+        }
         return RecognizeResponse(**result)
