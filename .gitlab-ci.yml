@@ -106,6 +106,7 @@ python:test:coverage:
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
+    - pip freeze
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
