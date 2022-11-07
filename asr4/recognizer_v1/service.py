@@ -176,7 +176,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         result = {
             "alternatives": [
                 {
-                    "transcript": bytes(response, "utf-8"),
+                    "transcript": response,
                     "confidence": 1.0,
                     "words": words,
                 }
