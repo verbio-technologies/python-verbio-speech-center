@@ -212,7 +212,7 @@ testing:promote:gpu:
     - tags
   before_script:
     - apt-get update && apt-get install -y asrtest-tools libffi-dev
-    - pip install .[client,test]proto
+    - pip install .[client,test]
   script:
     - python --version
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
