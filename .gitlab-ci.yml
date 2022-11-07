@@ -62,8 +62,6 @@ python:test:cpu:
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
-    - pip uninstall protobuf
-    - pip install protobuf==3.20.1
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -81,8 +79,6 @@ python:test:gpu:
   before_script:
     - source ~/.bashrc
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
-    - pip uninstall protobuf
-    - pip install protobuf==3.20.1
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
@@ -110,8 +106,6 @@ python:test:coverage:
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
-    - pip uninstall protobuf
-    - pip install protobuf==3.20.1
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
@@ -129,8 +123,6 @@ python:test:coverage:gpu:
   before_script:
     - source ~/.bashrc
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
-    - pip uninstall protobuf
-    - pip install protobuf==3.20.1
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
@@ -220,9 +212,7 @@ testing:promote:gpu:
     - tags
   before_script:
     - apt-get update && apt-get install -y asrtest-tools libffi-dev
-    - pip install .[client,test]
-    - pip uninstall protobuf
-    - pip install protobuf==3.20.1
+    - pip install .[client,test]proto
   script:
     - python --version
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
