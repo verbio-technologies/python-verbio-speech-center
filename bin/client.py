@@ -43,6 +43,7 @@ def _repr(responses: List[RecognizeRequest]) -> List[str]:
     return [
         f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
         for r in responses
+        if len(r.alternatives) > 0
     ]
 
 
@@ -167,7 +168,10 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
 
 def _getTrnHypothesis(response: RecognizeResponse, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
-    return f"{RecognizeResponse.FromString(response).alternatives[0].transcript} ({filename})"
+    if len(RecognizeResponse.FromString(response).alternatives) > 0:
+        return f"{RecognizeResponse.FromString(response).alternatives[0].transcript} ({filename})"
+    else:
+        return f" ({filename})"
 
 
 def _getAudiosList(gui_file: str) -> List[str]:
