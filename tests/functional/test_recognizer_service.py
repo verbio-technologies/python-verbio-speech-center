@@ -57,7 +57,7 @@ class TestRecognizerService(unittest.TestCase):
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(
-            response.text,
+            response.alternatives[0].transcript,
             DEFAULT_ENGLISH_MESSAGE,
         )
 
