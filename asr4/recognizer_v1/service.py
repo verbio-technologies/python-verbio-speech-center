@@ -157,27 +157,28 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return " ".join(words)
 
     def eventSink(self, response: str) -> RecognizeResponse:
-        tokens = response.split(" ")
         words = []
-        for token in tokens:
-            words.append({
-                "start_time": {
-                    "seconds": 0,
-                    "nanos": 0,
-                },
-                "end_time": {
-                    "seconds": 0,
-                    "nanos": 0,
-                },
-                "word": token,
-                "confidence": 1.0,
-            })
-        result = { "alternatives": 
-            [
+        for token in response.split(" "):
+            words.append(
                 {
-                    "transcript": bytes(response, 'utf-8'),
+                    "start_time": {
+                        "seconds": 0,
+                        "nanos": 0,
+                    },
+                    "end_time": {
+                        "seconds": 0,
+                        "nanos": 0,
+                    },
+                    "word": token,
                     "confidence": 1.0,
-                    "words": words
+                }
+            )
+        result = {
+            "alternatives": [
+                {
+                    "transcript": bytes(response, "utf-8"),
+                    "confidence": 1.0,
+                    "words": words,
                 }
             ]
         }

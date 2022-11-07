@@ -40,7 +40,10 @@ _ENCODING = "utf-8"
 
 
 def _repr(responses: List[RecognizeRequest]) -> List[str]:
-    return [f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">' for r in responses]
+    return [
+        f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
+        for r in responses
+    ]
 
 
 def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
