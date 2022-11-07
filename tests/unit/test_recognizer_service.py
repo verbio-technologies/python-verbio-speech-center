@@ -322,7 +322,27 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockOnnxSession(""))
         response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
-        self.assertEqual(service.eventSink(response), RecognizeResponse(text=response))
+        words = []
+        for word in response.split(" "):
+            words.append(
+                {
+                    "start_time": {
+                        "seconds": 0,
+                        "nanos": 0,
+                    },
+                    "end_time": {
+                        "seconds": 0,
+                        "nanos": 0,
+                    },
+                    "word": word,
+                    "confidence": 1.0,
+                }
+            )
+        alternatives = []
+        alternatives.append({"transcript": response, "confidence": 1.0, "words": words})
+        self.assertEqual(
+            service.eventSink(response), RecognizeResponse(alternatives=alternatives)
+        )
 
     def testRecognizeFormatter(self):
         service = RecognizerService(
