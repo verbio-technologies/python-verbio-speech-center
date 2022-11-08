@@ -216,7 +216,6 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-
     def testInvalidRecognizeRequestLanguage(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(

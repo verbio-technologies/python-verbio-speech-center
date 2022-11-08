@@ -117,7 +117,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             logging.info(f"Recognition result: '{response}'")
             return self.eventSink(response)
 
-
     def eventSource(
         self,
         request: RecognizeRequest,
