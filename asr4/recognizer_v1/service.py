@@ -94,11 +94,35 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         logging.info(f"Recognition result: '{response}'")
         return self.eventSink(response)
 
+    async def StreamingRecognize(
+        self,
+        request: StreamingRecognizeRequest,
+        _context: grpc.aio.ServicerContext,
+    ) -> RecognizeResponse:
+        """
+        Send audio as bytes and receive the transcription of the audio.
+        """
+        if request.config:
+            _validateConfig(request.config)
+            logging.info(
+                "Received streaming request "
+                f"[language={request.config.parameters.language}] "
+                f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+                f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
+            )
+        elif request.audio:
+            self._validateAudio(request.audio)
+            transcription = self._runtime.run(request.audio, sample_rate_hz).sequence
+            response = self._formatWords(transcription)
+            logging.info(f"Recognition result: '{response}'")
+            return self.eventSink(response)
+
+
     def eventSource(
         self,
         request: RecognizeRequest,
     ) -> None:
-        print(request)
+
         self._validateConfig(request.config)
         self._validateAudio(request.audio)
 

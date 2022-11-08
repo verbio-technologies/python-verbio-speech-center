@@ -8,6 +8,7 @@ from concurrent import futures
 from asr4.recognizer import RecognizerStub
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import RecognizeRequest
+from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
@@ -58,6 +59,26 @@ class TestRecognizerService(unittest.TestCase):
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(
             response.alternatives[0].transcript,
+            DEFAULT_ENGLISH_MESSAGE,
+        )
+
+    def testRecognizeStreamingRequestEnUs(self):
+        firstRequest = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+        )
+        secondRequest = StreamingRecognizeRequest(
+            audio=b"0000",
+        )
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response = RecognizerStub(channel).StreamingRecognize(firstRequest, timeout=10)
+        response = RecognizerStub(channel).StreamingRecognize(secondRequest, timeout=10)
+        self.assertEqual(
+            response.results[0].alternatives[0].transcript,
             DEFAULT_ENGLISH_MESSAGE,
         )
 
