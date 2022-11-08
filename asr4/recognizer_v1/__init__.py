@@ -8,7 +8,9 @@ except:
     pass
 
 from .types import RecognizeRequest
+from .types import StreamingRecognizeRequest
 from .types import RecognizeResponse
+from .types import StreamingRecognizeResponse
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
@@ -32,7 +34,9 @@ __all__ = (
     "OnnxRuntime",
     "OnnxRuntimeResult",
     "RecognizeRequest",
+    "StreamingRecognizeRequest",
     "RecognizeResponse",
+    "StreamingRecognizeResponse",
     "RecognitionConfig",
     "RecognitionParameters",
     "RecognitionResource",

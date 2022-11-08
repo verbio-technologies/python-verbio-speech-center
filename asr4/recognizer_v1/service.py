@@ -8,10 +8,12 @@ from .runtime import OnnxRuntime, Session
 from asr4.types.language import Language
 from .types import RecognizerServicer
 from .types import RecognizeRequest
+from .types import StreamingRecognizeRequest
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
 from .types import RecognizeResponse
+from .types import StreamingRecognizeResponse
 from .types import SampleRate
 
 from typing import Optional, List
@@ -96,6 +98,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self,
         request: RecognizeRequest,
     ) -> None:
+        print(request)
         self._validateConfig(request.config)
         self._validateAudio(request.audio)
 

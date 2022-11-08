@@ -1,6 +1,8 @@
 from .asr4_pb2 import (
     RecognizeRequest,
+    StreamingRecognizeRequest,
     RecognizeResponse,
+    StreamingRecognizeResponse,
     RecognitionConfig,
     RecognitionParameters,
     RecognitionResource,
@@ -22,7 +24,9 @@ SERVICES_NAMES = [
 __all__ = (
     "SERVICES_NAMES",
     "RecognizeRequest",
+    "StreamingRecognizeRequest",
     "RecognizeResponse",
+    "StreamingRecognizeResponse",
     "RecognitionConfig",
     "RecognitionParameters",
     "RecognitionResource",

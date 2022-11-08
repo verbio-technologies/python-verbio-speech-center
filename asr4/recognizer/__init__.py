@@ -9,7 +9,9 @@ except:
     pass
 
 from asr4.recognizer_v1 import RecognizeRequest
+from asr4.recognizer_v1 import StreamingRecognizeRequest
 from asr4.recognizer_v1 import RecognizeResponse
+from asr4.recognizer_v1 import StreamingRecognizeResponse
 from asr4.recognizer_v1 import RecognitionConfig
 from asr4.recognizer_v1 import RecognitionParameters
 from asr4.recognizer_v1 import RecognitionResource
@@ -31,7 +33,9 @@ __all__ = (
     "OnnxRuntime",
     "OnnxRuntimeResult",
     "RecognizeRequest",
+    "StreamingRecognizeRequest",
     "RecognizeResponse",
+    "StreamingRecognizeResponse",
     "RecognitionConfig",
     "RecognitionParameters",
     "RecognitionResource",
