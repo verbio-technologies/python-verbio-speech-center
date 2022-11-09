@@ -63,22 +63,25 @@ class TestRecognizerService(unittest.TestCase):
         )
 
     def testRecognizeStreamingRequestEnUs(self):
-        firstRequest = StreamingRecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=16000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
                 ),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-        )
-        secondRequest = StreamingRecognizeRequest(
-            audio=b"0000",
-        )
+            )
+            return StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).StreamingRecognize(firstRequest, timeout=10)
-        response = RecognizerStub(channel).StreamingRecognize(secondRequest, timeout=10)
+        response = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
         self.assertEqual(
-            response.results[0].alternatives[0].transcript,
+            response.results.alternatives[0].transcript,
             DEFAULT_ENGLISH_MESSAGE,
         )
 

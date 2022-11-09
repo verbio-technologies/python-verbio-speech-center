@@ -389,42 +389,38 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockOnnxSession(""))
         response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
-        words = []
-        for word in response.split(" "):
-            words.append(
-                {
-                    "start_time": {
-                        "seconds": 0,
-                        "nanos": 0,
-                    },
-                    "end_time": {
-                        "seconds": 0,
-                        "nanos": 0,
-                    },
-                    "word": word,
-                    "confidence": 1.0,
-                }
-            )
-        alternatives = []
-        alternatives.append({"transcript": response, "confidence": 1.0, "words": words})
+
+        def _getWordInfo(word: str) -> dict:
+            {
+                "start_time": {"seconds": 0, "nanos": 0},
+                "end_time": {"seconds": 0, "nanos": 0},
+                "word": word,
+                "confidence": 1.0,
+            }
+
+        alternatives = {
+            "transcript": response,
+            "confidence": 1.0,
+            "words": map(lambda word: _getWordInfo(word), response.split(" ")),
+        }
         self.assertEqual(
             service.eventSink(response), RecognizeResponse(alternatives=alternatives)
         )
 
-    # def testRecognizeFormatter(self):
-    #     service = RecognizerService(
-    #         MockOnnxSession("", language=Language.ES),
-    #         Language.ES,
-    #         formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
-    #     )
-    #     request = RecognizeRequest(
-    #         config=RecognitionConfig(
-    #             parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
-    #             resource=RecognitionResource(topic="GENERIC"),
-    #         ),
-    #         audio=b"0000",
-    #     )
-    #     self.assertEqual(
-    #         service.eventHandle(request),
-    #         FORMATTED_SPANISH_MESSAGE,
-    #     )
+    def testRecognizeFormatter(self):
+        service = RecognizerService(
+            MockOnnxSession("", language=Language.ES),
+            Language.ES,
+            formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
+        )
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+            audio=b"0000",
+        )
+        self.assertEqual(
+            service.eventHandle(request),
+            FORMATTED_SPANISH_MESSAGE,
+        )

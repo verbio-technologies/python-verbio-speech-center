@@ -166,10 +166,11 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
     return responses, trnHypothesis
 
 
-def _getTrnHypothesis(response: RecognizeResponse, audio_path: str) -> str:
+def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
-    if len(RecognizeResponse.FromString(response).alternatives) > 0:
-        return f"{RecognizeResponse.FromString(response).alternatives[0].transcript} ({filename})"
+    recognizeResponse = RecognizeResponse.FromString(response)
+    if len(recognizeResponse.alternatives) > 0:
+        return f"{recognizeResponse.alternatives[0].transcript} ({filename})"
     else:
         return f" ({filename})"
 
