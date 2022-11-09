@@ -11,7 +11,6 @@ from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
-from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
 
@@ -391,21 +390,26 @@ class TestRecognizerService(unittest.TestCase):
         response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
 
         def _getWordInfo(word: str) -> dict:
-            {
+            return {
                 "start_time": {"seconds": 0, "nanos": 0},
                 "end_time": {"seconds": 0, "nanos": 0},
                 "word": word,
                 "confidence": 1.0,
             }
 
-        alternatives = {
-            "transcript": response,
-            "confidence": 1.0,
-            "words": map(lambda word: _getWordInfo(word), response.split(" ")),
+        result = {
+            "alternatives": [
+                {
+                    "transcript": response,
+                    "confidence": 1.0,
+                    "words": list(
+                        map(lambda word: _getWordInfo(word), response.split(" "))
+                    ),
+                }
+            ],
+            "end_time": {"seconds": 0, "nanos": 0},
         }
-        self.assertEqual(
-            service.eventSink(response), RecognizeResponse(alternatives=alternatives)
-        )
+        self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
 
     def testRecognizeFormatter(self):
         service = RecognizerService(

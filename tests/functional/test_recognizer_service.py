@@ -77,13 +77,14 @@ class TestRecognizerService(unittest.TestCase):
             )
 
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).StreamingRecognize(
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
             _streamingRecognize(), timeout=10
         )
-        self.assertEqual(
-            response.results.alternatives[0].transcript,
-            DEFAULT_ENGLISH_MESSAGE,
-        )
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.alternatives[0].transcript,
+                DEFAULT_ENGLISH_MESSAGE,
+            )
 
     def testRecognizeRequestEs(self):
         request = RecognizeRequest(
