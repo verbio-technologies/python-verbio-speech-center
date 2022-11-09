@@ -14,6 +14,10 @@ from .types import RecognitionParameters
 from .types import RecognitionResource
 from .types import RecognizeResponse
 from .types import StreamingRecognizeResponse
+from .types import StreamingRecognitionResult
+from .types import RecognitionAlternative
+from .types import Duration
+from .types import WordInfo
 from .types import SampleRate
 
 from typing import Optional, List
@@ -96,32 +100,42 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     async def StreamingRecognize(
         self,
-        request: StreamingRecognizeRequest,
+        request_iterator: StreamingRecognizeRequest,
         _context: grpc.aio.ServicerContext,
-    ) -> RecognizeResponse:
+    ) -> StreamingRecognizeResponse:
         """
-        Send audio as bytes and receive the transcription of the audio.
+        Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        if request.config:
-            _validateConfig(request.config)
-            logging.info(
-                "Received streaming request "
-                f"[language={request.config.parameters.language}] "
-                f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-                f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
+        innerRecognizeRequest = RecognizeRequest()
+        for request in request_iterator:
+            if request.config:
+                logging.info(
+                    "Received streaming request "
+                    f"[language={request.config.parameters.language}] "
+                    f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+                    f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
+                )
+                innerRecognizeRequest.config = request.config
+            if request.audio:
+                innerRecognizeRequest.audio = (
+                    innerRecognizeRequest.audio + request.audio
+                )
+        self.eventSource(innerRecognizeRequest)
+        response = self.eventHandle(innerRecognizeRequest)
+        logging.info(f"Recognition result: '{response}'")
+        innerRecognizeResponse = self.eventSink(innerRecognizeRequest)
+        return StreamingRecognizeResponse(
+            results=StreamingRecognitionResult(
+                alternatives=innerRecognizeResponse.alternatives,
+                end_time=innerRecognizeResponse.end_time,
+                is_final=True,
             )
-        elif request.audio:
-            self._validateAudio(request.audio)
-            transcription = self._runtime.run(request.audio, sample_rate_hz).sequence
-            response = self._formatWords(transcription)
-            logging.info(f"Recognition result: '{response}'")
-            return self.eventSink(response)
+        )
 
     def eventSource(
         self,
         request: RecognizeRequest,
     ) -> None:
-
         self._validateConfig(request.config)
         self._validateAudio(request.audio)
 
@@ -183,29 +197,18 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return " ".join(words)
 
     def eventSink(self, response: str) -> RecognizeResponse:
-        words = []
-        for token in response.split(" "):
-            words.append(
-                {
-                    "start_time": {
-                        "seconds": 0,
-                        "nanos": 0,
-                    },
-                    "end_time": {
-                        "seconds": 0,
-                        "nanos": 0,
-                    },
-                    "word": token,
-                    "confidence": 1.0,
-                }
-            )
-        result = {
-            "alternatives": [
-                {
-                    "transcript": response,
-                    "confidence": 1.0,
-                    "words": words,
-                }
-            ]
-        }
-        return RecognizeResponse(**result)
+        words = map(
+            lambda token: WordInfo(
+                start_time=Duration(seconds=0, nanos=0),
+                end_time=Duration(seconds=0, nanos=0),
+                word=token,
+                confidence=1.0,
+            ),
+            response.split(" "),
+        )
+        alternative = RecognitionAlternative(
+            transcript=response, confidence=1.0, words=words
+        )
+        return RecognizeResponse(
+            alternatives=[alternative], end_time=Duration(seconds=0, nanos=0)
+        )
