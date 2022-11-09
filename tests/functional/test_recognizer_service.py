@@ -72,7 +72,7 @@ class TestRecognizerService(unittest.TestCase):
                     resource=RecognitionResource(topic="GENERIC"),
                 ),
             )
-            return StreamingRecognizeRequest(
+            yield StreamingRecognizeRequest(
                 audio=b"0000",
             )
 

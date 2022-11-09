@@ -107,24 +107,24 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
         innerRecognizeRequest = RecognizeRequest()
-        for request in request_iterator:
-            if request.config:
+        async for request in request_iterator:
+            if request.HasField("config"):
                 logging.info(
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
                     f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
                 )
-                innerRecognizeRequest.config = request.config
-            if request.audio:
+                innerRecognizeRequest.config.CopyFrom(request.config)
+            if request.HasField("audio"):
                 innerRecognizeRequest.audio = (
                     innerRecognizeRequest.audio + request.audio
                 )
         self.eventSource(innerRecognizeRequest)
         response = self.eventHandle(innerRecognizeRequest)
         logging.info(f"Recognition result: '{response}'")
-        innerRecognizeResponse = self.eventSink(innerRecognizeRequest)
-        return StreamingRecognizeResponse(
+        innerRecognizeResponse = self.eventSink(response)
+        yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
                 end_time=innerRecognizeResponse.end_time,
