@@ -105,7 +105,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -119,7 +119,21 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+                resource=RecognitionResource(topic=-1),
+            ),
+            audio=b"SOMETHING",
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidAudioEncoding(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding=2
                 ),
                 resource=RecognitionResource(topic=-1),
             ),
@@ -225,21 +239,21 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    def testInvalidRecognizeRequestAudioEncoding(self):
-        service = RecognizerService(MockOnnxSession(""))
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(audio_encoding="PCM"),
-            )
-        )
-        with self.assertRaises(ValueError):
-            service.eventSource(request)
-
     def testInvalidStreamingRecognizeRequestLanguage(self):
         service = RecognizerService(MockOnnxSession(""))
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="en-US"),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidRecognizeRequestAudioEncoding(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(audio_encoding="PCM"),
             )
         )
         with self.assertRaises(ValueError):
@@ -277,6 +291,18 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
+    def testInvalidStreamingRecognizeRequestParameters(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
     def testInvalidRecognizeRequestAudioEncodingValue(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
@@ -290,13 +316,14 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    def testInvalidStreamingRecognizeRequestParameters(self):
+    def testInvalidStreamingRecognizeRequestAudioEncodingValue(self):
         service = RecognizerService(MockOnnxSession(""))
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
                     language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
+                resource=RecognitionResource(topic="GENERIC"),
             )
         )
         with self.assertRaises(ValueError):
@@ -358,6 +385,16 @@ class TestRecognizerService(unittest.TestCase):
     def testInvalidRecognizeRequestHandle(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventHandle(request)
+
+    def testInvalidStreamingRecognizeRequestHandle(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(),
             )
