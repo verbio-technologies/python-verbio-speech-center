@@ -13,6 +13,7 @@ from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
+from asr4.recognizer_v1.types import WordInfo
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -460,8 +461,14 @@ class TestRecognizerService(unittest.TestCase):
 
         def _getWordInfo(word: str) -> dict:
             return {
-                "start_time": {"seconds": 0, "nanos": 0},
-                "end_time": {"seconds": 0, "nanos": 0},
+                "start_time": {
+                    "seconds": 0,
+                    "nanos": 0,
+                },
+                "end_time": {
+                    "seconds": 0,
+                    "nanos": 0,
+                },
                 "word": word,
                 "confidence": 1.0,
             }
@@ -479,6 +486,29 @@ class TestRecognizerService(unittest.TestCase):
             "end_time": {"seconds": 0, "nanos": 0},
         }
         self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
+
+    def testGetWordInfo(self):
+        service = RecognizerService(MockOnnxSession(""))
+        response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
+
+        def _getWordInfo(word: str) -> dict:
+            return {
+                "start_time": {
+                    "seconds": 0,
+                    "nanos": 0,
+                },
+                "end_time": {
+                    "seconds": 0,
+                    "nanos": 0,
+                },
+                "word": word,
+                "confidence": 1.0,
+            }
+
+        self.assertEqual(
+            list(service.getWordInfo(response)),
+            list(map(lambda word: _getWordInfo(word), response.split(" "))),
+        )
 
     def testRecognizeFormatter(self):
         service = RecognizerService(
