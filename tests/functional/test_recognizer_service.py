@@ -62,7 +62,7 @@ class TestRecognizerService(unittest.TestCase):
             DEFAULT_ENGLISH_MESSAGE,
         )
 
-    def testRecognizeStreamingRequestEnUs(self):
+    def testRecognizeStreamingRequestOneAudioEnUs(self):
         def _streamingRecognize():
             yield StreamingRecognizeRequest(
                 config=RecognitionConfig(
@@ -80,11 +80,64 @@ class TestRecognizerService(unittest.TestCase):
         response_iterator = RecognizerStub(channel).StreamingRecognize(
             _streamingRecognize(), timeout=10
         )
+
+        def _getWordInfo(word: str) -> dict:
+            return {
+                "start_time": {"seconds": 0, "nanos": 0},
+                "end_time": {"seconds": 0, "nanos": 0},
+                "word": word,
+                "confidence": 1.0,
+            }
+
         for response in response_iterator:
             self.assertEqual(
                 response.results.alternatives[0].transcript,
                 DEFAULT_ENGLISH_MESSAGE,
             )
+            self.assertEqual(
+                response.results.alternatives[0].confidence,
+                1.0,
+            )
+        self.assertEqual(
+                response.results.is_final,
+                True,
+        )
+
+
+    def testRecognizeStreamingRequestMoreThanOneAudioEnUs(self):
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=16000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                ),
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.alternatives[0].transcript,
+                DEFAULT_ENGLISH_MESSAGE,
+            )
+
+        self.assertEqual(
+            response.results.is_final,
+            True,
+        )
 
     def testRecognizeRequestEs(self):
         request = RecognizeRequest(
