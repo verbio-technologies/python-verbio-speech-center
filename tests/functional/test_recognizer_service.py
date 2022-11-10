@@ -99,10 +99,9 @@ class TestRecognizerService(unittest.TestCase):
                 1.0,
             )
         self.assertEqual(
-                response.results.is_final,
-                True,
+            response.results.is_final,
+            True,
         )
-
 
     def testRecognizeStreamingRequestMoreThanOneAudioEnUs(self):
         def _streamingRecognize():
@@ -132,6 +131,10 @@ class TestRecognizerService(unittest.TestCase):
             self.assertEqual(
                 response.results.alternatives[0].transcript,
                 DEFAULT_ENGLISH_MESSAGE,
+            )
+            self.assertEqual(
+                response.results.alternatives[0].confidence,
+                1.0,
             )
 
         self.assertEqual(
