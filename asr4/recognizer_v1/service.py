@@ -19,6 +19,7 @@ from .types import RecognitionAlternative
 from .types import Duration
 from .types import WordInfo
 from .types import SampleRate
+from .types import AudioEncoding
 
 from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
@@ -157,6 +158,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if not SampleRate.check(parameters.sample_rate_hz):
             raise ValueError(
                 f"Invalid value '{parameters.sample_rate_hz}' for sample_rate_hz parameter"
+            )
+        if not AudioEncoding.check(parameters.audio_encoding):
+            raise ValueError(
+                f"Invalid value '{parameters.audio_encoding}' for audio_encoding parameter"
             )
 
     def _validateResource(

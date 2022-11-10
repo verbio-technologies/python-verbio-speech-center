@@ -225,6 +225,16 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
+    def testInvalidRecognizeRequestAudioEncoding(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(audio_encoding="PCM"),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
     def testInvalidStreamingRecognizeRequestLanguage(self):
         service = RecognizerService(MockOnnxSession(""))
         request = StreamingRecognizeRequest(
@@ -260,8 +270,21 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidRecognizeRequestAudioEncodingValue(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
             )
         )
         with self.assertRaises(ValueError):
@@ -272,7 +295,7 @@ class TestRecognizerService(unittest.TestCase):
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
             )
         )
@@ -284,20 +307,21 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding=1
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
-            )
+            ),
+            audio=b"SOMETHING",
         )
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
-    def testInvalidRecognizeRequestConfig(self):
+    def testInvalidStreamingRecognizeRequestConfig(self):
         service = RecognizerService(MockOnnxSession(""))
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             )
@@ -310,7 +334,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -322,7 +346,9 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
@@ -343,7 +369,9 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -359,7 +387,9 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="es", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -376,7 +406,9 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="pt-BR", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="pt-BR", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -419,7 +451,9 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="es", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",

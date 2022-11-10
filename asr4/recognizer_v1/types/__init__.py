@@ -18,6 +18,7 @@ from .asr4_pb2_grpc import (
 )
 
 from .sample_rate import SampleRate
+from .audio_encoding import AudioEncoding
 from google.protobuf.duration_pb2 import Duration
 
 SERVICES_NAMES = [
@@ -42,4 +43,5 @@ __all__ = (
     "RecognizerServicer",
     "add_RecognizerServicer_to_server",
     "SampleRate",
+    "AudioEncoding",
 )
