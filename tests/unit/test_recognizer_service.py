@@ -530,7 +530,6 @@ class TestRecognizerService(unittest.TestCase):
                 alternatives=innerRecognizeResponse.alternatives,
             )
         )
-        print(innerRecognizeResponse.end_time)
         self.assertEqual(len(streamingResponse.results.alternatives), 1)
         self.assertEqual(
             streamingResponse.results.alternatives[0].transcript, transcription
