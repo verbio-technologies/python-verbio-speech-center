@@ -8,6 +8,7 @@ from concurrent import futures
 from asr4.recognizer import RecognizerStub
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import RecognizeRequest
+from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
@@ -57,8 +58,80 @@ class TestRecognizerService(unittest.TestCase):
         channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
         response = RecognizerStub(channel).Recognize(request, timeout=10)
         self.assertEqual(
-            response.text,
+            response.alternatives[0].transcript,
             DEFAULT_ENGLISH_MESSAGE,
+        )
+
+    def testRecognizeStreamingRequestOneAudioEnUs(self):
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=16000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                ),
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
+
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.alternatives[0].transcript,
+                DEFAULT_ENGLISH_MESSAGE,
+            )
+            self.assertEqual(
+                response.results.alternatives[0].confidence,
+                1.0,
+            )
+        self.assertEqual(
+            response.results.is_final,
+            True,
+        )
+
+    def testRecognizeStreamingRequestMoreThanOneAudioEnUs(self):
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=16000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                ),
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0000",
+            )
+
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.alternatives[0].transcript,
+                DEFAULT_ENGLISH_MESSAGE,
+            )
+            self.assertEqual(
+                response.results.alternatives[0].confidence,
+                1.0,
+            )
+
+        self.assertEqual(
+            response.results.is_final,
+            True,
         )
 
     def testRecognizeRequestEs(self):

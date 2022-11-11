@@ -6,12 +6,16 @@ import numpy as np
 
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import RecognizeRequest
+from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
+from asr4.recognizer import StreamingRecognizeResponse
+from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
+from asr4.recognizer_v1.types import WordInfo
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -104,7 +108,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -118,7 +122,21 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+                resource=RecognitionResource(topic=-1),
+            ),
+            audio=b"SOMETHING",
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidAudioEncoding(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding=2
                 ),
                 resource=RecognitionResource(topic=-1),
             ),
@@ -180,15 +198,35 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
+    def testInvalidStreamingRecognizeRequestEmpty(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest()
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
     def testInvalidRecognizeRequestAudio(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(audio=b"SOMETHING")
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
+    def testInvalidStreamingRecognizeRequestAudio(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(audio=b"SOMETHING")
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
     def testInvalidRecognizeRequestResource(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
+            config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidStreamingRecognizeRequestResource(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
             config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
         )
         with self.assertRaises(ValueError):
@@ -204,9 +242,39 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
+    def testInvalidStreamingRecognizeRequestLanguage(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(language="en-US"),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidRecognizeRequestAudioEncoding(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(audio_encoding="PCM"),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
     def testInvalidRecognizeRequestSampleRate(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(sample_rate_hz=4000),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidStreamingRecognizeRequestSampleRate(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(sample_rate_hz=4000),
             )
@@ -219,8 +287,46 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidStreamingRecognizeRequestParameters(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidRecognizeRequestAudioEncodingValue(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidStreamingRecognizeRequestAudioEncodingValue(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
             )
         )
         with self.assertRaises(ValueError):
@@ -231,7 +337,21 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding=1
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+            audio=b"SOMETHING",
+        )
+        with self.assertRaises(ValueError):
+            service.eventSource(request)
+
+    def testInvalidStreamingRecognizeRequestConfig(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             )
@@ -244,7 +364,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
+                    language="en-US", sample_rate_hz=16000, audio_encoding="PCM"
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -256,7 +376,9 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"SOMETHING",
@@ -273,11 +395,23 @@ class TestRecognizerService(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.eventHandle(request)
 
+    def testInvalidStreamingRecognizeRequestHandle(self):
+        service = RecognizerService(MockOnnxSession(""))
+        request = StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(),
+            )
+        )
+        with self.assertRaises(ValueError):
+            service.eventHandle(request)
+
     def testRecognizeRequestHandleEnUs(self):
         service = RecognizerService(MockOnnxSession(""))
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="en-US", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -293,7 +427,9 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="es", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -310,7 +446,9 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="pt-BR", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="pt-BR", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -322,7 +460,34 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockOnnxSession(""))
         response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
-        self.assertEqual(service.eventSink(response), RecognizeResponse(text=response))
+
+        def _getWordInfo(word: str) -> dict:
+            return {
+                "start_time": {
+                    "seconds": 0,
+                    "nanos": 0,
+                },
+                "end_time": {
+                    "seconds": 0,
+                    "nanos": 0,
+                },
+                "word": word,
+                "confidence": 1.0,
+            }
+
+        result = {
+            "alternatives": [
+                {
+                    "transcript": response,
+                    "confidence": 1.0,
+                    "words": list(
+                        map(lambda word: _getWordInfo(word), response.split(" "))
+                    ),
+                }
+            ],
+            "end_time": {"seconds": 0, "nanos": 0},
+        }
+        self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
 
     def testRecognizeFormatter(self):
         service = RecognizerService(
@@ -332,7 +497,9 @@ class TestRecognizerService(unittest.TestCase):
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es", sample_rate_hz=8000),
+                parameters=RecognitionParameters(
+                    language="es", sample_rate_hz=8000, audio_encoding="PCM"
+                ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
@@ -341,3 +508,30 @@ class TestRecognizerService(unittest.TestCase):
             service.eventHandle(request),
             FORMATTED_SPANISH_MESSAGE,
         )
+
+    def testResponseParameters(self):
+        service = RecognizerService(MockOnnxSession(""))
+        transcription = "".join(
+            random.choices(string.ascii_letters + string.digits, k=16)
+        )
+        response = service.eventSink(transcription)
+        self.assertEqual(len(response.alternatives), 1)
+        self.assertEqual(response.alternatives[0].transcript, transcription)
+        self.assertEqual(response.alternatives[0].confidence, 1.0)
+
+    def testStreamingResponseParameters(self):
+        service = RecognizerService(MockOnnxSession(""))
+        transcription = "".join(
+            random.choices(string.ascii_letters + string.digits, k=16)
+        )
+        innerRecognizeResponse = service.eventSink(transcription)
+        streamingResponse = StreamingRecognizeResponse(
+            results=StreamingRecognitionResult(
+                alternatives=innerRecognizeResponse.alternatives,
+            )
+        )
+        self.assertEqual(len(streamingResponse.results.alternatives), 1)
+        self.assertEqual(
+            streamingResponse.results.alternatives[0].transcript, transcription
+        )
+        self.assertEqual(streamingResponse.results.alternatives[0].confidence, 1.0)

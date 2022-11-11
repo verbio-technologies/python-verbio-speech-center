@@ -19,13 +19,24 @@ class RecognizerStub(object):
             request_serializer=asr4__pb2.RecognizeRequest.SerializeToString,
             response_deserializer=asr4__pb2.RecognizeResponse.FromString,
         )
+        self.StreamingRecognize = channel.stream_stream(
+            "/asr4.recognizer.v1.Recognizer/StreamingRecognize",
+            request_serializer=asr4__pb2.StreamingRecognizeRequest.SerializeToString,
+            response_deserializer=asr4__pb2.StreamingRecognizeResponse.FromString,
+        )
 
 
 class RecognizerServicer(object):
     """Service that implements ASR4 Recognition API."""
 
     def Recognize(self, request, context):
-        """Send audio as bytes and recieve the transcription of the audio."""
+        """Performs synchronous speech recognition: receive results after all audio has been sent and processed."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
+
+    def StreamingRecognize(self, request_iterator, context):
+        """Performs bidirectional streaming speech recognition: receive results while sending audio."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
@@ -37,6 +48,11 @@ def add_RecognizerServicer_to_server(servicer, server):
             servicer.Recognize,
             request_deserializer=asr4__pb2.RecognizeRequest.FromString,
             response_serializer=asr4__pb2.RecognizeResponse.SerializeToString,
+        ),
+        "StreamingRecognize": grpc.stream_stream_rpc_method_handler(
+            servicer.StreamingRecognize,
+            request_deserializer=asr4__pb2.StreamingRecognizeRequest.FromString,
+            response_serializer=asr4__pb2.StreamingRecognizeResponse.SerializeToString,
         ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -68,6 +84,35 @@ class Recognizer(object):
             "/asr4.recognizer.v1.Recognizer/Recognize",
             asr4__pb2.RecognizeRequest.SerializeToString,
             asr4__pb2.RecognizeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
+
+    @staticmethod
+    def StreamingRecognize(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.stream_stream(
+            request_iterator,
+            target,
+            "/asr4.recognizer.v1.Recognizer/StreamingRecognize",
+            asr4__pb2.StreamingRecognizeRequest.SerializeToString,
+            asr4__pb2.StreamingRecognizeResponse.FromString,
             options,
             channel_credentials,
             insecure,

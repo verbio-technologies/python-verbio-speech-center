@@ -1,0 +1,3 @@
+[run]
+omit = asr4/recognizer_v1/types/asr4_pb2*.py
+       asr4/__init__.py

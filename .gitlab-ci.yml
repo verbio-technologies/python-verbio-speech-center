@@ -108,7 +108,7 @@ python:test:coverage:
     - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
-    - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
+    - pytest tests/unit tests/functional --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 30 days
     paths:
@@ -125,7 +125,7 @@ python:test:coverage:gpu:
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
-    - pytest tests/unit tests/functional --cov=asr4 --cov-report=html:coverage --cov-report=term --verbose
+    - pytest tests/unit tests/functional --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 30 days
     paths:

@@ -41,7 +41,11 @@ _ENCODING = "utf-8"
 
 
 def _repr(responses: List[RecognizeRequest]) -> List[str]:
-    return [f'<RecognizeRequest text: "{r.text}">' for r in responses]
+    return [
+        f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
+        for r in responses
+        if len(r.alternatives) > 0
+    ]
 
 
 def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
@@ -163,9 +167,13 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
     return responses, trnHypothesis
 
 
-def _getTrnHypothesis(response: RecognizeResponse, audio_path: str) -> str:
+def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
-    return f"{RecognizeResponse.FromString(response).text} ({filename})"
+    recognizeResponse = RecognizeResponse.FromString(response)
+    if len(recognizeResponse.alternatives) > 0:
+        return f"{recognizeResponse.alternatives[0].transcript} ({filename})"
+    else:
+        return f" ({filename})"
 
 
 def _getAudiosList(gui_file: str) -> List[str]:

@@ -3,21 +3,33 @@ syntax = "proto3";
 package asr4.recognizer.v1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+import "google/rpc/status.proto";
 
 // Service that implements ASR4 Recognition API.
-service Recognizer {
-  // Send audio as bytes and recieve the transcription of the audio.
-  rpc Recognize(RecognizeRequest) returns (RecognizeResponse) {
-    option(google.api.http) = {
-      post: "/v1/recognize"
-      body: "*"
-   };
-  }
+service Recognizer {    
+    // Performs synchronous speech recognition: receive results after all audio has been sent and processed.
+    rpc Recognize(RecognizeRequest) returns (RecognizeResponse) {
+      option(google.api.http) = {
+        post: "/v1/recognize"
+        body: "*"
+      };
+    }
+    
+    // Performs bidirectional streaming speech recognition: receive results while sending audio.
+    rpc StreamingRecognize(stream StreamingRecognizeRequest) returns (stream StreamingRecognizeResponse);
 }
 
 message RecognizeRequest {
   RecognitionConfig config = 1; // Init message with the recognition data.
-  bytes audio = 2; // Raw bytes in signed 16-bit little endian PCM.
+  bytes audio = 2; // Raw audio in the selected format.
+}
+
+message StreamingRecognizeRequest {
+  oneof streaming_request {
+    RecognitionConfig config = 1; // Header like first streaming configuration message.
+    bytes audio = 2; // Raw audio in the selected format.
+  }
 }
 
 // An init message with the recognition data.
@@ -28,8 +40,13 @@ message RecognitionConfig {
 
 // This message will contain the language locale of your audio in IETF BCP 47 format.
 message RecognitionParameters {
+  enum AudioEncoding {
+    PCM = 0; // Linear Pulse-Code Modulation with signed 16 bit samples, little endian byte order, 16kHz.
+  }
+  
   string language = 1; // Currently supported: en-US, es, pt-BR.
-  uint32 sample_rate_hz = 2; // Audio sample rate in Hertz. Currently supported: 16000.
+  uint32 sample_rate_hz = 2; // Audio sample rate in Hertz. Currently supported: 8000, 16000.
+  AudioEncoding audio_encoding = 3; // Audio encoding.
 }
 
 // The request must specify a topic.
@@ -42,5 +59,35 @@ message RecognitionResource {
 }
 
 message RecognizeResponse {
-  string text = 1; // Full transcription of the audio.
+  repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
+  google.protobuf.Duration end_time = 2; // Time offset relative to the beginning of the audio.
+}
+
+message StreamingRecognizeResponse {
+  oneof streaming_response {
+    google.rpc.Status error = 1; // If set, specifies the error for the operation.
+    StreamingRecognitionResult results = 2; // List of results corresponding to portions of the audio currently being processed.
+  }
+}
+
+// A streaming recognition result corresponding to a portion of the audio that is currently being processed.
+message StreamingRecognitionResult {
+  repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
+  google.protobuf.Duration end_time = 2; // Time offset relative to the beginning of the audio.
+  bool is_final = 3; // Indicates whether a result represents an interim result that may change or not.
+}
+
+// Hypothesis-specific information.
+message RecognitionAlternative {
+  string transcript = 1; // Transcript text representing the words that the user spoke.
+  float confidence = 2; // The confidence estimate between 0.0 and 1.0.
+  repeated WordInfo words = 3; // A list of word-specific information for each recognized word.
+}
+
+// Word-specific information for recognized words.
+message WordInfo {
+  google.protobuf.Duration start_time = 1; // Time offset relative to the beginning of the audio corresponding to the start of the spoken word.
+  google.protobuf.Duration end_time = 2; // Time offset relative to the beginning of the audio corresponding to the end of the spoken word.
+  string word = 3; // The spoken word.
+  float confidence = 4; // The confidence estimate between 0.0 and 1.0.
 }
