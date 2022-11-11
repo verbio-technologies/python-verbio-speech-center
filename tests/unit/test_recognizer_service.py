@@ -489,29 +489,6 @@ class TestRecognizerService(unittest.TestCase):
         }
         self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
 
-    def testGetWordInfo(self):
-        service = RecognizerService(MockOnnxSession(""))
-        response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
-
-        def _getWordInfo(word: str) -> dict:
-            return {
-                "start_time": {
-                    "seconds": 0,
-                    "nanos": 0,
-                },
-                "end_time": {
-                    "seconds": 0,
-                    "nanos": 0,
-                },
-                "word": word,
-                "confidence": 1.0,
-            }
-
-        self.assertEqual(
-            list(service.getWordInfo(response)),
-            list(map(lambda word: _getWordInfo(word), response.split(" "))),
-        )
-
     def testRecognizeFormatter(self):
         service = RecognizerService(
             MockOnnxSession("", language=Language.ES),

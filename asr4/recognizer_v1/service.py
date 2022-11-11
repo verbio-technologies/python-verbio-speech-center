@@ -202,28 +202,18 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return " ".join(words)
 
     def eventSink(self, response: str) -> RecognizeResponse:
+        words = map(
+            lambda token: WordInfo(
+                start_time=Duration(seconds=0, nanos=0),
+                end_time=Duration(seconds=0, nanos=0),
+                word=token,
+                confidence=1.0,
+            ),
+            response.split(" "),
+        )
         alternative = RecognitionAlternative(
-            transcript=response, confidence=1.0, words=self.getWordInfo(response)
+            transcript=response, confidence=1.0, words=words
         )
         return RecognizeResponse(
             alternatives=[alternative], end_time=Duration(seconds=0, nanos=0)
         )
-
-    def getWordInfo(self, response: str) -> List[WordInfo]:
-        words = []
-        for token in response.split(" "):
-            words.append(
-                {
-                    "start_time": {
-                        "seconds": 0,
-                        "nanos": 0,
-                    },
-                    "end_time": {
-                        "seconds": 0,
-                        "nanos": 0,
-                    },
-                    "word": token,
-                    "confidence": 1.0,
-                }
-            )
-        return words
