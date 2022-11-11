@@ -81,14 +81,6 @@ class TestRecognizerService(unittest.TestCase):
             _streamingRecognize(), timeout=10
         )
 
-        def _getWordInfo(word: str) -> dict:
-            return {
-                "start_time": {"seconds": 0, "nanos": 0},
-                "end_time": {"seconds": 0, "nanos": 0},
-                "word": word,
-                "confidence": 1.0,
-            }
-
         for response in response_iterator:
             self.assertEqual(
                 response.results.alternatives[0].transcript,

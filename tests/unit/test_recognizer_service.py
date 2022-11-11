@@ -538,10 +538,9 @@ class TestRecognizerService(unittest.TestCase):
             random.choices(string.ascii_letters + string.digits, k=16)
         )
         response = service.eventSink(transcription)
-        assert (len(response.alternatives), 1)
-        assert (response.alternatives[0].transcript, transcription)
-        assert (response.alternatives[0].confidence, 1.0)
-        assert (response.end_time, 0)
+        self.assertEqual(len(response.alternatives), 1)
+        self.assertEqual(response.alternatives[0].transcript, transcription)
+        self.assertEqual(response.alternatives[0].confidence, 1.0)
 
     def testStreamingResponseParameters(self):
         service = RecognizerService(MockOnnxSession(""))
@@ -552,11 +551,11 @@ class TestRecognizerService(unittest.TestCase):
         streamingResponse = StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
-                end_time=innerRecognizeResponse.end_time,
             )
         )
-        assert (len(streamingResponse.results.alternatives), 1)
-        assert (streamingResponse.results.alternatives[0].transcript, transcription)
-        assert (streamingResponse.results.alternatives[0].confidence, 1.0)
-        assert (streamingResponse.results.end_time, 0)
-        assert (streamingResponse.results.is_final, True)
+        print(innerRecognizeResponse.end_time)
+        self.assertEqual(len(streamingResponse.results.alternatives), 1)
+        self.assertEqual(
+            streamingResponse.results.alternatives[0].transcript, transcription
+        )
+        self.assertEqual(streamingResponse.results.alternatives[0].confidence, 1.0)
