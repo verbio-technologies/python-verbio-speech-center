@@ -11,6 +11,7 @@ from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
 from .types import RecognizeResponse
 from .types import StreamingRecognizeResponse
+from .types import StreamingRecognitionResult
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
@@ -37,6 +38,7 @@ __all__ = (
     "StreamingRecognizeRequest",
     "RecognizeResponse",
     "StreamingRecognizeResponse",
+    "StreamingRecognitionResult",
     "RecognitionConfig",
     "RecognitionParameters",
     "RecognitionResource",
