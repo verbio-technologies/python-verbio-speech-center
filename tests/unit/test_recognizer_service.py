@@ -11,6 +11,8 @@ from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import RecognizeResponse
+from asr4.recognizer import StreamingRecognizeResponse
+from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
 from asr4.recognizer_v1.types import WordInfo
@@ -529,3 +531,32 @@ class TestRecognizerService(unittest.TestCase):
             service.eventHandle(request),
             FORMATTED_SPANISH_MESSAGE,
         )
+
+    def testResponseParameters(self):
+        service = RecognizerService(MockOnnxSession(""))
+        transcription = "".join(
+            random.choices(string.ascii_letters + string.digits, k=16)
+        )
+        response = service.eventSink(transcription)
+        assert (len(response.alternatives), 1)
+        assert (response.alternatives[0].transcript, transcription)
+        assert (response.alternatives[0].confidence, 1.0)
+        assert (response.end_time, 0)
+
+    def testStreamingResponseParameters(self):
+        service = RecognizerService(MockOnnxSession(""))
+        transcription = "".join(
+            random.choices(string.ascii_letters + string.digits, k=16)
+        )
+        innerRecognizeResponse = service.eventSink(transcription)
+        streamingResponse = StreamingRecognizeResponse(
+            results=StreamingRecognitionResult(
+                alternatives=innerRecognizeResponse.alternatives,
+                end_time=innerRecognizeResponse.end_time,
+            )
+        )
+        assert (len(streamingResponse.results.alternatives), 1)
+        assert (streamingResponse.results.alternatives[0].transcript, transcription)
+        assert (streamingResponse.results.alternatives[0].confidence, 1.0)
+        assert (streamingResponse.results.end_time, 0)
+        assert (streamingResponse.results.is_final, True)
