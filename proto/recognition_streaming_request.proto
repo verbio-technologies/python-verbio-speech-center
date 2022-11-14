@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package speechcenter.recognizer.v1;
+
+message RecognitionStreamingRequest {
+    oneof recognition_request {
+      RecognitionConfig config = 1; // Header like first streaming configuration message.
+      bytes audio = 2; // Raw audio in the selected format.
+    }
+  }
+  
+  // An init message with the recognition data.
+  message RecognitionConfig {
+    RecognitionParameters parameters = 1; // General parameters for the recognition, such as language.
+    RecognitionResource resource = 2; // The request must specify a topic.
+  }
+  
+  // This message will contain the language locale of your audio in IETF BCP 47 format.
+  message RecognitionParameters {
+    string language = 1; // Currently supported: en-US, es, pt-BR.
+
+    oneof AudioEncoding {
+      PCM pcm = 2; // Linear Pulse-Code Modulation with signed 16 bit samples, little endian byte order, 16kHz.
+    }
+  }
+
+  message PCM {
+    uint32 sample_rate_hz = 1; // Audio sample rate in Hertz. Currently supported: 16000.
+  }
+  
+  // The request must specify a topic.
+  message RecognitionResource {
+    enum Model {
+      GENERIC = 0;    // Suitable for any generic speech
+      /* Not implemented: */
+      BANKING = 1;    // Transcription will be optimized for banking recordings
+      TELCO = 2;      // Transcription will be optimized for telecommunications companies
+      INSURANCE = 3;  // Transcription will be optimized for insurance companies
+    }
+
+    // TODO: Grammar
+  
+    Model topic = 1; // The topic will determine the statistic language model used for the recognition.
+  }

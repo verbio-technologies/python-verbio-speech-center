@@ -24,7 +24,9 @@ message RecognitionParameters {
   string language = 1; //Currently supported: en-US, es-ES, pt-BR
 }
 
-// The request must specify either a topic or an ABNF grammar
+/*
+The request must specify either a topic or an ABNF grammar
+*/
 message RecognitionResource {
   enum Model {
     GENERIC = 0; //Suitable for any generic speech

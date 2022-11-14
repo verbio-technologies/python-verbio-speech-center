@@ -9,7 +9,7 @@ Currently, we support Python 3.6+.
 
 Before to start you will need:
 
-1. Speech Center proto file (provided in this repository)
+1. Speech Center proto files provided under proto directory.
 2. Platform access token (provided to you by Verbio Technologies)
 3. Speech Center endpoint (csr.api.speechcenter.verbio.com)
 
@@ -17,7 +17,6 @@ Before to start you will need:
 
 ### Python packages:
 ```requirements.txt
-protobuf==3.19.1
 grpcio==1.41.1
 grpcio-tools==1.41.1
 ```
@@ -35,31 +34,18 @@ pip install -r requirements.txt
 ```
 
 ### Generate grpc code with python
-In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. You can find it at `src/cli-client` folder.
+In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. You can find it at `scripts` folder.
 ```commandline
-.>$ cd src/cli-client/
-./src/cli-client>$ /generate_grpc_code.sh 
+.>$ cd scripts/
+./scripts>$ /generate_grpc_code.sh
 
-use: ./generate_grpc_code.sh <protobuf_definition_file> <python_output_path> <grpc_output_path>
 ```
-On a directory containing the .proto file provided by Verbio, run the following shell commands:
-```commandline
-# In case you want to use our Speech Center Recognizer
-./generate_grpc_code.sh verbio-speech-center-recognizer.proto ./ ./
+It will generate all needed grpc files on the project root directory `proto/generated` like:
 
-# In case you want to use our Speech Center Synthesizer
-./generate_grpc_code.sh verbio-speech-center-synthesizer.proto ./ ./
-```
-
-This will generate a set of python files with grpc calls:
 ```commandline
-# In case you generated the Speech Center Recognizer files
 verbio_speech_center_recognizer_pb2.py
 verbio_speech_center_recognizer_pb2_grpc.py
-
-# In case you generated the Speech Center Synthesizer files
-verbio_speech_center_synthesizer_pb2.py
-verbio_speech_center_synthesizer_pb2_grpc.py
+...
 ```
 
 ### Run a client

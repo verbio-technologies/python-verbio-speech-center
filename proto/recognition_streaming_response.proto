@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package speechcenter.recognizer.v1;
+
+message RecognitionStreamingResponse {
+    oneof recognition_response {
+      RecognitionError error = 1; // If set, specifies the error for the operation.
+      RecognitionResult result = 2; // List of results corresponding to portions of the audio currently being processed.
+    }
+}
+
+// A streaming recognition result corresponding to a portion of the audio that is currently being processed.
+message RecognitionResult {
+    repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
+    Duration end_time = 2; // Time offset relative to the beginning of the audio.
+    bool is_final = 3; // Indicates whether a result represents an interim result that may change or not.
+}
+
+// Hypothesis-specific information.
+message RecognitionAlternative {
+    string transcript = 1; // Transcript text representing the words that the user spoke.
+    float confidence = 2; // The confidence estimate between 0.0 and 1.0.
+    repeated WordInfo words = 3; // A list of word-specific information for each recognized word.
+}
+
+// Word-specific information for recognized words.
+message WordInfo {
+    Duration start_time = 1; // Time offset relative to the beginning of the audio corresponding to the start of the spoken word.
+    Duration end_time = 2; // Time offset relative to the beginning of the audio corresponding to the end of the spoken word.
+    string word = 3; // The spoken word.
+    float confidence = 4; // The confidence estimate between 0.0 and 1.0.
+}
+
+message RecognitionError {
+    // The reason of the error. This is a constant value that identifies the
+    // proximate cause of the error.
+    string reason = 1;
+
+    // The logical grouping to which the "reason" belongs. The error domain
+    // is typically the registered service name of the tool or product that
+    // generates the error.
+    string domain = 2;
+
+    // Additional structured details about this error. Usually pictured as a JSON.
+    map<string, string> metadata = 3;
+}
+
+// A Duration represents a signed, fixed-length span of time represented
+// as a count of seconds and fractions of seconds at nanosecond
+// resolution.
+message Duration {
+    int64 seconds = 1;
+  
+    // Signed fractions of a second at nanosecond resolution of the span
+    // of time. Durations less than one second are represented with a 0
+    // `seconds` field and a positive or negative `nanos` field. For durations
+    // of one second or more, a non-zero value for the `nanos` field must be
+    // of the same sign as the `seconds` field. Must be from -999,999,999
+    // to +999,999,999 inclusive.
+    int32 nanos = 2;
+}

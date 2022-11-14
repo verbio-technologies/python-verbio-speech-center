@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package speechcenter.recognizer.v1;
+
+import "recognition_streaming_request.proto";
+import "recognition_streaming_response.proto";
+
+// Service that implements Recognition API.
+service Recognizer {
+    // Performs bidirectional streaming speech recognition: receive results while sending audio.
+    rpc StreamingRecognize(stream RecognitionStreamingRequest) returns (stream RecognitionStreamingResponse);
+}
