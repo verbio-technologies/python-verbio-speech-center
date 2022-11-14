@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Used to make sure python find proto files
 import sys
 sys.path.insert(1, '../proto/generated')
