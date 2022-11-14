@@ -58,8 +58,8 @@ The CLI clients will use the generated code to connect to the speech center clou
 Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following commands:
 
 ```commandline
-.>$ cd src/cli-client/
-./src/cli-client>$ ./recognizer.py --help
+.>$ cd cli-client
+cli-client>$ ./recognizer.py --help
 usage: recognizer.py [-h] --audio-file AUDIO_FILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING,INSURANCE}) [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST]
 
 Perform speech recognition on an audio file
@@ -82,7 +82,12 @@ optional arguments:
 **Example**
 
 ```commandline
-python3 ./recognizer.py --audio-file file.wav --topic GENERIC --token you.speech-center.token
+python3 ./recognizer.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
+
+or for straming version
+
+python3 ./recognizer_stream.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
+
 ```
 
 This code will generate the following terminal output on success:
@@ -100,8 +105,8 @@ with response.text as your speech recognition inference response and response.st
 Our Synthesizer will convert your text into speech. In order to run the CLI Speech Center Synthesizer client, check out the following commands:
 
 ```commandline
-.>$ cd src/cli-client/
-./src/cli-client>$ ./synthesizer.py --help
+.>$ cd cli-client
+cli-client>$ ./synthesizer.py --help
 usage: synthesizer.py [-h] --text TEXT --voice {Tommy,Annie,Aurora,Luma,David} [--sample-rate {8000}] [--encoding {PCM}] [--format {wav,raw}] [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST] --audio-file AUDIO_FILE
 
 Perform speech synthesis on a sample text
