@@ -77,8 +77,6 @@ class SpeechCenterStreamingASRClient:
         self._executor = executor
         self._channel = channel
         self._stub = recognition_streaming_pb2_grpc.RecognizerStub(self._channel)
-        self._credentials = Credentials(self.__read_token(options.token_file))
-        self.token = self.__read_token(options.token_file)
         self._resources = Resources(options)
         self._host = options.host
         self._topic = options.topic
@@ -100,8 +98,7 @@ class SpeechCenterStreamingASRClient:
 
     
     def call(self) -> None:
-        metadata = [('authorization', "Bearer " + self.token)]
-        response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language), metadata=metadata)
+        response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language))
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
     def wait_server(self) -> bool:
@@ -141,7 +138,7 @@ class SpeechCenterStreamingASRClient:
             yield message
 
     @staticmethod
-    def __read_token(toke_file: str) -> str:
+    def read_token(toke_file: str) -> str:
         with open(toke_file) as token_hdl:
             return ''.join(token_hdl.read().splitlines())
 
@@ -161,7 +158,9 @@ def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, opt
 def run(command_line_options):
     executor = ThreadPoolExecutor()
     logging.info("Connecting to %s", command_line_options.host)
-    with grpc.insecure_channel(command_line_options.host) as channel:
+    token = SpeechCenterStreamingASRClient.read_token(command_line_options.token_file)
+    credentials = Credentials(token)
+    with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
         logging.info("Running executor...")
         future = executor.submit(process_recognition, executor, channel, command_line_options)
         future.result()
