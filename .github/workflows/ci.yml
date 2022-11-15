@@ -35,7 +35,7 @@ jobs:
       - name: Unit tests
         run: |
           cd test
-          python3 -m unittest discover -v test
+          python3 -m unittest -v test_speech_center_client.py
           cd ..
       - name: Execute client help
         run: |
