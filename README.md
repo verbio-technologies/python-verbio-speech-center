@@ -1,6 +1,6 @@
 # Python integration with the Verbio Speech Center cloud.
 
-This repository contains a python based example of how to use the Verbio Technologies Speech Center cloud.
+This repository contains a python example of how to use the Verbio Technologies Speech Center cloud.
 
 ## Requirements
 
@@ -11,13 +11,14 @@ Before to start you will need:
 
 1. Speech Center proto files provided under proto directory.
 2. Platform access token (provided to you by Verbio Technologies)
-3. Speech Center endpoint (csr.api.speechcenter.verbio.com)
+3. Speech Center endpoint
 
 
 
 ### Python packages:
 ```requirements.txt
-grpcio==1.41.1
+protobuf==3.19.1
+grpcio==1.48.0
 grpcio-tools==1.41.1
 ```
 they are already write in the requirements.txt in this repository.
@@ -28,16 +29,16 @@ The grpc and protobuf packages are necessary to automatically generate from the 
 The steps needed are very similar to the ones described in the grpc official guide.
 
 ### Install dependencies
-You can the standard pip call to install all the necessary dependencies:
+You can use the standard pip call to install all the necessary dependencies:
 ```commandline
 pip install -r requirements.txt
 ```
 
 ### Generate grpc code with python
-In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. You can find it at `scripts` folder.
+In scritps repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you.
 ```commandline
 .>$ cd scripts/
-./scripts>$ /generate_grpc_code.sh
+./scripts>$ ./generate_grpc_code.sh
 
 ```
 It will generate all needed grpc files on the project root directory `proto/generated` like:
@@ -53,7 +54,7 @@ verbio_speech_center_recognizer_pb2_grpc.py
 The CLI clients will use the generated code to connect to the speech center cloud to process your speech file or synthesize your input.  
   
 
-#### Recognizer
+#### Recognizer batch and stream
 
 Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following commands:
 
@@ -84,7 +85,7 @@ optional arguments:
 ```commandline
 python3 ./recognizer.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
 
-or for straming version
+or for a streaming version
 
 python3 ./recognizer_stream.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
 
