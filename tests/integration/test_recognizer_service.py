@@ -177,7 +177,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         status = process.wait(timeout=100)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
-        match = re.search('RecognizeRequest text: "(.+?)"', output)
+        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
         hypothesis = match.group(match.lastindex)
 
         assert len(hypothesis) > 1
@@ -190,13 +190,13 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         status = process.wait(timeout=100)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
-        match = re.search('RecognizeRequest text: "(.+?)"', output)
+        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
         hypothesis8k = match.group(match.lastindex)
         process = self.runRecognitionAudio8k(self._audio16k, self._language)
         status = process.wait(timeout=100)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
-        match = re.search('RecognizeRequest text: "(.+?)"', output)
+        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
         hypothesis16k = match.group(match.lastindex)
 
         assert hypothesis8k == hypothesis16k
@@ -207,7 +207,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self.checkStatus(status, process.stderr.read())
 
         output = process.stdout.read()
-        hypothesis = re.findall('RecognizeRequest text: "(.+?)"', output)
+        hypothesis = re.findall('RecognizeRequest first alternative: "(.+?)"', output)
 
         assert len(hypothesis) == 3
         assert len(hypothesis[0]) > 0
