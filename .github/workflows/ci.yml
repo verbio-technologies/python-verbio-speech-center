@@ -34,7 +34,9 @@ jobs:
           cd ..
       - name: Unit tests
         run: |
+          cd test
           python3 -m unittest discover -v test
+          cd ..
       - name: Execute client help
         run: |
           cd scripts
