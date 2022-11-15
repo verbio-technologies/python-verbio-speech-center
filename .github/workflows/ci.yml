@@ -30,7 +30,7 @@ jobs:
       - name: gRPC code generation
         run: |
           cd scripts
-          generate_grpc_code.sh
+          ./generate_grpc_code.sh
           cd ..
       - name: Unit tests
         run: |
@@ -38,7 +38,7 @@ jobs:
       - name: Execute client help
         run: |
           cd scripts
-          generate_grpc_code.sh
+          ./generate_grpc_code.sh
           cd ../cli-client
           ./recognizer.py --help
           ./recognizer_stream.py --help
