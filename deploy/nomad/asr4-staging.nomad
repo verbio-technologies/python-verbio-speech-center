@@ -168,7 +168,7 @@ job "asr4-staging" {
         mode        = "file"
         destination = "tmp/asr4.pb"
         options {
-          checksum = "md5:f3084ed9c64d7dbae422c41591a35f0d"
+          checksum = "md5:2f10d145d594592f2e6eca7fcf1a3338"
         }
       }
 
