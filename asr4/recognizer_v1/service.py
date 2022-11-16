@@ -88,7 +88,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as bytes and receive the transcription of the audio.
         """
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger()
         logger.info(
             "Received request "
             f"[language={request.config.parameters.language}] "
@@ -108,7 +108,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger()
         innerRecognizeRequest = RecognizeRequest()
         async for request in request_iterator:
             if request.HasField("config"):

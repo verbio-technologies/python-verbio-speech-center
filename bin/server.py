@@ -28,19 +28,14 @@ _LOG_LEVEL = 3
 
 
 def server_logger_configurer(verbose):
-    root = logging.getLogger(__name__)
-    h = logging.StreamHandler(sys.stdout)
     global _LOG_LEVEL
     _LOG_LEVEL = verbose
+    logging.Formatter.converter = time.gmtime
     logging.basicConfig(
-        level=_LOG_LEVELS.get(_LOG_LEVEL, logging.INFO),
+        level=_LOG_LEVELS.get(verbose, logging.INFO),
         format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    f = logging.Formatter()
-    f.converter = time.gmtime
-    h.setFormatter(f)
-    root.addHandler(h)
 
 
 # This is the listener process top-level loop: wait for logging events
@@ -73,7 +68,7 @@ def serve(
     )
     listener.start()
     _log_server_configurer(queue)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger()
     logger.info("Binding to '%s'", args.bindAddress)
     workers = []
     providers = ["CPUExecutionProvider"]
@@ -118,7 +113,7 @@ def _asyncRunServer(
 
 def _log_server_configurer(queue):
     h = logging.handlers.QueueHandler(queue)  # Just the one handler needed
-    root = logging.getLogger(__name__)
+    root = logging.getLogger()
     root.addHandler(h)
     # send all messages, for demo; no other level or filter logic applied.
     global _LOG_LEVEL
@@ -145,7 +140,7 @@ async def _runServer(
     )
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger()
     logger.info(f"Server listening {bindAddress}")
     await server.start()
     await server.wait_for_termination()
