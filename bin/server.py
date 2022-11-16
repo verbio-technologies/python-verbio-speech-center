@@ -26,6 +26,7 @@ _PROCESS_COUNT = multiprocessing.cpu_count()
 _LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
 _LOG_LEVEL = 3
 
+
 def server_logger_configurer(verbose):
     root = logging.getLogger(__name__)
     h = logging.StreamHandler(sys.stdout)
@@ -41,6 +42,7 @@ def server_logger_configurer(verbose):
     h.setFormatter(f)
     root.addHandler(h)
 
+
 # This is the listener process top-level loop: wait for logging events
 # (LogRecords)on the queue and handle them, quit when you get a None for a
 # LogRecord.
@@ -49,21 +51,26 @@ def server_logger_listener(queue, verbose):
     while True:
         try:
             record = queue.get()
-            if record is None:  # We send this as a sentinel to tell the listener to quit.
+            if (
+                record is None
+            ):  # We send this as a sentinel to tell the listener to quit.
                 break
             logger = logging.getLogger(record.name)
             logger.handle(record)  # No level or filter logic applied - just do it!
         except Exception:
             import sys, traceback
-            print('Whoops! Problem:', file=sys.stderr)
+
+            print("Whoops! Problem:", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
+
 
 def serve(
     args: argparse.Namespace,
 ) -> None:
     queue = multiprocessing.Queue(-1)
-    listener = multiprocessing.Process(target=server_logger_listener,
-                                       args=(queue,args.verbose))
+    listener = multiprocessing.Process(
+        target=server_logger_listener, args=(queue, args.verbose)
+    )
     listener.start()
     _log_server_configurer(queue)
     logger = logging.getLogger(__name__)
@@ -103,8 +110,11 @@ def _asyncRunServer(
     jobs: int,
 ) -> None:
     asyncio.run(
-        _runServer(queue, bindAddress, model, providers, language, vocabulary, formatter, jobs)
+        _runServer(
+            queue, bindAddress, model, providers, language, vocabulary, formatter, jobs
+        )
     )
+
 
 def _log_server_configurer(queue):
     h = logging.handlers.QueueHandler(queue)  # Just the one handler needed
@@ -113,6 +123,7 @@ def _log_server_configurer(queue):
     # send all messages, for demo; no other level or filter logic applied.
     global _LOG_LEVEL
     root.setLevel(_LOG_LEVELS.get(_LOG_LEVEL, logging.INFO))
+
 
 async def _runServer(
     queue: multiprocessing.Queue,
