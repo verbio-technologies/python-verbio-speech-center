@@ -88,7 +88,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as bytes and receive the transcription of the audio.
         """
-        logging.info(
+        logger = logging.getLogger(__name__)
+        logger.info(
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
@@ -96,7 +97,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         self.eventSource(request)
         response = self.eventHandle(request)
-        logging.info(f"Recognition result: '{response}'")
+        logger.info(f"Recognition result: '{response}'")
         return self.eventSink(response)
 
     async def StreamingRecognize(
@@ -107,10 +108,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
+        logger = logging.getLogger(__name__)
         innerRecognizeRequest = RecognizeRequest()
         async for request in request_iterator:
             if request.HasField("config"):
-                logging.info(
+                logger.info(
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
@@ -123,7 +125,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
         self.eventSource(innerRecognizeRequest)
         response = self.eventHandle(innerRecognizeRequest)
-        logging.info(f"Recognition result: '{response}'")
+        logger.info(f"Recognition result: '{response}'")
         innerRecognizeResponse = self.eventSink(response)
         yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
