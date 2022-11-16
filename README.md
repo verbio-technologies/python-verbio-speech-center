@@ -1,6 +1,6 @@
 # Python integration with the Verbio Speech Center cloud.
 
-This repository contains a python based example of how to use the Verbio Technologies Speech Center cloud.
+This repository contains a python example of how to use the Verbio Technologies Speech Center cloud.
 
 ## Requirements
 
@@ -9,16 +9,16 @@ Currently, we support Python 3.6+.
 
 Before to start you will need:
 
-1. Speech Center proto file (provided in this repository)
+1. Speech Center proto files provided under proto directory.
 2. Platform access token (provided to you by Verbio Technologies)
-3. Speech Center endpoint (csr.api.speechcenter.verbio.com)
+3. Speech Center endpoint
 
 
 
 ### Python packages:
 ```requirements.txt
 protobuf==3.19.1
-grpcio==1.41.1
+grpcio==1.48.0
 grpcio-tools==1.41.1
 ```
 they are already write in the requirements.txt in this repository.
@@ -29,37 +29,24 @@ The grpc and protobuf packages are necessary to automatically generate from the 
 The steps needed are very similar to the ones described in the grpc official guide.
 
 ### Install dependencies
-You can the standard pip call to install all the necessary dependencies:
+You can use the standard pip call to install all the necessary dependencies:
 ```commandline
 pip install -r requirements.txt
 ```
 
 ### Generate grpc code with python
-In this repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you. You can find it at `src/cli-client` folder.
+In scritps repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you.
 ```commandline
-.>$ cd src/cli-client/
-./src/cli-client>$ /generate_grpc_code.sh 
+.>$ cd scripts/
+./scripts>$ ./generate_grpc_code.sh
 
-use: ./generate_grpc_code.sh <protobuf_definition_file> <python_output_path> <grpc_output_path>
 ```
-On a directory containing the .proto file provided by Verbio, run the following shell commands:
-```commandline
-# In case you want to use our Speech Center Recognizer
-./generate_grpc_code.sh verbio-speech-center-recognizer.proto ./ ./
+It will generate all needed grpc files on the project root directory `proto/generated` like:
 
-# In case you want to use our Speech Center Synthesizer
-./generate_grpc_code.sh verbio-speech-center-synthesizer.proto ./ ./
-```
-
-This will generate a set of python files with grpc calls:
 ```commandline
-# In case you generated the Speech Center Recognizer files
 verbio_speech_center_recognizer_pb2.py
 verbio_speech_center_recognizer_pb2_grpc.py
-
-# In case you generated the Speech Center Synthesizer files
-verbio_speech_center_synthesizer_pb2.py
-verbio_speech_center_synthesizer_pb2_grpc.py
+...
 ```
 
 ### Run a client
@@ -67,13 +54,13 @@ verbio_speech_center_synthesizer_pb2_grpc.py
 The CLI clients will use the generated code to connect to the speech center cloud to process your speech file or synthesize your input.  
   
 
-#### Recognizer
+#### Recognizer batch and stream
 
 Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following commands:
 
 ```commandline
-.>$ cd src/cli-client/
-./src/cli-client>$ ./recognizer.py --help
+.>$ cd cli-client
+cli-client>$ ./recognizer.py --help
 usage: recognizer.py [-h] --audio-file AUDIO_FILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING,INSURANCE}) [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST]
 
 Perform speech recognition on an audio file
@@ -96,7 +83,12 @@ optional arguments:
 **Example**
 
 ```commandline
-python3 ./recognizer.py --audio-file file.wav --topic GENERIC --token you.speech-center.token
+python3 ./recognizer.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
+
+or for a streaming version
+
+python3 ./recognizer_stream.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
+
 ```
 
 This code will generate the following terminal output on success:
@@ -114,8 +106,8 @@ with response.text as your speech recognition inference response and response.st
 Our Synthesizer will convert your text into speech. In order to run the CLI Speech Center Synthesizer client, check out the following commands:
 
 ```commandline
-.>$ cd src/cli-client/
-./src/cli-client>$ ./synthesizer.py --help
+.>$ cd cli-client
+cli-client>$ ./synthesizer.py --help
 usage: synthesizer.py [-h] --text TEXT --voice {Tommy,Annie,Aurora,Luma,David} [--sample-rate {8000}] [--encoding {PCM}] [--format {wav,raw}] [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST] --audio-file AUDIO_FILE
 
 Perform speech synthesis on a sample text

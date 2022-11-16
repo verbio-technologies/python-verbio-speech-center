@@ -1,3 +1,7 @@
+# Used to make sure python find proto files
+import sys
+sys.path.insert(1, '../cli-client')
+
 import unittest
 import wave
 

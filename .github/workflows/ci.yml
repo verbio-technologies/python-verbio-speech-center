@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flake8 pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -29,15 +29,19 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10  --statistics
       - name: gRPC code generation
         run: |
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-recognizer.proto src/cli-client src/cli-client
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-synthesizer.proto src/cli-client src/cli-client
+          cd scripts
+          ./generate_grpc_code.sh
+          cd ..
       - name: Unit tests
         run: |
-          cd ./src/cli-client 
-          python3 -m unittest discover -v test
+          cd test
+          python3 -m unittest -v test_speech_center_client.py
+          cd ..
       - name: Execute client help
         run: |
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-recognizer.proto src/cli-client src/cli-client
-          ./src/cli-client/recognizer.py --help
-          ./src/cli-client/generate_grpc_code.sh src/cli-client/verbio-speech-center-synthesizer.proto src/cli-client src/cli-client
-          ./src/cli-client/synthesizer.py --help
+          cd scripts
+          ./generate_grpc_code.sh
+          cd ../cli-client
+          ./recognizer.py --help
+          ./recognizer_stream.py --help
+          ./synthesizer.py --help
