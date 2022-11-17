@@ -57,7 +57,6 @@ lint:rust:nightly:
 unit-testing:
   stage: test
   before_script:
-    - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
@@ -88,7 +87,6 @@ unit-testing:rust:
 functional-testing:cpu:
   stage: test
   before_script:
-    - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
