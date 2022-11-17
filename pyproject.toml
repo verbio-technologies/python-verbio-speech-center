@@ -75,8 +75,8 @@ cpu = [
     "onnxruntime-dnnl @ https://__token__:glpat-wPfyyLYAyyXSEEzXVB-7@gitlab.lan.verbio.com/api/v4/projects/1436/packages/pypi/files/f2aeb33fb4918ce85757c67711a153072302d5d81c7a5a9fb3666f4e49232042/onnxruntime_dnnl-1.14.0-cp36-cp36m-linux_x86_64.whl ; python_version=='3.6' and platform_system=='Linux'",
     "onnxruntime-dnnl @ https://__token__:glpat-wPfyyLYAyyXSEEzXVB-7@gitlab.lan.verbio.com/api/v4/projects/1436/packages/pypi/files/4610cf890d19533ddc591a909c8eb4c30a0fc51c1ed11d192a50a14d18656ed7/onnxruntime_dnnl-1.14.0-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "onnxruntime-dnnl @ https://__token__:glpat-wPfyyLYAyyXSEEzXVB-7@gitlab.lan.verbio.com/api/v4/projects/1436/packages/pypi/files/977077043665d153f8967d972a2efe2dee81eb6875112e0bf519eea4f1fce1ee/onnxruntime_dnnl-1.14.0-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "intel-numpy @ https://pypi.anaconda.org/intel/simple/numpy/1.21.4/numpy-1.21.4-16-cp37-cp37m-manylinux2014_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "intel-numpy @ https://pypi.anaconda.org/intel/simple/numpy/1.22.3/numpy-1.22.3-0-cp39-cp39-manylinux2014_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "numpy @ https://pypi.anaconda.org/intel/simple/numpy/1.21.4/numpy-1.21.4-16-cp37-cp37m-manylinux2014_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "numpy @ https://pypi.anaconda.org/intel/simple/numpy/1.22.3/numpy-1.22.3-0-cp39-cp39-manylinux2014_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
 ]
 gpu = [
     "torch == 1.12.0a0+git8c5c07c",
