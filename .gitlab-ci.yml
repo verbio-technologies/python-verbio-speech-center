@@ -3,45 +3,24 @@ stages:
   - test
   - build
   - testing-promote
-  - testing-integration
+  - testing-functional
   - staging-promote
-  - staging-deploy
   - staging-e2e
-  - release-promote
-  - release-deploy
+  - stable-promote
+  - stable-deploy
   - cleanup
+  - integration-testing
 
 image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
 
 variables:
-  RUSTC_WRAPPER: sccache
-  RUST_BACKTRACE: "FULL"
-  MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
-  DOCKER_RELEASE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
+  DOCKER_STABLE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
   DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
+  MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
 
-
-rust:lint:stable:
-  stage: lint
-  image: docker.registry.verbio.com/rust/centos:stable
-  script:
-    - cargo --version
-    - rustc --version
-    - cargo fmt --all -- --check
-    - cargo clippy --all --all-targets -- -D warnings
-
-rust:lint:nightly:
-  stage: lint
-  image: docker.registry.verbio.com/rust/centos:stable
-  allow_failure: true
-  script:
-    - cargo +nightly --version
-    - cargo fmt --all -- --check
-    - cargo +nightly clippy --all --all-targets -- -D warnings
-
-python:lint:
+lint:python:
   stage: lint
   before_script:
     - pip install flake8==3.9.2 black==22.6.0
@@ -49,15 +28,33 @@ python:lint:
     - black --check .
     - flake8 --exit-zero --show-source --statistics
 
-
-rust:test:all:
-  stage: test
+lint:rust:stable:
+  stage: lint
   image: docker.registry.verbio.com/rust/centos:stable
+  variables:
+    RUSTC_WRAPPER: sccache
+    RUST_BACKTRACE: "FULL"
   script:
     - cargo --version
-    - cargo test --all
+    - rustc --version
+    - cargo fmt --all -- --check
+    - cargo clippy --all --all-targets -- -D warnings
 
-python:test:cpu:
+lint:rust:nightly:
+  stage: lint
+  image: docker.registry.verbio.com/rust/centos:stable
+  variables:
+    RUSTC_WRAPPER: sccache
+    RUST_BACKTRACE: "FULL"
+  allow_failure: true
+  script:
+    - cargo +nightly --version
+    - cargo fmt --all -- --check
+    - cargo +nightly clippy --all --all-targets -- -D warnings
+
+
+
+unit-testing:
   stage: test
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
@@ -65,92 +62,54 @@ python:test:cpu:
     - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
-    - pytest tests/unit tests/functional --junit-xml=report.xml --verbose
+    - pytest tests/unit --junit-xml=report.xml --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 5 days
     reports:
       junit: report.xml
+    paths:
+      - coverage/**
+  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
 
-python:test:gpu:
-  stage: test
-  tags:
-    - gpu
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
-  before_script:
-    - source ~/.bashrc
-    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
-    - citbx install packages verbio-verbio8k-es-es-am
-  script:
-    - python --version
-    - pytest tests/unit tests/functional --junit-xml=report.xml --verbose
-  artifacts:
-    expire_in: 5 days
-    reports:
-      junit: report.xml
-
-
-rust:test:coverage:
+unit-testing:rust:
   stage: test
   before_script:
-    - cargo install cargo-tarpaulin
+    - cargo install cargo-tarpaulin 
   script:
+    - cargo --version
+    - cargo test --all
     - cargo tarpaulin -o Html --all --avoid-cfg-tarpaulin
   artifacts:
-    expire_in: 30 days
+    expire_in: 5 days
     paths:
       - tarpaulin-report.html
   coverage: '/^(\d+\.\d*)\% coverage, .+$/'
 
-python:test:coverage:
+functional-testing:cpu:
   stage: test
   before_script:
     - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
     - pip install .[server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
-    - pytest tests/unit tests/functional --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
-  artifacts:
-    expire_in: 30 days
-    paths:
-      - coverage/**
-  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
+    - pytest tests/functional --junit-xml=report.xml --verbose
 
-python:test:coverage:gpu:
+functional-testing:gpu:
   stage: test
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   tags:
     - gpu
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
   before_script:
     - source ~/.bashrc
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
   script:
-    - pytest tests/unit tests/functional --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
-  artifacts:
-    expire_in: 30 days
-    paths:
-      - coverage/**
-  coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
+    - python --version
+    - pytest tests/functional --junit-xml=report.xml --verbose
 
 
-rust:build:latest_bin:
-  stage: build
-  only:
-    - tags
-  script:
-    - cargo --version
-    - cargo build --release
-    # - cpack -G "DEB;RPM" ./
-    # - cargo deb -v
-    # - mv *.deb ../
-    # - mv *.rpm ../
-  artifacts:
-    expire_in: 2 days
-    paths:
-      - "*.deb"
-      - "*.rpm"
 
-python:build:latest_bin:
+build:python:
   stage: build
   only:
     - tags
@@ -172,16 +131,46 @@ python:build:latest_bin:
     reports:
       dotenv: job.env
 
+build:rust:
+  stage: build
+  only:
+    - tags
+  script:
+    - cargo --version
+    - cargo build --release
+    # - cpack -G "DEB;RPM" ./
+    # - cargo deb -v
+    # - mv *.deb ../
+    # - mv *.rpm ../
+  artifacts:
+    expire_in: 2 days
+    paths:
+      - "*.deb"
+      - "*.rpm"
 
-.testing:promote:
+
+
+testing:promote:cpu:
+  variables:
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    DOCKERFILE: "Dockerfile.debian"
+  extends: .template_docker_build
+
+testing:promote:gpu:
+  variables:
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    DOCKERFILE: "Dockerfile.debian-gpu"
+  extends: .template_docker_build
+
+.template_docker_build:
   stage: testing-promote
   image: docker:20.10.15
+  only:
+    - tags
+  needs: ["build:python"]
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  only:
-    - tags
-  needs: ["python:build:latest_bin"]
   script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - mv *.whl deploy/docker/
@@ -193,125 +182,70 @@ python:build:latest_bin:
     - docker build . -f ${DOCKERFILE} --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
-testing:promote:cpu:
-  variables:
-    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    DOCKERFILE: "Dockerfile.debian"
-  extends: .testing:promote
 
-testing:promote:gpu:
-  variables:
-    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    DOCKERFILE: "Dockerfile.debian-gpu"
-  extends: .testing:promote
-
-
-.testing:integration:
-  stage: testing-integration
-  only:
-    - tags
-  before_script:
-    - apt-get update && apt-get install -y asrtest-tools libffi-dev
-    - pip install .[client,test]
-  script:
-    - python --version
-    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
-  variables:
-      LANGUAGE: en-us
+testing:functional-testing:cpu:
+  extends: .template:functional-testing
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       variables:
-        LANGUAGE: en-us
+        LANGUAGE: ${LANGUAGE}
+
+testing:functional-testing:gpu:
+  extends: .template:functional-testing
+  tags:
+    - gpu
+  variables:
+    ASR4_HOSTNAME: 0.0.0.0
+  before_script:
+    # Install docker to run ASR4 server docker
+    - !reference [.install-docker, before_script]
+    # Launch ASR4 server on GPU
+    - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
+    - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    # Install the remaining testing dependencies
+    - !reference [.template:functional-testing, before_script]
+  after_script:
+    - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
+
+
+.template:functional-testing:
+  stage: testing-functional
+  only:
+    - tags
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
+  before_script:
+    - apt-get update && apt-get install -y asrtest-eval libffi-dev
+    - pip install .[client,test]
+  script:
+    - python --version
+    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
     reports:
       junit: report.xml
 
-testing:integration:en-us:cpu:
-  extends: .testing:integration
-  needs: ["testing:promote:cpu"]
-  variables:
-    LANGUAGE: en-us
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: en-us
+.install-docker:
+  before_script:
+    - apt-get install -y lsb-release
+    - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/docker.gpg
+    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    - apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
-testing:integration:es:cpu:
-  extends: .testing:integration
-  needs: ["testing:promote:cpu"]
-  variables:
-    LANGUAGE: es
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: es
 
-testing:integration:pt-br:cpu:
-  extends: .testing:integration
-  needs: [ "testing:promote:cpu" ]
-  variables:
-    LANGUAGE: pt-br
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: pt-br
 
-testing:integration:en-us:gpu:
-  extends: .testing:integration
-  needs: [ "testing:promote:gpu" ]
-  tags:
-    - gpu
-  allow_failure: true
-  variables:
-    LANGUAGE: en-us
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: en-us
-
-testing:integration:es:gpu:
-  extends: .testing:integration
-  needs: [ "testing:promote:gpu" ]
-  tags:
-    - gpu
-  allow_failure: true
-  variables:
-    LANGUAGE: es
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: es
-
-testing:integration:pt-br:gpu:
-  extends: .testing:integration
-  needs: [ "testing:promote:gpu" ]
-  tags:
-    - gpu
-  allow_failure: true
-  variables:
-    LANGUAGE: pt-br
-  services:
-    - name: ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
-      alias: asr4-server
-      variables:
-        LANGUAGE: pt-br
 
 staging:promote:
   stage: staging-promote
   image: docker:20.10.15
+  only:
+    - tags
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  only:
-    - tags
-  needs: ["testing:integration:en-us:cpu", "testing:integration:es:cpu", "testing:integration:pt-br:cpu", "testing:integration:en-us:gpu", "testing:integration:es:gpu", "testing:integration:pt-br:gpu"]
   script:
     - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
@@ -322,99 +256,84 @@ staging:promote:
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
-#tbd: where do we deploy with GPU
-
-staging:deploy:cpu:
-  stage: staging-deploy
-  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
-  only:
-    - tags
-  needs: ["staging:promote", "python:build:latest_bin"]
-  environment:
-    name: pre-production/asr4
-    action: start
-  script:
-    - cd deploy/nomad
-    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
-    - export NOMAD_ADDR=http://$NOMAD_IP:4646
-    - echo "Deploying CPU staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging.nomad
-
-staging:deploy:gpu:
-  stage: staging-deploy
-  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
-  only:
-    - tags
-  allow_failure: true
-  needs: ["staging:promote", "python:build:latest_bin"]
-  environment:
-    name: pre-production/asr4
-    action: start
-  script:
-    - cd deploy/nomad
-    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
-    - export NOMAD_ADDR=http://$NOMAD_IP:4646
-    - echo "Deploying GPU staging version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-staging-gpu.nomad
-
 
 
 staging:e2e:cpu:
   stage: staging-e2e
-  image: "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  only:
+    - tags
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  only:
-    - tags
-  needs: ["staging:deploy:cpu"]
   script:
-    - echo "E2E tests for new release"
+    - echo "E2E tests for CPU new release"
 
 staging:e2e:gpu:
   stage: staging-e2e
-  tags:
-    - gpu
-  allow_failure: true
-  image: "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+  only:
+    - tags
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  only:
-    - tags
-  needs: ["staging:deploy:gpu"]
   script:
     - echo "E2E tests for GPU new release"
 
-release:promote:
-  stage: release-promote
+
+
+stable:promote:
+  stage: stable-promote
   image: docker:20.10.15
+  only:
+    - tags
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  only:
-    - tags
-  needs: ["staging:e2e:cpu", "staging:e2e:gpu"]
   script:
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
-release:deploy:
-  stage: release-deploy
+
+
+stable:deploy:cpu:
+  stage: stable-deploy
   image: docker.registry.verbio.com/cognitive/nomad:1.0.2
   only:
     - tags
-  needs: ["release:promote", "python:build:latest_bin"]
+  dependencies:
+    - build:python
+  environment:
+    name: production/asr4
+    action: start
   script:
-    - echo "deploy new release in pre-production"
     - cd deploy/nomad
-    # - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} NOMAD_VAR_STAGE=staging nomad job run asr4-staging.nomad
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+    - echo "Deploying CPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable.nomad
+
+stable:deploy:gpu:
+  stage: stable-deploy
+  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+  only:
+    - tags
+  dependencies:
+    - build:python
+  environment:
+    name: production/asr4-gpu
+    action: start
+  script:
+    - cd deploy/nomad
+    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+    - echo "Deploying GPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable-gpu.nomad
+
 
 
 cleanup:
@@ -428,7 +347,21 @@ cleanup:
   script:
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${DOCKER_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+
+
+
+integration-testing:
+  stage: integration-testing
+  only:
+    - tags
+  variables:
+    TEST_SERVICE_NAME: asr4
+    TEST_SERVICE_COMMIT_TAG: $DOCKER_IMAGE_VERSION
+  trigger:
+    project: voice-center/operations/integration/integration-tests
+    strategy: depend
+
