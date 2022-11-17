@@ -38,9 +38,6 @@ def server_logger_configurer(verbose):
     )
 
 
-# This is the listener process top-level loop: wait for logging events
-# (LogRecords)on the queue and handle them, quit when you get a None for a
-# LogRecord.
 def server_logger_listener(queue, verbose):
     server_logger_configurer(verbose)
     while True:
@@ -48,14 +45,14 @@ def server_logger_listener(queue, verbose):
             record = queue.get()
             if (
                 record is None
-            ):  # We send this as a sentinel to tell the listener to quit.
+            ):
                 break
             logger = logging.getLogger(record.name)
-            logger.handle(record)  # No level or filter logic applied - just do it!
+            logger.handle(record)
         except Exception:
             import sys, traceback
 
-            print("Whoops! Problem:", file=sys.stderr)
+            print("Couldn't write log", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
 
 
@@ -112,10 +109,9 @@ def _asyncRunServer(
 
 
 def _log_server_configurer(queue):
-    h = logging.handlers.QueueHandler(queue)  # Just the one handler needed
+    h = logging.handlers.QueueHandler(queue)
     root = logging.getLogger()
     root.addHandler(h)
-    # send all messages, for demo; no other level or filter logic applied.
     global _LOG_LEVEL
     root.setLevel(_LOG_LEVELS.get(_LOG_LEVEL, logging.INFO))
 
@@ -245,7 +241,7 @@ def _parseArguments() -> argparse.Namespace:
 if __name__ == "__main__":
     multiprocessing.set_start_method(
         "spawn"
-    )  # This is important and MUST be inside the name==main block
+    )
     args = _parseArguments()
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
