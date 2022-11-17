@@ -43,9 +43,7 @@ def server_logger_listener(queue, verbose):
     while True:
         try:
             record = queue.get()
-            if (
-                record is None
-            ):
+            if record is None:
                 break
             logger = logging.getLogger(record.name)
             logger.handle(record)
@@ -239,9 +237,7 @@ def _parseArguments() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method(
-        "spawn"
-    )
+    multiprocessing.set_start_method("spawn")
     args = _parseArguments()
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
