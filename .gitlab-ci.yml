@@ -260,25 +260,15 @@ staging:promote:
 
 
 
-staging:e2e:cpu:
+staging:e2e:
   stage: staging-e2e
   only:
     - tags
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - echo "E2E tests for CPU new release"
-
-staging:e2e:gpu:
-  stage: staging-e2e
-  only:
-    - tags
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - echo "E2E tests for GPU new release"
+  variables:
+    TF_VAR_asr4_version: ${DOCKER_IMAGE_VERSION}
+  trigger:
+    project: csr/asr4-benchmark
+    strategy: depend
 
 
 
