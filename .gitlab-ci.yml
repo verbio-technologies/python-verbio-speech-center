@@ -87,8 +87,9 @@ unit-testing:rust:
 functional-testing:cpu:
   stage: test
   before_script:
-    - pip install .[server,cpu,test]
+    - pip install .[client,server,cpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
+    - bash tests/functional/launch_server.sh
   script:
     - pytest tests/functional --junit-xml=report.xml --verbose
 
@@ -99,8 +100,9 @@ functional-testing:gpu:
     - gpu
   before_script:
     - source ~/.bashrc
-    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[server,gpu,test]
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[client,server,gpu,test]
     - citbx install packages verbio-verbio8k-es-es-am
+    - bash tests/functional/launch_server.sh
   script:
     - python --version
     - pytest tests/functional --junit-xml=report.xml --verbose
