@@ -51,7 +51,7 @@ version = {file = ["VERSION"]}
 
 [project.optional-dependencies]
 client = [
-    "numpy >= 1.23.4",
+    "numpy >= 1.21.4",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/6806194d888066cea249b3d50c4d3c26c6bcdc2d95da45ec468f19dc6e29a5e7/csr_evaluation_tools-0.0.8-py37-none-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/5d4e676e45363352003ddb3a53a20f7a8e17dbb43bfed81002d16fdbc64ec372/csr_evaluation_tools-0.0.8-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/7f3575fc0a7abdf08bd58fc44d428f2a8b71a489058b749dcd0c89fdaa03fce2/csr_evaluation_tools-0.0.8-py39-none-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
