@@ -23,6 +23,7 @@ variables:
 lint:python:
   stage: lint
   before_script:
+    - . /opt/intel/oneapi/setvars.sh
     - pip install flake8==3.9.2 black==22.6.0
   script:
     - black --check .
@@ -57,8 +58,8 @@ lint:rust:nightly:
 unit-testing:
   stage: test
   before_script:
+    - . /opt/intel/oneapi/setvars.sh
     - pip install .[server,cpu,test]
-    - citbx install packages verbio-verbio8k-es-es-am
   script:
     - python --version
     - pytest tests/unit --junit-xml=report.xml --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
@@ -87,6 +88,7 @@ unit-testing:rust:
 functional-testing:cpu:
   stage: test
   before_script:
+    - . /opt/intel/oneapi/setvars.sh
     - pip install .[client,server,cpu,test]
     - bash tests/functional/launch_server.sh
   script:
@@ -113,6 +115,7 @@ build:python:
     - tags
   before_script:
     - echo JOB_ID=$CI_JOB_ID >> job.env
+    - . /opt/intel/oneapi/setvars.sh 
   script:
     - export MAKEFLAGS="-j4"
     - pip install build grpcio grpcio-tools
