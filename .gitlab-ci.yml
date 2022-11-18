@@ -11,7 +11,7 @@ stages:
   - cleanup
   - integration-testing
 
-image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python:3.9
+image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
 
 variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
@@ -23,7 +23,6 @@ variables:
 lint:python:
   stage: lint
   before_script:
-    - . /opt/intel/oneapi/setvars.sh
     - pip install flake8==3.9.2 black==22.6.0
   script:
     - black --check .
@@ -58,7 +57,6 @@ lint:rust:nightly:
 unit-testing:
   stage: test
   before_script:
-    - . /opt/intel/oneapi/setvars.sh
     - pip install .[server,cpu,test]
   script:
     - python --version
@@ -88,7 +86,6 @@ unit-testing:rust:
 functional-testing:cpu:
   stage: test
   before_script:
-    - . /opt/intel/oneapi/setvars.sh
     - pip install .[client,server,cpu,test]
     - bash tests/functional/launch_server.sh
   script:
@@ -115,7 +112,6 @@ build:python:
     - tags
   before_script:
     - echo JOB_ID=$CI_JOB_ID >> job.env
-    - . /opt/intel/oneapi/setvars.sh 
   script:
     - export MAKEFLAGS="-j4"
     - pip install build grpcio grpcio-tools
