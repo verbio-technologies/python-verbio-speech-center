@@ -11,7 +11,7 @@ stages:
   - cleanup
   - integration-testing
 
-image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
+image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python:3.9
 
 variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
@@ -88,7 +88,6 @@ functional-testing:cpu:
   stage: test
   before_script:
     - pip install .[client,server,cpu,test]
-    - citbx install packages verbio-verbio8k-es-es-am
     - bash tests/functional/launch_server.sh
   script:
     - pytest tests/functional --junit-xml=report.xml --verbose
@@ -101,7 +100,6 @@ functional-testing:gpu:
   before_script:
     - source ~/.bashrc
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[client,server,gpu,test]
-    - citbx install packages verbio-verbio8k-es-es-am
     - bash tests/functional/launch_server.sh
   script:
     - python --version
