@@ -1,4 +1,4 @@
-import sys
+import sys, traceback
 
 import grpc
 import asyncio
@@ -48,8 +48,6 @@ def server_logger_listener(queue, verbose):
             logger = logging.getLogger(record.name)
             logger.handle(record)
         except Exception:
-            import sys, traceback
-
             print("Couldn't write log", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
 
