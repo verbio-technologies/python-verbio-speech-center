@@ -16,6 +16,8 @@ variables:
 staging:e2e:
   stage: staging-e2e
   #needs: ["staging:promote"]
+  variables:
+    TF_VAR_asr4_version: 0.0.14
   trigger:
     project: csr/asr4-benchmark
     strategy: depend
