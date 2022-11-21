@@ -1,4 +1,3 @@
-import sys
 import grpc
 import wave
 import atexit
