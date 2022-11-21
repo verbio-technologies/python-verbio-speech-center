@@ -77,9 +77,8 @@ cpu = [
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp39-cp39-win_amd64.whl ; python_version=='3.9' and platform_system=='Windows'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp310-cp310-win_amd64.whl ; python_version=='3.10' and platform_system=='Windows'",
     "simple-ctc @ https://__token__:glpat-8zdyFTs7Lk796Sri1gcU@gitlab.lan.verbio.com/api/v4/projects/1440/packages/pypi/files/bb97a7c34233d35c229010dbe3cc87f1164b3deb7275af63e4adf1f11e93146d/simple_ctc-0.0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23; python_version=='3.8'",
     "simple-ctc @ https://__token__:glpat-8zdyFTs7Lk796Sri1gcU@gitlab.lan.verbio.com/api/v4/projects/1440/packages/pypi/files/979254bbdf08384b5d9aa2b7574925888df1210a4c28c399615cfb1fe1f4fdca/simple_ctc-0.0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23; python_version=='3.10'",
+    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'",
     "onnxruntime >= 1.12.1",
 ]
 gpu = [
