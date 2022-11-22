@@ -16,7 +16,7 @@ testing:integration-testing:cpu:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["python3", "server.py", "-j1", "-m", "/asr4-${LANGUAGE}.onnx", "-d", "/dict.ltr.txt", "-l", "${LANGUAGE}", "-f", "/format-model.${LANGUAGE}.fm"]
+      command: ["python3", "server.py", "-j1", "-m", "/asr4-${LANGUAGE}.onnx", "-d", "/dict.ltr.txt", "-l", "$LANGUAGE", "-f", "/format-model.${LANGUAGE}.fm"]
       variables:
         LANGUAGE: "en-us"
   variables:
