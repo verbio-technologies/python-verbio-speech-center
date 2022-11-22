@@ -34,6 +34,7 @@ testing:integration-testing:gpu:
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
+    - docker logs -t asr4-gpu-${LANGUAGE}
     - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
 
 
