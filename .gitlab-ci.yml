@@ -20,7 +20,7 @@ testing:integration-testing:cpu:
         LANGUAGE: "${LANGUAGE}"
   variables:
     ASR4_HOSTNAME: asr4-server
-
+    LANGUAGE: "${LANGUAGE}"
 
 .template:integration-testing:
   stage: testing-integration
