@@ -16,7 +16,7 @@ testing:integration-testing:cpu:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      command: ["env", "LANGUAGE=en-us", "/bin/bash", "-c", "/init.sh"]
+      command: ["env", "LANGUAGE=$LANGUAGE", "/bin/bash", "-c", "/init.sh"]
       variables:
         LANGUAGE: "en-us"
   variables:
