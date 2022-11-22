@@ -19,6 +19,7 @@ testing:integration-testing:cpu:
       command: ["python3", "server.py", "-j1", "-m", "/asr4-${LANGUAGE}.onnx", "-d", "/dict.ltr.txt", "-l", "${LANGUAGE}", "-f", "/format-model.${LANGUAGE}.fm"]
   variables:
     ASR4_HOSTNAME: asr4-server
+    LANGUAGE: "en-us"
 
 .template:integration-testing:
   stage: testing-integration
