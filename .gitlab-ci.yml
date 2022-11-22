@@ -17,7 +17,7 @@ testing:integration-testing:cpu:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       variables:
-        LANGUAGE: ${LANGUAGE}
+        LANGUAGE: "${LANGUAGE}"
   variables:
     ASR4_HOSTNAME: asr4-server
 
@@ -28,6 +28,7 @@ testing:integration-testing:cpu:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
+    - echo "${LANGUAGE}"
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
     - pip install .[client,test]
   script:
