@@ -17,8 +17,6 @@ testing:integration-testing:cpu:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       command: ["python3", "server.py", "-j1", "-m", "/asr4-${LANGUAGE}.onnx", "-d", "/dict.ltr.txt", "-l", "${LANGUAGE}", "-f", "/format-model.${LANGUAGE}.fm"]
-      variables:
-        LANGUAGE: "${LANGUAGE}"
   variables:
     ASR4_HOSTNAME: asr4-server
     LANGUAGE: "${LANGUAGE}"
