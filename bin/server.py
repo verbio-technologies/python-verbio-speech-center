@@ -207,7 +207,7 @@ def _parseArguments() -> argparse.Namespace:
         "--gpu",
         dest="gpu",
         default=False,
-        type=int,
+        action="store_true",
         help="Whether to use GPU instead of CPU",
     )
     parser.add_argument(
