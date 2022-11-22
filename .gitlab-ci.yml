@@ -205,8 +205,7 @@ testing:integration-testing:cpu:
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      variables:
-        LANGUAGE: ${LANGUAGE}
+      command: ["env", "/bin/bash", "-c", "/init.sh"]
   variables:
     ASR4_HOSTNAME: asr4-server
 
@@ -220,7 +219,7 @@ testing:integration-testing:gpu:
     # Launch ASR4 server on GPU
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
-    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LANGUAGE=${LANGUAGE} ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
