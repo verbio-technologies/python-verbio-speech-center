@@ -20,13 +20,29 @@ testing:integration-testing:cpu:
   variables:
     ASR4_HOSTNAME: asr4-server
 
+testing:integration-testing:gpu:
+  extends: .template:integration-testing
+  tags:
+    - gpu
+  before_script:
+    # Install docker to run ASR4 server docker
+    - !reference [.install-docker, before_script]
+    # Launch ASR4 server on GPU
+    - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
+    - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    # Install the remaining testing dependencies
+    - !reference [.template:integration-testing, before_script]
+  after_script:
+    - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
+
+
 .template:integration-testing:
   stage: testing-integration
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
-    - echo "${LANGUAGE}"
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
     - pip install .[client,test]
   script:
@@ -36,3 +52,10 @@ testing:integration-testing:cpu:
     expire_in: 5 days
     reports:
       junit: report.xml
+
+.install-docker:
+  before_script:
+    - apt-get install -y lsb-release
+    - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/docker.gpg
+    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    - apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
