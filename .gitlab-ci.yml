@@ -17,7 +17,7 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_STABLE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
+  DOCKER_IMAGE_VERSION: ${CI_COMMIT_TAG}
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
 
 lint:python:
