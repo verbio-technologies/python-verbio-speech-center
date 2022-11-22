@@ -3,13 +3,13 @@ stages:
   - test
   - build
   - testing-promote
-  - testing-functional
+  - testing-integration
   - staging-promote
   - staging-e2e
   - stable-promote
   - stable-deploy
   - cleanup
-  - integration-testing
+  - speech-center-integration-testing
 
 image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
 
@@ -83,7 +83,7 @@ unit-testing:rust:
       - tarpaulin-report.html
   coverage: '/^(\d+\.\d*)\% coverage, .+$/'
 
-functional-testing:cpu:
+functional-testing:
   stage: test
   before_script:
     - pip install .[client,server,cpu,test]
@@ -91,18 +91,39 @@ functional-testing:cpu:
   script:
     - pytest tests/functional --junit-xml=report.xml --verbose
 
-functional-testing:gpu:
+integration-testing:cpu:
+  extends: .template:integration-testing
   stage: test
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
-  tags:
-    - gpu
+  only:
+    - tags
+    - branches
+    - web
+    - master
   before_script:
-    - source ~/.bashrc
-    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[client,server,gpu,test]
-    - bash tests/functional/launch_server.sh
-  script:
-    - python --version
-    - pytest tests/functional --junit-xml=report.xml --verbose
+    - pip install .[client,server,cpu,test]
+    - export VERSION=$(cat VERSION | xargs echo -n)
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE
+    # Install the remaining testing dependencies
+    - !reference [.template:integration-testing, before_script]
+
+#integration-testing:gpu:
+#  extends: .template:integration-testing
+#  stage: test
+#  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
+#  only:
+#    - tags
+#    - branches
+#    - web
+#    - master
+#  tags:
+#    - gpu
+#  before_script:
+#    - source ~/.bashrc
+#    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[client,server,gpu,test]
+#    - export VERSION=$(cat VERSION | xargs echo -n)
+#    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE 1
+#    # Install the remaining testing dependencies
+#    - !reference [.template:integration-testing, before_script]
 
 
 
@@ -180,35 +201,34 @@ testing:promote:gpu:
     - docker push "${IMAGE_NAME}"
 
 
-testing:functional-testing:cpu:
-  extends: .template:functional-testing
+testing:integration-testing:cpu:
+  extends: .template:integration-testing
   services:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
-      variables:
-        LANGUAGE: ${LANGUAGE}
+      command: ["env", "/bin/bash", "-c", "/init.sh"]
+  variables:
+    ASR4_HOSTNAME: asr4-server
 
-testing:functional-testing:gpu:
-  extends: .template:functional-testing
+testing:integration-testing:gpu:
+  extends: .template:integration-testing
   tags:
     - gpu
-  variables:
-    ASR4_HOSTNAME: 0.0.0.0
   before_script:
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
-    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LANGUAGE=${LANGUAGE} ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
     # Install the remaining testing dependencies
-    - !reference [.template:functional-testing, before_script]
+    - !reference [.template:integration-testing, before_script]
   after_script:
     - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
 
 
-.template:functional-testing:
-  stage: testing-functional
+.template:integration-testing:
+  stage: testing-integration
   only:
     - tags
   parallel:
@@ -255,25 +275,15 @@ staging:promote:
 
 
 
-staging:e2e:cpu:
+staging:e2e:
   stage: staging-e2e
   only:
     - tags
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - echo "E2E tests for CPU new release"
-
-staging:e2e:gpu:
-  stage: staging-e2e
-  only:
-    - tags
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - echo "E2E tests for GPU new release"
+  variables:
+    TF_VAR_asr4_version: ${DOCKER_IMAGE_VERSION}
+  trigger:
+    project: csr/asr4-benchmark
+    strategy: depend
 
 
 
@@ -351,8 +361,8 @@ cleanup:
 
 
 
-integration-testing:
-  stage: integration-testing
+speech-center-integration-testing:
+  stage: speech-center-integration-testing
   only:
     - tags
   variables:

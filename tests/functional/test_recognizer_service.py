@@ -1,12 +1,11 @@
-import unittest
-
+import os
 import grpc
+import pytest
 import asyncio
+import unittest
 import multiprocessing
 from concurrent import futures
-import os
 
-import pytest
 from asr4.recognizer import RecognizerStub
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import RecognizeRequest

@@ -1,6 +1,9 @@
+import sys, traceback
+
 import grpc
 import asyncio
 import logging
+import logging.handlers
 import argparse
 import multiprocessing
 import time
@@ -20,14 +23,46 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 
 
 _PROCESS_COUNT = multiprocessing.cpu_count()
-_LOGGER = logging.getLogger(__name__)
 _LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
+_LOG_LEVEL = 3
+
+
+def server_logger_configurer(verbose):
+    global _LOG_LEVEL
+    _LOG_LEVEL = verbose
+    logging.Formatter.converter = time.gmtime
+    logging.basicConfig(
+        level=_LOG_LEVELS.get(verbose, logging.INFO),
+        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
+def server_logger_listener(queue, verbose):
+    server_logger_configurer(verbose)
+    while True:
+        try:
+            record = queue.get()
+            if record is None:
+                break
+            logger = logging.getLogger(record.name)
+            logger.handle(record)
+        except Exception:
+            print("Couldn't write log", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
 
 
 def serve(
     args: argparse.Namespace,
 ) -> None:
-    _LOGGER.info("Binding to '%s'", args.bindAddress)
+    queue = multiprocessing.Queue(-1)
+    listener = multiprocessing.Process(
+        target=server_logger_listener, args=(queue, args.verbose)
+    )
+    listener.start()
+    _log_server_configurer(queue)
+    logger = logging.getLogger()
+    logger.info("Binding to '%s'", args.bindAddress)
     workers = []
     providers = ["CPUExecutionProvider"]
     if args.gpu:
@@ -36,6 +71,7 @@ def serve(
         worker = multiprocessing.Process(
             target=_asyncRunServer,
             args=(
+                queue,
                 args.bindAddress,
                 args.model,
                 providers,
@@ -52,6 +88,7 @@ def serve(
 
 
 def _asyncRunServer(
+    queue: multiprocessing.Queue,
     bindAddress: str,
     model: str,
     providers: str,
@@ -61,11 +98,22 @@ def _asyncRunServer(
     jobs: int,
 ) -> None:
     asyncio.run(
-        _runServer(bindAddress, model, providers, language, vocabulary, formatter, jobs)
+        _runServer(
+            queue, bindAddress, model, providers, language, vocabulary, formatter, jobs
+        )
     )
 
 
+def _log_server_configurer(queue):
+    h = logging.handlers.QueueHandler(queue)
+    root = logging.getLogger()
+    root.addHandler(h)
+    global _LOG_LEVEL
+    root.setLevel(_LOG_LEVELS.get(_LOG_LEVEL, logging.INFO))
+
+
 async def _runServer(
+    queue: multiprocessing.Queue,
     bindAddress: str,
     model: str,
     providers: str,
@@ -74,6 +122,7 @@ async def _runServer(
     formatterPath: Optional[str],
     jobs: int,
 ) -> None:
+    _log_server_configurer(queue)
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=jobs),
         options=(("grpc.so_reuseport", 1),),
@@ -83,7 +132,8 @@ async def _runServer(
     )
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
-    _LOGGER.info(f"Server listening on {bindAddress}")
+    logger = logging.getLogger()
+    logger.info(f"Server listening {bindAddress}")
     await server.start()
     await server.wait_for_termination()
 
@@ -157,7 +207,7 @@ def _parseArguments() -> argparse.Namespace:
         "--gpu",
         dest="gpu",
         default=False,
-        type=int,
+        action="store_true",
         help="Whether to use GPU instead of CPU",
     )
     parser.add_argument(
@@ -185,16 +235,8 @@ def _parseArguments() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method(
-        "spawn"
-    )  # This is important and MUST be inside the name==main block
+    multiprocessing.set_start_method("spawn")
     args = _parseArguments()
-    logging.Formatter.converter = time.gmtime
-    logging.basicConfig(
-        level=_LOG_LEVELS.get(args.verbose, logging.INFO),
-        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     serve(args)
