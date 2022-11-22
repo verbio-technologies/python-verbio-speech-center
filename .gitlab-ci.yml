@@ -17,11 +17,8 @@ testing:integration-testing:cpu:
     - name: ${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
       command: ["env", "/bin/bash", "-c", "/init.sh"]
-      variables:
-        LANGUAGE: "en-us"
   variables:
     ASR4_HOSTNAME: asr4-server
-    LANGUAGE: "en-us"
 
 .template:integration-testing:
   stage: testing-integration
