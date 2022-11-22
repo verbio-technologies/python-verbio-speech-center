@@ -7,12 +7,14 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_STABLE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: 0.0.19
+  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
 
 
 staging:e2e:
   stage: staging-e2e
+  only:
+    - tags
   variables:
     TF_VAR_asr4_version: ${DOCKER_IMAGE_VERSION}
   trigger:
