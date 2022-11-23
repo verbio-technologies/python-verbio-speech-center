@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM docker.registry.verbio.com/engineering/devops/python:3.9-slim
 
 ARG VERSION
 ARG LANGUAGE
