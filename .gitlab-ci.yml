@@ -83,7 +83,21 @@ unit-testing:rust:
       - tarpaulin-report.html
   coverage: '/^(\d+\.\d*)\% coverage, .+$/'
 
-functional-testing:
+functional-testing:endpoints:
+  stage: test
+  before_script:
+    - wget https://github.com/bojand/ghz/releases/download/v0.111.0/ghz-linux-x86_64.tar.gz
+    - tar -xzf ghz-linux-x86_64.tar.gz
+    - mv ghz /bin
+    - pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+    - pip install .[client,server,cpu,test]
+    - export VERSION=$(cat VERSION | xargs echo -n)
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${VERSION}.dict.ltr.txt en-us
+  script:
+    - cd tests/functional/data
+    - bash ../streaming_tests.sh
+
+functional-testing:cpu:
   stage: test
   before_script:
     - pip install .[server,cpu,test]
@@ -123,7 +137,6 @@ integration-testing:cpu:
 #    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE 1
 #    # Install the remaining testing dependencies
 #    - !reference [.template:integration-testing, before_script]
-
 
 
 build:python:
@@ -250,7 +263,6 @@ testing:integration-testing:gpu:
     - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/docker.gpg
     - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     - apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
-
 
 
 
