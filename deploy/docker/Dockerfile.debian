@@ -1,10 +1,10 @@
-FROM docker.registry.verbio.com/python:3.10-slim
+FROM python:3.9-slim
 
-ARG VERSION=0.0.1
-ARG LANGUAGE=en-us
+ARG VERSION
+ARG LANGUAGE
+ENV WORKERS=12
 
-RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
-
+RUN apt update && apt install -y libgomp1
 
 COPY init.sh /init.sh
 COPY server.py /server.py
@@ -13,11 +13,10 @@ COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
-RUN pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-ENV MAKEFLAGS="-j4"
-
 RUN pip install asr4-$VERSION-py3-none-any.whl[server,cpu]
-RUN apt-get purge -y git build-essential ninja-build cmake
-RUN apt-get autoremove -y
+RUN python -m pip install intel_extension_for_pytorch -f https://software.intel.com/ipex-whl-stable-cpu
+RUN python -m pip uninstall cmake ninja -y
 
-CMD [ "/init.sh" ]
+ENV LANGUAGE=${LANGUAGE}
+
+CMD [ "/init.sh", ${WORKERS}]

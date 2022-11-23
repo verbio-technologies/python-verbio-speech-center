@@ -1,5 +1,9 @@
 #!/bin/bash
 
-set -euxo pipefail
+if [[ $# -ne 1 ]]; then
+  echo Number of workers not provided
+fi
 
-python3 server.py -j1 -m /asr4-$LANGUAGE.onnx -d /dict.ltr.txt -l $LANGUAGE -f /format-model.$LANGUAGE.fm
+workers=${1}
+
+python3 server.py -j${workers} -m /asr4-$LANGUAGE.onnx -d /dict.ltr.txt -l $LANGUAGE -f /format-model.$LANGUAGE.fm
