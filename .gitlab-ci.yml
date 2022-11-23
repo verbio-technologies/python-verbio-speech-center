@@ -17,6 +17,7 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_STABLE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
+  DOCKER_SPEECH_CENTER_IMAGE_NAME: docker.registry.verbio.com/voice-center/testing/asr4
   DOCKER_IMAGE_VERSION: ${CI_COMMIT_TAG}
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
 
@@ -317,6 +318,29 @@ stable:promote:
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
+speech-center:promote:
+  stage: stable-promote
+  image: docker:20.10.15
+  only:
+    - tags
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
+  script:
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker tag $OLD_NAME $NEW_LATEST_NAME
+    - docker push $NEW_NAME
+    - docker push $NEW_LATEST_NAME
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker tag $OLD_NAME $NEW_LATEST_NAME
+    - docker push $NEW_NAME
+    - docker push $NEW_LATEST_NAME
 
 
 stable:deploy:cpu:
@@ -336,22 +360,22 @@ stable:deploy:cpu:
     - echo "Deploying CPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable.nomad
 
-stable:deploy:gpu:
-  stage: stable-deploy
-  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
-  only:
-    - tags
-  dependencies:
-    - build:python
-  environment:
-    name: production/asr4-gpu
-    action: start
-  script:
-    - cd deploy/nomad
-    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
-    - export NOMAD_ADDR=http://$NOMAD_IP:4646
-    - echo "Deploying GPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable-gpu.nomad
+#stable:deploy:gpu:
+#  stage: stable-deploy
+#  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+#  only:
+#    - tags
+#  dependencies:
+#    - build:python
+#  environment:
+#    name: production/asr4-gpu
+#    action: start
+#  script:
+#    - cd deploy/nomad
+#    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+#    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+#    - echo "Deploying GPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable-gpu.nomad
 
 
 
@@ -367,19 +391,63 @@ cleanup:
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
 
 
 
-speech-center-integration-testing:
+speech-center-integration-testing:en-us:cpu:
+  variables:
+    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-en-us"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:es:cpu:
+  variables:
+    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-es"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:pt-br:cpu:
+  variables:
+    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-pt-br"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:en-us:gpu:
+  variables:
+    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-en-us"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:es:gpu:
+  variables:
+    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-es"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:pt-br:gpu:
+  variables:
+    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-pt-br"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+
+.template:speech-center-integration-testing:
   stage: speech-center-integration-testing
   only:
     - tags
-  variables:
-    TEST_SERVICE_NAME: asr4
-    TEST_SERVICE_COMMIT_TAG: $DOCKER_IMAGE_VERSION
   trigger:
     project: voice-center/operations/integration/integration-tests
     strategy: depend
