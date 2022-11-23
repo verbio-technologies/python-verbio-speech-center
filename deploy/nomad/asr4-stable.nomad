@@ -9,7 +9,7 @@ variables {
 variable "envoy_config" {
   type = string
   description = "Custom envoy config"
-  default = "envoy.yaml"
+  default = "envoy-stable.yaml"
 }
 
 
