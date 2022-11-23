@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 ARG VERSION
 ARG LANGUAGE
-ENV WORKERS=12
+ENV WORKERS=${WORKERS}
 
 RUN apt update && apt install -y libgomp1
 
@@ -19,4 +19,4 @@ RUN python -m pip uninstall cmake ninja -y
 
 ENV LANGUAGE=${LANGUAGE}
 
-CMD [ "/init.sh", ${WORKERS}]
+CMD [ "/init.sh"]
