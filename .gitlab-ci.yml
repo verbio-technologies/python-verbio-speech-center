@@ -403,42 +403,42 @@ cleanup:
 
 speech-center-integration-testing:en-us:cpu:
   variables:
-    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-en-us"
+    TEST_SERVICE_NAME: "asr4-en-us"
     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
   extends: .template:speech-center-integration-testing
 
 speech-center-integration-testing:es:cpu:
   variables:
-    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-es"
+    TEST_SERVICE_NAME: "asr4-es"
     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
   extends: .template:speech-center-integration-testing
 
 speech-center-integration-testing:pt-br:cpu:
   variables:
-    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-pt-br"
+    TEST_SERVICE_NAME: "asr4-pt-br"
     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
   extends: .template:speech-center-integration-testing
 
 speech-center-integration-testing:en-us:gpu:
   variables:
-    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-en-us"
+    TEST_SERVICE_NAME: "asr4-gpu-en-us"
     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
   extends: .template:speech-center-integration-testing
 
 speech-center-integration-testing:es:gpu:
   variables:
-    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-es"
+    TEST_SERVICE_NAME: "asr4-gpu-es"
     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
   extends: .template:speech-center-integration-testing
 
 speech-center-integration-testing:pt-br:gpu:
   variables:
-    TEST_SERVICE_NAME: "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-pt-br"
+    TEST_SERVICE_NAME: "asr4-gpu-pt-br"
     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
   extends: .template:speech-center-integration-testing
