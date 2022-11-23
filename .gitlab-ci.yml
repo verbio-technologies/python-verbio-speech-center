@@ -100,8 +100,7 @@ functional-testing:endpoints:
 functional-testing:cpu:
   stage: test
   before_script:
-    - pip install .[client,server,cpu,test]
-    - bash tests/functional/launch_server.sh
+    - pip install .[server,cpu,test]
   script:
     - pytest tests/functional --junit-xml=report.xml --verbose
 
