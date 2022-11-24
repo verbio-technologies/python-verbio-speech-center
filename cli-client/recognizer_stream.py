@@ -13,7 +13,7 @@ import logging
 import wave
 import grpc
 
-import recognition_streaming_pb2_grpc
+import recognition_pb2_grpc
 import recognition_streaming_request_pb2
 import recognition_streaming_response_pb2
 
@@ -25,6 +25,7 @@ class Options:
         self.audio_file = None
         self.topic = None
         self.language = 'en-US'
+        self.sample_rate = 16000
 
     def check(self):
         if self.topic is None:
@@ -39,6 +40,7 @@ def parse_command_line() -> Options:
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
     parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
+    parser.add_argument('--sample-rate', '-s', help='Sample rate for audio: Example 8000 or 16000', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     args = parser.parse_args()
@@ -47,6 +49,7 @@ def parse_command_line() -> Options:
     options.audio_file = args.audio_file
     options.topic = args.topic
     options.language = args.language
+    options.sample_rate = int(args.sample_rate)
 
     return options
 
@@ -76,12 +79,15 @@ class SpeechCenterStreamingASRClient:
     def __init__(self, executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options):
         self._executor = executor
         self._channel = channel
-        self._stub = recognition_streaming_pb2_grpc.RecognizerStub(self._channel)
+        self._stub = recognition_pb2_grpc.RecognizerStub(self._channel)
         self._resources = Resources(options)
         self._host = options.host
         self._topic = options.topic
+        self._sample_rate = options.sample_rate
         self._language = options.language
         self._peer_responded = threading.Event()
+        self._credentials = Credentials(self.read_token(toke_file=options.token_file))
+        self.token = self.read_token(toke_file=options.token_file)
 
     def _response_watcher(
             self,
@@ -90,15 +96,19 @@ class SpeechCenterStreamingASRClient:
             logging.info("Running response watcher")
             for response in response_iterator:
                 logging.info("New incoming response %s", pprint(response))
-
+            
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
             self._peer_responded.set()
             raise
 
+    def read_token(self, toke_file: str) -> str:
+        with open(toke_file) as token_hdl:
+            return ''.join(token_hdl.read().splitlines())
     
     def call(self) -> None:
-        response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language))
+        metadata = [('authorization', "Bearer " + self.token)]
+        response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._sample_rate), metadata=metadata)
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
     def wait_server(self) -> bool:
@@ -113,36 +123,33 @@ class SpeechCenterStreamingASRClient:
     def __generate_inferences(
         wav_audio: bytes,
         topic: str = "",
-        language: str = ""
+        language: str = "",
+        sample_rate: int = 16000
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
         """
         Inferences always start with a topic and a language, then audio is passed in a second message
         """
         if len(topic):
-            var_resource = recognition_streaming_request_pb2.RecognitionResource(topic=topic)
+            var_resource = recognition_streaming_request_pb2.RecognitionResource(topic=0)
         else:
             raise Exception("Topic must be declared in order to perform the recognition")
 
         messages = [
-            ("RecognitionConfig", 
+            ("config", 
                 recognition_streaming_request_pb2.RecognitionStreamingRequest(
                     config=recognition_streaming_request_pb2.RecognitionConfig(
                         parameters=recognition_streaming_request_pb2.RecognitionParameters(
-                            language=language), 
+                            language=language,
+                            pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate)
+                        ), 
                         resource=var_resource))),
-            ("Audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
+            ("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
         ]
-
         for message_type, message in messages:
             logging.info("Sending streaming message " + message_type)
             yield message
 
-    @staticmethod
-    def read_token(toke_file: str) -> str:
-        with open(toke_file) as token_hdl:
-            return ''.join(token_hdl.read().splitlines())
-
-
+    
 def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options) -> None:
     client = SpeechCenterStreamingASRClient(executor, channel, options)
     client.call()
@@ -158,9 +165,9 @@ def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, opt
 def run(command_line_options):
     executor = ThreadPoolExecutor()
     logging.info("Connecting to %s", command_line_options.host)
-    token = SpeechCenterStreamingASRClient.read_token(command_line_options.token_file)
-    credentials = Credentials(token)
-    with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
+    #token = SpeechCenterStreamingASRClient.read_token(command_line_options.token_file)
+    #credentials = Credentials(token)
+    with grpc.insecure_channel(command_line_options.host) as channel:
         logging.info("Running executor...")
         future = executor.submit(process_recognition, executor, channel, command_line_options)
         future.result()
