@@ -1,10 +1,9 @@
 {
-"en-us": {"oov": 0, "wer": 0}, 
-"es": {"oov": 0, "wer": 0},
-"pt-br": {"oov": 0, "wer": 0},
-"es-co": {"oov": 1, "wer": 1},
-"es-es": {"oov": 0, "wer": 0},
-"es-mx": {"oov": 0, "wer": 0},
-"es-pe": {"oov": 0, "wer": 0},
-"es-us": {"oov": 0, "wer": 0}
+"en-us": {"oov": 4.09, "accuracy": 80.26}, 
+"pt-br": {"oov": 6.90, "accuracy": 66.00},
+"es-co": {"oov": 2.30, "accuracy": 87.12},
+"es-es": {"oov": 8.73, "accuracy": 63.15},
+"es-mx": {"oov": 4.40, "accuracy": 75.16},
+"es-pe": {"oov": 4.23, "accuracy": 79.00},
+"es-us": {"oov": 2.34, "accuracy": 87.10}
 }
