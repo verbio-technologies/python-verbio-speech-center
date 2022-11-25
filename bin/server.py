@@ -24,18 +24,7 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 
 _PROCESS_COUNT = multiprocessing.cpu_count()
 _LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
-_LOG_LEVEL = 3
-
-
-def server_logger_configurer(verbose):
-    global _LOG_LEVEL
-    _LOG_LEVEL = verbose
-    logging.Formatter.converter = time.gmtime
-    logging.basicConfig(
-        level=_LOG_LEVELS.get(verbose, logging.INFO),
-        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+_LOG_LEVEL = 2
 
 
 def server_logger_listener(queue, verbose):
@@ -52,17 +41,28 @@ def server_logger_listener(queue, verbose):
             traceback.print_exc(file=sys.stderr)
 
 
+def server_logger_configurer(level):
+    logging.Formatter.converter = time.gmtime
+    logging.basicConfig(
+        level=_LOG_LEVELS.get(level, logging.INFO),
+        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
 def serve(
     args: argparse.Namespace,
 ) -> None:
     queue = multiprocessing.Queue(-1)
+    loglevel = args.verbose
     listener = multiprocessing.Process(
-        target=server_logger_listener, args=(queue, args.verbose)
+        target=server_logger_listener, args=(queue, loglevel)
     )
     listener.start()
-    _log_server_configurer(queue)
-    logger = logging.getLogger()
+    _log_server_configurer(queue, loglevel)
+    logger = logging.getLogger("ASR4")
     logger.info("Binding to '%s'", args.bindAddress)
+
     workers = []
     providers = ["CPUExecutionProvider"]
     if args.gpu:
@@ -79,6 +79,7 @@ def serve(
                 args.vocabulary,
                 args.formatter,
                 args.jobs,
+                loglevel,
             ),
         )
         worker.start()
@@ -96,20 +97,28 @@ def _asyncRunServer(
     vocabulary: Optional[str],
     formatter: Optional[str],
     jobs: int,
+    loglevel: int,
 ) -> None:
     asyncio.run(
         _runServer(
-            queue, bindAddress, model, providers, language, vocabulary, formatter, jobs
+            queue,
+            bindAddress,
+            model,
+            providers,
+            language,
+            vocabulary,
+            formatter,
+            jobs,
+            loglevel,
         )
     )
 
 
-def _log_server_configurer(queue):
+def _log_server_configurer(queue, level):
     h = logging.handlers.QueueHandler(queue)
-    root = logging.getLogger()
+    root = logging.getLogger("ASR4")
     root.addHandler(h)
-    global _LOG_LEVEL
-    root.setLevel(_LOG_LEVELS.get(_LOG_LEVEL, logging.INFO))
+    root.setLevel(_LOG_LEVELS.get(level, logging.INFO))
 
 
 async def _runServer(
@@ -121,8 +130,9 @@ async def _runServer(
     vocabularyPath: Optional[str],
     formatterPath: Optional[str],
     jobs: int,
+    loglevel: int,
 ) -> None:
-    _log_server_configurer(queue)
+    _log_server_configurer(queue, loglevel)
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=jobs),
         options=(("grpc.so_reuseport", 1),),
@@ -132,7 +142,7 @@ async def _runServer(
     )
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
-    logger = logging.getLogger()
+    logger = logging.getLogger("ASR4")
     logger.info(f"Server listening {bindAddress}")
     await server.start()
     await server.wait_for_termination()
@@ -228,8 +238,8 @@ def _parseArguments() -> argparse.Namespace:
         "-v",
         "--verbose",
         action="count",
-        default=3,
-        help="Give more output. Option is additive, and can be used up to 4 times.",
+        default=_LOG_LEVEL,
+        help="Give more output. Option is additive, and can be used up to 2 times to achieve INFO and DEBUG levels. Default level is WARNING.",
     )
     return parser.parse_args()
 
@@ -239,4 +249,6 @@ if __name__ == "__main__":
     args = _parseArguments()
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
+    if args.verbose > 4:
+        args.verbose = 4
     serve(args)
