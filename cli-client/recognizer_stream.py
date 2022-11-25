@@ -17,7 +17,6 @@ import recognition_pb2_grpc
 import recognition_streaming_request_pb2
 import recognition_streaming_response_pb2
 
-
 class Options:
     def __init__(self):
         self.token_file = None
@@ -26,6 +25,7 @@ class Options:
         self.topic = None
         self.language = 'en-US'
         self.sample_rate = 16000
+        self.secure_channel = True
 
     def check(self):
         if self.topic is None:
@@ -43,6 +43,8 @@ def parse_command_line() -> Options:
     parser.add_argument('--sample-rate', '-s', help='Sample rate for audio: Example 8000 or 16000', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
+    parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=False, type=bool)
+    
     args = parser.parse_args()
     options.token_file = args.token
     options.host = args.host
@@ -50,7 +52,14 @@ def parse_command_line() -> Options:
     options.topic = args.topic
     options.language = args.language
     options.sample_rate = int(args.sample_rate)
-
+    
+    options.secure_channel = not args.not_secure
+    '''
+    if args.not_secure is not None:
+        options.secure_channel = False
+    else:
+        options.secure_channel = True
+    '''
     return options
 
 class Credentials:
@@ -88,6 +97,7 @@ class SpeechCenterStreamingASRClient:
         self._peer_responded = threading.Event()
         self._credentials = Credentials(self.read_token(toke_file=options.token_file))
         self.token = self.read_token(toke_file=options.token_file)
+        self._secure_channel = options.secure_channel
 
     def _response_watcher(
             self,
@@ -108,7 +118,12 @@ class SpeechCenterStreamingASRClient:
             return ''.join(token_hdl.read().splitlines())
     
     def call(self) -> None:
-        response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._sample_rate))
+        metadata = [('authorization', "Bearer " + self.token)]
+        if self._secure_channel:
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._sample_rate))
+        else:
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._sample_rate), metadata=metadata)
+        
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
     def wait_server(self) -> bool:
@@ -166,12 +181,20 @@ def run(command_line_options):
     executor = ThreadPoolExecutor()
     logging.info("Connecting to %s", command_line_options.host)
     token = SpeechCenterStreamingASRClient.read_token(toke_file=command_line_options.token_file)
-    credentials = Credentials(token)
-    with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
-        logging.info("Running executor...")
-        future = executor.submit(process_recognition, executor, channel, command_line_options)
-        future.result()
-        logging.info("New result arrived")
+
+    if command_line_options.secure_channel:
+        credentials = Credentials(token)
+        with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
+            logging.info("Running executor...")
+            future = executor.submit(process_recognition, executor, channel, command_line_options)
+            future.result()
+            logging.info("New result arrived")
+    else:
+        with grpc.insecure_channel(command_line_options.host) as channel:
+            logging.info("Running executor...")
+            future = executor.submit(process_recognition, executor, channel, command_line_options)
+            future.result()
+            logging.info("New result arrived")
     
 
 if __name__ == '__main__':
