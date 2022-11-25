@@ -50,6 +50,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self._language = language
         self._createRuntime(session, vocabularyPath)
         self._createFormatter(formatterPath)
+        self.logger = logging.getLogger("ASR4")
 
     def _createRuntime(
         self,
@@ -88,8 +89,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as bytes and receive the transcription of the audio.
         """
-        logger = logging.getLogger()
-        logger.info(
+        self.logger.info(
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
@@ -97,7 +97,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         self.eventSource(request)
         response = self.eventHandle(request)
-        logger.info(f"Recognition result: '{response}'")
+        self.logger.info(f"Recognition result: '{response}'")
         return self.eventSink(response)
 
     async def StreamingRecognize(
@@ -108,11 +108,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        logger = logging.getLogger()
         innerRecognizeRequest = RecognizeRequest()
         async for request in request_iterator:
             if request.HasField("config"):
-                logger.info(
+                self.logger.info(
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
@@ -124,8 +123,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     innerRecognizeRequest.audio + request.audio
                 )
         self.eventSource(innerRecognizeRequest)
+        self.logger.debug(
+            f" Processig audio with length %d" % len(innerRecognizeRequest.audio)
+        )
         response = self.eventHandle(innerRecognizeRequest)
-        logger.info(f"Recognition result: '{response}'")
+        self.logger.info(f"Recognition result: '{response}'")
         innerRecognizeResponse = self.eventSink(response)
         yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
@@ -199,6 +201,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def _formatWords(self, transcription: str) -> str:
         words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
         if self._formatter:
+            self.logger.debug(f"Pre-formatter text: {words}")
             return " ".join(self._formatter.classify(words))
         else:
             return " ".join(words)
