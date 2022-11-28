@@ -60,7 +60,7 @@ unit-testing:
   before_script:
     - pip install .[server,cpu,test]
   script:
-    - python --version
+    - python3 --version
     - pytest tests/unit --junit-xml=report.xml --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 5 days
@@ -148,8 +148,8 @@ build:python:
   script:
     - export MAKEFLAGS="-j4"
     - pip install build grpcio grpcio-tools
-    - python -m build
-    - python -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4-${DOCKER_IMAGE_VERSION}.pb asr4.proto
+    - python3 -m build
+    - python3 -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4-${DOCKER_IMAGE_VERSION}.pb asr4.proto
     - mv dist/*.whl .
     - mv proto/*.pb .
   artifacts:
@@ -250,7 +250,7 @@ testing:integration-testing:gpu:
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
     - pip install .[client,test]
   script:
-    - python --version
+    - python3 --version
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days

@@ -15,9 +15,9 @@ LANGUAGE=$3
 
 if [ -z $4 ]
 then
-      python bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -j1 &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -j1 &
 else
-      python bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -j1 --gpu &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -j1 --gpu &
 fi
 
 export TIME=30
