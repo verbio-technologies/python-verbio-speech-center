@@ -17,7 +17,8 @@ variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_STABLE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
-  DOCKER_IMAGE_VERSION: ${CI_COMMIT_REF_NAME}
+  DOCKER_SPEECH_CENTER_IMAGE_NAME: docker.registry.verbio.com/voice-center/testing/asr4
+  DOCKER_IMAGE_VERSION: ${CI_COMMIT_TAG}
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
 
 lint:python:
@@ -59,7 +60,7 @@ unit-testing:
   before_script:
     - pip install .[server,cpu,test]
   script:
-    - python --version
+    - python3 --version
     - pytest tests/unit --junit-xml=report.xml --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 5 days
@@ -83,7 +84,20 @@ unit-testing:rust:
       - tarpaulin-report.html
   coverage: '/^(\d+\.\d*)\% coverage, .+$/'
 
-functional-testing:
+functional-testing:endpoints:
+  stage: test
+  before_script:
+    - wget https://github.com/bojand/ghz/releases/download/v0.111.0/ghz-linux-x86_64.tar.gz
+    - tar -xzf ghz-linux-x86_64.tar.gz
+    - mv ghz /bin
+    - pip install .[client,server,cpu,test]
+    - export VERSION=$(cat VERSION | xargs echo -n)
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${VERSION}.dict.ltr.txt en-us
+  script:
+    - cd tests/functional/data
+    - bash ../streaming_tests.sh
+
+functional-testing:cpu:
   stage: test
   before_script:
     - pip install .[server,cpu,test]
@@ -125,7 +139,6 @@ integration-testing:cpu:
 #    - !reference [.template:integration-testing, before_script]
 
 
-
 build:python:
   stage: build
   only:
@@ -135,8 +148,8 @@ build:python:
   script:
     - export MAKEFLAGS="-j4"
     - pip install build grpcio grpcio-tools
-    - python -m build
-    - python -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4-${DOCKER_IMAGE_VERSION}.pb asr4.proto
+    - python3 -m build
+    - python3 -m grpc_tools.protoc --proto_path=proto --include_imports --include_source_info --descriptor_set_out=proto/asr4-${DOCKER_IMAGE_VERSION}.pb asr4.proto
     - mv dist/*.whl .
     - mv proto/*.pb .
   artifacts:
@@ -237,7 +250,7 @@ testing:integration-testing:gpu:
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
     - pip install .[client,test]
   script:
-    - python --version
+    - python3 --version
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
@@ -250,7 +263,6 @@ testing:integration-testing:gpu:
     - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/docker.gpg
     - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     - apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
-
 
 
 
@@ -279,7 +291,8 @@ staging:e2e:
   only:
     - tags
   variables:
-    TF_VAR_asr4_version: ${DOCKER_IMAGE_VERSION}
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TF_VAR_asr4_version: ${CI_COMMIT_TAG}
   trigger:
     project: csr/asr4-benchmark
     strategy: depend
@@ -304,6 +317,29 @@ stable:promote:
     - docker tag $OLD_NAME $NEW_NAME
     - docker push $NEW_NAME
 
+speech-center:promote:
+  stage: stable-promote
+  image: docker:20.10.15
+  only:
+    - tags
+  parallel:
+    matrix:
+      - LANGUAGE: [en-us, es, pt-br]
+  script:
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker tag $OLD_NAME $NEW_LATEST_NAME
+    - docker push $NEW_NAME
+    - docker push $NEW_LATEST_NAME
+    - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
+    - docker tag $OLD_NAME $NEW_NAME
+    - docker tag $OLD_NAME $NEW_LATEST_NAME
+    - docker push $NEW_NAME
+    - docker push $NEW_LATEST_NAME
 
 
 stable:deploy:cpu:
@@ -323,22 +359,22 @@ stable:deploy:cpu:
     - echo "Deploying CPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable.nomad
 
-stable:deploy:gpu:
-  stage: stable-deploy
-  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
-  only:
-    - tags
-  dependencies:
-    - build:python
-  environment:
-    name: production/asr4-gpu
-    action: start
-  script:
-    - cd deploy/nomad
-    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
-    - export NOMAD_ADDR=http://$NOMAD_IP:4646
-    - echo "Deploying GPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable-gpu.nomad
+#stable:deploy:gpu:
+#  stage: stable-deploy
+#  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
+#  only:
+#    - tags
+#  dependencies:
+#    - build:python
+#  environment:
+#    name: production/asr4-gpu
+#    action: start
+#  script:
+#    - cd deploy/nomad
+#    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
+#    - export NOMAD_ADDR=http://$NOMAD_IP:4646
+#    - echo "Deploying GPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
+#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable-gpu.nomad
 
 
 
@@ -354,19 +390,63 @@ cleanup:
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker image rm "${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
+    - docker image rm "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
 
 
 
-speech-center-integration-testing:
+speech-center-integration-testing:en-us:cpu:
+  variables:
+    TEST_SERVICE_NAME: "asr4-en-us"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:es:cpu:
+  variables:
+    TEST_SERVICE_NAME: "asr4-es"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:pt-br:cpu:
+  variables:
+    TEST_SERVICE_NAME: "asr4-pt-br"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:en-us:gpu:
+  variables:
+    TEST_SERVICE_NAME: "asr4-gpu-en-us"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:es:gpu:
+  variables:
+    TEST_SERVICE_NAME: "asr4-gpu-es"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+speech-center-integration-testing:pt-br:gpu:
+  variables:
+    TEST_SERVICE_NAME: "asr4-gpu-pt-br"
+    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+  extends: .template:speech-center-integration-testing
+
+
+.template:speech-center-integration-testing:
   stage: speech-center-integration-testing
   only:
     - tags
-  variables:
-    TEST_SERVICE_NAME: asr4
-    TEST_SERVICE_COMMIT_TAG: $DOCKER_IMAGE_VERSION
   trigger:
     project: voice-center/operations/integration/integration-tests
     strategy: depend
