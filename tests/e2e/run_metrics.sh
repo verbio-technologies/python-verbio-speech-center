@@ -33,23 +33,23 @@ function compare_metrics(){
 pip install .[client]
 python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
 sleep 10
-wer_metric=$(cat "test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
+accuracy_metric=$(cat "test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
 oov_metric=$(jq '.score' "test_${language}_oov.json" | sed 's/[^0-9.]*//g')
 
 
 if [ "${variant}" != "none" ];
 then
 
-	expected_wer=$(jq --arg keyvar "$language-$variant" '.[$keyvar].accuracy' "tests/e2e/data/expected_metrics.json")
+	expected_accuracy=$(jq --arg keyvar "$language-$variant" '.[$keyvar].accuracy' "tests/e2e/data/expected_metrics.json")
 	expected_oov=$(jq --arg keyvar "$language-$variant" '.[$keyvar].oov' "tests/e2e/data/expected_metrics.json")
 else
 	echo "$language"
-	expected_wer=$(jq --arg keyvar "$language" '.[$keyvar].accuracy' "tests/e2e/data/expected_metrics.json")
+	expected_accuracy=$(jq --arg keyvar "$language" '.[$keyvar].accuracy' "tests/e2e/data/expected_metrics.json")
 	expected_oov=$(jq --arg keyvar "$language" '.[$keyvar].oov' "tests/e2e/data/expected_metrics.json")
 fi
 
-echo "Comparing obtained and expected WER metrics..."
-compare_metrics ${wer_metric} ${expected_wer}
+echo "Comparing obtained and expected accuracy metrics..."
+compare_metrics ${accuracy_metric} ${expected_accuracy}
 
 echo "Comparing obtained and expected OOV metrics..."
 compare_metrics ${oov_metric} ${expected_oov}
