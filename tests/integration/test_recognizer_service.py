@@ -24,7 +24,7 @@ class TestRecognizerUtils(object):
         output: Optional[str] = None,
     ) -> Popen:
         cmd = [
-            "python",
+            "python3",
             f"{self.rootdir}/bin/client.py",
             "--language",
             language,
