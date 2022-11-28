@@ -43,7 +43,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--sample-rate', '-s', help='Sample rate for audio: Example 8000 or 16000', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
-    parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=False, type=bool)
+    parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
     
     args = parser.parse_args()
     options.token_file = args.token
@@ -52,8 +52,7 @@ def parse_command_line() -> Options:
     options.topic = args.topic
     options.language = args.language
     options.sample_rate = int(args.sample_rate)
-    
-    options.secure_channel = not args.not_secure
+    options.secure_channel = args.secure
     '''
     if args.not_secure is not None:
         options.secure_channel = False
@@ -180,10 +179,11 @@ def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, opt
 def run(command_line_options):
     executor = ThreadPoolExecutor()
     logging.info("Connecting to %s", command_line_options.host)
-    token = SpeechCenterStreamingASRClient.read_token(toke_file=command_line_options.token_file)
 
     if command_line_options.secure_channel:
+        token = SpeechCenterStreamingASRClient.read_token(toke_file=command_line_options.token_file)
         credentials = Credentials(token)
+        
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
             logging.info("Running executor...")
             future = executor.submit(process_recognition, executor, channel, command_line_options)
