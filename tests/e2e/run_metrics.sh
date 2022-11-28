@@ -31,7 +31,7 @@ function compare_metrics(){
 
 
 pip install .[client]
-python bin/client.py -l "${language}" --host "${AWS_IP}:50051" -g "${gui}" -m
+python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
 sleep 10
 wer_metric=$(cat "test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
 oov_metric=$(jq '.score' "test_${language}_oov.json" | sed 's/[^0-9.]*//g')
