@@ -5,6 +5,7 @@ AWS_IP=$2
 gui=$3
 TEST_PASSED=true
 variant="none"
+interval=0.05
 
 
 if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
@@ -16,7 +17,7 @@ function compare_metrics(){
 	metric="$1"
 	expected_metric="$2"
 
-	if (( $(echo "$metric == $expected_metric" |bc -l) ));
+	if (( $(echo "$metric+$interval >= $expected_metric" |bc -l) )) && (( $(echo "$metric-$interval <= $expected_metric" |bc -l) ));
 	then
 	  echo "Obtained values and expected values match"
 	elif (( $(echo "$metric > $expected_metric" |bc -l) ));
