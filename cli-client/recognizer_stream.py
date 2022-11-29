@@ -16,6 +16,9 @@ import recognition_pb2_grpc
 import recognition_streaming_request_pb2
 import recognition_streaming_response_pb2
 
+from google.protobuf.json_format import MessageToJson
+
+
 class Options:
     def __init__(self):
         self.token_file = None
@@ -60,6 +63,7 @@ def parse_command_line() -> Options:
     '''
     return options
 
+
 class Credentials:
     def __init__(self, token):
         # Set JWT token for service access.
@@ -82,6 +86,7 @@ class Resources:
             audio_data = wav_data.readframes(wav_data.getnframes())
             return audio_data
 
+
 class SpeechCenterStreamingASRClient:
     def __init__(self, executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options):
         self._executor = executor
@@ -103,7 +108,9 @@ class SpeechCenterStreamingASRClient:
         try:
             logging.info("Running response watcher")
             for response in response_iterator:
-                logging.info("New incoming response %s", pprint(response))
+                json = MessageToJson(response)
+                logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
+                print(MessageToJson(response))
             
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
