@@ -5,8 +5,7 @@ sys.path.insert(1, '../proto/generated')
 
 from concurrent.futures import ThreadPoolExecutor
 import threading
-from typing import Iterator
-from typing import Iterable
+from typing import Iterator, Iterable
 from pprint import pprint
 import argparse
 import logging
