@@ -19,7 +19,7 @@ function compare_metrics(){
 
 	if (( $(echo "$metric+$interval >= $expected_metric" |bc -l) )) && (( $(echo "$metric-$interval <= $expected_metric" |bc -l) ));
 	then
-	  echo "Obtained values and expected values match"
+	  echo "Obtained values and expected values match (${metric})"
 	elif (( $(echo "$metric > $expected_metric" |bc -l) ));
 	then
 		echo "Obtained value (${metric}) is higher than expected value (${expected_metric})"
