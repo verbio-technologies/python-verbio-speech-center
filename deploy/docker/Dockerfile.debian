@@ -19,5 +19,6 @@ RUN python -m pip install intel_extension_for_pytorch -f https://software.intel.
 RUN python -m pip uninstall cmake ninja -y
 
 ENV LANGUAGE=${LANGUAGE}
+ENV LOG_LEVEL=${LOG_LEVEL}
 
 CMD [ "/init.sh"]

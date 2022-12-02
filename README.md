@@ -119,7 +119,7 @@ Additionally, include the `--help` argument to display all available options:
 
 ```
 » python bin/client.py --help
-usage: client.py [-h] [-o OUTPUT] (-a AUDIO | -g GUI) [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-m] [-v]
+usage: client.py [-h] [-o OUTPUT] (-a AUDIO | -g GUI) [-l {en-us,es,pt-br}] [--host HOST] [-j JOBS] [-m] [-v VERBOSE]
 
 A Speech Recognition client.
 
@@ -136,7 +136,8 @@ optional arguments:
   --host HOST           Hostname address of the ASR4 server.
   -j JOBS, --jobs JOBS  Number of parallel workers; if not specified, defaults to CPU count.
   -m, --metrics         Calculate metrics using the audio transcription references.
-  -v, --verbose         Give more output. Option is additive, and can be used up to 4 times.
+  -v VERBOSE, --verbose VERBOSE
+                        Log levels. Options: CRITICAL, ERROR, WARNING, INFO and DEBUG.
 
 ```
 
@@ -169,7 +170,7 @@ Additionally, include the `--help` argument to display all available options:
 ```
 » python bin/server.py --help
 usage: server.py [-h] -m MODEL [-d VOCABULARY] [-l {en-us,es,pt-br}] [-f FORMATTER]
-                 [--host BINDADDRESS] [-j JOBS] [-v]
+                 [--host BINDADDRESS] [-j JOBS] [-v VERBOSE]
 
 Python ASR4 Server
 
@@ -186,7 +187,8 @@ optional arguments:
                         Path to the formatter model file.
   --host BINDADDRESS    Hostname address to bind the server to.
   -j JOBS, --jobs JOBS  Number of parallel workers; if not specified, defaults to CPU count.
-  -v, --verbose         Give more output. Option is additive, and can be used up to 4 times.
+  -v VERBOSE, --verbose VERBOSE
+                        Log levels. Options: CRITICAL, ERROR, WARNING, INFO and DEBUG. By default reads env variable LOG_LEVEL.
 ```
 
 
