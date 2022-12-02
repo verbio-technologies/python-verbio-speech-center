@@ -1,10 +1,36 @@
 {
 "en-us": {"oov": 4.29, "accuracy": 62.37}, 
 "pt-br": {"oov": 5.97, "accuracy": 49.67},
-"es-co": {"oov": 2.30, "accuracy": 87.12},
-"es-es": {"oov": 8.73, "accuracy": 63.15},
-"es-mx": {"oov": 4.40, "accuracy": 75.16},
-"es-pe": {"oov": 4.23, "accuracy": 79.00},
-"es-us": {"oov": 2.34, "accuracy": 87.10},
-"es": {"oov": 5.86, "accuracy": 62.00}
+"es": 
+    {
+        "oov": 5.82,
+        "accuracy": 72.00,
+        "dialects": {
+            "es-co": {"accuracy": 86.33},
+            "es-es": {"accuracy": 74.38},
+            "es-mx": {"accuracy": 79.01},
+            "es-pe": {"accuracy": 77.81},
+            "es-us": {"accuracy": 87.73},
+            "typical_deviation": 5.13
+        },
+        "domains": {
+            "multidomain-administration-hh-060": {"accuracy": 68.22},
+            "multidomain-administration-hm-aeat": {"accuracy": 100.0},
+            "multidomain-banking-hm-bancomer": {"accuracy": 80.19},
+            "multidomain-banking-hm-bankia": {"accuracy": 94.04},
+            "multidomain-banking-hm-bbva_line": {"accuracy": 58.39},
+            "multidomain-banking-hm-bbvae": {"accuracy": 97.98},
+            "multidomain-banking-hm-caixabank": {"accuracy": 96.65},
+            "multidomain-energy-hh-endesa": {"accuracy": 53.41},
+            "multidomain-furniture_sales-hh-lomonaco": {"accuracy": 58.75},
+            "multidomain-insurance-hh-liberty_insurances": {"accuracy": 39.37},
+            "multidomain-real_estate-hh-servihabitat": {"accuracy": 56.35},
+            "multidomain-technology_support-hh-bq_tech_support": {"accuracy": 73.42},
+            "multidomain-telco-hh-claro": {"accuracy": 74.5},
+            "multidomain-telco-hh-vodafone_customer": {"accuracy": 34.64},
+            "multidomain-telco-hm-telefónica": {"accuracy": 81.47},
+            "multidomain-telco-hm-tmobile": {"accuracy": 87.73},
+            "typical_deviation": 19.98
+        }
+    }
 }

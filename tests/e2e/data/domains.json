@@ -1,0 +1,21 @@
+{
+"es": 
+    [
+        "multidomain-administration-hh-060",
+        "multidomain-administration-hm-aeat",
+        "multidomain-banking-hm-bancomer",
+        "multidomain-banking-hm-bankia",
+        "multidomain-banking-hm-bbva_line",
+        "multidomain-banking-hm-bbvae",
+        "multidomain-banking-hm-caixabank",
+        "multidomain-energy-hh-endesa",
+        "multidomain-furniture_sales-hh-lomonaco",
+        "multidomain-insurance-hh-liberty_insurances",
+        "multidomain-real_estate-hh-servihabitat",
+        "multidomain-technology_support-hh-bq_tech_support",
+        "multidomain-telco-hh-claro",
+        "multidomain-telco-hh-vodafone_customer",
+        "multidomain-telco-hm-telefónica",
+        "multidomain-telco-hm-tmobile"
+    ]
+}
