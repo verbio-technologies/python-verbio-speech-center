@@ -26,6 +26,8 @@ class TestRecognizerUtils(object):
         cmd = [
             "python3",
             f"{self.rootdir}/bin/client.py",
+            "-v",
+            "INFO",
             "--language",
             language,
             "--host",

@@ -1,4 +1,4 @@
-import sys, traceback
+import os, sys, traceback
 
 import grpc
 import asyncio
@@ -23,8 +23,15 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 
 
 _PROCESS_COUNT = multiprocessing.cpu_count()
-_LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
-_LOG_LEVEL = 2
+_LOG_LEVELS = {
+    "ERROR": logging.ERROR,
+    "WARNING": logging.WARNING,
+    "INFO": logging.INFO,
+    "DEBUG": logging.DEBUG,
+    "TRACE": logging.DEBUG,
+}
+_LOG_LEVEL = "ERROR"
+_LOGGER_NAME = "ASR4"
 
 
 def server_logger_listener(queue, verbose):
@@ -60,7 +67,7 @@ def serve(
     )
     listener.start()
     _log_server_configurer(queue, loglevel)
-    logger = logging.getLogger("ASR4")
+    logger = logging.getLogger(_LOGGER_NAME)
     logger.info("Binding to '%s'", args.bindAddress)
 
     workers = []
@@ -116,7 +123,7 @@ def _asyncRunServer(
 
 def _log_server_configurer(queue, level):
     h = logging.handlers.QueueHandler(queue)
-    root = logging.getLogger("ASR4")
+    root = logging.getLogger(_LOGGER_NAME)
     root.addHandler(h)
     root.setLevel(_LOG_LEVELS.get(level, logging.INFO))
 
@@ -142,7 +149,7 @@ async def _runServer(
     )
     _addHealthCheckService(server, jobs)
     server.add_insecure_port(bindAddress)
-    logger = logging.getLogger("ASR4")
+    logger = logging.getLogger(_LOGGER_NAME)
     logger.info(f"Server listening {bindAddress}")
     await server.start()
     await server.wait_for_termination()
@@ -237,18 +244,29 @@ def _parseArguments() -> argparse.Namespace:
     parser.add_argument(
         "-v",
         "--verbose",
-        action="count",
-        default=_LOG_LEVEL,
-        help="Give more output. Option is additive, and can be used up to 2 times to achieve INFO and DEBUG levels. Default level is WARNING.",
+        choices=list(_LOG_LEVELS.keys()),
+        default=os.environ.get("LOG_LEVEL", _LOG_LEVEL),
+        help="Log levels. By default reads env variable LOG_LEVEL.",
     )
     return parser.parse_args()
+
+
+def validateLogLevel(args):
+    if args.verbose not in _LOG_LEVELS:
+        offender = args.verbose
+        args.verbose = _LOG_LEVEL
+        server_logger_configurer(args.verbose)
+        logger = logging.getLogger(_LOGGER_NAME)
+        logger.error(
+            "Level [%s] is not valid log level. Will use %s instead."
+            % (offender, args.verbose)
+        )
 
 
 if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
     args = _parseArguments()
+    validateLogLevel(args)
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
-    if args.verbose > 4:
-        args.verbose = 4
     serve(args)

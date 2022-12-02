@@ -13,6 +13,7 @@ COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
 ENV MAKEFLAGS="-j4"
+ENV LOG_LEVEL=${LOG_LEVEL}
 
 RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server,gpu]
 

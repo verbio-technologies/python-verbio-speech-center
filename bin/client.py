@@ -26,7 +26,15 @@ from asr4.recognizer import RecognitionResource
 
 _LOGGER = logging.getLogger(__name__)
 _PROCESS_COUNT = 8
-_LOG_LEVELS = {1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
+
+_LOG_LEVELS = {
+    "ERROR": logging.ERROR,
+    "WARNING": logging.WARNING,
+    "INFO": logging.INFO,
+    "DEBUG": logging.DEBUG,
+    "TRACE": logging.DEBUG,
+}
+_LOG_LEVEL = "ERROR"
 CHANNEL_OPTIONS = [
     ("grpc.lb_policy_name", "pick_first"),
     ("grpc.enable_retries", 0),
@@ -279,18 +287,28 @@ def _parseArguments() -> argparse.Namespace:
     parser.add_argument(
         "-v",
         "--verbose",
-        action="count",
-        default=3,
-        help="Give more output. Option is additive, and can be used up to 4 times.",
+        choices=list(_LOG_LEVELS.keys()),
+        default=os.environ.get("LOG_LEVEL", _LOG_LEVEL),
+        help="Log levels. Options: CRITICAL, ERROR, WARNING, INFO and DEBUG. By default reads env variable LOG_LEVEL.",
     )
     return parser.parse_args()
+
+
+def validateLogLevel(args):
+    if args.verbose not in _LOG_LEVELS:
+        offender = args.verbose
+        args.verbose = _LOG_LEVEL
+        _LOGGER.warning(
+            "Level [%s] is not valid log level. Will use %s instead."
+            % (offender, args.verbose)
+        )
 
 
 if __name__ == "__main__":
     args = _parseArguments()
     if not (args.audio or args.gui):
         raise ValueError(f"Audio path (-a) or audios gui file (-g) is required")
-
+    validateLogLevel(args)
     logging.Formatter.converter = time.gmtime
     logging.basicConfig(
         level=_LOG_LEVELS.get(args.verbose, logging.INFO),
