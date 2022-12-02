@@ -105,7 +105,9 @@ class SpeechCenterStreamingASRClient:
             logging.info("Running response watcher")
             for response in response_iterator:
                 logging.info("New incoming response %s", pprint(response))
-            
+                if response.result and response.result.is_final:
+                    self._peer_responded.set()
+
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
             self._peer_responded.set()
@@ -185,16 +187,19 @@ def run(command_line_options):
         credentials = Credentials(token)
         
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
-            logging.info("Running executor...")
+            runExecutor(command_line_options, executor, channel)
             future = executor.submit(process_recognition, executor, channel, command_line_options)
             future.result()
             logging.info("New result arrived")
     else:
         with grpc.insecure_channel(command_line_options.host) as channel:
-            logging.info("Running executor...")
-            future = executor.submit(process_recognition, executor, channel, command_line_options)
-            future.result()
-            logging.info("New result arrived")
+            runExecutor(command_line_options, executor, channel)
+
+def runExecutor(command_line_options, executor, channel):
+    logging.info("Running executor...")
+    future = executor.submit(process_recognition, executor, channel, command_line_options)
+    future.result()
+    logging.info("New result arrived")
     
 
 if __name__ == '__main__':
