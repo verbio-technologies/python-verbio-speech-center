@@ -35,8 +35,8 @@ pip install .[client]
 python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
 sleep 10
 
-accuracy_metric=$(cat "spanish/test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
-oov_metric=$(jq '.score' "spanish/test_${language}_oov.json" | sed 's/[^0-9.]*//g')
+accuracy_metric=$(cat "test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
+oov_metric=$(jq '.score' "test_${language}_oov.json" | sed 's/[^0-9.]*//g')
 
 expected_accuracy=$(jq --arg keyvar "$language" '.[$keyvar].accuracy' "tests/e2e/data/expected_metrics.json")
 expected_oov=$(jq --arg keyvar "$language" '.[$keyvar].oov' "tests/e2e/data/expected_metrics.json")
@@ -52,13 +52,13 @@ then
 	dialects=("es" "mx" "co" "pe" "us")
 	for dialect in  "${dialects[@]}";
 	do
-		accuracy_metric=$(jq --arg dialect "$language-$dialect" '.[$dialect]' "spanish/test_${language}_intratest/dialects_intratest.json")
+		accuracy_metric=$(jq --arg dialect "$language-$dialect" '.[$dialect]' "test_${language}_intratest/dialects_intratest.json")
 		expected_accuracy=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects[$dialect].accuracy' "tests/e2e/data/expected_metrics.json")
 
 		echo "Comparing obtained and expected accuracy metrics of $language-$dialect..."
 		compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-		deviation_metric=$(jq --arg dialect "$language-$dialect" '."Accuracy typical deviation"' "spanish/test_${language}_intratest/dialects_intratest.json")
+		deviation_metric=$(jq --arg dialect "$language-$dialect" '."Accuracy typical deviation"' "test_${language}_intratest/dialects_intratest.json")
 		expected_deviation=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
 		
 		echo "Comparing obtained and expected accuracy deviation metrics of $language..."
@@ -69,13 +69,13 @@ fi
 domains=($(jq --arg keyvar "$language" '.[$keyvar]' "tests/e2e/data/domains.json" | sed 's/\[//g' | sed 's/\]//g' |  sed 's/"//g'| sed 's/,/ /g' | tr -d '\n' | sed 's/  /  /g'))
 for domain in "${domains[@]}";
 	do
-		accuracy_metric=$(jq --arg dom "$domain" '.[$dom]' "spanish/test_${language}_intratest/domains_intratest.json")
+		accuracy_metric=$(jq --arg dom "$domain" '.[$dom]' "test_${language}_intratest/domains_intratest.json")
 		expected_accuracy=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains[$dom].accuracy' "tests/e2e/data/expected_metrics.json")
 
 		echo "Comparing obtained and expected accuracy metrics of $domain..."
 		compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-		deviation_metric=$(jq --arg dom "$domain" '."Accuracy typical deviation"' "spanish/test_${language}_intratest/domains_intratest.json")
+		deviation_metric=$(jq --arg dom "$domain" '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
 		expected_deviation=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
 		
 		echo "Comparing obtained and expected accuracy deviation metrics of $domain..."
