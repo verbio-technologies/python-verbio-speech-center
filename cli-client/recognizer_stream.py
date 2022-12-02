@@ -188,9 +188,7 @@ def run(command_line_options):
         
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
             runExecutor(command_line_options, executor, channel)
-            future = executor.submit(process_recognition, executor, channel, command_line_options)
-            future.result()
-            logging.info("New result arrived")
+            
     else:
         with grpc.insecure_channel(command_line_options.host) as channel:
             runExecutor(command_line_options, executor, channel)
