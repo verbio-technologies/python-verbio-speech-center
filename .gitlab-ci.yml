@@ -233,6 +233,8 @@ testing:integration-testing:gpu:
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
     - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LANGUAGE=${LANGUAGE} ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
+    - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
