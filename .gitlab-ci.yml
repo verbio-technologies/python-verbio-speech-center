@@ -115,28 +115,28 @@ integration-testing:cpu:
   before_script:
     - pip install .[client,server,cpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE 0
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
 
-#integration-testing:gpu:
-#  extends: .template:integration-testing
-#  stage: test
-#  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
-#  only:
-#    - tags
-#    - branches
-#    - web
-#    - master
-#  tags:
-#    - gpu
-#  before_script:
-#    - source ~/.bashrc
-#    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[client,server,gpu,test]
-#    - export VERSION=$(cat VERSION | xargs echo -n)
-#    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE 1
-#    # Install the remaining testing dependencies
-#    - !reference [.template:integration-testing, before_script]
+integration-testing:gpu:
+  extends: .template:integration-testing
+  stage: test
+  image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
+  only:
+    - tags
+    - branches
+    - web
+    - master
+  tags:
+    - gpu
+  before_script:
+    - . /opt/intel/oneapi/setvars.sh
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
+    - export VERSION=$(cat VERSION | xargs echo -n)
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE 1
+    # Install the remaining testing dependencies
+    - !reference [.template:integration-testing, before_script]
 
 
 build:python:

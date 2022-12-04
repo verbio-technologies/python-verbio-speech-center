@@ -73,7 +73,7 @@ def serve(
     workers = []
     providers = ["CPUExecutionProvider"]
     if args.gpu:
-        providers = ["CUDAExecutionProvider"] + providers
+        providers = ["TensorrtExecutionProvider"] + providers
     for _ in range(args.jobs):
         worker = multiprocessing.Process(
             target=_asyncRunServer,

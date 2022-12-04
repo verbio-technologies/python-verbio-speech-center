@@ -1,11 +1,11 @@
-FROM docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
+FROM docker.registry.verbio.com/engineering/devops/python:3.9-slim
 
 ARG VERSION
 ARG LANGUAGE
 ENV WORKERS=${WORKERS}
 ENV PORT=${PORT}
 
-RUN apt-get update && apt-get install -y git build-essential ninja-build cmake
+RUN apt update && apt install -y libgomp1
 
 COPY init-gpu.sh /init.sh
 COPY server.py /server.py
@@ -14,13 +14,13 @@ COPY asr4-$LANGUAGE-$VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
+
 ENV MAKEFLAGS="-j4"
 ENV LANGUAGE=${LANGUAGE}
 ENV LOG_LEVEL=${LOG_LEVEL}
 
-RUN CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install asr4-$VERSION-py3-none-any.whl[server,gpu]
+RUN python -m pip install nvidia-tensorrt
+RUN python -m pip install asr4-$VERSION-py3-none-any.whl[server,gpu]
+RUN python -m pip uninstall cmake ninja -y
 
-RUN apt-get purge -y git build-essential ninja-build cmake
-RUN apt-get autoremove -y
-
-CMD /bin/bash -c "source /root/.bashrc && /init.sh"
+CMD [ "/init.sh"]
