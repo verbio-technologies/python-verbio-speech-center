@@ -45,12 +45,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         session: Session,
         language: Language = Language.EN_US,
         vocabularyPath: Optional[str] = None,
-        formatterPath: Optional[str] = None,
+        formatter: pyformatter.PyFormatter = None,
     ) -> None:
         self._language = language
+        self._formatter = formatter
         self._createRuntime(session, vocabularyPath)
-        self._createFormatter(formatterPath)
         self.logger = logging.getLogger("ASR4")
+        if formatter is None:
+            self.logger.warning("No formatter provided. Text will be generated without format")
 
     def _createRuntime(
         self,
@@ -63,23 +65,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         else:
             self._runtime = OnnxRuntime(session)
 
+    @staticmethod
     def _readVocabulary(
-        self,
         vocabularyPath: str,
     ) -> List[str]:
         with open(vocabularyPath) as f:
             vocabulary = f.read().splitlines()
         return vocabulary
-
-    def _createFormatter(
-        self,
-        path: Optional[str],
-    ):
-        self._formatter = None
-        if path != None:
-            self._formatter = pyformatter.PyFormatter(
-                self._language.asFormatter(), path, b"", b"", dict()
-            )
 
     async def Recognize(
         self,
