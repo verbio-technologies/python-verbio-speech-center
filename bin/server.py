@@ -173,7 +173,7 @@ def _addRecognizerService(
             session,
             language,
             vocabularyPath,
-            FormatterFactory.createFormatter(formatterPath, language),
+            FormatterFactory.createFormatter(formatterPath, language) if formatterPath else None,
         ),
         server,
     )
