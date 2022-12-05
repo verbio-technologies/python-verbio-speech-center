@@ -169,7 +169,13 @@ def _addRecognizerService(
         providers=providers,
     )
     add_RecognizerServicer_to_server(
-        RecognizerService(session, language, vocabularyPath, FormatterFactory.createFormatter(formatterPath)), server
+        RecognizerService(
+            session,
+            language,
+            vocabularyPath,
+            FormatterFactory.createFormatter(formatterPath),
+        ),
+        server,
     )
 
 

@@ -6,5 +6,3 @@ class FormatterFactory:
     @staticmethod
     def createFormatter(model_path: str, language: Language) -> Formatter:
         return Formatter(language.asFormatter(), model_path, b"", b"", dict())
-
-

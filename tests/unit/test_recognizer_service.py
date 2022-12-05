@@ -34,7 +34,7 @@ DEFAULT_CORRECT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem s
 
 class MockFormatter:
     def __init__(self, correct_sentence: str):
-        self._correct_sentence = correct_sentence.split(' ')
+        self._correct_sentence = correct_sentence.split(" ")
 
     def classify(self, sentence: []) -> []:
         return self._correct_sentence
@@ -101,7 +101,9 @@ class MockOnnxSession(Session):
 class TestRecognizerService(unittest.TestCase):
     def testNoExistentVocabulary(self):
         with self.assertRaises(FileNotFoundError):
-            RecognizerService(MockOnnxSession(""), vocabularyPath="file_that_doesnt_exist")
+            RecognizerService(
+                MockOnnxSession(""), vocabularyPath="file_that_doesnt_exist"
+            )
 
     def testEmptyvocabularyPath(self):
         with self.assertRaises(FileNotFoundError):
@@ -506,7 +508,7 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(
             MockOnnxSession("", language=Language.ES),
             Language.ES,
-            formatter=MockFormatter(FORMATTED_SPANISH_MESSAGE)
+            formatter=MockFormatter(FORMATTED_SPANISH_MESSAGE),
         )
         request = RecognizeRequest(
             config=RecognitionConfig(

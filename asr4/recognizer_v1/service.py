@@ -52,7 +52,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self._createRuntime(session, vocabularyPath)
         self.logger = logging.getLogger("ASR4")
         if formatter is None:
-            self.logger.warning("No formatter provided. Text will be generated without format")
+            self.logger.warning(
+                "No formatter provided. Text will be generated without format"
+            )
 
     def _createRuntime(
         self,
