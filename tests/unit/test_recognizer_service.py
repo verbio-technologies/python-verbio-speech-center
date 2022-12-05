@@ -15,7 +15,6 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
-from asr4.recognizer_v1.types import WordInfo
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -100,14 +99,20 @@ class MockOnnxSession(Session):
 
 
 class TestRecognizerService(unittest.TestCase):
-    def testVocabulary(self):
-        labels = ["|", "<s>", "</s>", "<pad>"]
+    def testNoExistentVocabulary(self):
+        with self.assertRaises(FileNotFoundError):
+            RecognizerService(MockOnnxSession(""), vocabularyPath="file_that_doesnt_exist")
+
+    def testEmptyvocabularyPath(self):
         with self.assertRaises(FileNotFoundError):
             RecognizerService(MockOnnxSession(""), vocabularyPath="")
+
+    def testVocabulary(self):
+        labels = ["|", "<s>", "</s>", "<pad>"]
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             vocabularyPath = f.name
-            for l in labels:
-                f.write(f"{l}\n")
+            for label in labels:
+                f.write(f"{label}\n")
         service = RecognizerService(MockOnnxSession(""), vocabularyPath=vocabularyPath)
         self.assertEqual(service._runtime._decoder.labels, labels)
 
