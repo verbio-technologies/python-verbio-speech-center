@@ -16,6 +16,7 @@ from asr4.recognizer import SERVICES_NAMES
 from asr4.recognizer import OnnxSession
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import add_RecognizerServicer_to_server
+from asr4.recognizer import FormatterFactory
 
 from grpc_health.v1 import health
 from grpc_health.v1.health_pb2 import HealthCheckResponse
@@ -168,7 +169,15 @@ def _addRecognizerService(
         providers=providers,
     )
     add_RecognizerServicer_to_server(
-        RecognizerService(session, language, vocabularyPath, formatterPath), server
+        RecognizerService(
+            session,
+            language,
+            vocabularyPath,
+            FormatterFactory.createFormatter(formatterPath, language)
+            if formatterPath
+            else None,
+        ),
+        server,
     )
 
 

@@ -143,7 +143,8 @@ class OnnxRuntime(Runtime):
         normalized_y = F.softmax(torch.from_numpy(y[0]), dim=2)
         return self._decoder.decode(normalized_y)
 
-    def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
+    @staticmethod
+    def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
