@@ -15,7 +15,6 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
-from asr4.recognizer_v1.types import WordInfo
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -31,6 +30,14 @@ FORMATTED_SPANISH_MESSAGE: str = (
 )
 DEFAULT_PORTUGUESE_MESSAGE: str = "ola  estou de pe recebi uma mensagem sua"
 DEFAULT_CORRECT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
+
+
+class MockFormatter:
+    def __init__(self, correct_sentence: str):
+        self._correct_sentence = correct_sentence.split(" ")
+
+    def classify(self, sentence: []) -> []:
+        return self._correct_sentence
 
 
 class MockOnnxSession(Session):
@@ -92,14 +99,22 @@ class MockOnnxSession(Session):
 
 
 class TestRecognizerService(unittest.TestCase):
-    def testVocabulary(self):
-        labels = ["|", "<s>", "</s>", "<pad>"]
+    def testNoExistentVocabulary(self):
+        with self.assertRaises(FileNotFoundError):
+            RecognizerService(
+                MockOnnxSession(""), vocabularyPath="file_that_doesnt_exist"
+            )
+
+    def testEmptyvocabularyPath(self):
         with self.assertRaises(FileNotFoundError):
             RecognizerService(MockOnnxSession(""), vocabularyPath="")
+
+    def testVocabulary(self):
+        labels = ["|", "<s>", "</s>", "<pad>"]
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             vocabularyPath = f.name
-            for l in labels:
-                f.write(f"{l}\n")
+            for label in labels:
+                f.write(f"{label}\n")
         service = RecognizerService(MockOnnxSession(""), vocabularyPath=vocabularyPath)
         self.assertEqual(service._runtime._decoder.labels, labels)
 
@@ -493,7 +508,7 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(
             MockOnnxSession("", language=Language.ES),
             Language.ES,
-            formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
+            formatter=MockFormatter(FORMATTED_SPANISH_MESSAGE),
         )
         request = RecognizeRequest(
             config=RecognitionConfig(

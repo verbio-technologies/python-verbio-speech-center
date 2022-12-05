@@ -4,6 +4,7 @@ try:
     from .runtime import OnnxSession
     from .runtime import OnnxRuntime
     from .runtime import OnnxRuntimeResult
+    from .formatter import FormatterFactory
 except:
     pass
 
