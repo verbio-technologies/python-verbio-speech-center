@@ -5,6 +5,7 @@ try:
     from asr4.recognizer_v1 import OnnxSession
     from asr4.recognizer_v1 import OnnxRuntime
     from asr4.recognizer_v1 import OnnxRuntimeResult
+    from asr4.recognizer_v1.formatter import FormatterFactory
 except:
     pass
 
@@ -46,4 +47,5 @@ __all__ = (
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
+    "FormatterFactory"
 )
