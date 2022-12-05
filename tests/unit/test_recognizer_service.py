@@ -33,6 +33,14 @@ DEFAULT_PORTUGUESE_MESSAGE: str = "ola  estou de pe recebi uma mensagem sua"
 DEFAULT_CORRECT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
 
 
+class MockFormatter:
+    def __init__(self, correct_sentence: str):
+        self._correct_sentence = correct_sentence.split(' ')
+
+    def classify(self, sentence: []) -> []:
+        return self._correct_sentence
+
+
 class MockOnnxSession(Session):
     def __init__(
         self,
@@ -493,7 +501,7 @@ class TestRecognizerService(unittest.TestCase):
         service = RecognizerService(
             MockOnnxSession("", language=Language.ES),
             Language.ES,
-            formatterPath="/mnt/shared/squad2/projects/asr4models/formatter/format-model.es-es-1.1.0.fm",
+            formatter=MockFormatter(FORMATTED_SPANISH_MESSAGE)
         )
         request = RecognizeRequest(
             config=RecognitionConfig(
