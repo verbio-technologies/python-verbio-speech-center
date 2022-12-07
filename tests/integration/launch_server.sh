@@ -5,19 +5,20 @@ set -eo pipefail
 
 if [ $# -lt 3 ]
 then
-      echo "Usage: launch_server.sh <model_path> <dictionary_path> <language> [<with_gpu>]"
+      echo "Usage: launch_server.sh <model_path> <dictionary_path> <formatter_path> <language> [<with_gpu>]"
       exit -1
 fi
 
 MODEL=$1
 DICTIONARY=$2
-LANGUAGE=$3
+FORMATTER=$3
+LANGUAGE=$4
 
-if [ -z $4 ]
+if [ -z $5 ]
 then
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -j1 &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -j1 &
 else
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -j1 --gpu &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -j1 --gpu &
 fi
 
 export TIME=30
