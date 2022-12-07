@@ -33,4 +33,6 @@ class TestLanguage(unittest.TestCase):
         self.assertEqual(Language.getDefaultValue(), Language.EN_US)
 
     def testAvailableOptions(self):
-        self.assertEqual(Language.getValidOptions(), [Language.EN_US, Language.ES, Language.PT_BR])
+        self.assertEqual(
+            Language.getValidOptions(), [Language.EN_US, Language.ES, Language.PT_BR]
+        )
