@@ -5,6 +5,7 @@ try:
     from .runtime import OnnxRuntime
     from .runtime import OnnxRuntimeResult
     from .formatter import FormatterFactory
+    from .loggerService import Logger, LoggerQueue, LoggerService
 except:
     pass
 
@@ -48,4 +49,7 @@ __all__ = (
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
+    "Logger",
+    "LoggerQueue",
+    "LoggerService",
 )
