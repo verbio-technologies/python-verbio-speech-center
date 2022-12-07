@@ -11,7 +11,6 @@ from typing import Any, Dict, List, Optional, Union
 class MockOnnxSession(Session):
     def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
-        # TEST ONNX SESSION here need to add por testing.
         session_options = kwargs.pop("sess_options", None)
         providers = kwargs.pop("providers", None)
 
