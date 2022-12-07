@@ -28,3 +28,11 @@ class TestLanguage(unittest.TestCase):
         self.assertTrue(Language.check("PT_BR"))
         self.assertFalse(Language.check("INVALID"))
         self.assertFalse(Language.check(""))
+
+    def testDefault(self):
+        self.assertEqual(Language.getDefaultValue(), Language.EN_US)
+
+    def testAvailableOptions(self):
+        self.assertEqual(
+            Language.getValidOptions(), [Language.EN_US, Language.ES, Language.PT_BR]
+        )

@@ -27,7 +27,7 @@ class Session(abc.ABC):
         _path_or_bytes: Union[str, bytes],
         **kwargs,
     ) -> None:
-        raise NotImplementedError()
+        pass
 
     def run(
         self,
