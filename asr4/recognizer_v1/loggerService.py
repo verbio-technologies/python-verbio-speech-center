@@ -32,6 +32,7 @@ class LoggerService:
     _LOG_LEVELS = {
         "ERROR": logging.ERROR,
         "WARNING": logging.WARNING,
+        "WARN": logging.WARNING,
         "INFO": logging.INFO,
         "DEBUG": logging.DEBUG,
         "TRACE": logging.DEBUG,
