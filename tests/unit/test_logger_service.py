@@ -10,6 +10,7 @@ from asr4.recognizer_v1 import LoggerService, Logger, LoggerQueue
 class TestLoggerService(unittest.TestCase):
     def testServiceStops(self):
         service = LoggerService("INFO", "TestASR4")
+        service.configureGlobalLogger()
         service.stop()
 
     def testDefaults(self):
@@ -42,3 +43,15 @@ class TestLoggerService(unittest.TestCase):
         record = queue.get(timeout=5)
         self.assertEqual(record.name, loggerName)
         self.assertEqual(record.message, message)
+
+    def testValidateLogLevel(self):
+        self.assertEqual(LoggerService.getDefaultLogLevel(), "ERROR")
+        loggerService = LoggerService()
+        self.assertEqual(loggerService.validateLogLevel("INFO"), logging.INFO)
+        self.assertEqual(loggerService.validateLogLevel("WARNING"), logging.WARNING)
+        self.assertEqual(loggerService.validateLogLevel("WARN"), logging.WARNING)
+        self.assertEqual(loggerService.validateLogLevel("xxxxx"), loggerService.validateLogLevel(LoggerService.getDefaultLogLevel()))
+        loggerService.stop()
+
+    def testValidOptions(self):
+        self.assertEqual(LoggerService.getLogLevelOptions(), ['ERROR', 'WARNING', 'WARN', 'INFO', 'DEBUG', 'TRACE'])
