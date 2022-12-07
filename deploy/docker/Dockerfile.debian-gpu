@@ -1,4 +1,5 @@
-FROM docker.registry.verbio.com/engineering/devops/python-gpu:3.9-slim
+#FROM docker.registry.verbio.com/engineering/devops/python-gpu:3.9-slim
+FROM docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
 
 ARG VERSION
 ARG LANGUAGE
