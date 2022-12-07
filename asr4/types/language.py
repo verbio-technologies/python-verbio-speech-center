@@ -22,3 +22,11 @@ class Language(Enum):
 
     def asFormatter(self) -> str:
         return self.value.lower()
+
+    @staticmethod
+    def getValidOptions():
+        return [Language.EN_US, Language.ES, Language.PT_BR]
+
+    @staticmethod
+    def getDefaultValue():
+        return Language.EN_US
