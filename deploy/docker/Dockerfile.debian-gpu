@@ -20,8 +20,7 @@ ENV MAKEFLAGS="-j4"
 ENV LANGUAGE=${LANGUAGE}
 ENV LOG_LEVEL=${LOG_LEVEL}
 
-#RUN python -m pip install nvidia-tensorrt
-RUN python -m pip install asr4-$VERSION-py3-none-any.whl[server,gpu]
-RUN python -m pip uninstall cmake ninja -y
+RUN . /opt/intel/oneapi/setvars.sh && python -m pip install asr4-$VERSION-py3-none-any.whl[server,gpu]
+RUN . /opt/intel/oneapi/setvars.sh && python -m pip uninstall cmake ninja -y
 
 CMD [ "/init.sh"]
