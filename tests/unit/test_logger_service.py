@@ -50,8 +50,14 @@ class TestLoggerService(unittest.TestCase):
         self.assertEqual(loggerService.validateLogLevel("INFO"), logging.INFO)
         self.assertEqual(loggerService.validateLogLevel("WARNING"), logging.WARNING)
         self.assertEqual(loggerService.validateLogLevel("WARN"), logging.WARNING)
-        self.assertEqual(loggerService.validateLogLevel("xxxxx"), loggerService.validateLogLevel(LoggerService.getDefaultLogLevel()))
+        self.assertEqual(
+            loggerService.validateLogLevel("xxxxx"),
+            loggerService.validateLogLevel(LoggerService.getDefaultLogLevel()),
+        )
         loggerService.stop()
 
     def testValidOptions(self):
-        self.assertEqual(LoggerService.getLogLevelOptions(), ['ERROR', 'WARNING', 'WARN', 'INFO', 'DEBUG', 'TRACE'])
+        self.assertEqual(
+            LoggerService.getLogLevelOptions(),
+            ["ERROR", "WARNING", "WARN", "INFO", "DEBUG", "TRACE"],
+        )
