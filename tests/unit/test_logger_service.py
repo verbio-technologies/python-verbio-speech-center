@@ -1,7 +1,6 @@
-import multiprocessing
+from multiprocessing import Queue
 import unittest
 import logging
-import re
 
 
 from asr4.recognizer_v1 import LoggerService, Logger, LoggerQueue
@@ -17,7 +16,7 @@ class TestLoggerService(unittest.TestCase):
         self.assertEqual(LoggerService.getDefaultLogLevel(), "ERROR")
 
     def testLogger(self):
-        queue = multiprocessing.Queue(-1)
+        queue = Queue(-1)
         loggerName = "TestASR4"
         message = "message"
         logger = Logger(loggerName, logging.INFO, queue)
@@ -32,7 +31,7 @@ class TestLoggerService(unittest.TestCase):
         self.assertEqual(0, queue.qsize())
 
     def testLoggerQueue(self):
-        queue = multiprocessing.Queue(-1)
+        queue = Queue(-1)
         loggerName = "TestASR4"
         message = "message"
         loggerQueue = LoggerQueue(loggerName, logging.INFO, queue)
