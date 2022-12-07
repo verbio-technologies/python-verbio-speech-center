@@ -36,12 +36,13 @@ class LoggerService:
         "DEBUG": logging.DEBUG,
         "TRACE": logging.DEBUG,
     }
-    _LOG_LEVEL = logging.ERROR
+    _LOG_LEVEL = "ERROR"
     _LOGGER_NAME = "ASR4"
 
     def __init__(
         self, log_level: str = _LOG_LEVEL, logger_name: str = _LOGGER_NAME
     ) -> None:
+        self._stopSignal = multiprocessing.Event()
         self._logger_name = logger_name
         self._log_level = self.validateLogLevel(log_level)
         self._queue = multiprocessing.Queue(-1)
@@ -57,15 +58,20 @@ class LoggerService:
     def getLogger(self):
         return self.getQueue().getLogger()
 
+    def stop(self):
+        self._stopSignal.set()
+        self._listener.join(5)
+        self._listener.kill()
+
     def configureGlobalLogger(self):
         LoggerService.configureLogger(self._log_level)
 
     @staticmethod
-    def getLogLevelOptions():
+    def getLogLevelOptions() -> []:
         return list(LoggerService._LOG_LEVELS.keys())
 
     @staticmethod
-    def getDefaultLogLevel():
+    def getDefaultLogLevel() -> str:
         return LoggerService._LOG_LEVEL
 
     @staticmethod
@@ -79,16 +85,17 @@ class LoggerService:
         )
 
     def _spawnService(self):
+        self._stopSignal = multiprocessing.Event()
         self._listener = multiprocessing.Process(
             target=LoggerService._server_logger_listener,
-            args=(self._queue, self._log_level),
+            args=(self._queue, self._log_level, self._stopSignal),
         )
         self._listener.start()
 
     @staticmethod
-    def _server_logger_listener(queue, level):
+    def _server_logger_listener(queue: multiprocessing.Queue, level: int, stopSignal: multiprocessing.Event()):
         LoggerService.configureLogger(level)
-        while True:
+        while not stopSignal.is_set() or not queue.empty():
             try:
                 record = queue.get()
                 if record is None:
@@ -96,7 +103,7 @@ class LoggerService:
                 logger = logging.getLogger(record.name)
                 logger.handle(record)
             except Exception:
-                print("Couldn't write log", file=sys.stderr)
+                print("[ERROR] Couldn't write log", file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
 
     def validateLogLevel(self, loglevel: str) -> int:
