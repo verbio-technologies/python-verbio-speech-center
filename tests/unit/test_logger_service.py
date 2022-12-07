@@ -42,5 +42,3 @@ class TestLoggerService(unittest.TestCase):
         record = queue.get(timeout=5)
         self.assertEqual(record.name, loggerName)
         self.assertEqual(record.message, message)
-
-

@@ -93,7 +93,9 @@ class LoggerService:
         self._listener.start()
 
     @staticmethod
-    def _server_logger_listener(queue: multiprocessing.Queue, level: int, stopSignal: multiprocessing.Event()):
+    def _server_logger_listener(
+        queue: multiprocessing.Queue, level: int, stopSignal: multiprocessing.Event()
+    ):
         LoggerService.configureLogger(level)
         while not stopSignal.is_set() or not queue.empty():
             try:
