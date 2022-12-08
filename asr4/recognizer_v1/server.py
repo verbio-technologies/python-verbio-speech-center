@@ -41,7 +41,10 @@ class Server:
         self._logger.info("Spawning server process.")
         self._server = multiprocessing.Process(
             target=Server._asyncRunServer,
-            args=(self.loggerService.getQueue(), self.createGRpcServer(self._configuration))
+            args=(
+                self.loggerService.getQueue(),
+                self.createGRpcServer(self._configuration),
+            ),
         )
         self._server.start()
         self._logger.info("Server started")
@@ -51,9 +54,7 @@ class Server:
             self._server.join()
 
     @staticmethod
-    def _asyncRunServer(
-            logsQueue: LoggerQueue, gRpcServer: grpc.aio.server
-    ) -> None:
+    def _asyncRunServer(logsQueue: LoggerQueue, gRpcServer: grpc.aio.server) -> None:
         logsQueue.configureGlobalLogger()
         logger = logsQueue.getLogger()
         logger.info("Running asyncio server")
@@ -74,11 +75,15 @@ class Server:
             futures.ThreadPoolExecutor(max_workers=configuration.numberOfListeners),
             options=(("grpc.so_reuseport", 1),),
         )
-        Server._addRecognizerService(grpcServer, configuration.getServiceConfiguration())
+        Server._addRecognizerService(
+            grpcServer, configuration.getServiceConfiguration()
+        )
         Server._addHealthCheckService(grpcServer, configuration.numberOfListeners)
         grpcServer.add_insecure_port(configuration.bindAddress)
         self._logger.info(
-            "Creating server with %d listeners, listening on %s", configuration.numberOfListeners, configuration.bindAddress
+            "Creating server with %d listeners, listening on %s",
+            configuration.numberOfListeners,
+            configuration.bindAddress,
         )
         return grpcServer
 
