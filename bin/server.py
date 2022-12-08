@@ -1,11 +1,12 @@
 import os, sys, traceback
 
+import multiprocessing
+
 import grpc
 import asyncio
 import logging
 import logging.handlers
 import argparse
-import multiprocessing
 import time
 from concurrent import futures
 
@@ -273,7 +274,7 @@ def validateLogLevel(args):
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn", force=True)
     args = _parseArguments()
     validateLogLevel(args)
     if not Language.check(args.language):
