@@ -26,9 +26,9 @@ from .types import add_RecognizerServicer_to_server
 
 try:
     from .service import RecognizerService
-except:
-    pass
-
+    from .server import Server, ServerConfiguration
+except Exception as e:
+    print("Not importing Recognizer Service, will not be available (%s)", str(e))
 
 __all__ = (
     "SERVICES_NAMES",
@@ -46,6 +46,8 @@ __all__ = (
     "RecognitionResource",
     "RecognizerStub",
     "RecognizerServicer",
+    "Server",
+    "ServerConfiguration",
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
