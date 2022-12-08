@@ -2,7 +2,6 @@
 
 set -eo pipefail
 
-
 if [ $# -lt 3 ]
 then
       echo "Usage: launch_server.sh <model_path> <dictionary_path> <formatter_path> <language> [<with_gpu>]"
@@ -11,8 +10,8 @@ fi
 
 MODEL=$1
 DICTIONARY=$2
-FORMATTER=$(ls $3/format-model.${LANGUAGE}*)
 LANGUAGE=$4
+FORMATTER=$(ls $3/format-model.${LANGUAGE}*)
 CUDA_VISIBLE_DEVICES=1
 
 if [ -z $5 ]
