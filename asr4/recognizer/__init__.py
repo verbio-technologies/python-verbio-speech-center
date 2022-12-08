@@ -24,8 +24,9 @@ from asr4.recognizer_v1 import Language
 try:
     from asr4.recognizer_v1 import RecognizerService
     from asr4.recognizer_v1 import add_RecognizerServicer_to_server
-except:
-    pass
+    from asr4.recognizer_v1 import Server, ServerConfiguration
+except Exception as e:
+    print("Not importing Recognizer Service, will not be available (%S)", str(e))
 
 
 __all__ = (
@@ -44,6 +45,8 @@ __all__ = (
     "RecognitionResource",
     "RecognizerStub",
     "RecognizerServicer",
+    "Server",
+    "ServerConfiguration",
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
