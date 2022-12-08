@@ -1,5 +1,4 @@
-#FROM docker.registry.verbio.com/engineering/devops/python-gpu:3.9-slim
-FROM docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
+FROM docker.registry.verbio.com/engineering/devops/python-gpu:3.9-slim
 
 ARG VERSION
 ARG LANGUAGE
@@ -19,9 +18,8 @@ COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 ENV MAKEFLAGS="-j4"
 ENV LANGUAGE=${LANGUAGE}
 ENV LOG_LEVEL=${LOG_LEVEL}
-ENV ASR4_VERSION=${VERSION}
 
-RUN . /opt/intel/oneapi/setvars.sh && python -m pip install asr4-${ASR4_VERSION}-py3-none-any.whl[server,gpu]
-RUN . /opt/intel/oneapi/setvars.sh && python -m pip uninstall cmake ninja -y
+RUN python -m pip install asr4-${VERSION}-py3-none-any.whl[server,gpu]
+RUN python -m pip uninstall cmake ninja -y
 
 CMD [ "/init.sh"]

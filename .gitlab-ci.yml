@@ -20,7 +20,6 @@ variables:
   DOCKER_SPEECH_CENTER_IMAGE_NAME: docker.registry.verbio.com/voice-center/testing/asr4
   DOCKER_IMAGE_VERSION: ${CI_COMMIT_TAG}
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
-  FORMATTER_VERSION: 1.0.1
 
 lint:python:
   stage: lint
@@ -93,7 +92,7 @@ functional-testing:endpoints:
     - mv ghz /bin
     - pip install .[client,server,cpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${VERSION}.dict.ltr.txt en-us
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE
   script:
     - cd tests/functional/data
     - bash ../streaming_tests.sh
@@ -116,7 +115,7 @@ integration-testing:cpu:
   before_script:
     - pip install .[client,server,cpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/format-model.${LANGUAGE}-${FORMATTER_VERSION}.fm $LANGUAGE 0
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 0
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
 
@@ -136,7 +135,7 @@ integration-testing:gpu:
     - . /opt/intel/oneapi/setvars.sh
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/format-model.${LANGUAGE}-${FORMATTER_VERSION}.fm $LANGUAGE 1
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
     - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
     - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
     # Install the remaining testing dependencies
