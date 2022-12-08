@@ -92,7 +92,7 @@ functional-testing:endpoints:
     - mv ghz /bin
     - pip install .[client,server,cpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
   script:
     - cd tests/functional/data
     - bash ../streaming_tests.sh
