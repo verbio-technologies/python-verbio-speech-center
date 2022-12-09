@@ -1,205 +1,36 @@
-import os, sys, traceback
+import os
 
+import argparse
 import multiprocessing
 
-import grpc
-import asyncio
-import logging
-import logging.handlers
-import argparse
-import time
-from concurrent import futures
-
-from typing import Optional
-
 from asr4.recognizer import Language
-from asr4.recognizer import SERVICES_NAMES
-from asr4.recognizer import OnnxSession
-from asr4.recognizer import RecognizerService, RecognitionServiceConfiguration
-from asr4.recognizer import add_RecognizerServicer_to_server
-from asr4.recognizer import FormatterFactory
-
-from grpc_health.v1 import health
-from grpc_health.v1.health_pb2 import HealthCheckResponse
-from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
+from asr4.recognizer import LoggerService
+from asr4.recognizer import Server, ServerConfiguration
 
 
-_PROCESS_COUNT = multiprocessing.cpu_count()
-_LOG_LEVELS = {
-    "ERROR": logging.ERROR,
-    "WARNING": logging.WARNING,
-    "INFO": logging.INFO,
-    "DEBUG": logging.DEBUG,
-    "TRACE": logging.DEBUG,
-}
-_LOG_LEVEL = "ERROR"
-_LOGGER_NAME = "ASR4"
-
-
-def server_logger_listener(queue, verbose):
-    server_logger_configurer(verbose)
-    while True:
-        try:
-            record = queue.get()
-            if record is None:
-                break
-            logger = logging.getLogger(record.name)
-            logger.handle(record)
-        except Exception:
-            print("Couldn't write log", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-
-
-def server_logger_configurer(level):
-    logging.Formatter.converter = time.gmtime
-    logging.basicConfig(
-        level=_LOG_LEVELS.get(level, logging.INFO),
-        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+def main():
+    multiprocessing.set_start_method("spawn", force=True)
+    args = _parseArguments()
+    logService = LoggerService(args.verbose)
+    logService.configureGlobalLogger()
+    serve(ServerConfiguration(args), logService)
+    logService.stop()
 
 
 def serve(
-    args: argparse.Namespace,
+    configuration,
+    loggerService: LoggerService,
 ) -> None:
-    queue = multiprocessing.Queue(-1)
-    loglevel = args.verbose
-    listener = multiprocessing.Process(
-        target=server_logger_listener, args=(queue, loglevel)
-    )
-    listener.start()
-    _log_server_configurer(queue, loglevel)
-    logger = logging.getLogger(_LOGGER_NAME)
-    logger.info("Binding to '%s'", args.bindAddress)
+    logger = loggerService.getLogger()
+    servers = []
+    for i in range(configuration.numberOfServers):
+        logger.info("Starting sever %s", i)
+        server = Server(configuration, loggerService)
+        server.spawn()
+        servers.append(server)
 
-    workers = []
-    providers = ["CPUExecutionProvider"]
-    if args.gpu:
-        providers = ["CUDAExecutionProvider"] + providers
-    for _ in range(args.jobs):
-        worker = multiprocessing.Process(
-            target=_asyncRunServer,
-            args=(
-                queue,
-                args.bindAddress,
-                args.model,
-                providers,
-                Language.parse(args.language),
-                args.vocabulary,
-                args.formatter,
-                args.jobs,
-                loglevel,
-            ),
-        )
-        worker.start()
-        workers.append(worker)
-    for worker in workers:
-        worker.join()
-
-
-def _asyncRunServer(
-    queue: multiprocessing.Queue,
-    bindAddress: str,
-    model: str,
-    providers: str,
-    language: Language,
-    vocabulary: Optional[str],
-    formatter: Optional[str],
-    jobs: int,
-    loglevel: int,
-) -> None:
-    asyncio.run(
-        _runServer(
-            queue,
-            bindAddress,
-            model,
-            providers,
-            language,
-            vocabulary,
-            formatter,
-            jobs,
-            loglevel,
-        )
-    )
-
-
-def _log_server_configurer(queue, level):
-    h = logging.handlers.QueueHandler(queue)
-    root = logging.getLogger(_LOGGER_NAME)
-    root.addHandler(h)
-    root.setLevel(_LOG_LEVELS.get(level, logging.INFO))
-
-
-async def _runServer(
-    queue: multiprocessing.Queue,
-    bindAddress: str,
-    model: str,
-    providers: str,
-    language: Language,
-    vocabularyPath: Optional[str],
-    formatterPath: Optional[str],
-    jobs: int,
-    loglevel: int,
-) -> None:
-    _log_server_configurer(queue, loglevel)
-    server = grpc.aio.server(
-        futures.ThreadPoolExecutor(max_workers=jobs),
-        options=(("grpc.so_reuseport", 1),),
-    )
-    _addRecognizerService(
-        server, model, providers, language, vocabularyPath, formatterPath
-    )
-    _addHealthCheckService(server, jobs)
-    server.add_insecure_port(bindAddress)
-    logger = logging.getLogger(_LOGGER_NAME)
-    logger.info(f"Server listening {bindAddress}")
-    await server.start()
-    await server.wait_for_termination()
-
-
-def __createConfiguration(formatterPath, language, model, vocabularyPath):
-    configuration = RecognitionServiceConfiguration()
-    configuration.language = language
-    configuration.formatterModelPath = formatterPath
-    configuration.vocabulary = vocabularyPath
-    configuration.model = model
-    return configuration
-
-
-def _addRecognizerService(
-    server: grpc.aio.Server,
-    model: str,
-    providers: str,
-    language: Language,
-    vocabularyPath: Optional[str],
-    formatterPath: Optional[str],
-) -> None:
-    add_RecognizerServicer_to_server(
-        RecognizerService(
-            __createConfiguration(formatterPath, language, model, vocabularyPath),
-            FormatterFactory.createFormatter(formatterPath, language)
-            if formatterPath
-            else None,
-        ),
-        server,
-    )
-
-
-def _addHealthCheckService(
-    server: grpc.aio.Server,
-    jobs: int,
-) -> None:
-    healthServicer = health.HealthServicer(
-        experimental_non_blocking=True,
-        experimental_thread_pool=futures.ThreadPoolExecutor(max_workers=jobs),
-    )
-    _markAllServicesAsHealthy(healthServicer)
-    add_HealthServicer_to_server(healthServicer, server)
-
-
-def _markAllServicesAsHealthy(healthServicer: health.HealthServicer) -> None:
-    for service in SERVICES_NAMES + [health.SERVICE_NAME]:
-        healthServicer.set(service, HealthCheckResponse.SERVING)
+    for server in servers:
+        server.join()
 
 
 def _parseArguments() -> argparse.Namespace:
@@ -247,18 +78,35 @@ def _parseArguments() -> argparse.Namespace:
         help="Hostname address to bind the server to.",
     )
     parser.add_argument(
-        "-j",
-        "--jobs",
+        "-s",
+        "--servers",
         type=int,
-        dest="jobs",
-        default=_PROCESS_COUNT,
-        help="Number of parallel workers; if not specified, defaults to CPU count.",
+        dest="servers",
+        default=1,
+        help="The number of inference servers to be run. Each server will load a whole new inference system.",
+    )
+    parser.add_argument(
+        "-L",
+        "--listeners",
+        type=int,
+        dest="listeners",
+        default=2,
+        help="Number of gRPC listeners that a server will load. All listeners share the same inference server",
+    )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        dest="workers",
+        default=2,
+        help="The number of workers that a single listener can use to resolve a single request.",
     )
     parser.add_argument(
         "-v",
         "--verbose",
-        choices=list(_LOG_LEVELS.keys()),
-        default=os.environ.get("LOG_LEVEL", _LOG_LEVEL),
+        type=str,
+        choices=LoggerService.getLogLevelOptions(),
+        default=os.environ.get("LOG_LEVEL", LoggerService.getDefaultLogLevel()),
         help="Log levels. By default reads env variable LOG_LEVEL.",
     )
     return parser.parse_args()
@@ -277,9 +125,4 @@ def validateLogLevel(args):
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method("spawn", force=True)
-    args = _parseArguments()
-    validateLogLevel(args)
-    if not Language.check(args.language):
-        raise ValueError(f"Invalid language '{args.language}'")
-    serve(args)
+    main()
