@@ -1,11 +1,12 @@
 import os, sys, traceback
 
+import multiprocessing
+
 import grpc
 import asyncio
 import logging
 import logging.handlers
 import argparse
-import multiprocessing
 import time
 from concurrent import futures
 
@@ -16,6 +17,7 @@ from asr4.recognizer import SERVICES_NAMES
 from asr4.recognizer import OnnxSession
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import add_RecognizerServicer_to_server
+from asr4.recognizer import FormatterFactory
 
 from grpc_health.v1 import health
 from grpc_health.v1.health_pb2 import HealthCheckResponse
@@ -168,7 +170,15 @@ def _addRecognizerService(
         providers=providers,
     )
     add_RecognizerServicer_to_server(
-        RecognizerService(session, language, vocabularyPath, formatterPath), server
+        RecognizerService(
+            session,
+            language,
+            vocabularyPath,
+            FormatterFactory.createFormatter(formatterPath, language)
+            if formatterPath
+            else None,
+        ),
+        server,
     )
 
 
@@ -264,7 +274,7 @@ def validateLogLevel(args):
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn", force=True)
     args = _parseArguments()
     validateLogLevel(args)
     if not Language.check(args.language):

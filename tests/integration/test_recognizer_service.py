@@ -48,7 +48,7 @@ class TestRecognizerUtils(object):
             universal_newlines=True,
         )
 
-    def runRecognition(self, audioPath: str, language: str) -> Popen:
+    def launchRecognitionProcess(self, audioPath: str, language: str) -> Popen:
         return self._runRecognition(language, audioPath=audioPath)
 
     def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
@@ -64,14 +64,16 @@ class TestRecognizerUtils(object):
     ) -> Popen:
         return self._runRecognition(language, guiPath=guiPath, output=output)
 
-    def checkStatus(self, status: int, stderr: str) -> None:
+    @staticmethod
+    def checkStatus(status: int, stderr: str) -> None:
         try:
             assert status == 0
         except:
             print(stderr, file=sys.stderr)
             exit(-1)
 
-    def evaluateHypothesis(self, reference: str, hypothesis: str) -> None:
+    @staticmethod
+    def evaluateHypothesis(reference: str, hypothesis: str) -> None:
         measures = jiwer.compute_measures(reference, hypothesis)
         cer = jiwer.cer(reference, hypothesis)
         print("\nHypothesis =", hypothesis)
@@ -118,33 +120,15 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self._output = self.datadir + "/output"
 
     def testRecognizeRequest(self):
-        process = self.runRecognition(self._audio, self._language)
-        status = process.wait(timeout=900)
-        self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis = match.group(match.lastindex)
-
-        assert len(hypothesis) > 1
-
-        if match != None and match.lastindex != None:
-            self.evaluateHypothesis(self._reference, hypothesis)
+        hypothesis = self._recognizeAudio(self._audio, self._language)
+        self.assertGreater(len(hypothesis), 1)
+        self.evaluateHypothesis(self._reference, hypothesis)
 
     def testRecognitionAudioDifferentSampleRate(self):
-        process = self.runRecognition(self._audio8k, self._language)
-        status = process.wait(timeout=900)
-        self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis8k = match.group(match.lastindex)
-        process = self.runRecognition(self._audio16k, self._language)
-        status = process.wait(timeout=900)
-        self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis16k = match.group(match.lastindex)
-
-        assert hypothesis8k == hypothesis16k
+        self.assertEqual(
+            self._recognizeAudio(self._audio8k, self._language),
+            self._recognizeAudio(self._audio16k, self._language),
+        )
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)
@@ -154,17 +138,19 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         output = process.stdout.read()
         hypothesis = re.findall('RecognizeRequest first alternative: "(.+?)"', output)
 
-        assert len(hypothesis) == 3
-        assert len(hypothesis[0]) > 0
-        assert len(hypothesis[1]) > 0
-        assert len(hypothesis[2]) > 0
+        self.assertEqual(len(hypothesis), 3)
+        self.assertGreater(len(hypothesis[0]), 0)
+        self.assertGreater(len(hypothesis[1]), 0)
+        self.assertGreater(len(hypothesis[2]), 0)
 
     def testRecognizeRequestWithOtherLanguages(self):
         currentLanguage = Language.parse(self._language)
         for otherLanguage in Language:
             if otherLanguage != currentLanguage:
-                process = self.runRecognition(self._audio, otherLanguage.value)
-                _status = process.wait(timeout=900)
+                process = self.launchRecognitionProcess(
+                    self._audio, otherLanguage.value
+                )
+                _status = process.wait(timeout=100)
                 output = process.stdout.read()
                 match = re.search(
                     f"Invalid language '{otherLanguage}'. Only '{currentLanguage}' is supported.",
@@ -173,8 +159,10 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 self.assertIsNotNone(match)
 
     def testEmptyRecognizeRequest(self):
-        process = self.runRecognition(f"{self.datadir}/empty.wav", self._language)
-        status = process.wait(timeout=900)
+        process = self.launchRecognitionProcess(
+            f"{self.datadir}/empty.wav", self._language
+        )
+        status = process.wait(timeout=100)
         self.assertEqual(status, 1)
 
     def testEmptyGuiRecognizeRequest(self):
@@ -228,3 +216,15 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             f"{self._output }/test_{self._language}_results.tsv"
         ), "analysis file does not exist"
         self.removeOutputContents()
+
+    def _recognizeAudio(self, audio, language):
+        process = self.launchRecognitionProcess(audio, language)
+        status = process.wait(timeout=100)
+        self.checkStatus(status, process.stderr.read())
+        output = process.stdout.read()
+        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
+        return (
+            match.group(match.lastindex)
+            if match is not None and match.lastindex is not None
+            else ""
+        )
