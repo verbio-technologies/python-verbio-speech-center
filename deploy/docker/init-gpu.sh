@@ -1,7 +1,5 @@
 #!/bin/bash
 
-. /opt/intel/oneapi/setvars.sh
-
 workers="${WORKERS:-1}"
 port="${PORT:-50051}"
 LOG_LEVEL=${LOG_LEVEL:-ERROR}
