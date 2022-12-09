@@ -6,8 +6,9 @@ import unittest
 import multiprocessing
 from concurrent import futures
 
+from asr4.recognizer import Language
 from asr4.recognizer import RecognizerStub
-from asr4.recognizer import RecognizerService
+from asr4.recognizer import RecognizerService, RecognitionServiceConfiguration
 from asr4.recognizer import RecognizeRequest
 from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognitionConfig
@@ -15,7 +16,12 @@ from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import add_RecognizerServicer_to_server
 
-from tests.unit.test_recognizer_service import MockOnnxSession
+from tests.unit.test_recognizer_service import (
+    MockOnnxSession,
+    MockArguments,
+    MockRecognitionServiceConfiguration,
+    MockFormatter,
+)
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
@@ -28,7 +34,10 @@ async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=1),
     )
-    add_RecognizerServicer_to_server(RecognizerService(MockOnnxSession("")), server)
+    configuration = MockRecognitionServiceConfiguration(MockArguments())
+    configuration.language = Language.EN_US
+    configuration.vocabulary = None
+    add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
     await server.start()
     event.set()
