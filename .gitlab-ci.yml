@@ -92,7 +92,7 @@ functional-testing:endpoints:
     - mv ghz /bin
     - pip install .[client,server,cpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${VERSION}.dict.ltr.txt en-us
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
   script:
     - cd tests/functional/data
     - bash ../streaming_tests.sh
@@ -115,28 +115,31 @@ integration-testing:cpu:
   before_script:
     - pip install .[client,server,cpu,test]
     - export VERSION=$(cat VERSION | xargs echo -n)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 0
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
 
-#integration-testing:gpu:
-#  extends: .template:integration-testing
-#  stage: test
-#  image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust-torch-gpu:latest
-#  only:
-#    - tags
-#    - branches
-#    - web
-#    - master
-#  tags:
-#    - gpu
-#  before_script:
-#    - source ~/.bashrc
-#    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/root/miniconda3/lib/ -liomp5" pip install .[client,server,gpu,test]
-#    - export VERSION=$(cat VERSION | xargs echo -n)
-#    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt $LANGUAGE 1
-#    # Install the remaining testing dependencies
-#    - !reference [.template:integration-testing, before_script]
+integration-testing:gpu:
+  extends: .template:integration-testing
+  stage: test
+  image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
+  only:
+    - tags
+    - branches
+    - web
+    - master
+  tags:
+    - gpu
+  allow_failure: true
+  before_script:
+    - . /opt/intel/oneapi/setvars.sh
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
+    - export VERSION=$(cat VERSION | xargs echo -n)
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
+    - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
+    - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
+    # Install the remaining testing dependencies
+    - !reference [.template:integration-testing, before_script]
 
 
 build:python:
@@ -232,10 +235,12 @@ testing:integration-testing:gpu:
     # Launch ASR4 server on GPU
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
-    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LANGUAGE=${LANGUAGE} ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
+    - nvidia-smi
+    - docker logs asr4-gpu-${LANGUAGE}
     - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
 
 

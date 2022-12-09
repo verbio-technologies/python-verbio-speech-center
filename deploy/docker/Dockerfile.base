@@ -1,63 +1,37 @@
-FROM docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
-
-RUN apt-get update && apt-get install -y git build-essential libxml2 zstd wget
+ARG PYTHON_VERSION=3.9
+FROM docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python:${PYTHON_VERSION}
 
 # Install CUDA 11.7.0
+
+RUN apt-get update && apt-get install libxml2 zstd -y
 
 RUN wget https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux.run && \
     sh cuda_11.7.0_515.43.04_linux.run --silent --toolkit && \
     rm -rf cuda_11.7.0_515.43.04_linux.run
 
-# Install CuDNN 8.4.1
-
 RUN mkdir cudnn && \
     cd cudnn && \
-    wget https://europe.mirror.pkgbuild.com/community/os/x86_64/cudnn-8.5.0.96-1-x86_64.pkg.tar.zst && \
-    tar --use-compress-program=unzstd -xvf cudnn-8.5.0.96-1-x86_64.pkg.tar.zst && \
+    wget https://europe.mirror.pkgbuild.com/community/os/x86_64/cudnn-8.6.0.163-1-x86_64.pkg.tar.zst && \
+    tar --use-compress-program=unzstd -xvf cudnn-8.6.0.163-1-x86_64.pkg.tar.zst && \
     mv usr/include/* /usr/local/cuda/include/ && \
     mv usr/lib/* /usr/local/cuda/lib64/ && \
     cd .. && \
     rm -rf cudnn
 
-# Install Miniconda3
+COPY TensorRT-8.5.1.7.Linux.x86_64-gnu.cuda-11.8.cudnn8.6.tar.gz /
 
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash && \
-    bash Miniconda3-latest-Linux-x86_64.sh -b && \
-    rm -rf Miniconda3-latest-Linux-x86_64.sh
+ARG PYTHON_VERSION
 
-RUN rm -rf ~/.bashrc
-RUN /root/miniconda3/bin/conda init bash
-SHELL ["/bin/bash", "--login", "-c"]
+RUN . /opt/intel/oneapi/setvars.sh && \
+    tar xzvf TensorRT-8.5.1.7.Linux.x86_64-gnu.cuda-11.8.cudnn8.6.tar.gz && \
+    python -m pip install TensorRT-8.5.1.7/python/tensorrt-8.5.1.7-cp$(echo ${PYTHON_VERSION} | tr -d '.')-none-linux_x86_64.whl && \
+    mv TensorRT-8.5.1.7/targets/x86_64-linux-gnu/bin/* /bin/ && \
+    mv TensorRT-8.5.1.7/targets/x86_64-linux-gnu/lib/* /usr/lib/x86_64-linux-gnu/ && \
+    mv TensorRT-8.5.1.7/targets/x86_64-linux-gnu/include/Nv* /usr/local/include/ && \
+    rm -rf TensorRT-8.5.1.7 TensorRT-8.5.1.7.Linux.x86_64-gnu.cuda-11.8.cudnn8.6.tar.gz
 
-
-# Add Intel Conda channel to download MKL
-
-RUN conda config --add channels intel
-
-RUN conda install python=3.8 intelpython=2022.1.0 -y
-
-RUN conda install astunparse numpy ninja pyyaml setuptools cmake cffi typing_extensions future six requests dataclasses mkl mkl-include -y
-
-RUN conda install -c pytorch magma-cuda117 -y
-
-# Build PyTorch from scratch
+RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV CUDACXX=/usr/local/cuda/bin/nvcc
 
-RUN git clone --recursive https://github.com/pytorch/pytorch -b 1_12_torchgen_update && \
-    cd pytorch && \
-    git submodule sync && \
-    git submodule update --init --recursive --jobs 0 && \
-    export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"} && \
-    CMAKE_CUDA_COMPILER=$CUDACXX python setup.py install && \
-    cd .. && \
-    rm -rf pytorch
 
-RUN git clone https://github.com/microsoft/onnxruntime.git && cd onnxruntime && \
-    pip install packaging && \
-    ./build.sh --cuda_home /usr/local/cuda --cudnn_home /usr/local/cuda/lib64/ --use_cuda --config Release --build_wheel --update --build --parallel --cmake_extra_defines ONNXRUNTIME_VERSION=$(cat ./VERSION_NUMBER) 'CMAKE_CUDA_ARCHITECTURES=52;60;61;70;75;86' && \
-    pip install ./build/Linux/Release/dist/*whl && \
-    rm -rf onnxruntime
-
-WORKDIR /
