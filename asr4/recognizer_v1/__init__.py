@@ -6,8 +6,11 @@ try:
     from .runtime import OnnxRuntimeResult
     from .formatter import FormatterFactory
     from .loggerService import Logger, LoggerQueue, LoggerService
-except:
-    pass
+except Exception as e:
+    print(
+        "Unable to import runtime moduels, so inference will not be available. (%s)",
+        str(e),
+    )
 
 from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
@@ -26,6 +29,7 @@ from .types import add_RecognizerServicer_to_server
 
 try:
     from .service import RecognizerService
+    from .service import RecognitionServiceConfiguration
     from .server import Server, ServerConfiguration
 except Exception as e:
     print("Not importing Recognizer Service, will not be available (%s)", str(e))
@@ -46,6 +50,7 @@ __all__ = (
     "RecognitionResource",
     "RecognizerStub",
     "RecognizerServicer",
+    "RecognitionServiceConfiguration",
     "Server",
     "ServerConfiguration",
     "add_RecognizerServicer_to_server",

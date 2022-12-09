@@ -23,6 +23,7 @@ from asr4.recognizer_v1 import Language
 
 try:
     from asr4.recognizer_v1 import RecognizerService
+    from asr4.recognizer_v1 import RecognitionServiceConfiguration
     from asr4.recognizer_v1 import add_RecognizerServicer_to_server
     from asr4.recognizer_v1 import Server, ServerConfiguration
 except Exception as e:
@@ -50,5 +51,6 @@ __all__ = (
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
+    "RecognitionServiceConfiguration",
     "FormatterFactory",
 )
