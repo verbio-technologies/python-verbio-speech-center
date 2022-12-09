@@ -54,10 +54,16 @@ class Server:
             self._server.join()
 
     @staticmethod
-    def _asyncRunServer(logsQueue: LoggerQueue, configuration: ServerConfiguration) -> None:
+    def _asyncRunServer(
+        logsQueue: LoggerQueue, configuration: ServerConfiguration
+    ) -> None:
         logsQueue.configureGlobalLogger()
         logger = logsQueue.getLogger()
-        logger.info("Running gRPC server with %d listeners on %s", configuration.numberOfListeners, configuration.bindAddress)
+        logger.info(
+            "Running gRPC server with %d listeners on %s",
+            configuration.numberOfListeners,
+            configuration.bindAddress,
+        )
         asyncio.run(Server._runGRpcServer(logsQueue, configuration))
 
     @staticmethod
@@ -77,7 +83,9 @@ class Server:
             futures.ThreadPoolExecutor(max_workers=configuration.numberOfListeners),
             options=(("grpc.so_reuseport", 1),),
         )
-        Server._addRecognizerService(grpcServer, configuration.getServiceConfiguration())
+        Server._addRecognizerService(
+            grpcServer, configuration.getServiceConfiguration()
+        )
         Server._addHealthCheckService(grpcServer, configuration.numberOfListeners)
         grpcServer.add_insecure_port(configuration.bindAddress)
         return grpcServer

@@ -12,7 +12,7 @@ class Language(Enum):
     @classmethod
     def parse(cls, language) -> Optional[Self]:
         if type(language) == Language:
-            return language;
+            return language
         try:
             return cls[language.upper().replace("-", "_")]
         except:
