@@ -43,7 +43,7 @@ class Server:
             target=Server._asyncRunServer,
             args=(
                 self.loggerService.getQueue(),
-                self.createGRpcServer(self._configuration),
+                self._configuration,
             ),
         )
         self._server.start()
@@ -54,37 +54,32 @@ class Server:
             self._server.join()
 
     @staticmethod
-    def _asyncRunServer(logsQueue: LoggerQueue, gRpcServer: grpc.aio.server) -> None:
+    def _asyncRunServer(logsQueue: LoggerQueue, configuration: ServerConfiguration) -> None:
         logsQueue.configureGlobalLogger()
         logger = logsQueue.getLogger()
-        logger.info("Running asyncio server")
-        asyncio.run(Server._runGRpcServer(logsQueue, gRpcServer))
+        logger.info("Running gRPC server with %d listeners on %s", configuration.numberOfListeners, configuration.bindAddress)
+        asyncio.run(Server._runGRpcServer(logsQueue, configuration))
 
     @staticmethod
     async def _runGRpcServer(
-        logsQueue: LoggerQueue, gRpcServer: grpc.aio.server
+        logsQueue: LoggerQueue, configuration: ServerConfiguration
     ) -> None:
         logsQueue.configureGlobalLogger()
         logger = logsQueue.getLogger()
-        logger.info("Sever started")
+        gRpcServer = Server.createGRpcServer(configuration)
         await gRpcServer.start()
+        logger.info("Sever started")
         await gRpcServer.wait_for_termination()
 
-    def createGRpcServer(self, configuration) -> grpc.aio.server:
+    @staticmethod
+    def createGRpcServer(configuration) -> grpc.aio.server:
         grpcServer = grpc.aio.server(
             futures.ThreadPoolExecutor(max_workers=configuration.numberOfListeners),
             options=(("grpc.so_reuseport", 1),),
         )
-        Server._addRecognizerService(
-            grpcServer, configuration.getServiceConfiguration()
-        )
+        Server._addRecognizerService(grpcServer, configuration.getServiceConfiguration())
         Server._addHealthCheckService(grpcServer, configuration.numberOfListeners)
         grpcServer.add_insecure_port(configuration.bindAddress)
-        self._logger.info(
-            "Creating server with %d listeners, listening on %s",
-            configuration.numberOfListeners,
-            configuration.bindAddress,
-        )
         return grpcServer
 
     @staticmethod
