@@ -10,7 +10,7 @@ from typing import Optional
 from asr4.recognizer import Language
 
 
-class TestRecognizerUtils(object):ƒtim
+class TestRecognizerUtils(object):
     def readReference(self, referencePath: str) -> str:
         with open(referencePath) as f:
             return " ".join(f.read().splitlines())
