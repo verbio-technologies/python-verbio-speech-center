@@ -138,6 +138,11 @@ class TestRecognizerServiceConfiguration(unittest.TestCase):
         self.assertEqual(configuration.vocabulary, arguments.vocabulary)
         self.assertEqual(configuration.numberOfWorkers, arguments.workers)
 
+    def testEmpyInit(self):
+        configuration = RecognitionServiceConfiguration()
+        self.assertIsNotNone(configuration)
+        self.assertEqual(type(configuration), RecognitionServiceConfiguration)
+
 
 class TestRecognizerService(unittest.TestCase):
     def testNoExistentVocabulary(self):

@@ -26,13 +26,23 @@ from google.protobuf.reflection import GeneratedProtocolMessageType
 
 
 class RecognitionServiceConfiguration:
-    def __init__(self, arguments: argparse.Namespace):
-        self.vocabulary = arguments.vocabulary
-        self.formatterModelPath = arguments.formatter
-        self.language = self._validateLanguage(arguments.language)
-        self.model = arguments.model
-        self.gpu = arguments.gpu
-        self.numberOfWorkers = arguments.workers
+    def __init__(self, arguments: Optional[argparse.Namespace] = None):
+        self.vocabulary = None
+        self.formatterModelPath = None
+        self.language = Language.EN_US
+        self.model = None
+        self.gpu = False
+        self.numberOfWorkers = 1
+        self.__setArguments(arguments)
+
+    def __setArguments(self, arguments):
+        if arguments is not None:
+            self.vocabulary = arguments.vocabulary
+            self.formatterModelPath = arguments.formatter
+            self.language = self._validateLanguage(arguments.language)
+            self.model = arguments.model
+            self.gpu = arguments.gpu
+            self.numberOfWorkers = arguments.workers
 
     def createOnnxSession(self):
         return OnnxSession(
