@@ -10,7 +10,7 @@ from typing import Optional
 from asr4.recognizer import Language
 
 
-class TestRecognizerUtils(object):
+class TestRecognizerUtils(object):ƒtim
     def readReference(self, referencePath: str) -> str:
         with open(referencePath) as f:
             return " ".join(f.read().splitlines())
@@ -150,7 +150,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 process = self.launchRecognitionProcess(
                     self._audio, otherLanguage.value
                 )
-                _status = process.wait(timeout=100)
+                _status = process.wait(timeout=900)
                 output = process.stdout.read()
                 match = re.search(
                     f"Invalid language '{otherLanguage}'. Only '{currentLanguage}' is supported.",
@@ -162,7 +162,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         process = self.launchRecognitionProcess(
             f"{self.datadir}/empty.wav", self._language
         )
-        status = process.wait(timeout=100)
+        status = process.wait(timeout=900)
         self.assertEqual(status, 1)
 
     def testEmptyGuiRecognizeRequest(self):
@@ -219,7 +219,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def _recognizeAudio(self, audio, language):
         process = self.launchRecognitionProcess(audio, language)
-        status = process.wait(timeout=100)
+        status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
