@@ -3,8 +3,10 @@ import random
 import string
 import tempfile
 import numpy as np
+import argparse
 
 from asr4.recognizer import RecognizerService
+from asr4.recognizer import RecognitionServiceConfiguration
 from asr4.recognizer import RecognizeRequest
 from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognitionConfig
@@ -40,12 +42,39 @@ class MockFormatter:
         return self._correct_sentence
 
 
+class MockArguments(argparse.Namespace):
+    def __init__(self):
+        super().__init__()
+        self.vocabularyLabels = ["|", "<s>", "</s>", "<pad>"]
+        self.vocabulary = self.createVocabulary()
+        self.formatter = "path_to_formatter/formatter.fm"
+        self.language = "es"
+        self.model = "path_to_models/model.onnx"
+        self.gpu = False
+        self.workers = 4
+
+    def createVocabulary(self) -> str:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            vocabularyPath = f.name
+            for label in self.vocabularyLabels:
+                f.write(f"{label}\n")
+        return vocabularyPath
+
+    def getVocabularyLabels(self):
+        return self.vocabularyLabels
+
+
+class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
+    def __init__(self, arguments: MockArguments = MockArguments()):
+        super().__init__(arguments)
+
+    def createOnnxSession(self):
+        return MockOnnxSession(self.model, language=self.language)
+
+
 class MockOnnxSession(Session):
-    def __init__(
-        self,
-        _path_or_bytes: Union[str, bytes],
-        **kwargs,
-    ) -> None:
+    def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
+        super().__init__(_path_or_bytes, **kwargs)
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,
@@ -98,28 +127,39 @@ class MockOnnxSession(Session):
         return ["input"]
 
 
+class TestRecognizerServiceConfiguration(unittest.TestCase):
+    def testInit(self):
+        arguments = MockArguments()
+        configuration = RecognitionServiceConfiguration(arguments)
+        self.assertEqual(configuration.language, Language.parse(arguments.language))
+        self.assertEqual(configuration.model, arguments.model)
+        self.assertEqual(configuration.gpu, arguments.gpu)
+        self.assertEqual(configuration.formatterModelPath, arguments.formatter)
+        self.assertEqual(configuration.vocabulary, arguments.vocabulary)
+        self.assertEqual(configuration.numberOfWorkers, arguments.workers)
+
+
 class TestRecognizerService(unittest.TestCase):
     def testNoExistentVocabulary(self):
         with self.assertRaises(FileNotFoundError):
-            RecognizerService(
-                MockOnnxSession(""), vocabularyPath="file_that_doesnt_exist"
-            )
+            configuration = MockRecognitionServiceConfiguration()
+            configuration.vocabulary = "file_that_doesnt_exist"
+            RecognizerService(configuration)
 
     def testEmptyvocabularyPath(self):
         with self.assertRaises(FileNotFoundError):
-            RecognizerService(MockOnnxSession(""), vocabularyPath="")
+            configuration = MockRecognitionServiceConfiguration()
+            configuration.vocabulary = ""
+            RecognizerService(configuration)
 
     def testVocabulary(self):
-        labels = ["|", "<s>", "</s>", "<pad>"]
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-            vocabularyPath = f.name
-            for label in labels:
-                f.write(f"{label}\n")
-        service = RecognizerService(MockOnnxSession(""), vocabularyPath=vocabularyPath)
-        self.assertEqual(service._runtime._decoder.labels, labels)
+        arguments = MockArguments()
+        configuration = MockRecognitionServiceConfiguration(arguments)
+        service = RecognizerService(configuration)
+        self.assertEqual(service._runtime._decoder.labels, arguments.getVocabularyLabels())
 
     def testInvalidAudio(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -133,7 +173,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidTopic(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -147,7 +187,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidAudioEncoding(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -161,7 +201,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidLanguage(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="", sample_rate_hz=16000),
@@ -184,7 +224,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidSampleRate(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -208,31 +248,31 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestEmpty(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest()
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestEmpty(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest()
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestAudio(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(audio=b"SOMETHING")
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestAudio(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(audio=b"SOMETHING")
         with self.assertRaises(ValueError):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestResource(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
         )
@@ -240,7 +280,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestResource(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
         )
@@ -248,7 +288,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestLanguage(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="en-US"),
@@ -258,7 +298,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestLanguage(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(language="en-US"),
@@ -268,7 +308,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestAudioEncoding(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(audio_encoding="PCM"),
@@ -278,7 +318,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestSampleRate(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(sample_rate_hz=4000),
@@ -288,7 +328,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestSampleRate(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(sample_rate_hz=4000),
@@ -298,7 +338,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestParameters(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -310,7 +350,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestParameters(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -322,7 +362,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestAudioEncodingValue(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -335,7 +375,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestAudioEncodingValue(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -348,7 +388,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidRecognizeRequestConfig(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -362,7 +402,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testInvalidStreamingRecognizeRequestConfig(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -375,7 +415,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventSource(request)
 
     def testRecognizeRequestSampleRate16000(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -388,7 +428,7 @@ class TestRecognizerService(unittest.TestCase):
         self.assertFalse(service.eventSource(request))
 
     def testRecognizeRequestSampleRate8000(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -401,7 +441,7 @@ class TestRecognizerService(unittest.TestCase):
         self.assertFalse(service.eventSource(request))
 
     def testInvalidRecognizeRequestHandle(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(),
@@ -411,7 +451,7 @@ class TestRecognizerService(unittest.TestCase):
             service.eventHandle(request)
 
     def testInvalidStreamingRecognizeRequestHandle(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         request = StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(),
@@ -421,7 +461,10 @@ class TestRecognizerService(unittest.TestCase):
             service.eventHandle(request)
 
     def testRecognizeRequestHandleEnUs(self):
-        service = RecognizerService(MockOnnxSession(""))
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -437,9 +480,10 @@ class TestRecognizerService(unittest.TestCase):
         )
 
     def testRecognizeRequestHandleEs(self):
-        service = RecognizerService(
-            MockOnnxSession("", language=Language.ES), Language.ES
-        )
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -455,10 +499,10 @@ class TestRecognizerService(unittest.TestCase):
         )
 
     def testRecognizeRequestHandlePtBr(self):
-        service = RecognizerService(
-            MockOnnxSession("", language=Language.PT_BR),
-            Language.PT_BR,
-        )
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -473,7 +517,7 @@ class TestRecognizerService(unittest.TestCase):
         )
 
     def testRecognizeRequestSink(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
 
         def _getWordInfo(word: str) -> dict:
@@ -505,11 +549,11 @@ class TestRecognizerService(unittest.TestCase):
         self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
 
     def testRecognizeFormatter(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
         service = RecognizerService(
-            MockOnnxSession("", language=Language.ES),
-            Language.ES,
-            formatter=MockFormatter(FORMATTED_SPANISH_MESSAGE),
-        )
+            MockRecognitionServiceConfiguration(arguments), MockFormatter(FORMATTED_SPANISH_MESSAGE))
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
@@ -525,7 +569,7 @@ class TestRecognizerService(unittest.TestCase):
         )
 
     def testResponseParameters(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         transcription = "".join(
             random.choices(string.ascii_letters + string.digits, k=16)
         )
@@ -535,7 +579,7 @@ class TestRecognizerService(unittest.TestCase):
         self.assertEqual(response.alternatives[0].confidence, 1.0)
 
     def testStreamingResponseParameters(self):
-        service = RecognizerService(MockOnnxSession(""))
+        service = RecognizerService(MockRecognitionServiceConfiguration())
         transcription = "".join(
             random.choices(string.ascii_letters + string.digits, k=16)
         )
