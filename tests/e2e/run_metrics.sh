@@ -7,6 +7,8 @@ TEST_PASSED=true
 variant="none"
 interval=0.05
 
+DIALECTS_ES=("es" "mx" "co" "pe" "us")
+
 
 if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
 	variant=$(echo $language | cut -d "-" -f 2)
@@ -49,8 +51,7 @@ compare_metrics ${oov_metric} ${expected_oov}
 
 if [ "${language}" == "es" ];
 then
-	dialects=("es" "mx" "co" "pe" "us")
-	for dialect in  "${dialects[@]}";
+	for dialect in  "${DIALECTS_ES}";
 	do
 		accuracy_metric=$(jq --arg dialect "$language-$dialect" '.[$dialect]' "test_${language}_intratest/dialects_intratest.json")
 		expected_accuracy=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects[$dialect].accuracy' "tests/e2e/data/expected_metrics.json")
@@ -66,25 +67,25 @@ then
 	done
 fi
 
-domains=($(jq --arg keyvar "$language" '.[$keyvar]' "tests/e2e/data/domains.json" | sed 's/\[//g' | sed 's/\]//g' |  sed 's/"//g'| sed 's/,/ /g' | tr -d '\n' | sed 's/  /  /g'))
-for domain in "${domains[@]}";
-	do
-		accuracy_metric=$(jq --arg dom "$domain" '.[$dom]' "test_${language}_intratest/domains_intratest.json")
-		expected_accuracy=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains[$dom].accuracy' "tests/e2e/data/expected_metrics.json")
+while read domain;
+do
+	accuracy_metric=$(jq --arg dom "$domain" '.[$dom]' "test_${language}_intratest/domains_intratest.json")
+	expected_accuracy=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains[$dom].accuracy' "tests/e2e/data/expected_metrics.json")
 
-		echo "Comparing obtained and expected accuracy metrics of $domain..."
-		compare_metrics ${accuracy_metric} ${expected_accuracy}
+	echo "Comparing obtained and expected accuracy metrics of $domain..."
+	compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-		deviation_metric=$(jq --arg dom "$domain" '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
-		expected_deviation=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
-		
-		echo "Comparing obtained and expected accuracy deviation metrics of $domain..."
-		compare_metrics ${deviation_metric} ${expected_deviation}
-	done
+	deviation_metric=$(jq --arg dom "$domain" '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
+	expected_deviation=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
+
+	echo "Comparing obtained and expected accuracy deviation metrics of $domain..."
+	compare_metrics ${deviation_metric} ${expected_deviation}
+ done < "tests/e2e/data/domains_$language.txt"
 
 rm "test_${language}_results.tsv"
 rm "test_${language}_oov.json"
 rm -rf "test_${language}_intratest"
+rm -rf "wer"
 
 if [ $TEST_PASSED == false ];
 then

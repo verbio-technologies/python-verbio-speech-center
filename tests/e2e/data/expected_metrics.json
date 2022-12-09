@@ -1,6 +1,38 @@
 {
-"en-us": {"oov": 4.29, "accuracy": 62.37}, 
-"pt-br": {"oov": 5.97, "accuracy": 49.67},
+"en-us": {
+    "oov": 4.29,
+    "accuracy": 62.37,
+    "domains": {
+        "multidomain-airtravel-hm-atis": {"accuracy":81.3},
+        "multidomain-banking-hm-s4am": {"accuracy":79.53},
+        "multidomain-banking-hm-sterling": {"accuracy":53.35},
+        "multidomain-contact_center_generic-hm-generic": {"accuracy":67.08}, 
+        "multidomain-contact_center_generic-hm-smart_action": {"accuracy":78.8}, 
+        "multidomain-housemaintenance-hh-hellospoke_cut": {"accuracy":54.51}, 
+        "multidomain-itmaintenance-hh-gdit_cut": {"accuracy":40.78}, 
+        "multidomain-telco-hh-agentassist_cut": {"accuracy":41.58},
+        "multidomain-telco-hm-sprintopenquestiontmobile": {"accuracy":67.21}, 
+        "multidomain-varied-hh-switchboard_cut": {"accuracy":45.65}, 
+        "multidomain-varied-hm-8x30_cut": {"accuracy":57.57},
+        "typical_deviation": 14.4
+
+    }
+}, 
+"pt-br": {
+    "oov": 5.97,
+    "accuracy": 49.67,
+    "domains": {
+        "multidomain-banking-hh-seguros": {"accuracy":39.98},
+        "multidomain-banking-hm-translated": {"accuracy":57.17},
+        "multidomain-telco-hh-atento": {"accuracy":37.3},
+        "multidomain-telco-hh-net": {"accuracy":38.37},
+        "multidomain-telco-hh-net2": {"accuracy":43.19}, 
+        "multidomain-telco-hh-oi": {"accuracy":43.69}, 
+        "multidomain-telco-hm-accenture": {"accuracy":37.65},
+        "multidomain-varied-hm-sala_ii": {"accuracy":66.17}, 
+        "typical_deviation": 9.89
+    }
+},
 "es": 
     {
         "oov": 5.82,
