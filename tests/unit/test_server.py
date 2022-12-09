@@ -39,5 +39,4 @@ class TestServer(unittest.TestCase):
         multiprocessing.set_start_method("spawn", force=True)
         loggerService = LoggerService("DEBUG")
         server = Server(ServerConfiguration(MockArguments()), loggerService)
-        server.stop()
         server.join()
