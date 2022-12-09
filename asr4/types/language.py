@@ -10,7 +10,9 @@ class Language(Enum):
     PT_BR = "pt-BR"
 
     @classmethod
-    def parse(cls, language: str) -> Optional[Self]:
+    def parse(cls, language) -> Optional[Self]:
+        if type(language) == Language:
+            return language;
         try:
             return cls[language.upper().replace("-", "_")]
         except:
