@@ -9,7 +9,7 @@ from asr4.types.language import Language
 from .types import RecognizerServicer
 from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
-from .types import RecognitionConfig
+from .types import RecognitionCo nfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
 from .types import RecognizeResponse
