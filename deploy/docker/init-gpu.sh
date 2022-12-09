@@ -1,6 +1,6 @@
 #!/bin/bash
 
-workers="${WORKERS:-1}"
+workers="${WORKERS:-3}"
 port="${PORT:-50051}"
 LOG_LEVEL=${LOG_LEVEL:-ERROR}
 
