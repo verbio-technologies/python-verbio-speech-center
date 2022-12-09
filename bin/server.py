@@ -15,7 +15,7 @@ from typing import Optional
 from asr4.recognizer import Language
 from asr4.recognizer import SERVICES_NAMES
 from asr4.recognizer import OnnxSession
-from asr4.recognizer import RecognizerService
+from asr4.recognizer import RecognizerService, RecognitionServiceConfiguration
 from asr4.recognizer import add_RecognizerServicer_to_server
 from asr4.recognizer import FormatterFactory
 
@@ -157,6 +157,15 @@ async def _runServer(
     await server.wait_for_termination()
 
 
+def __createConfiguration(formatterPath, language, model, vocabularyPath):
+    configuration = RecognitionServiceConfiguration()
+    configuration.language = language
+    configuration.formatterModelPath = formatterPath
+    configuration.vocabulary = vocabularyPath
+    configuration.model = model
+    return configuration
+
+
 def _addRecognizerService(
     server: grpc.aio.Server,
     model: str,
@@ -165,15 +174,9 @@ def _addRecognizerService(
     vocabularyPath: Optional[str],
     formatterPath: Optional[str],
 ) -> None:
-    session = OnnxSession(
-        model,
-        providers=providers,
-    )
     add_RecognizerServicer_to_server(
         RecognizerService(
-            session,
-            language,
-            vocabularyPath,
+            __createConfiguration(formatterPath, language, model, vocabularyPath),
             FormatterFactory.createFormatter(formatterPath, language)
             if formatterPath
             else None,
