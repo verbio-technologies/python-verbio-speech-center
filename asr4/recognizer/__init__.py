@@ -6,6 +6,7 @@ try:
     from asr4.recognizer_v1 import OnnxRuntime
     from asr4.recognizer_v1 import OnnxRuntimeResult
     from asr4.recognizer_v1.formatter import FormatterFactory
+    from asr4.recognizer_v1.loggerService import Logger, LoggerQueue, LoggerService
 except:
     pass
 
@@ -53,4 +54,7 @@ __all__ = (
     "RecognizerService",
     "RecognitionServiceConfiguration",
     "FormatterFactory",
+    "Logger",
+    "LoggerService",
+    "LoggerQueue",
 )
