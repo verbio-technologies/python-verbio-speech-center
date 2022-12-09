@@ -1,9 +1,9 @@
 import abc
 import grpc
 import logging
-import pyformatter
+import argparse
 
-from .runtime import OnnxRuntime, Session
+from .runtime import OnnxRuntime, Session, OnnxSession
 
 from asr4.types.language import Language
 from .types import RecognizerServicer
@@ -25,6 +25,36 @@ from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
 
+class RecognitionServiceConfiguration:
+    def __init__(self, arguments: argparse.Namespace):
+        self.vocabulary = arguments.vocabulary
+        self.formatterModelPath = arguments.formatter
+        self.language = self._validateLanguage(arguments.language)
+        self.model = arguments.model
+        self.gpu = arguments.gpu
+        self.numberOfWorkers = arguments.workers
+
+    def createOnnxSession(self):
+        return OnnxSession(
+            self.model,
+            providers=RecognitionServiceConfiguration._createProvidersList(self.gpu),
+            number_of_workers=self.numberOfWorkers,
+        )
+
+    @staticmethod
+    def _createProvidersList(gpu):
+        providers = ["CPUExecutionProvider"]
+        if gpu:
+            providers = ["CUDAExecutionProvider"] + providers
+        return providers
+
+    @staticmethod
+    def _validateLanguage(language: str) -> Language:
+        if not Language.check(language):
+            raise ValueError(f"Invalid language '{language}'")
+        return Language.parse(language)
+
+
 class SourceSinkService(abc.ABC):
     def eventSource(
         self,
@@ -42,30 +72,30 @@ class SourceSinkService(abc.ABC):
 class RecognizerService(RecognizerServicer, SourceSinkService):
     def __init__(
         self,
-        session: Session,
-        language: Language = Language.EN_US,
-        vocabularyPath: Optional[str] = None,
-        formatter: pyformatter.PyFormatter = None,
+        configuration: RecognitionServiceConfiguration,
+        formatter=None,
     ) -> None:
-        self._language = language
-        self._formatter = formatter
-        self._createRuntime(session, vocabularyPath)
         self.logger = logging.getLogger("ASR4")
+        self._language = configuration.language
+        self._formatter = formatter
+        self._runtime = self._createRuntime(
+            configuration.createOnnxSession(), configuration.vocabulary
+        )
         if formatter is None:
             self.logger.warning(
                 "No formatter provided. Text will be generated without format"
             )
 
+    @staticmethod
     def _createRuntime(
-        self,
         session: Session,
         vocabularyPath: Optional[str],
-    ):
-        if vocabularyPath != None:
-            vocabulary = self._readVocabulary(vocabularyPath)
-            self._runtime = OnnxRuntime(session, vocabulary)
+    ) -> OnnxRuntime:
+        if vocabularyPath is not None:
+            vocabulary = RecognizerService._readVocabulary(vocabularyPath)
+            return OnnxRuntime(session, vocabulary)
         else:
-            self._runtime = OnnxRuntime(session)
+            return OnnxRuntime(session)
 
     @staticmethod
     def _readVocabulary(
