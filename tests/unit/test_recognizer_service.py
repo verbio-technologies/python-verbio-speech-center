@@ -156,7 +156,9 @@ class TestRecognizerService(unittest.TestCase):
         arguments = MockArguments()
         configuration = MockRecognitionServiceConfiguration(arguments)
         service = RecognizerService(configuration)
-        self.assertEqual(service._runtime._decoder.labels, arguments.getVocabularyLabels())
+        self.assertEqual(
+            service._runtime._decoder.labels, arguments.getVocabularyLabels()
+        )
 
     def testInvalidAudio(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())
@@ -553,7 +555,9 @@ class TestRecognizerService(unittest.TestCase):
         arguments.language = Language.ES
         arguments.vocabulary = None
         service = RecognizerService(
-            MockRecognitionServiceConfiguration(arguments), MockFormatter(FORMATTED_SPANISH_MESSAGE))
+            MockRecognitionServiceConfiguration(arguments),
+            MockFormatter(FORMATTED_SPANISH_MESSAGE),
+        )
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
