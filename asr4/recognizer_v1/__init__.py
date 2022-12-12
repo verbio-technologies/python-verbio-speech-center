@@ -8,7 +8,7 @@ try:
     from .loggerService import Logger, LoggerQueue, LoggerService
 except Exception as e:
     print(
-        "Unable to import runtime moduels, so inference will not be available. (%s)",
+        "Unable to import runtime models, so inference will not be available. (%s)",
         str(e),
     )
 
