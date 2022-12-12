@@ -234,7 +234,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def _formatWords(self, transcription: str) -> str:
         words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
-        if self._formatter:
+        if self._formatter and words:
             self.logger.debug(f"Pre-formatter text: {words}")
             return " ".join(self._formatter.classify(words))
         else:
