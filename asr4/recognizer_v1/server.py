@@ -60,10 +60,10 @@ class Server:
         logsQueue.configureGlobalLogger()
         logger = logsQueue.getLogger()
         logger.info(
-            "Running gRPC server with %d listeners on %s",
-            configuration.numberOfListeners,
-            configuration.bindAddress,
+            "Running gRPC server with %d listeners on %s" %
+            (configuration.numberOfListeners, configuration.bindAddress)
         )
+
         asyncio.run(Server._runGRpcServer(logsQueue, configuration))
 
     @staticmethod
