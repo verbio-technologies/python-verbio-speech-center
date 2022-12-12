@@ -1,6 +1,7 @@
 from enum import Enum, unique
 from typing import Optional
 from typing_extensions import Self
+from typing import Union
 
 
 @unique
