@@ -11,7 +11,7 @@ class Language(Enum):
     PT_BR = "pt-BR"
 
     @classmethod
-    def parse(cls, language: Union[str, Language]) -> Optional[Self]:
+    def parse(cls, language: Union[str, Self]) -> Optional[Self]:
         if isinstance(language, Language):
             return language
         try:
