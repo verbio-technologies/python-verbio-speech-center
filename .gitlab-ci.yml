@@ -1,6 +1,8 @@
 stages:
   - test
 
+image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
+
 variables:
   DOCKER_TESTING_IMAGE_NAME: docker.registry.verbio.com/csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
