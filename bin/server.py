@@ -120,18 +120,6 @@ def _parseArguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def validateLogLevel(args):
-    if args.verbose not in _LOG_LEVELS:
-        offender = args.verbose
-        args.verbose = _LOG_LEVEL
-        server_logger_configurer(args.verbose)
-        logger = logging.getLogger(_LOGGER_NAME)
-        logger.error(
-            "Level [%s] is not valid log level. Will use %s instead."
-            % (offender, args.verbose)
-        )
-
-
 def fixNumberOfJobs(args):
     if args.jobs is not None:
         args.servers = 1
