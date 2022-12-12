@@ -1,3 +1,5 @@
+import logging
+
 import torch
 import numpy as np
 import resampy
@@ -45,6 +47,7 @@ class Session(abc.ABC):
 class OnnxSession(Session):
     def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(path_or_bytes)
+        self.logger = logging.getLogger("ASR4")
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
             sess_options=self.__createSessionOptions(kwargs),
@@ -53,11 +56,12 @@ class OnnxSession(Session):
             **kwargs,
         )
 
-    @staticmethod
-    def __createSessionOptions(kwargs):
+    def __createSessionOptions(self, kwargs):
         options = SessionOptions()
         options.intra_op_num_threads = kwargs.pop("number_of_workers", 0)
         options.inter_op_num_threads = 1 if "number_of_workers" in kwargs else 0
+        self.logger.info(f"intra operation number of threads: {options.intra_op_num_threads}")
+        self.logger.info(f"inter operation number of threads: {options.inter_op_num_threads}")
         return options
 
     def run(
