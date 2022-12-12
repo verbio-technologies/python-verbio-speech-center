@@ -215,9 +215,7 @@ If you want to install it, run the following command:
 $ cargo install cargo-release
 ```
 
-:warning: If you want to see what operations it would apply, you can add the `--dry-run` flag and it won't actually perform any operation.
-
-In order to generate a new release, you can invoke the following command (keep in mind the flag `--workspace` is required in order to update all the subcrates):
+In order to generate a new release, you can invoke the following command (the flag `--workspace` is required in order to update all the subcrates):
 
 ```
 # Increment major
@@ -237,14 +235,16 @@ It will:
 
 1. Set the new version to all the `Cargo.toml` of the main crate and subcrates. It also updates the `Cargo.lock`.
 2. Set the new version to the `CMakeLists.txt` file.
-3. Create a "Bump version" commit.
+3. Update the `VERSION` file.
+4. Create a "Bump version" commit.
 
-⚠ IT DOES NOT CREATE THE TAG NOR PUSH ANYTHING
+⚠ NOTE: IT DOES NOT ACTUALLY PERFORM ANY MODIFICATION UNLESS THE FLAG `--execute` IS PROVIDED
+⚠ NOTE: IT DOES NOT CREATE THE TAG NOR PUSH ANYTHING
 
 So, a typical workflow would be the following:
 
 ```
-$ cargo release minor --workspace
+$ cargo release patch --workspace --execute
 $ git push 
 $ git tag VERSION_NUMBER
 $ git push --tags 
