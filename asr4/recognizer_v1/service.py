@@ -52,7 +52,7 @@ class RecognitionServiceConfiguration:
         )
 
     @staticmethod
-    def _createProvidersList(gpu):
+    def _createProvidersList(gpu: bool) -> List[str]:
         providers = ["CPUExecutionProvider"]
         if gpu:
             providers = ["CUDAExecutionProvider"] + providers
