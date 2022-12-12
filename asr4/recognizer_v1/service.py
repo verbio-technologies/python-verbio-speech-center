@@ -35,7 +35,7 @@ class RecognitionServiceConfiguration:
         self.numberOfWorkers = 1
         self.__setArguments(arguments)
 
-    def __setArguments(self, arguments):
+    def __setArguments(self, arguments: argparse.Namespace):
         if arguments is not None:
             self.vocabulary = arguments.vocabulary
             self.formatterModelPath = arguments.formatter
