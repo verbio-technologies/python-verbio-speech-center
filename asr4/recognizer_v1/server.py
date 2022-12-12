@@ -78,7 +78,7 @@ class Server:
         await gRpcServer.wait_for_termination()
 
     @staticmethod
-    def createGRpcServer(configuration) -> grpc.aio.server:
+    def createGRpcServer(configuration: ServerConfiguration) -> grpc.aio.server:
         grpcServer = grpc.aio.server(
             futures.ThreadPoolExecutor(max_workers=configuration.numberOfListeners),
             options=(("grpc.so_reuseport", 1),),
