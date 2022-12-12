@@ -81,7 +81,7 @@ def _parseArguments() -> argparse.Namespace:
         "-j",
         "--jobs",
         type=int,
-        dest="servers",
+        dest="jobs",
         default=None,
         help="Deprecated. Just for backcompatibility issues. Overrides -S, -L and -w and has the same effect as:  -S 1 -L {jobs} -w 0",
     )
