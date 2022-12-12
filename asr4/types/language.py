@@ -1,6 +1,7 @@
 from enum import Enum, unique
 from typing import Optional
 from typing_extensions import Self
+from typing import Union
 
 
 @unique
@@ -10,7 +11,9 @@ class Language(Enum):
     PT_BR = "pt-BR"
 
     @classmethod
-    def parse(cls, language: str) -> Optional[Self]:
+    def parse(cls, language: Union[str, Self]) -> Optional[Self]:
+        if isinstance(language, Language):
+            return language
         try:
             return cls[language.upper().replace("-", "_")]
         except:

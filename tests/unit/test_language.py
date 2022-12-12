@@ -16,6 +16,11 @@ class TestLanguage(unittest.TestCase):
         self.assertEqual(Language.parse("INVALID"), None)
         self.assertEqual(Language.parse(""), None)
 
+    def testParseItselkf(self):
+        self.assertEqual(Language.EN_US, Language.parse(Language.EN_US))
+        self.assertEqual(Language.ES, Language.parse(Language.ES))
+        self.assertEqual(Language.PT_BR, Language.parse(Language.PT_BR))
+
     def testCheck(self):
         self.assertTrue(Language.check("en-us"))
         self.assertTrue(Language.check("es"))

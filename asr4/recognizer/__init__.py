@@ -6,6 +6,7 @@ try:
     from asr4.recognizer_v1 import OnnxRuntime
     from asr4.recognizer_v1 import OnnxRuntimeResult
     from asr4.recognizer_v1.formatter import FormatterFactory
+    from asr4.recognizer_v1.loggerService import Logger, LoggerQueue, LoggerService
 except:
     pass
 
@@ -23,9 +24,11 @@ from asr4.recognizer_v1 import Language
 
 try:
     from asr4.recognizer_v1 import RecognizerService
+    from asr4.recognizer_v1 import RecognitionServiceConfiguration
     from asr4.recognizer_v1 import add_RecognizerServicer_to_server
-except:
-    pass
+    from asr4.recognizer_v1 import Server, ServerConfiguration
+except Exception as e:
+    print("Not importing Recognizer Service, will not be available (%s)" % str(e))
 
 
 __all__ = (
@@ -44,8 +47,14 @@ __all__ = (
     "RecognitionResource",
     "RecognizerStub",
     "RecognizerServicer",
+    "Server",
+    "ServerConfiguration",
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
+    "RecognitionServiceConfiguration",
     "FormatterFactory",
+    "Logger",
+    "LoggerService",
+    "LoggerQueue",
 )
