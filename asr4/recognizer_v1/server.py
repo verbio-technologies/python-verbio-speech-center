@@ -26,7 +26,7 @@ class ServerConfiguration:
         self.numberOfListeners = arguments.listeners
         self.serviceConfiguration = RecognitionServiceConfiguration(arguments)
 
-    def getServiceConfiguration(self):
+    def getServiceConfiguration(self) -> RecognitionServiceConfiguration:
         return self.serviceConfiguration
 
 
