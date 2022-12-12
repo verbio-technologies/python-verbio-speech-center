@@ -1,0 +1,8 @@
+multidomain-banking-hh-seguros
+multidomain-banking-hm-translated
+multidomain-telco-hh-atento
+multidomain-telco-hh-net
+multidomain-telco-hh-net2
+multidomain-telco-hh-oi
+multidomain-telco-hm-accenture
+multidomain-varied-hm-sala_ii

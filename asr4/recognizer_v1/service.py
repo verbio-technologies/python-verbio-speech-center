@@ -35,7 +35,7 @@ class RecognitionServiceConfiguration:
         self.numberOfWorkers = 1
         self.__setArguments(arguments)
 
-    def __setArguments(self, arguments):
+    def __setArguments(self, arguments: argparse.Namespace):
         if arguments is not None:
             self.vocabulary = arguments.vocabulary
             self.formatterModelPath = arguments.formatter
@@ -44,7 +44,7 @@ class RecognitionServiceConfiguration:
             self.gpu = arguments.gpu
             self.numberOfWorkers = arguments.workers
 
-    def createOnnxSession(self):
+    def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
             self.model,
             providers=RecognitionServiceConfiguration._createProvidersList(self.gpu),
@@ -52,7 +52,7 @@ class RecognitionServiceConfiguration:
         )
 
     @staticmethod
-    def _createProvidersList(gpu):
+    def _createProvidersList(gpu: bool) -> List[str]:
         providers = ["CPUExecutionProvider"]
         if gpu:
             providers = ["CUDAExecutionProvider"] + providers

@@ -8,8 +8,8 @@ try:
     from .loggerService import Logger, LoggerQueue, LoggerService
 except Exception as e:
     print(
-        "Unable to import runtime moduels, so inference will not be available. (%s)"
-        % str(e)
+        "Unable to import runtime models, so inference will not be available. (%s)"
+        % str(e),
     )
 
 from .types import RecognizeRequest
@@ -32,7 +32,7 @@ try:
     from .service import RecognitionServiceConfiguration
     from .server import Server, ServerConfiguration
 except Exception as e:
-    print("Not importing Recognizer Service, will not be available (%s)" % str(e))
+    print("Not importing Recognizer Service, will not be available (%s)", str(e))
 
 __all__ = (
     "SERVICES_NAMES",

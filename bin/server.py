@@ -10,7 +10,7 @@ from asr4.recognizer import Server, ServerConfiguration
 
 def main():
     multiprocessing.set_start_method("spawn", force=True)
-    args = _parseArguments()
+    args = fixNumberOfJobs(_parseArguments())
     logService = LoggerService(args.verbose)
     logService.configureGlobalLogger()
     serve(ServerConfiguration(args), logService)
@@ -78,6 +78,14 @@ def _parseArguments() -> argparse.Namespace:
         help="Hostname address to bind the server to.",
     )
     parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        dest="jobs",
+        default=None,
+        help="Deprecated. Just for backcompatibility issues. Overrides -S, -L and -w and has the same effect as:  -S 1 -L {jobs} -w 0",
+    )
+    parser.add_argument(
         "-s",
         "--servers",
         type=int,
@@ -112,16 +120,12 @@ def _parseArguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def validateLogLevel(args):
-    if args.verbose not in _LOG_LEVELS:
-        offender = args.verbose
-        args.verbose = _LOG_LEVEL
-        server_logger_configurer(args.verbose)
-        logger = logging.getLogger(_LOGGER_NAME)
-        logger.error(
-            "Level [%s] is not valid log level. Will use %s instead."
-            % (offender, args.verbose)
-        )
+def fixNumberOfJobs(args):
+    if args.jobs is not None:
+        args.servers = 1
+        args.workers = 0
+        args.listeners = args.jobs
+    return args
 
 
 if __name__ == "__main__":
