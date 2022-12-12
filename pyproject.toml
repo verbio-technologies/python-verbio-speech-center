@@ -19,9 +19,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Multimedia :: Sound/Audio :: Speech",
@@ -52,10 +50,10 @@ version = {file = ["VERSION"]}
 [project.optional-dependencies]
 client = [
     "numpy >= 1.21.4",
-    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/6806194d888066cea249b3d50c4d3c26c6bcdc2d95da45ec468f19dc6e29a5e7/csr_evaluation_tools-0.0.8-py37-none-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/5d4e676e45363352003ddb3a53a20f7a8e17dbb43bfed81002d16fdbc64ec372/csr_evaluation_tools-0.0.8-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
-    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/7f3575fc0a7abdf08bd58fc44d428f2a8b71a489058b749dcd0c89fdaa03fce2/csr_evaluation_tools-0.0.8-py39-none-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/ce1ef19ee863b619e4ebeb0a139a7e2b51177fdf9958012a6467c639ff143947/csr_evaluation_tools-0.0.8-py310-none-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
+    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/f8d8063889d24bdd07edfae5e5c189f5dbb26c38f3c8ab2d76c4268d149f6cc7/csr_evaluation_tools-0.0.22-py37-none-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/734c88c08f37f4bcc0d85121fd6bbb1badc2bcd54b24f5d7d9ffe8dbecffa1bd/csr_evaluation_tools-0.0.22-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
+    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/80e98be34e5798c3c2ac410b1f9696216aaed413cda01213c5a207b286317d6b/csr_evaluation_tools-0.0.22-py39-none-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/0f6bbb9642c692941c7e6e4de52c9d356bcf090f2d4eb17a6c3e63f09c9a1396/csr_evaluation_tools-0.0.22-py310-none-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
 ]
 server = [
     "resampy >= 0.4.2",
@@ -82,12 +80,23 @@ cpu = [
     "numpy @ https://pypi.anaconda.org/intel/simple/numpy/1.22.3/numpy-1.22.3-0-cp39-cp39-manylinux2014_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "simple-ctc @ https://__token__:glpat-WfjrtC5qsrDz34rkc5yD@gitlab.lan.verbio.com/api/v4/projects/1445/packages/pypi/files/a100d92ebad4c6d2aa137c1e0a530143f00bf953a9ee9c883b9faead4effdb8c/simple_ctc-0.0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "simple-ctc @ https://__token__:glpat-WfjrtC5qsrDz34rkc5yD@gitlab.lan.verbio.com/api/v4/projects/1445/packages/pypi/files/cbf64abf1824339194ac608e7d5d4c0135e01bb56c2faac7e923972d7a373fc9/simple_ctc-0.0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'",
+    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'"
 ]
 gpu = [
-    "torch == 1.12.0a0+git8c5c07c",
-    "onnxruntime-gpu >= 1.12.1",
-    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23",
+    "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/8e401aff0afb20599bbaec6c958b5ae44c5535e14835328fea1d36a657ce3898/torch-1.12.0a0+git8c5c07c-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
+    "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/b24b22852724d0e984a584126826f1f7af6e88a0bf197000e054941b82c9af26/torch-1.12.0a0+git8c5c07c-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp37-cp37m-win_amd64.whl ; python_version=='3.7' and platform_system=='Windows'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-win_amd64.whl ; python_version=='3.8' and platform_system=='Windows'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp39-cp39-win_amd64.whl ; python_version=='3.9' and platform_system=='Windows'",
+    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp310-cp310-win_amd64.whl ; python_version=='3.10' and platform_system=='Windows'",
+    "onnxruntime-gpu @ https://__token__:glpat-2aabCj5voGjGLsDZJhZw@gitlab.lan.verbio.com/api/v4/projects/1452/packages/pypi/files/93e8bd4a4aadf2ee1be72cbdd00ae9342f56df6e7697f8ab557fcc94a2c2f043/onnxruntime_gpu-1.14.0-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "onnxruntime-gpu @ https://__token__:glpat-2aabCj5voGjGLsDZJhZw@gitlab.lan.verbio.com/api/v4/projects/1452/packages/pypi/files/28213e773ada613e73e61489e19807a950f4a139dd49e03d016ee0c7253d9417/onnxruntime_gpu-1.14.0-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "onnxruntime-gpu >= 1.14.0 ; python_version!='3.7' and python_version!='3.9'",
+    "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/dd46c5d18a1078b5e46bb3dfde441adb3a5cc00b29939396cd522154e84abaa2/simple_ctc-0.0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/00c8abf05423d962eced6a108bedf70895954c28d501caad27942a7d1607c8da/simple_ctc-0.0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'",
 ]
 test = [
     "pytest >= 6.2.5",
