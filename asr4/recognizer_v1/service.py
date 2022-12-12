@@ -44,7 +44,7 @@ class RecognitionServiceConfiguration:
             self.gpu = arguments.gpu
             self.numberOfWorkers = arguments.workers
 
-    def createOnnxSession(self):
+    def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
             self.model,
             providers=RecognitionServiceConfiguration._createProvidersList(self.gpu),
