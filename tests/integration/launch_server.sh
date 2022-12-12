@@ -16,9 +16,9 @@ CUDA_VISIBLE_DEVICES=1
 
 if [ -z $5 ]
 then
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -j1 -v DEBUG &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -j1 &
 else
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -j1 -v DEBUG --gpu &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -j1 --gpu &
 fi
 
 export TIME=30
