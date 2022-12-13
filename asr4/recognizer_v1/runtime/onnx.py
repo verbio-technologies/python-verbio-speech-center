@@ -50,18 +50,23 @@ class OnnxSession(Session):
         self.logger = logging.getLogger("ASR4")
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
-            sess_options=self.__createSessionOptions(kwargs),
+            sess_options=self.__getSessionOptions(**kwargs),
             providers=kwargs.pop("providers", None),
             provider_options=kwargs.get("provider_options"),
             **kwargs,
         )
 
-    def __createSessionOptions(self, kwargs):
+    def __getSessionOptions(self, **kwargs):
+        session_options = self._createSessionOptions(**kwargs)
+        self.logger.info(f"intra operation number of threads: {session_options.intra_op_num_threads}")
+        self.logger.info(f"inter operation number of threads: {session_options.inter_op_num_threads}")
+        return session_options
+
+    @staticmethod
+    def _createSessionOptions(**kwargs):
         options = SessionOptions()
-        options.intra_op_num_threads = kwargs.pop("number_of_workers", 0)
-        options.inter_op_num_threads = 1 if "number_of_workers" in kwargs else 0
-        self.logger.info(f"intra operation number of threads: {options.intra_op_num_threads}")
-        self.logger.info(f"inter operation number of threads: {options.inter_op_num_threads}")
+        options.inter_op_num_threads = kwargs.pop("number_of_workers", 0)
+        options.intra_op_num_threads = 0 if options.inter_op_num_threads == 0 else 1
         return options
 
     def run(
