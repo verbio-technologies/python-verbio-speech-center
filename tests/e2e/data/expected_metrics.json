@@ -1,7 +1,7 @@
 {
 "en-us": {
     "oov": 4.10,
-    "accuracy": 6.00,
+    "accuracy": 62.00,
     "domains": {
         "multidomain-airtravel-hm-atis": {"accuracy": 81.38},
         "multidomain-banking-hm-s4am": {"accuracy": 79.72},
