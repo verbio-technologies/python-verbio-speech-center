@@ -42,5 +42,4 @@ test $ERR1 -eq 1 && echo "Success 10" || echo "Test 10 Failed."
 
 
 
-#test $OK2 -eq 1 && test $OK3 -eq 1 && test $OK4 -eq 1 && test $OK5 -eq 10 && test $OK6 -eq 1 && test $OK7 -eq 1 && test $ERR1 -eq 1 && test $UNK1 -eq 1 && test $UNK2 -eq 1
-test $OK2 -eq 1 && test $OK3 -eq 1 && test $OK4 -eq 1 && test $OK5 -eq 10 && test $OK6 -eq 1 && test $ERR1 -eq 1 && test $UNK1 -eq 1 && test $UNK2 -eq 1
+test $OK2 -eq 1 && test $OK3 -eq 1 && test $OK4 -eq 1 && test $OK5 -eq 10 && test $OK6 -eq 1 && test $OK7 -eq 1 && test $ERR1 -eq 1 && test $UNK1 -eq 1 && test $UNK2 -eq 1
