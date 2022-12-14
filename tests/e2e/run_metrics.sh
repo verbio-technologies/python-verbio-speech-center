@@ -59,12 +59,13 @@ then
 		echo "Comparing obtained and expected accuracy metrics of $language-$dialect..."
 		compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-		deviation_metric=$(jq --arg dialect "$language-$dialect" '."Accuracy typical deviation"' "test_${language}_intratest/dialects_intratest.json")
-		expected_deviation=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
-		
-		echo "Comparing obtained and expected accuracy deviation metrics betweens $language dialects..."
-		compare_metrics ${deviation_metric} ${expected_deviation}
 	done
+
+	deviation_metric=$(jq '."Accuracy typical deviation"' "test_${language}_intratest/dialects_intratest.json")
+	expected_deviation=$(jq --arg lang "$language" '.[$lang].dialects["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
+	
+	echo "Comparing obtained and expected accuracy deviation metrics betweens $language dialects..."
+	compare_metrics ${deviation_metric} ${expected_deviation}
 fi
 
 while read domain;
@@ -75,12 +76,13 @@ do
 	echo "Comparing obtained and expected accuracy metrics of $domain..."
 	compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-	deviation_metric=$(jq --arg dom "$domain" '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
-	expected_deviation=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
-
-	echo "Comparing obtained and expected accuracy deviation metrics between domains..."
-	compare_metrics ${deviation_metric} ${expected_deviation}
  done < "tests/e2e/data/domains_$language.txt"
+
+deviation_metric=$(jq '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
+expected_deviation=$(jq --arg lang "$language" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
+
+echo "Comparing obtained and expected accuracy deviation metrics between domains..."
+compare_metrics ${deviation_metric} ${expected_deviation}
 
 rm "test_${language}_results.tsv"
 rm "test_${language}_oov.json"
