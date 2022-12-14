@@ -38,7 +38,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     argGroup = parser.add_mutually_exclusive_group(required=True)
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
-    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
     parser.add_argument('--sample-rate', '-s', help='Sample rate for audio: Example 8000 or 16000', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
@@ -53,12 +53,7 @@ def parse_command_line() -> Options:
     options.language = args.language
     options.sample_rate = int(args.sample_rate)
     options.secure_channel = args.secure
-    '''
-    if args.not_secure is not None:
-        options.secure_channel = False
-    else:
-        options.secure_channel = True
-    '''
+    
     return options
 
 class Credentials:
@@ -106,6 +101,7 @@ class SpeechCenterStreamingASRClient:
             for response in response_iterator:
                 logging.info("New incoming response %s", pprint(response))
                 if response.result and response.result.is_final:
+                    logging.info("Final recognition from server detected")
                     self._peer_responded.set()
 
         except Exception as e:
@@ -128,12 +124,13 @@ class SpeechCenterStreamingASRClient:
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
     def wait_server(self) -> bool:
-        logging.info("Waiting for server to connect...")
+        logging.info("Waiting for server to respond...")
         self._peer_responded.wait(timeout=None)
         if self._consumer_future.done():
             # If the future raises, forwards the exception here
             self._consumer_future.result()
-        True
+        
+        return True
     
     @staticmethod
     def __generate_inferences(
@@ -171,8 +168,6 @@ def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, opt
     client.call()
     logging.info("Press CTRL+C to exit")
     if client.wait_server():
-        logging.info("Recognition started")
-        client.audio_session()
         logging.info("Recognition finished")
     else:
         logging.error("Recognition failed: server didn't answer")
