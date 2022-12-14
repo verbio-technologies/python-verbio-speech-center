@@ -1,6 +1,6 @@
 {
 "en-us": {
-    "oov": 4.10,
+    "oov": 4.13,
     "accuracy": 62.00,
     "domains": {
         "multidomain-airtravel-hm-atis": {"accuracy": 81.38},
@@ -54,7 +54,7 @@
             "multidomain-banking-hm-bbvae": {"accuracy": 68.28},
             "multidomain-banking-hm-caixabank": {"accuracy": 87.43},
             "multidomain-energy-hh-endesa": {"accuracy": 41.87},
-            "multidomain-furniture_sales-hh-lomonaco": {"accuracy": 45.8},
+            "multidomain-furniture_sales-hh-lomonaco": {"accuracy": 45.64},
             "multidomain-insurance-hh-liberty_insurances": {"accuracy": 31.61},
             "multidomain-real_estate-hh-servihabitat": {"accuracy": 45.55},
             "multidomain-technology_support-hh-bq_tech_support": {"accuracy": 55.51},
