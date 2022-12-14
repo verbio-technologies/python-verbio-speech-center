@@ -129,7 +129,6 @@ class SpeechCenterStreamingASRClient:
         if self._consumer_future.done():
             # If the future raises, forwards the exception here
             self._consumer_future.result()
-            return True
         
         return True
     
