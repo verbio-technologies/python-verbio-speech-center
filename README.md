@@ -58,28 +58,6 @@ The CLI clients will use the generated code to connect to the speech center clou
 
 Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following commands:
 
-```commandline
-.>$ cd cli-client
-cli-client>$ ./recognizer.py --help
-usage: recognizer.py [-h] --audio-file AUDIO_FILE (--grammar GRAMMAR | --topic {GENERIC,TELCO,BANKING,INSURANCE}) [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST]
-
-Perform speech recognition on an audio file
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --audio-file AUDIOFILE, -a AUDIOFILE
-                        Path to a .wav audio in 8kHz and PCM16 encoding
-  --grammar GRAMMAR, -g GRAMMAR
-                        Path to a file containing an ABNF grammar
-  --topic {GENERIC,TELCO,BANKING,INSURANCE}, -T {GENERIC,TELCO,BANKING,INSURANCE}
-                        A valid topic
-  --language {en-US,pt-BR,es-ES}, -l {en-US,pt-BR,es-ES}
-                        A Language ID (default: en-US)
-  --token TOKEN, -t TOKEN
-                        A string with the authentication token
-  --host HOST, -H HOST  The URL of the host trying to reach (default: csr.api.speechcenter.verbio.com)
-```
-
 **Example**
 
 ```commandline
