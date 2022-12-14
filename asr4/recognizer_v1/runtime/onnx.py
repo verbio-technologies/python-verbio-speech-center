@@ -58,8 +58,12 @@ class OnnxSession(Session):
 
     def __getSessionOptions(self, **kwargs):
         session_options = self._createSessionOptions(**kwargs)
-        self.logger.info(f"intra operation number of threads: {session_options.intra_op_num_threads}")
-        self.logger.info(f"inter operation number of threads: {session_options.inter_op_num_threads}")
+        self.logger.info(
+            f"intra operation number of threads: {session_options.intra_op_num_threads}"
+        )
+        self.logger.info(
+            f"inter operation number of threads: {session_options.inter_op_num_threads}"
+        )
         return session_options
 
     @staticmethod
