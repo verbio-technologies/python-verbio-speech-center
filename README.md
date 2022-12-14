@@ -83,33 +83,6 @@ with response.text as your speech recognition inference response and response.st
 
 Our Synthesizer will convert your text into speech. In order to run the CLI Speech Center Synthesizer client, check out the following commands:
 
-```commandline
-.>$ cd cli-client
-cli-client>$ ./synthesizer.py --help
-usage: synthesizer.py [-h] --text TEXT --voice {Tommy,Annie,Aurora,Luma,David} [--sample-rate {8000}] [--encoding {PCM}] [--format {wav,raw}] [--language {en-US,pt-BR,es-ES}] --token TOKEN [--host HOST] --audio-file AUDIO_FILE
-
-Perform speech synthesis on a sample text
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --text TEXT, -T TEXT  Text to synthesize to audio
-  --voice {Tommy,Annie,Aurora,Luma,David}, -v {Tommy,Annie,Aurora,Luma,David}
-                        Voice to use for the synthesis
-  --sample-rate {8000}, -s {8000}
-                        Output audio sample rate in Hz (default: 8000)
-  --encoding {PCM}, -e {PCM}
-                        Output audio encoding algorithm (default: PCM [Signed 16-bit little endian PCM])
-  --format {wav,raw}, -f {wav,raw}
-                        Output audio header. (default: wav)
-  --language {en-US,pt-BR,es-ES,ca-ES}, -l {en-US,pt-BR,es-ES,ca-ES}
-                        A Language ID (default: en-US)
-  --token TOKEN, -t TOKEN
-                        A string with the authentication token
-  --host HOST, -H HOST  The URL of the host trying to reach (default: tts.api.speechcenter.verbio.com)
-  --audio-file AUDIO_FILE, -a AUDIO_FILE
-                        Path to store the resulting audio
-```
-
 **Example**
 
 ```commandline
