@@ -34,7 +34,7 @@ function compare_metrics(){
 
 
 pip install .[client]
-python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m -v DEBUG
+python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
 sleep 10
 
 accuracy_metric=$(cat "test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
