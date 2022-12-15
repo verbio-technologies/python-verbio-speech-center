@@ -32,7 +32,7 @@ try:
     from .service import RecognitionServiceConfiguration
     from .server import Server, ServerConfiguration
 except Exception as e:
-    print("Not importing Recognizer Service, will not be available (%s)", str(e))
+    print("Not importing Recognizer Service, will not be available (%s)" % str(e))
 
 __all__ = (
     "SERVICES_NAMES",
