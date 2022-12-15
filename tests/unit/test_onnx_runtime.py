@@ -34,8 +34,8 @@ class TestOnnxSession(unittest.TestCase):
     def testNumberOfThreads(self):
         numberOfWorkers = 4
         options = OnnxSession._createSessionOptions(number_of_workers=numberOfWorkers)
-        self.assertEqual(numberOfWorkers, options.inter_op_num_threads)
-        self.assertEqual(1, options.intra_op_num_threads)
+        self.assertEqual(1, options.inter_op_num_threads)
+        self.assertEqual(numberOfWorkers, options.intra_op_num_threads)
 
     def testZeroNumberOfThreads(self):
         options = OnnxSession._createSessionOptions(number_of_workers=0)
