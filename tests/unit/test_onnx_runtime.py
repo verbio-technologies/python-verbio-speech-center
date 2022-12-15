@@ -30,7 +30,7 @@ class MockOnnxSession(Session):
         return ["input"]
 
 
-class TestOnnSession(unittest.TestCase):
+class TestOnnxSession(unittest.TestCase):
     def testNumberOfThreads(self):
         numberOfWorkers = 4
         options = OnnxSession._createSessionOptions(number_of_workers=numberOfWorkers)
