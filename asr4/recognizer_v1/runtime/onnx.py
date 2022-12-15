@@ -69,8 +69,8 @@ class OnnxSession(Session):
     @staticmethod
     def _createSessionOptions(**kwargs) -> SessionOptions:
         options = SessionOptions()
-        options.inter_op_num_threads = kwargs.pop("number_of_workers", 0)
-        options.intra_op_num_threads = 0 if options.inter_op_num_threads == 0 else 1
+        options.intra_op_num_threads = kwargs.pop("number_of_workers", 0)
+        options.inter_op_num_threads = 0 if options.intra_op_num_threads == 0 else 1
         return options
 
     def run(
