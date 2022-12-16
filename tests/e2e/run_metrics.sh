@@ -7,7 +7,7 @@ TEST_PASSED=true
 variant="none"
 interval=0.05
 
-DIALECTS_ES=("es" "mx" "co" "pe" "us")
+DIALECTS_ES="es mx co pe us"
 
 
 if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
@@ -32,9 +32,8 @@ function compare_metrics(){
 	fi
 }
 
-
 pip install .[client]
-python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
+python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
 sleep 10
 
 accuracy_metric=$(cat "test_${language}_results.tsv" | grep "Accuracy" | cut -d " " -f 2)
@@ -51,7 +50,7 @@ compare_metrics ${oov_metric} ${expected_oov}
 
 if [ "${language}" == "es" ];
 then
-	for dialect in  "${DIALECTS_ES}";
+	for dialect in  $DIALECTS_ES;
 	do
 		accuracy_metric=$(jq --arg dialect "$language-$dialect" '.[$dialect]' "test_${language}_intratest/dialects_intratest.json")
 		expected_accuracy=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects[$dialect].accuracy' "tests/e2e/data/expected_metrics.json")
@@ -59,12 +58,13 @@ then
 		echo "Comparing obtained and expected accuracy metrics of $language-$dialect..."
 		compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-		deviation_metric=$(jq --arg dialect "$language-$dialect" '."Accuracy typical deviation"' "test_${language}_intratest/dialects_intratest.json")
-		expected_deviation=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
-		
-		echo "Comparing obtained and expected accuracy deviation metrics of $language..."
-		compare_metrics ${deviation_metric} ${expected_deviation}
 	done
+
+	deviation_metric=$(jq '."Accuracy typical deviation"' "test_${language}_intratest/dialects_intratest.json")
+	expected_deviation=$(jq --arg lang "$language" '.[$lang].dialects["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
+	
+	echo "Comparing obtained and expected accuracy deviation metrics betweens $language dialects..."
+	compare_metrics ${deviation_metric} ${expected_deviation}
 fi
 
 while read domain;
@@ -75,12 +75,13 @@ do
 	echo "Comparing obtained and expected accuracy metrics of $domain..."
 	compare_metrics ${accuracy_metric} ${expected_accuracy}
 
-	deviation_metric=$(jq --arg dom "$domain" '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
-	expected_deviation=$(jq --arg lang "$language" --arg dom "$domain" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
-
-	echo "Comparing obtained and expected accuracy deviation metrics of $domain..."
-	compare_metrics ${deviation_metric} ${expected_deviation}
  done < "tests/e2e/data/domains_$language.txt"
+
+deviation_metric=$(jq '."Accuracy typical deviation"' "test_${language}_intratest/domains_intratest.json")
+expected_deviation=$(jq --arg lang "$language" '.[$lang].domains["typical_deviation"]' "tests/e2e/data/expected_metrics.json")
+
+echo "Comparing obtained and expected accuracy deviation metrics between domains..."
+compare_metrics ${deviation_metric} ${expected_deviation}
 
 rm "test_${language}_results.tsv"
 rm "test_${language}_oov.json"
