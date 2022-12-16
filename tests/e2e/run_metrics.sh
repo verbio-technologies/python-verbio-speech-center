@@ -7,7 +7,7 @@ TEST_PASSED=true
 variant="none"
 interval=0.05
 
-DIALECTS_ES=("es" "mx" "co" "pe" "us")
+DIALECTS_ES="es mx co pe us"
 
 
 if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
@@ -32,7 +32,6 @@ function compare_metrics(){
 	fi
 }
 
-
 pip install .[client]
 python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
 sleep 10
@@ -51,7 +50,7 @@ compare_metrics ${oov_metric} ${expected_oov}
 
 if [ "${language}" == "es" ];
 then
-	for dialect in  "${DIALECTS_ES}";
+	for dialect in  $DIALECTS_ES;
 	do
 		accuracy_metric=$(jq --arg dialect "$language-$dialect" '.[$dialect]' "test_${language}_intratest/dialects_intratest.json")
 		expected_accuracy=$(jq --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang].dialects[$dialect].accuracy' "tests/e2e/data/expected_metrics.json")
