@@ -14,3 +14,10 @@ multidomain-telco-hh-claro
 multidomain-telco-hh-vodafone_customer
 multidomain-telco-hm-telefónica
 multidomain-telco-hm-tmobile
+multidomain_extended-banking
+multidomain_extended-banking-hh-appen_cut
+multidomain_extended-insurance
+multidomain_extended-retail
+multidomain_extended-telco
+multidomain_extended-telco-hh-appen_cut
+multidomain_extended-telcojpt
