@@ -1,8 +1,11 @@
+import logging
+
 import torch
 import numpy as np
 import resampy
 import torch.nn.functional as F
 import onnxruntime
+from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
 import simple_ctc
 
 import abc
@@ -41,17 +44,34 @@ class Session(abc.ABC):
         raise NotImplementedError()
 
 
-class OnnxSession(abc.ABC):
+class OnnxSession(Session):
     def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
-        providers = kwargs.get("providers")
-        del kwargs["providers"]
+        super().__init__(path_or_bytes)
+        self.logger = logging.getLogger("ASR4")
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
-            sess_options=kwargs.get("sess_options"),
-            providers=providers,
+            sess_options=self.__getSessionOptions(**kwargs),
+            providers=kwargs.pop("providers", None),
             provider_options=kwargs.get("provider_options"),
             **kwargs,
         )
+
+    def __getSessionOptions(self, **kwargs) -> SessionOptions:
+        session_options = self._createSessionOptions(**kwargs)
+        self.logger.info(
+            f"intra operation number of threads: {session_options.intra_op_num_threads}"
+        )
+        self.logger.info(
+            f"inter operation number of threads: {session_options.inter_op_num_threads}"
+        )
+        return session_options
+
+    @staticmethod
+    def _createSessionOptions(**kwargs) -> SessionOptions:
+        options = SessionOptions()
+        options.intra_op_num_threads = kwargs.pop("number_of_workers", 0)
+        options.inter_op_num_threads = 0 if options.intra_op_num_threads == 0 else 1
+        return options
 
     def run(
         self,

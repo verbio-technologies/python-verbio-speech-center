@@ -1,5 +1,5 @@
 import unittest
-from asr4.recognizer_v1.runtime import Session, OnnxRuntime
+from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession
 from asr4.recognizer_v1.runtime.onnx import _DecodeResult
 
 import torch
@@ -28,6 +28,19 @@ class MockOnnxSession(Session):
 
     def get_inputs_names(self) -> List[str]:
         return ["input"]
+
+
+class TestOnnxSession(unittest.TestCase):
+    def testNumberOfThreads(self):
+        numberOfWorkers = 4
+        options = OnnxSession._createSessionOptions(number_of_workers=numberOfWorkers)
+        self.assertEqual(1, options.inter_op_num_threads)
+        self.assertEqual(numberOfWorkers, options.intra_op_num_threads)
+
+    def testZeroNumberOfThreads(self):
+        options = OnnxSession._createSessionOptions(number_of_workers=0)
+        self.assertEqual(0, options.inter_op_num_threads)
+        self.assertEqual(0, options.intra_op_num_threads)
 
 
 class TestOnnxRuntime(unittest.TestCase):

@@ -56,6 +56,7 @@ __all__ = (
     "add_RecognizerServicer_to_server",
     "Language",
     "RecognizerService",
+    "FormatterFactory",
     "Logger",
     "LoggerQueue",
     "LoggerService",

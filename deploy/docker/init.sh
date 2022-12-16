@@ -8,4 +8,5 @@ export OMP_NUM_THREADS=8
 export OMP_WAIT_POLICY=PASSIVE
 export KMP_AFFINITY=scatter
 
-python3 server.py -j${workers} -m /asr4-$LANGUAGE.onnx -d /dict.ltr.txt -l $LANGUAGE -v "${LOG_LEVEL}" -f /format-model.$LANGUAGE.fm --host [::]:${port}
+python3 server.py -s 1 -L ${workers} -w ${OMP_NUM_THREADS} -m /asr4-$LANGUAGE.onnx -d /dict.ltr.txt -l $LANGUAGE -v "${LOG_LEVEL}" -f /format-model.$LANGUAGE.fm --host [::]:${port}
+

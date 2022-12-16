@@ -74,7 +74,7 @@ class Server:
         logger = logsQueue.getLogger()
         gRpcServer = Server.createGRpcServer(configuration)
         await gRpcServer.start()
-        logger.info("Sever started")
+        logger.info("Server started")
         await gRpcServer.wait_for_termination()
 
     @staticmethod

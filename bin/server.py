@@ -24,7 +24,7 @@ def serve(
     logger = loggerService.getLogger()
     servers = []
     for i in range(configuration.numberOfServers):
-        logger.info("Starting sever %s", i)
+        logger.info("Starting server %s" % i)
         server = Server(configuration, loggerService)
         server.spawn()
         servers.append(server)
