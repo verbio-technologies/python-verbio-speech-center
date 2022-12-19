@@ -90,7 +90,9 @@
                 "multidomain_extended-retail": {"accuracy": 49.61},
                 "multidomain_extended-telco": {"accuracy": 53.34},
                 "multidomain_extended-telco-hh-appen_cut": {"accuracy": 47.15},
-                "typical_deviation":  3.93
+                "multidomain_extended-telcojpt": {"accuracy": 57.32},
+                "typical_deviation": 3.93
+
             }
         }
     }
