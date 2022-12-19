@@ -75,26 +75,24 @@
         },
         "upgraded": {
             "oov": 6.49,
-            "accuracy": 74.00,
+            "accuracy": 58.00,
             "dialects": {
-                "es-co": {"accuracy": 62.9},
-                "es-es": {"accuracy": 76.88},
-                "es-mx": {"accuracy": 72.85},
-                "es-cl": {"accuracy": 62.16},
+                "es-co": {"accuracy": 48.12},
+                "es-es": {"accuracy": 53.96},
+                "es-mx": {"accuracy": 53.98},
+                "es-cl": {"accuracy": 47.03},
                 "es-us": {"accuracy": 71.68},
-                "typical_deviation": 6.34
+                "typical_deviation": 3.22
             },
             "domains": {
-                "multidomain_extended-banking": {"accuracy": 80.03},
-                "multidomain_extended-banking-hh-appen_cut": {"accuracy": 63.8},
-                "multidomain_extended-insurance": {"accuracy": 73.99},
-                "multidomain_extended-retail": {"accuracy": 72.14},
-                "multidomain_extended-telco": {"accuracy": 73.23},
-                "multidomain_extended-telco-hh-appen_cut": {"accuracy": 61.3},
-                "multidomain_extended-telcojpt": {"accuracy": 79.06},
-                "typical_deviation":  6.56
+                "multidomain_extended-banking": {"accuracy": 57.56},
+                "multidomain_extended-banking-hh-appen_cut": {"accuracy": 48.02},
+                "multidomain_extended-insurance": {"accuracy": 53.86},
+                "multidomain_extended-retail": {"accuracy": 49.61},
+                "multidomain_extended-telco": {"accuracy": 53.34},
+                "multidomain_extended-telco-hh-appen_cut": {"accuracy": 47.15},
+                "typical_deviation":  3.93
             }
-
         }
     }
 }
