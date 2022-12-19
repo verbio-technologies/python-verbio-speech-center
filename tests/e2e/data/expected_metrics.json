@@ -81,7 +81,6 @@
                 "es-es": {"accuracy": 53.96},
                 "es-mx": {"accuracy": 53.98},
                 "es-cl": {"accuracy": 47.03},
-                "es-us": {"accuracy": 71.68},
                 "typical_deviation": 3.22
             },
             "domains": {
