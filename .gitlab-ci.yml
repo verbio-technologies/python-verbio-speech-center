@@ -229,6 +229,7 @@ testing:integration-testing:gpu:
   extends: .template:integration-testing
   tags:
     - gpu
+  allow_failure: true
   before_script:
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
