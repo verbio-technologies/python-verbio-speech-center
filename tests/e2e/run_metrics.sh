@@ -23,7 +23,13 @@ function compare_metrics(){
 	expected_metric="$2"
 	comparison=$3
 
-	if [ "$metric" != "null" ] && [ "$expected_metric" != "null" ] 
+	if [ "$metric" == "null" ] && [ "$expected_metric" != "null" ]
+	then
+		TEST_PASSED=false
+	elif [ "$metric" != "null" ] && [ "$expected_metric" == "null" ]
+	then
+		TEST_PASSED=false
+	elif [ "$metric" != "null" ] && [ "$expected_metric" != "null" ]
 	then
 		if (( $(echo "$metric+$interval >= $expected_metric" |bc -l) )) && (( $(echo "$metric-$interval <= $expected_metric" |bc -l) ));
 		then
