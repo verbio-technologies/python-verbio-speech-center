@@ -14,9 +14,9 @@
                 "multidomain-telco-hh-agentassist_cut": {"accuracy": 39.37},
                 "multidomain-telco-hm-sprintopenquestiontmobile": {"accuracy": 67.74},
                 "multidomain-varied-hh-switchboard_cut": {"accuracy": 45.74},
-                "multidomain-varied-hm-8x30_cut": {"accuracy": 57.17},
-                "typical_deviation": 14.7
-            }
+                "multidomain-varied-hm-8x30_cut": {"accuracy": 57.17}
+            },
+            "domains_typical_deviation": 14.7
         },
         "upgraded": {}
 
@@ -33,10 +33,9 @@
                 "multidomain-telco-hh-net2": {"accuracy": 42.99},
                 "multidomain-telco-hh-oi": {"accuracy": 43.25},
                 "multidomain-telco-hm-accenture": {"accuracy": 36.16},
-                "multidomain-varied-hm-sala_ii": {"accuracy": 65.34},
-                "typical_deviation": 9.94
-        
-            }
+                "multidomain-varied-hm-sala_ii": {"accuracy": 65.34}        
+            },
+            "domains_typical_deviation": 9.94
         },
         "upgraded": {}
 
@@ -50,9 +49,9 @@
                 "es-es": {"accuracy": 56.72},
                 "es-mx": {"accuracy": 65.72},
                 "es-pe": {"accuracy": 69.7},
-                "es-us": {"accuracy": 71.68},
-                "typical_deviation": 5.1
+                "es-us": {"accuracy": 71.68}
             },
+            "dialects_typical_deviation": 5.1,
             "domains": {
                 "multidomain-administration-hh-060": {"accuracy": 45.12},
                 "multidomain-administration-hm-aeat": {"accuracy": 69.23},
@@ -69,9 +68,9 @@
                 "multidomain-telco-hh-claro": {"accuracy": 63.49},
                 "multidomain-telco-hh-vodafone_customer": {"accuracy": 12.92},
                 "multidomain-telco-hm-telefónica": {"accuracy": 68.24},
-                "multidomain-telco-hm-tmobile": {"accuracy": 71.68}, 
-                "typical_deviation": 17.8
-            }
+                "multidomain-telco-hm-tmobile": {"accuracy": 71.68}
+            },
+            "domains_typical_deviation": 17.8
         },
         "upgraded": {
             "oov": 6.49,
@@ -80,9 +79,9 @@
                 "es-co": {"accuracy": 48.12},
                 "es-es": {"accuracy": 53.96},
                 "es-mx": {"accuracy": 53.98},
-                "es-cl": {"accuracy": 47.03},
-                "typical_deviation": 3.22
+                "es-cl": {"accuracy": 47.03}
             },
+            "dialects_typical_deviation": 3.22,
             "domains": {
                 "multidomain_extended-banking": {"accuracy": 57.56},
                 "multidomain_extended-banking-hh-appen_cut": {"accuracy": 48.02},
@@ -90,10 +89,9 @@
                 "multidomain_extended-retail": {"accuracy": 49.61},
                 "multidomain_extended-telco": {"accuracy": 53.34},
                 "multidomain_extended-telco-hh-appen_cut": {"accuracy": 47.15},
-                "multidomain_extended-telcojpt": {"accuracy": 57.32},
-                "typical_deviation": 3.93
-
-            }
+                "multidomain_extended-telcojpt": {"accuracy": 57.32}
+            },
+            "domains_typical_deviation": 3.93
         }
     }
 }
