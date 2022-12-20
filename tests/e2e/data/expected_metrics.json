@@ -49,9 +49,9 @@
                 "es-es": {"accuracy": 56.72},
                 "es-mx": {"accuracy": 65.72},
                 "es-pe": {"accuracy": 69.7},
-                "es-us": {"accuracy": 71.68},
-                "typical_deviation": 5.1
+                "es-us": {"accuracy": 71.68}
             },
+            "dialects_typical_deviation": 5.1,
             "domains": {
                 "multidomain-administration-hh-060": {"accuracy": 45.12},
                 "multidomain-administration-hm-aeat": {"accuracy": 69.23},

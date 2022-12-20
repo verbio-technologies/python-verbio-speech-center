@@ -47,13 +47,13 @@ compare_metrics ${oov_metric} ${expected_oov} "${language} OOV metrics"
 
 if [ "${language}" == "es" ];
 then
-	dialects=( $(cat  "tests/e2e/data/expected_metrics.json" | jq --arg testtype "$test" --arg lang "$language" '.[$lang][$testtype].dialects | keys[]') )
+	dialects=( $(cat  "tests/e2e/data/expected_metrics.json" | jq --arg testtype "$test" --arg lang "$language" '.[$lang][$testtype].dialects | keys[]' | sed 's/"//g') )
 	for dialect in  ${dialects[@]};
 	do
-		accuracy_metric=$(jq --arg dialect "$language-$dialect" '.[$dialect]' "test_${language}_intratest/dialects_intratest.json")
-		expected_accuracy=$(jq --arg testtype "$test" --arg lang "$language" --arg dialect "$language-$dialect" '.[$lang][$testtype].dialects[$dialect].accuracy' "tests/e2e/data/expected_metrics.json")
+		accuracy_metric=$(jq --arg dialect "$dialect" '.[$dialect]' "test_${language}_intratest/dialects_intratest.json")
+		expected_accuracy=$(jq --arg testtype "$test" --arg lang "$language" --arg dialect "$dialect" '.[$lang][$testtype].dialects[$dialect].accuracy' "tests/e2e/data/expected_metrics.json")
 
-		compare_metrics ${accuracy_metric} ${expected_accuracy} "$language-$dialect accuracy metrics"
+		compare_metrics ${accuracy_metric} ${expected_accuracy} "$dialect accuracy metrics"
 
 	done
 
@@ -63,7 +63,7 @@ then
 	compare_metrics ${deviation_metric} ${expected_deviation} "$language dialect accuracy deviation metrics"
 fi
 
-domains=( $(cat  "tests/e2e/data/expected_metrics.json" | jq --arg testtype "$test" --arg lang "$language" '.[$lang][$testtype].domains | keys[]') )
+domains=( $(cat  "tests/e2e/data/expected_metrics.json" | jq --arg testtype "$test" --arg lang "$language" '.[$lang][$testtype].domains | keys[]' | sed 's/"//g') )
 for domain in ${domains[@]};
 do
 	accuracy_metric=$(jq --arg dom $domain '.[$dom]' "test_${language}_intratest/domains_intratest.json")
