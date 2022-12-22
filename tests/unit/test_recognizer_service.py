@@ -38,7 +38,7 @@ class MockFormatter:
     def __init__(self, correct_sentence: str):
         self._correct_sentence = correct_sentence.split(" ")
 
-    def classify(self, sentence: []) -> []:
+    def classify(self, sentence: List[str]) -> List[str]:
         return self._correct_sentence
 
 

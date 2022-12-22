@@ -4,6 +4,7 @@ import time
 import multiprocessing
 import traceback
 import sys
+from typing import List
 
 
 class Logger(logging.Logger):
@@ -68,7 +69,7 @@ class LoggerService:
         LoggerService.configureLogger(self._log_level)
 
     @staticmethod
-    def getLogLevelOptions() -> []:
+    def getLogLevelOptions() -> List[str]:
         return list(LoggerService._LOG_LEVELS.keys())
 
     @staticmethod
@@ -78,6 +79,8 @@ class LoggerService:
     @staticmethod
     def configureLogger(level: int) -> None:
         logging.getLogger("numba").setLevel(min(level, logging.INFO))
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
+        logging.getLogger("grpc").setLevel(logging.WARNING)
         logging.Formatter.converter = time.gmtime
         logging.basicConfig(
             level=level,
@@ -117,4 +120,4 @@ class LoggerService:
                 "Level [%s] is not valid log level. Will use %s instead."
                 % (offender, loglevel)
             )
-        return self._LOG_LEVELS.get(loglevel, self._LOG_LEVEL)
+        return self._LOG_LEVELS.get(loglevel, self._LOG_LEVELS[self._LOG_LEVEL])
