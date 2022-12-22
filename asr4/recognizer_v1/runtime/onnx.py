@@ -63,7 +63,7 @@ class OnnxSession(Session):
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
             sess_options=self.__getSessionOptions(**kwargs),
-            providers=kwargs.pop("providers", None),
+            providers=kwargs.pop("providers", ["CPUExecutionProvider"]),
             provider_options=kwargs.get("provider_options"),
             **kwargs,
         )
