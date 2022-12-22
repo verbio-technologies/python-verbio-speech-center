@@ -1,11 +1,16 @@
 import unittest
-from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession
-from asr4.recognizer_v1.runtime.onnx import _DecodeResult
+import pytest
+import logging
 
 import torch
+import google
 import numpy as np
 from random import randint
 from typing import Any, Dict, List, Optional, Union
+
+from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession
+from asr4.recognizer_v1.runtime.onnx import _DecodeResult
+from asr4.recognizer_v1.loggerService import LoggerService
 
 
 class MockOnnxSession(Session):
@@ -31,6 +36,15 @@ class MockOnnxSession(Session):
 
 
 class TestOnnxSession(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def rootpath(self, pytestconfig):
+        self.rootpath = pytestconfig.rootpath
+        self.datapath = pytestconfig.rootpath.joinpath("tests/unit/data")
+
+    @pytest.fixture(autouse=True)
+    def caplog(self, caplog):
+        self.caplog = caplog
+
     def testNumberOfThreads(self):
         numberOfWorkers = 4
         options = OnnxSession._createSessionOptions(number_of_workers=numberOfWorkers)
@@ -42,6 +56,37 @@ class TestOnnxSession(unittest.TestCase):
         self.assertEqual(0, options.inter_op_num_threads)
         self.assertEqual(0, options.intra_op_num_threads)
 
+    def testEmptyModel(self):
+        with self.assertRaises(FileNotFoundError):
+            _session = OnnxSession("")
+
+    def testInvalidModel(self):
+        with self.assertRaises(google.protobuf.message.DecodeError):
+            _session = OnnxSession(self.rootpath.joinpath("README.md"))
+
+    def testNonQuantizedModel(self):
+        LoggerService.configureLogger(logging.INFO)
+        with self.caplog.at_level(logging.WARNING):
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12.onnx")))
+        self.assertTrue("Model not quantized - weight precision: 'FLOAT32'" in self.caplog.text)
+
+    def testINT8QuantizedModel(self):
+        LoggerService.configureLogger(logging.INFO)
+        with self.caplog.at_level(logging.INFO):
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-int8.onnx")))
+        self.assertTrue("Model quantized - weight precision: 'INT8'" in self.caplog.text)
+
+    def testFLOAT16QuantizedModel(self):
+        LoggerService.configureLogger(logging.INFO)
+        with self.caplog.at_level(logging.WARNING):
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-float16.onnx")))
+        self.assertTrue("Model Quantization Error: expected 'INT8' but retrieved 'FLOAT16' weight precision" in self.caplog.text)
+
+    def testUINT8QuantizedModel(self):
+        LoggerService.configureLogger(logging.INFO)
+        with self.caplog.at_level(logging.WARNING):
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-uint8.onnx")))
+        self.assertTrue("Model Quantization Error: expected 'INT8' but retrieved 'UINT8' weight precision" in self.caplog.text)
 
 class TestOnnxRuntime(unittest.TestCase):
     def testEmptyInput(self):
