@@ -12,12 +12,16 @@ import onnxruntime
 import onnxruntime.quantization
 
 from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
-from onnxruntime.quantization.quant_utils import TENSOR_NAME_QUANT_SUFFIX, type_to_name, model_has_infer_metadata
+from onnxruntime.quantization.quant_utils import (
+    TENSOR_NAME_QUANT_SUFFIX,
+    type_to_name,
+    model_has_infer_metadata,
+)
 
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
 
-MODEL_QUANTIZATION_PRECISION = 'INT8'
+MODEL_QUANTIZATION_PRECISION = "INT8"
 
 
 class OnnxRuntimeResult(NamedTuple):
@@ -81,7 +85,7 @@ class OnnxSession(Session):
         options.inter_op_num_threads = 0 if options.intra_op_num_threads == 0 else 1
         return options
 
-    def __checkModelWeightPrecision(self, path_or_bytes: Union[str, bytes]) -> None:        
+    def __checkModelWeightPrecision(self, path_or_bytes: Union[str, bytes]) -> None:
         model = onnx.load(path_or_bytes)
         if model_has_infer_metadata(model):
             precision = self.__getQuantizationPrecision(model)
@@ -94,13 +98,9 @@ class OnnxSession(Session):
                     f"Model Quantization Error: expected '{MODEL_QUANTIZATION_PRECISION}' but retrieved '{precision}' weight precision"
                 )
             else:
-                self.logger.info(
-                    f"Model quantized - weight precision: '{precision}'"
-                )
+                self.logger.info(f"Model quantized - weight precision: '{precision}'")
         else:
-            self.logger.warning(
-                "Model not quantized - weight precision: 'FLOAT32'"
-            )
+            self.logger.warning("Model not quantized - weight precision: 'FLOAT32'")
 
     def __getQuantizationPrecision(self, model: onnx.ModelProto) -> Optional[str]:
         for node in model.graph.initializer:
