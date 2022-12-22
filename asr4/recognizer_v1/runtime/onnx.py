@@ -1,16 +1,23 @@
+import abc
 import logging
+import resampy
+import numpy as np
 
 import torch
-import numpy as np
-import resampy
 import torch.nn.functional as F
-import onnxruntime
-from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
 import simple_ctc
 
-import abc
+import onnx
+import onnxruntime
+import onnxruntime.quantization
+
+from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
+from onnxruntime.quantization.quant_utils import TENSOR_NAME_QUANT_SUFFIX, type_to_name, model_has_infer_metadata
+
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
+
+MODEL_QUANTIZATION_PRECISION = 'INT8'
 
 
 class OnnxRuntimeResult(NamedTuple):
@@ -48,6 +55,7 @@ class OnnxSession(Session):
     def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(path_or_bytes)
         self.logger = logging.getLogger("ASR4")
+        self.__checkModelWeightPrecision(path_or_bytes)
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
             sess_options=self.__getSessionOptions(**kwargs),
@@ -57,7 +65,7 @@ class OnnxSession(Session):
         )
 
     def __getSessionOptions(self, **kwargs) -> SessionOptions:
-        session_options = self._createSessionOptions(**kwargs)
+        session_options = OnnxSession._createSessionOptions(**kwargs)
         self.logger.info(
             f"intra operation number of threads: {session_options.intra_op_num_threads}"
         )
@@ -72,6 +80,33 @@ class OnnxSession(Session):
         options.intra_op_num_threads = kwargs.pop("number_of_workers", 0)
         options.inter_op_num_threads = 0 if options.intra_op_num_threads == 0 else 1
         return options
+
+    def __checkModelWeightPrecision(self, path_or_bytes: Union[str, bytes]) -> None:        
+        model = onnx.load(path_or_bytes)
+        if model_has_infer_metadata(model):
+            precision = self.__getQuantizationPrecision(model)
+            if not precision:
+                self.logger.warning(
+                    f"Model Quantization Error: expected '{MODEL_QUANTIZATION_PRECISION}' but retrieved 'FLOAT16' weight precision"
+                )
+            elif precision != MODEL_QUANTIZATION_PRECISION:
+                self.logger.warning(
+                    f"Model Quantization Error: expected '{MODEL_QUANTIZATION_PRECISION}' but retrieved '{precision}' weight precision"
+                )
+            else:
+                self.logger.info(
+                    f"Model quantized - weight precision: '{precision}'"
+                )
+        else:
+            self.logger.warning(
+                "Model not quantized - weight precision: 'FLOAT32'"
+            )
+
+    def __getQuantizationPrecision(self, model: onnx.ModelProto) -> Optional[str]:
+        for node in model.graph.initializer:
+            if node.name.endswith(TENSOR_NAME_QUANT_SUFFIX):
+                return type_to_name[node.data_type]
+        return None
 
     def run(
         self,
