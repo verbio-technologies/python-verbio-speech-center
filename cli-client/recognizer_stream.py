@@ -40,7 +40,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     argGroup = parser.add_mutually_exclusive_group(required=True)
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
-    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
     parser.add_argument('--sample-rate', '-s', help='Sample rate for audio: Example 8000 or 16000', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
@@ -55,12 +55,7 @@ def parse_command_line() -> Options:
     options.language = args.language
     options.sample_rate = int(args.sample_rate)
     options.secure_channel = args.secure
-    '''
-    if args.not_secure is not None:
-        options.secure_channel = False
-    else:
-        options.secure_channel = True
-    '''
+    
     return options
 
 
@@ -111,7 +106,10 @@ class SpeechCenterStreamingASRClient:
                 json = MessageToJson(response)
                 logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
                 print(MessageToJson(response))
-            
+                if response.result and response.result.is_final:
+                    logging.info("Final recognition from server detected")
+                    self._peer_responded.set()
+
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
             self._peer_responded.set()
@@ -132,12 +130,13 @@ class SpeechCenterStreamingASRClient:
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
     def wait_server(self) -> bool:
-        logging.info("Waiting for server to connect...")
+        logging.info("Waiting for server to respond...")
         self._peer_responded.wait(timeout=None)
         if self._consumer_future.done():
             # If the future raises, forwards the exception here
             self._consumer_future.result()
-        True
+        
+        return True
     
     @staticmethod
     def __generate_inferences(
@@ -175,8 +174,6 @@ def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, opt
     client.call()
     logging.info("Press CTRL+C to exit")
     if client.wait_server():
-        logging.info("Recognition started")
-        client.audio_session()
         logging.info("Recognition finished")
     else:
         logging.error("Recognition failed: server didn't answer")
@@ -191,16 +188,17 @@ def run(command_line_options):
         credentials = Credentials(token)
         
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
-            logging.info("Running executor...")
-            future = executor.submit(process_recognition, executor, channel, command_line_options)
-            future.result()
-            logging.info("New result arrived")
+            runExecutor(command_line_options, executor, channel)
+            
     else:
         with grpc.insecure_channel(command_line_options.host) as channel:
-            logging.info("Running executor...")
-            future = executor.submit(process_recognition, executor, channel, command_line_options)
-            future.result()
-            logging.info("New result arrived")
+            runExecutor(command_line_options, executor, channel)
+
+def runExecutor(command_line_options, executor, channel):
+    logging.info("Running executor...")
+    future = executor.submit(process_recognition, executor, channel, command_line_options)
+    future.result()
+    logging.info("New result arrived")
     
 
 if __name__ == '__main__':
