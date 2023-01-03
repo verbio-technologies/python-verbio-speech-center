@@ -130,7 +130,6 @@ integration-testing:gpu:
     - master
   tags:
     - gpu
-  allow_failure: true
   before_script:
     - . /opt/intel/oneapi/setvars.sh
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
@@ -229,7 +228,6 @@ testing:integration-testing:gpu:
   extends: .template:integration-testing
   tags:
     - gpu
-  allow_failure: true
   before_script:
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
