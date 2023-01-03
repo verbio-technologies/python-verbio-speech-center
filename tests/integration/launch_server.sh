@@ -12,13 +12,12 @@ MODEL=$1
 DICTIONARY=$2
 LANGUAGE=$4
 FORMATTER=$(ls $3/format-model.${LANGUAGE}*)
-CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=1
 
 if [ -z $5 ]
 then
       python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 &
 else
-      export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
       python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 --gpu &
 fi
 
