@@ -27,7 +27,7 @@ class TestRecognizerUtils(object):
             "python3",
             f"{self.rootdir}/bin/client.py",
             "-v",
-            "INFO",
+            "TRACE",
             "--language",
             language,
             "--host",
@@ -168,6 +168,8 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
     def testEmptyGuiRecognizeRequest(self):
         process = self.runGuiRecognition(f"{self.datadir}/empty.gui", self._language)
         status = process.wait(timeout=60)
+        outs, errs = process.communicate(timeout=15)
+        print("ERRORS:", errs)
         self.assertEqual(status, 0)
 
     def testGuiEvaluationResultsExistInPath(self):

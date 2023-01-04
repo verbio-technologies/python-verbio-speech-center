@@ -79,6 +79,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
             args.language,
         )
 
+    _LOGGER.debug("[+] Generating Responses from %d candidates" % len(responses))
     return list(map(RecognizeResponse.FromString, responses))
 
 
@@ -150,6 +151,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         audios = _getAudiosList(args.gui)
     else:
         audios.append(args.audio)
+    _LOGGER.debug("- Read %d files from GUI." % len(audios))
 
     workerPool = multiprocessing.Pool(
         processes=args.jobs,
@@ -170,6 +172,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
     trnHypothesis.append("")
+    _LOGGER.debug("[-] TRN Hypothesis: {trnHypothesis}")
 
     return responses, trnHypothesis
 
