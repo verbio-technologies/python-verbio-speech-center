@@ -12,7 +12,7 @@ MODEL=$1
 DICTIONARY=$2
 LANGUAGE=$4
 FORMATTER=$(ls $3/format-model.${LANGUAGE}*)
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 if [ -z $5 ]
 then
