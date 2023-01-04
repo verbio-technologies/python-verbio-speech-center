@@ -214,7 +214,7 @@ testing:promote:gpu:
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
     - cd deploy/docker/
-    - docker build . -f ${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
+    - docker build . -f ${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     - docker push "${IMAGE_NAME}"
 
 
