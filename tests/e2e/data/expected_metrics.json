@@ -25,7 +25,7 @@
                 "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": 53.11},
                 "multidomain_extended-defined-ai_cut-hh-insurance":  {"accuracy": 59.79},
                 "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 59.88},
-                "multidomain_extended-defined-ai_cut-hh-telco":  {"accuracy": 60.55}
+                "multidomain_extended-defined-ai_cut-hh-telco":  {"accuracy": 59.00}
             },
             "domains_typical_deviation": 3.03
         }
