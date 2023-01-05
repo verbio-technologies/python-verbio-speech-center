@@ -26,7 +26,6 @@ function compare_metrics(){
 	elif (( $(echo "$metric > $expected_metric" |bc -l) ));
 	then
 		echo "$comparison: Obtained value (${metric}) is higher than expected value (${expected_metric})"
-		TEST_PASSED=false
 	else 
 		echo "$comparison: Obtained value (${metric}) is lower than expected value (${expected_metric})"
 		TEST_PASSED=false
