@@ -36,7 +36,7 @@
             "accuracy": 49.08,
             "domains": {
                 "multidomain-banking-hh-seguros": {"accuracy": 40.21},
-                "multidomain-banking-hm-translated": {"accuracy": 58.83},
+                "multidomain-banking-hm-translated": {"accuracy": 58},
                 "multidomain-telco-hh-atento": {"accuracy": 34.96},
                 "multidomain-telco-hh-net": {"accuracy": 37.36},
                 "multidomain-telco-hh-net2": {"accuracy": 43.43},
