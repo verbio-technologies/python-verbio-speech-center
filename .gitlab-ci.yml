@@ -208,6 +208,7 @@ testing:promote:gpu:
   script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:${DEVICE} | awk '/1/ -F " " {print $2}')
+    - echo ${MODEL_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
