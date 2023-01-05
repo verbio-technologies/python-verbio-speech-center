@@ -5,7 +5,7 @@ AWS_IP=$2
 gui=$3
 TEST_PASSED=true
 test=basic
-interval=0.1
+interval=1
 
 if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
 	language="es"
