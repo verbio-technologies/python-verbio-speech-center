@@ -65,7 +65,7 @@
                 "multidomain-administration-hh-060": {"accuracy": 45.12},
                 "multidomain-administration-hm-aeat": {"accuracy": 69.23},
                 "multidomain-banking-hm-bancomer": {"accuracy": 66.13},
-                "multidomain-banking-hm-bankia": {"accuracy": 68.26},
+                "multidomain-banking-hm-bankia": {"accuracy": 67.26},
                 "multidomain-banking-hm-bbva_line": {"accuracy": 41.01},
                 "multidomain-banking-hm-bbvae": {"accuracy": 68.28},
                 "multidomain-banking-hm-caixabank": {"accuracy": 87.43},
