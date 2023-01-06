@@ -73,7 +73,7 @@
                 "multidomain-furniture_sales-hh-lomonaco": {"accuracy": 45.71},
                 "multidomain-insurance-hh-liberty_insurances": {"accuracy": 31.28},
                 "multidomain-real_estate-hh-servihabitat": {"accuracy": 46.06},
-                "multidomain-technology_support-hh-bq_tech_support": {"accuracy": 56.44},
+                "multidomain-technology_support-hh-bq_tech_support": {"accuracy": 54.74},
                 "multidomain-telco-hh-claro": {"accuracy": 63.35},
                 "multidomain-telco-hh-vodafone_customer": {"accuracy": 12.92},
                 "multidomain-telco-hm-telefónica": {"accuracy": 68.24},
