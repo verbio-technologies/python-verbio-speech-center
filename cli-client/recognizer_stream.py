@@ -6,7 +6,6 @@ sys.path.insert(1, '../proto/generated')
 from concurrent.futures import ThreadPoolExecutor
 import threading
 from typing import Iterator, Iterable
-from pprint import pprint
 import argparse
 import logging
 import wave
@@ -105,7 +104,7 @@ class SpeechCenterStreamingASRClient:
             for response in response_iterator:
                 json = MessageToJson(response)
                 logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
-                print(MessageToJson(response))
+                logging.debug(MessageToJson(response))
                 if response.result and response.result.is_final:
                     logging.info("Final recognition from server detected")
                     self._peer_responded.set()
@@ -202,7 +201,7 @@ def runExecutor(command_line_options, executor, channel):
     
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logging.info("Running speechcenter streaming channel...")
     command_line_options = parse_command_line()
     command_line_options.check()
