@@ -104,7 +104,7 @@ class SpeechCenterStreamingASRClient:
             for response in response_iterator:
                 json = MessageToJson(response)
                 logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
-                logging.debug(MessageToJson(response))
+                print(MessageToJson(response))
                 if response.result and response.result.is_final:
                     logging.info("Final recognition from server detected")
                     self._peer_responded.set()
