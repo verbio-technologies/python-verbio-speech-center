@@ -1,9 +1,9 @@
 ARG PYTHON_VERSION=3.9
-FROM docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python:${PYTHON_VERSION}
+From docker.registry.verbio.com/engineering/devops/python:${PYTHON_VERSION}-slim
 
 # Install CUDA 11.7.0
 
-RUN apt-get update && apt-get install libxml2 zstd -y
+RUN apt-get update && apt-get install libxml2 zstd wget gcc -y
 
 RUN wget https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux.run && \
     sh cuda_11.7.0_515.43.04_linux.run --silent --toolkit && \
@@ -18,19 +18,7 @@ RUN mkdir cudnn && \
     cd .. && \
     rm -rf cudnn
 
-COPY TensorRT-8.5.1.7.Linux.x86_64-gnu.cuda-11.8.cudnn8.6.tar.gz /
-
-ARG PYTHON_VERSION
-
-RUN . /opt/intel/oneapi/setvars.sh && \
-    tar xzvf TensorRT-8.5.1.7.Linux.x86_64-gnu.cuda-11.8.cudnn8.6.tar.gz && \
-    python -m pip install TensorRT-8.5.1.7/python/tensorrt-8.5.1.7-cp$(echo ${PYTHON_VERSION} | tr -d '.')-none-linux_x86_64.whl && \
-    mv TensorRT-8.5.1.7/targets/x86_64-linux-gnu/bin/* /bin/ && \
-    mv TensorRT-8.5.1.7/targets/x86_64-linux-gnu/lib/* /usr/lib/x86_64-linux-gnu/ && \
-    mv TensorRT-8.5.1.7/targets/x86_64-linux-gnu/include/Nv* /usr/local/include/ && \
-    rm -rf TensorRT-8.5.1.7 TensorRT-8.5.1.7.Linux.x86_64-gnu.cuda-11.8.cudnn8.6.tar.gz
-
-RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get purge gcc wget -y && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV CUDACXX=/usr/local/cuda/bin/nvcc
 
