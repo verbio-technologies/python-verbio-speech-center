@@ -25,7 +25,6 @@ class Options:
         self.audio_file = None
         self.topic = None
         self.language = 'en-US'
-        self.sample_rate = 16000
         self.secure_channel = True
 
     def check(self):
@@ -41,7 +40,6 @@ def parse_command_line() -> Options:
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
     parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
-    parser.add_argument('--sample-rate', '-s', help='Sample rate for audio: Example 8000 or 16000', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
@@ -52,7 +50,6 @@ def parse_command_line() -> Options:
     options.audio_file = args.audio_file
     options.topic = args.topic
     options.language = args.language
-    options.sample_rate = int(args.sample_rate)
     options.secure_channel = args.secure
     
     return options
@@ -71,14 +68,11 @@ class Credentials:
 
 class Resources:
     def __init__(self, options: Options):
-        self.audio = self.__read_audio_file(options.audio_file)
-
-    @staticmethod
-    def __read_audio_file(audio_file: str) -> bytes:
-        with open(audio_file, "rb") as wav_file:
+        with open(options.audio_file, "rb") as wav_file:
             wav_data = wave.open(wav_file)
-            audio_data = wav_data.readframes(wav_data.getnframes())
-            return audio_data
+            self.sample_rate = wav_data.getframerate()
+            self.audio = wav_data.readframes(wav_data.getnframes())
+            wav_data.close()
 
 
 class SpeechCenterStreamingASRClient:
@@ -89,7 +83,6 @@ class SpeechCenterStreamingASRClient:
         self._resources = Resources(options)
         self._host = options.host
         self._topic = options.topic
-        self._sample_rate = options.sample_rate
         self._language = options.language
         self._peer_responded = threading.Event()
         self._credentials = Credentials(self.read_token(toke_file=options.token_file))
@@ -122,9 +115,9 @@ class SpeechCenterStreamingASRClient:
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._sample_rate))
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate))
         else:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._sample_rate), metadata=metadata)
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate), metadata=metadata)
         
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
