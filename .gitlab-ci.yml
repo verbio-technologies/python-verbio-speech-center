@@ -134,7 +134,8 @@ integration-testing:gpu:
     - . /opt/intel/oneapi/setvars.sh
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:gpu | awk '/1/ -F " " {print $2}')
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
+    # - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
     - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
     - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
     # Install the remaining testing dependencies
@@ -212,6 +213,8 @@ testing:promote:gpu:
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
+    - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx deploy/docker/
+    - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
     - cd deploy/docker/
