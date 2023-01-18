@@ -159,7 +159,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         initargs=(args.host,),
     )
 
-    for audio_path in audios:
+    for n, audio_path in enumerate(audios):
         audio, sample_rate_hz = _getAudio(audio_path)
         response = workerPool.apply(
             _runWorkerQuery,
@@ -167,6 +167,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
                 audio,
                 sample_rate_hz,
                 Language.parse(args.language),
+                n,
             ),
         )
         responses.append(response)
@@ -216,7 +217,9 @@ def _shutdownWorker():
         _workerStubSingleton.stop()
 
 
-def _runWorkerQuery(audio: bytes, sample_rate_hz: int, language: Language) -> bytes:
+def _runWorkerQuery(
+    audio: bytes, sample_rate_hz: int, language: Language, queryID: int
+) -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
             parameters=RecognitionParameters(
@@ -227,8 +230,8 @@ def _runWorkerQuery(audio: bytes, sample_rate_hz: int, language: Language) -> by
         audio=audio,
     )
     _LOGGER.info(
-        "Running recognition. "
-        "If the length of the audio is one minute or more, the process may take several seconds to complete. "
+        "Running recognition {queryID}. "
+        "The process may take several seconds to complete for audios longer that one minute. "
     )
     try:
         return _workerStubSingleton.Recognize(
