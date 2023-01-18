@@ -217,7 +217,9 @@ def _shutdownWorker():
         _workerStubSingleton.stop()
 
 
-def _runWorkerQuery(audio: bytes, sample_rate_hz: int, language: Language, queryID: int) -> bytes:
+def _runWorkerQuery(
+    audio: bytes, sample_rate_hz: int, language: Language, queryID: int
+) -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
             parameters=RecognitionParameters(
