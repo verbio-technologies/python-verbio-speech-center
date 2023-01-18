@@ -1,0 +1,104 @@
+{
+    "en-us": {
+        "basic": {
+            "oov": 4.05,
+            "accuracy": 62.28,
+            "domains": {
+                "multidomain-airtravel-hm-atis": {"accuracy": 81.38},
+                "multidomain-banking-hm-s4am": {"accuracy": 79.72},
+                "multidomain-banking-hm-sterling": {"accuracy": 53.3},
+                "multidomain-contact_center_generic-hm-generic": {"accuracy": 67.31},
+                "multidomain-contact_center_generic-hm-smart_action": {"accuracy": 78.33},
+                "multidomain-housemaintenance-hh-hellospoke_cut": {"accuracy": 54.43},
+                "multidomain-itmaintenance-hh-gdit_cut": {"accuracy": 40.85},
+                "multidomain-telco-hh-agentassist_cut": {"accuracy": 39.33},
+                "multidomain-telco-hm-sprintopenquestiontmobile": {"accuracy": 68.09},
+                "multidomain-varied-hh-switchboard_cut": {"accuracy": 45.65},
+                "multidomain-varied-hm-8x30_cut": {"accuracy": 57.18}
+            },
+            "domains_typical_deviation": 14.71
+        },
+        "upgraded": {
+            "oov": 3.91,
+            "accuracy": 63,
+            "domains": {
+                "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": 53.11},
+                "multidomain_extended-defined-ai_cut-hh-insurance":  {"accuracy": 59.79},
+                "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 59.88},
+                "multidomain_extended-defined-ai_cut-hh-telco":  {"accuracy": 59.00}
+            },
+            "domains_typical_deviation": 3.03
+        }
+    },
+    "pt-br": {
+        "basic": {
+            "oov": 6.54,
+            "accuracy": 49.08,
+            "domains": {
+                "multidomain-banking-hh-seguros": {"accuracy": 39.21},
+                "multidomain-banking-hm-translated": {"accuracy": 58},
+                "multidomain-telco-hh-atento": {"accuracy": 34.96},
+                "multidomain-telco-hh-net": {"accuracy": 37.36},
+                "multidomain-telco-hh-net2": {"accuracy": 43.43},
+                "multidomain-telco-hh-oi": {"accuracy": 42.97},
+                "multidomain-telco-hm-accenture": {"accuracy": 36.16},
+                "multidomain-varied-hm-sala_ii": {"accuracy": 65.74}        
+            },
+            "domains_typical_deviation": 10.54
+        },
+        "upgraded": {}
+
+    },
+    "es": {
+        "basic": {
+            "oov": 6.37,
+            "accuracy": 61.07,
+            "dialects": {
+                "es-co": {"accuracy": 66.18},
+                "es-es": {"accuracy": 56.9},
+                "es-us": {"accuracy": 71.88}
+            },
+            "dialects_typical_deviation": 5.15,
+            "domains": {
+                "multidomain-administration-hh-060": {"accuracy": 45.12},
+                "multidomain-administration-hm-aeat": {"accuracy": 69.23},
+                "multidomain-banking-hm-bancomer": {"accuracy": 66.13},
+                "multidomain-banking-hm-bankia": {"accuracy": 67.26},
+                "multidomain-banking-hm-bbva_line": {"accuracy": 41.01},
+                "multidomain-banking-hm-bbvae": {"accuracy": 68.28},
+                "multidomain-banking-hm-caixabank": {"accuracy": 87.43},
+                "multidomain-energy-hh-endesa": {"accuracy": 41.55},
+                "multidomain-furniture_sales-hh-lomonaco": {"accuracy": 45.71},
+                "multidomain-insurance-hh-liberty_insurances": {"accuracy": 31.28},
+                "multidomain-real_estate-hh-servihabitat": {"accuracy": 46.06},
+                "multidomain-technology_support-hh-bq_tech_support": {"accuracy": 54.74},
+                "multidomain-telco-hh-claro": {"accuracy": 63.35},
+                "multidomain-telco-hh-vodafone_customer": {"accuracy": 12.92},
+                "multidomain-telco-hm-telefónica": {"accuracy": 68.24},
+                "multidomain-telco-hm-tmobile": {"accuracy": 71.88}
+            },
+            "domains_typical_deviation": 18.09
+        },
+        "upgraded": {
+            "oov": 6.49,
+            "accuracy": 58.00,
+            "dialects": {
+                "es-co": {"accuracy": 48.12},
+                "es-es": {"accuracy": 53.96},
+                "es-mx": {"accuracy": 53.98},
+                "es-cl": {"accuracy": 47.03}
+            },
+            "dialects_typical_deviation": 3.22,
+            "domains": {
+                "multidomain_extended-appen_cut-hh-banking": {"accuracy": 48.02},
+                "multidomain_extended-appen_cut-hh-telco": {"accuracy": 47.15},
+                "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 53.86},
+                "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 49.61},
+                "multidomain_extended-defined-ai_cut-hh-telco": {"accuracy": 53.34},
+                "multidomain_extended-defined-ai_cut-hh-banking": {"accuracy": 57.56},
+                "multidomain_extended-defined-ai_cut-hh-telcojpt": {"accuracy": 57.32}
+            },
+            "domains_typical_deviation": 3.93
+        }
+    }
+}
