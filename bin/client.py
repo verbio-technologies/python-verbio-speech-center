@@ -230,8 +230,7 @@ def _runWorkerQuery(
         audio=audio,
     )
     _LOGGER.info(
-        "Running recognition {queryID}. "
-        "The process may take several seconds to complete for audios longer that one minute. "
+        f"Running recognition {queryID}. The process may take several seconds to complete for audios longer that one minute."
     )
     try:
         return _workerStubSingleton.Recognize(
