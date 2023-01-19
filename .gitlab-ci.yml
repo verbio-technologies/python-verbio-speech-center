@@ -92,7 +92,7 @@ functional-testing:endpoints:
     - mv ghz /bin
     - pip install .[client,server,cpu,test]
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep en-us:cpu | awk '/1/ -F " " {print $2}')
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-en-us-${MODEL_VERSION}.onnx ${MODELS_PATH}/asr4-en-us-${MODEL_VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
   script:
     - cd tests/functional/data
     - bash ../streaming_tests.sh
@@ -115,7 +115,7 @@ integration-testing:cpu:
   before_script:
     - pip install .[client,server,cpu,test]
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:cpu | awk '/1/ -F " " {print $2}')
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 0
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 0
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
 
