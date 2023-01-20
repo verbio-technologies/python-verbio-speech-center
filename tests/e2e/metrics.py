@@ -184,7 +184,6 @@ class Metrics:
             try:
                 expected_accuracy = self.expected_results.domains[key]["accuracy"]
                 model_accuracy = self.model_results.domains[key]
-                print("----", expected_accuracy, model_accuracy)
                 self.compare_accuracy(model_accuracy, expected_accuracy, f" {key}")
             except KeyError:
                 print(
@@ -210,7 +209,7 @@ class Metrics:
             self.expected_results.accuracy,
             "Global accuracy",
         )
-        self.make_oov_comparison()
+        self.compare_oov()
         self.compare_deviation("dialects")
         self.compare_deviation("domains")
         self.compare_domains()
