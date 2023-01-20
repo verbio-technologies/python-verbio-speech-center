@@ -4,7 +4,7 @@ import os
 import json
 import pytest
 from pathlib import Path
-from tests.e2e.metrics import Metrics, ModelOutput, ExpectedOutput
+from tests.e2e.metrics import MetricsComparison, ModelOutput, ExpectedOutput
 
 
 class MockModelOutput(ModelOutput):
@@ -98,68 +98,68 @@ class TestCompareMetrics(unittest.TestCase):
     def testCompareSameAccuracy(self):
         self.mockModelOutput.accuracy = 20
         self.mockExpectedOutput.accuracy = 20
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_accuracy(20, 20, "Test type")
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareHigherModelAccuracy(self):
         self.mockModelOutput.accuracy = 40
         self.mockExpectedOutput.accuracy = 20
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_accuracy(40, 20, "Accuracy")
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareHigherReferenceAccuracy(self):
         self.mockModelOutput.accuracy = 20
         self.mockExpectedOutput.accuracy = 40
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_accuracy(20, 40, "Accuracy")
         self.assertEqual(metrics.TEST_PASSED, False)
 
     def testCompareHigherReferenceWithinThresholdAccuracy(self):
         self.mockModelOutput.accuracy = 39
         self.mockExpectedOutput.accuracy = 40
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_accuracy(39, 40, "Accuracy")
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareHigherModelOOV(self):
         self.mockModelOutput.oov = 5
         self.mockExpectedOutput.oov = 4
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_oov()
         self.assertEqual(metrics.TEST_PASSED, False)
 
     def testCompareHigherModelWithinThresholdOOV(self):
         self.mockModelOutput.oov = 5
         self.mockExpectedOutput.oov = 4.75
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_oov()
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareLowerModelOOV(self):
         self.mockModelOutput.oov = 4
         self.mockExpectedOutput.oov = 5
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_oov()
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareHigherModelDeviation(self):
         self.mockModelOutput.domains = {"Accuracy typical deviation": 9.51}
         self.mockExpectedOutput.domains_deviation = 5
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_deviation("intratest domain name")
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareLowerModelDeviation(self):
         self.mockModelOutput.domains = {"Accuracy typical deviation": 0.51}
         self.mockExpectedOutput.domains_deviation = 5
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_deviation("intratest domain name")
         self.assertEqual(metrics.TEST_PASSED, True)
 
     def testCompareDomainsMissingDomains(self):
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_domains()
         self.assertEqual(metrics.TEST_PASSED, False)
 
@@ -169,7 +169,7 @@ class TestCompareMetrics(unittest.TestCase):
             "domain1": {"accuracy": 5.12},
             "domain2": {"accuracy": 35.2},
         }
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_domains()
         self.assertEqual(metrics.TEST_PASSED, True)
 
@@ -179,7 +179,7 @@ class TestCompareMetrics(unittest.TestCase):
             "domain1": {"accuracy": 45.12},
             "domain2": {"accuracy": 35.2},
         }
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_domains()
         self.assertEqual(metrics.TEST_PASSED, False)
 
@@ -190,7 +190,7 @@ class TestCompareMetrics(unittest.TestCase):
             "es-es": {"accuracy": 53.96},
             "es-us": {"accuracy": 53.98},
         }
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_dialects()
         self.assertEqual(metrics.TEST_PASSED, False)
 
@@ -201,7 +201,7 @@ class TestCompareMetrics(unittest.TestCase):
             "es-es": {"accuracy": 53.96},
             "es-us": {"accuracy": 53.98},
         }
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_dialects()
         self.assertEqual(metrics.TEST_PASSED, True)
 
@@ -212,6 +212,6 @@ class TestCompareMetrics(unittest.TestCase):
             "es-es": {"accuracy": 53.96},
             "es-us": {"accuracy": 100},
         }
-        metrics = Metrics(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
+        metrics = MetricsComparison(self.mockModelOutput, self.mockExpectedOutput, "basic", "es")
         metrics.compare_dialects()
         self.assertEqual(metrics.TEST_PASSED, False)

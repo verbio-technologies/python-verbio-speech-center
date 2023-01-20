@@ -104,7 +104,7 @@ class ExpectedOutput:
         self.get_expected_intratest_metrics(language, test_type)
 
 
-class Metrics:
+class MetricsComparison:
     def __init__(
         self,
         model_results,
@@ -258,13 +258,13 @@ def main():
     modelOutput.load_model_metrics()
     expectedOutput = ExpectedOutput(args.expected_metrics)
     expectedOutput.load_expected_metrics(args.language, args.test_type)
-    metrics = Metrics(
+    metricsComparison = MetricsComparison(
         modelOutput,
         expectedOutput,
         args.test_type,
         args.language,
     )
-    metrics.compare_metrics()
+    metricsComparison.compare_metrics()
 
 
 if __name__ == "__main__":
