@@ -3,138 +3,218 @@ import os
 import argparse
 
 
+class ModelOutput:
+    def __init__(self, model_accuracy_file, model_oov_file, model_intratest_folder):
+        self.model_accuracy_file = model_accuracy_file
+        self.model_oov_file = model_oov_file
+        self.model_intratest_folder = model_intratest_folder
+        self.accuracy = None
+        self.oov = None
+        self.domains = {}
+        self.dialects = {}
+
+    def load_model_accuracy_metric(self):
+        with open(self.model_accuracy_file) as ac_file:
+
+            for line in ac_file.readlines()[::-1]:
+                if "Accuracy" in line:
+                    self.accuracy = float(line.strip().split("\t")[1].split(" ")[1])
+                    break
+        if not self.accuracy:
+            print("Could not load accuracy score from model output")
+
+    def load_model_oov_metric(self):
+        with open(self.model_oov_file) as oov_f:
+            try:
+                oov_info = json.load(oov_f)["score"]
+                self.oov = float(oov_info.strip("%"))
+            except:
+                print("Could not load OOV score from model output")
+
+    def load_intratest_data(self):
+        for intratest_type in ["domains", "dialects"]:
+            try:
+                model_intratest_data = json.load(
+                    open(
+                        os.path.join(
+                            self.model_intratest_folder,
+                            f"{intratest_type}_intratest.json",
+                        )
+                    )
+                )
+                if intratest_type == "domains":
+                    self.domains = model_intratest_data
+                else:
+                    self.dialects = model_intratest_data
+            except FileNotFoundError:
+                print(f"There is no data for {intratest_key}")
+
+    def load_model_metrics(self):
+        self.load_model_accuracy_metric()
+        self.load_model_oov_metric()
+        self.load_intratest_data()
+
+
+class ExpectedOutput:
+    def __init__(self, expected_output_file):
+        self.expected_output_file = expected_output_file
+        self.metrics_data = {}
+        self.accuracy = None
+        self.oov = None
+        self.domains = {}
+        self.dialects = {}
+        self.domains_deviation = None
+        self.dialects_deviation = None
+
+    def load_expected_output_data(self):
+        with open(self.expected_output_file) as ref_file:
+            try:
+                self.metrics_data = json.load(ref_file)
+            except:
+                print("Could not load reference metrics")
+
+    def get_expected_global_metrics(self, language, test_type):
+        try:
+            self.accuracy = self.metrics_data[language][test_type]["accuracy"]
+            self.oov = self.metrics_data[language][test_type]["oov"]
+        except KeyError:
+            print(f"Could not find {language} or {test_type} in reference")
+            return None
+
+    def get_expected_intratest_metrics(self, language, test_type):
+        try:
+            if "domains" in self.metrics_data[language][test_type]:
+                self.domains = self.metrics_data[language][test_type]["domains"]
+                self.domains_deviation = self.metrics_data[language][test_type][
+                    "domains_typical_deviation"
+                ]
+
+            if "dialects" in self.metrics_data[language][test_type]:
+                self.dialects = self.metrics_data[language][test_type]["dialects"]
+                self.dialects_deviation = self.metrics_data[language][test_type][
+                    "dialects_typical_deviation"
+                ]
+        except KeyError:
+            print(f"Could not find {language} or {test_type} in reference")
+            return None
+
+    def load_expected_metrics(self, language, test_type):
+        self.load_expected_output_data()
+        self.get_expected_global_metrics(language, test_type)
+        self.get_expected_intratest_metrics(language, test_type)
+
+
 class Metrics:
     def __init__(
         self,
-        obtained_accuracy,
-        obtained_oov,
-        obtained_intratest_folder,
-        expected_metrics,
+        model_results,
+        expected_results,
         test_type,
         language,
     ):
-        self.accuracy_interval = 1
-        self.oov_interval = 0.25
+        self.accuracy_tolerance = 1
+        self.oov_tolerance = 0.25
         self.TEST_PASSED = True
-        self.obtained_accuracy = obtained_accuracy
-        self.obtained_oov = obtained_oov
-        self.obtained_intratest_folder = obtained_intratest_folder
-        self.expected_metrics = expected_metrics
+        self.model_results = model_results
+        self.expected_results = expected_results
         self.test_type = test_type
         self.language = language
 
-    def compare_metrics(self, obtained_metric, expected_metric, comparison_type):
-        obtained_metric = float(obtained_metric)
-        if comparison_type == "OOV":
-            interval = self.oov_interval
-        else:
-            interval = self.accuracy_interval
-        if abs(obtained_metric - expected_metric) <= interval:
-            print(
-                f"{comparison_type}: Obtained values and expected values match ({obtained_metric})"
-            )
-        elif obtained_metric > expected_metric:
-            print(
-                f"{comparison_type}: Obtained value ({obtained_metric}) is higher than expected value ({expected_metric})"
-            )
-            if comparison_type == "OOV":
-                self.TEST_PASSED = False
-                print("Metric is above threshold: test wont pass")
-        else:
-            print(
-                f"{comparison_type}: Obtained value ({obtained_metric}) is lower than expected value ({expected_metric})"
-            )
-            if comparison_type != "OOV":
-                self.TEST_PASSED = False
-                print("Metric is below threshold: test wont pass")
-
-    def get_accuracy_obtained_metric(self):
-        with open(self.obtained_accuracy) as ac_file:
-            for line in ac_file.readlines()[::-1]:
-                if "Accuracy" in line:
-                    return line.strip().split("\t")[1].split(" ")[1]
-
-    def get_oov_obtained_metric(self):
-        with open(self.obtained_oov) as oov_f:
-            oov_info = json.load(oov_f)["score"]
-            return oov_info.strip("%")
-
-    def get_expected_metric(self, metric):
-        with open(self.expected_metrics) as ref_file:
-            expected_metrics_file = json.load(ref_file)
-            try:
-                expected_metric = expected_metrics_file[self.language][self.test_type][
-                    metric
-                ]
-                return expected_metric
-            except KeyError:
-                self.TEST_PASSED = False
+    def compare_accuracy(self, model_result, expected_result, comparison_type):
+        if model_result and expected_result:
+            if abs(model_result - expected_result) <= self.accuracy_tolerance:
                 print(
-                    f"Test won't pass. Could not find {self.language}, {self.test_type} or {metric} in reference"
+                    f"{comparison_type}: Model values and expected values match ({model_result})"
                 )
-
-    def make_accuracy_comparison(self):
-        obtained_accuracy = self.get_accuracy_obtained_metric()
-        expected_accuracy = self.get_expected_metric("accuracy")
-        if obtained_accuracy and expected_accuracy:
-            self.compare_metrics(obtained_accuracy, expected_accuracy, "Accuracy")
+            elif model_result > expected_result:
+                print(
+                    f"{comparison_type}: Model value ({model_result}) is higher than expected value ({expected_result})"
+                )
+            else:
+                print(
+                    f"{comparison_type}: Model value ({model_result}) is lower than expected value ({expected_result})"
+                )
+                print("Metric is below threshold: test wont pass")
+                self.TEST_PASSED = False
         else:
             self.TEST_PASSED = False
             print(f"Test won't pass. Could not run accuracy check")
 
-    def make_oov_comparison(self):
-        obtained_oov = self.get_oov_obtained_metric()
-        expected_oov = self.get_expected_metric("oov")
-        if obtained_oov and expected_oov:
-            self.compare_metrics(obtained_oov, expected_oov, "OOV")
+    def compare_oov(self):
+        if self.model_results.oov and self.expected_results.oov:
+            if (
+                abs(self.model_results.oov - self.expected_results.oov)
+                <= self.oov_tolerance
+            ):
+                print(
+                    f"OOV: Model values and expected values match ({self.model_results.oov})"
+                )
+            elif self.model_results.oov > self.expected_results.oov:
+                print(
+                    f"OOV: Model value ({self.model_results.oov}) is higher than expected value ({self.expected_results.oov})"
+                )
+                self.TEST_PASSED = False
+                print("Metric is above threshold: test wont pass")
+            else:
+                print(
+                    f"OOV: Model value ({self.model_results.oov}) is lower than expected value ({self.expected_results.oov})"
+                )
         else:
             self.TEST_PASSED = False
             print(f"Test won't pass. Could not run OOV check")
 
-    def make_intratest_comparison(self, reference_data, intratest_type):
-        obtained_data_contents = json.load(
-            open(
-                os.path.join(
-                    self.obtained_intratest_folder, f"{intratest_type}_intratest.json"
-                )
-            )
-        )
-        obtained_deviation = obtained_data_contents["Accuracy typical deviation"]
-        reference_deviation = reference_data[f"{intratest_type}_typical_deviation"]
-        if obtained_deviation == reference_deviation:
+    def compare_deviation(self, intratest_type):
+        if intratest_type == "domains":
+            model_deviation = self.model_results.domains["Accuracy typical deviation"]
+            reference_deviation = self.expected_results.domains_deviation
+        else:
+            model_deviation = self.model_results.dialects["Accuracy typical deviation"]
+            reference_deviation = self.expected_results.dialects_deviation
+        if model_deviation == reference_deviation:
             print(
-                f"Deviation: intratest for {intratest_type}: Obtained values and expected values match ({obtained_deviation})"
+                f"Deviation: intratest for {intratest_type}: Model values and expected values match ({model_deviation})"
             )
         else:
             print(
-                f"Deviation: Intratest for {intratest_type}: Obtained values ({obtained_deviation}) and expected values ({reference_deviation}) do not match"
+                f"Deviation: Intratest for {intratest_type}: Model values ({model_deviation}) and expected values ({reference_deviation}) do not match"
             )
 
-        for key in reference_data[intratest_type]:
+    def compare_domains(self):
+        for key in self.expected_results.domains:
             try:
-                expected_accuracy = reference_data[intratest_type][key]["accuracy"]
-                obtained_accuracy = obtained_data_contents[key]
-                self.compare_metrics(
-                    obtained_accuracy, expected_accuracy, intratest_type + f" {key}"
-                )
+                expected_accuracy = self.expected_results.domains[key]["accuracy"]
+                model_accuracy = self.model_results.domains[key]
+                print("----", expected_accuracy, model_accuracy)
+                self.compare_accuracy(model_accuracy, expected_accuracy, f" {key}")
             except KeyError:
                 print(
-                    f"Test won't pass. Could not find {key} in reference or intratest results file)"
+                    f"Test won't pass. Could not find {key} in reference or intratest results file"
                 )
                 self.TEST_PASSED = False
 
-    def launch_metric_test(self):
-        self.make_accuracy_comparison()
+    def compare_dialects(self):
+        for key in self.expected_results.dialects:
+            try:
+                expected_accuracy = self.expected_results.dialects[key]["accuracy"]
+                model_accuracy = self.model_results.dialects[key]
+                self.compare_accuracy(model_accuracy, expected_accuracy, f" {key}")
+            except KeyError:
+                print(
+                    f"Test won't pass. Could not find {key} in reference or intratest results file"
+                )
+                self.TEST_PASSED = False
+
+    def compare_metrics(self):
+        self.compare_accuracy(
+            self.model_results.accuracy,
+            self.expected_results.accuracy,
+            "Global accuracy",
+        )
         self.make_oov_comparison()
-        reference_data = json.load(open(self.expected_metrics))[self.language][
-            self.test_type
-        ]
-        if "domains" in reference_data:
-
-            self.make_intratest_comparison(reference_data, "domains")
-        if "dialects" in reference_data:
-            self.make_intratest_comparison(reference_data, "dialects")
-
+        self.compare_deviation("dialects")
+        self.compare_deviation("domains")
+        self.compare_domains()
+        self.compare_dialects()
         if self.TEST_PASSED == False:
             raise Exception("Test did not pass")
 
@@ -145,21 +225,21 @@ def main():
     )
     parser.add_argument(
         "-w",
-        "--obtained_accuracy",
-        dest="obtained_accuracy",
-        help="Tsv file containing obtained accuracy.",
+        "--model_accuracy",
+        dest="model_accuracy",
+        help="Tsv file containing model accuracy.",
     )
     parser.add_argument(
         "-o",
-        "--obtained_oov",
-        dest="obtained_oov",
-        help="Json file containing obtained OOV metric.",
+        "--model_oov",
+        dest="model_oov",
+        help="Json file containing model OOV metric.",
     )
     parser.add_argument(
         "-i",
-        "--obtained_intratest_folder",
-        dest="obtained_intratest_folder",
-        help="Folder containing json files with obtained intratest metric.",
+        "--model_intratest_folder",
+        dest="model_intratest_folder",
+        help="Folder containing json files with model intratest metric.",
     )
     parser.add_argument(
         "-e",
@@ -173,15 +253,19 @@ def main():
     parser.add_argument("-l", "--language", dest="language", help="Language.")
 
     args = parser.parse_args()
+    modelOutput = ModelOutput(
+        args.model_accuracy, args.model_oov, args.model_intratest_folder
+    )
+    modelOutput.load_model_metrics()
+    expectedOutput = ExpectedOutput(args.expected_metrics)
+    expectedOutput.load_expected_metrics(args.language, args.test_type)
     metrics = Metrics(
-        args.obtained_accuracy,
-        args.obtained_oov,
-        args.obtained_intratest_folder,
-        args.expected_metrics,
+        modelOutput,
+        expectedOutput,
         args.test_type,
         args.language,
     )
-    metrics.launch_metric_test()
+    metrics.compare_metrics()
 
 
 if __name__ == "__main__":
