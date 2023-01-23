@@ -3,14 +3,16 @@ import pytest
 import logging
 
 import torch
+import wave
 import google
 import numpy as np
 from random import randint
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Tuple, Dict, List, Optional, Union
 
 from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession
 from asr4.recognizer_v1.runtime.onnx import _DecodeResult
 from asr4.recognizer_v1.loggerService import LoggerService
+from asr4.recognizer import Language
 
 
 class MockOnnxSession(Session):
@@ -100,6 +102,11 @@ class TestOnnxSession(unittest.TestCase):
 
 
 class TestOnnxRuntime(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def rootpath(self, pytestconfig):
+        self.rootpath = pytestconfig.rootpath
+        self.datapath = pytestconfig.rootpath.joinpath("tests/unit/data")
+
     def testEmptyInput(self):
         with self.assertRaises(ValueError):
             runtime = OnnxRuntime(MockOnnxSession(""))
@@ -118,6 +125,22 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertTrue(isinstance(tensor, torch.Tensor))
         self.assertTrue(tensor.shape[0], 1)  # batch size
         self.assertTrue(tensor.shape[1], 2)  # n samples
+        for language in Language:
+            basePath = self.datapath.joinpath(language.value.lower())
+            audio, sample_rate = TestOnnxRuntime.__getAudio(str(basePath.with_suffix('.8k.wav')))
+            tensor8k = runtime._preprocess(audio, sample_rate)
+            audio, sample_rate = TestOnnxRuntime.__getAudio(str(basePath.with_suffix('.16k.wav')))
+            tensor16k = runtime._preprocess(audio, sample_rate)
+            torch.testing.assert_close(tensor8k, tensor16k, atol=3., rtol=1.3e-6)
+
+    @staticmethod
+    def __getAudio(audioFile: str) -> Tuple[bytes, int]:
+        with wave.open(audioFile) as f:
+            n = f.getnframes()
+            audio = f.readframes(n)
+            sample_rate_hz = f.getframerate()
+        audio = np.frombuffer(audio, dtype=np.int16)
+        return (audio.tobytes(), sample_rate_hz)
 
     def testPostProcess(self):
         results = _DecodeResult(
