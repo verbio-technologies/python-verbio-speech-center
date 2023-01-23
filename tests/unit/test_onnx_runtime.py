@@ -127,11 +127,15 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertTrue(tensor.shape[1], 2)  # n samples
         for language in Language:
             basePath = self.datapath.joinpath(language.value.lower())
-            audio, sample_rate = TestOnnxRuntime.__getAudio(str(basePath.with_suffix('.8k.wav')))
+            audio, sample_rate = TestOnnxRuntime.__getAudio(
+                str(basePath.with_suffix(".8k.wav"))
+            )
             tensor8k = runtime._preprocess(audio, sample_rate)
-            audio, sample_rate = TestOnnxRuntime.__getAudio(str(basePath.with_suffix('.16k.wav')))
+            audio, sample_rate = TestOnnxRuntime.__getAudio(
+                str(basePath.with_suffix(".16k.wav"))
+            )
             tensor16k = runtime._preprocess(audio, sample_rate)
-            torch.testing.assert_close(tensor8k, tensor16k, atol=3., rtol=1.3e-6)
+            torch.testing.assert_close(tensor8k, tensor16k, atol=3.0, rtol=1.3e-6)
 
     @staticmethod
     def __getAudio(audioFile: str) -> Tuple[bytes, int]:
