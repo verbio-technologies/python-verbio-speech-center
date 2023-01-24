@@ -53,8 +53,6 @@ pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl
 pip install .[server]
 ```
 
-In order to perform sample-rate conversion, the server uses a wrapper for [libsoxr](https://sourceforge.net/projects/soxr/). If you do not have it installed in your system, consider doing so or otherwise you will not be able to run the server.
-
 ### Uninstall asr4
 
 First remove the folder "asr4.egg-info" from the asr4 repository root and then run:

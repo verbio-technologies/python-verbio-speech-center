@@ -6,7 +6,7 @@ ARG LANGUAGE
 ENV WORKERS=${WORKERS}
 ENV PORT=${PORT}
 
-RUN apt update && apt install -y libgomp1 sox
+RUN apt update && apt install -y libgomp1
 
 COPY init-gpu.sh /init.sh
 COPY server.py /server.py
