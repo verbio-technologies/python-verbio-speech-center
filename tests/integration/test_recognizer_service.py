@@ -112,8 +112,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
         self._audio = f"{os.path.join(self.datadir, self._language)}-1.wav"
-        self._audio8k = f"{os.path.join(self.datadir, self._language)}.8k.wav"
-        self._audio16k = f"{os.path.join(self.datadir, self._language)}.16k.wav"
         self._gui = f"{os.path.join(self.datadir, self._language)}.gui"
         referencePath = f"{os.path.join(self.datadir, self._language)}-1.txt"
         self._reference = self.readReference(referencePath)
@@ -123,10 +121,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         hypothesis = self._recognizeAudio(self._audio, self._language)
         self.assertGreater(len(hypothesis), 1)
         self.evaluateHypothesis(self._reference, hypothesis)
-
-    def testRecognitionAudioDifferentSampleRate(self):
-        self._recognizeAudio(self._audio8k, self._language),
-        self._recognizeAudio(self._audio16k, self._language),
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)

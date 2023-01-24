@@ -1,6 +1,6 @@
 import abc
 import logging
-import resampy
+import soxr
 import numpy as np
 
 import torch
@@ -182,11 +182,10 @@ class OnnxRuntime(Runtime):
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         x = np.frombuffer(input, dtype=np.int16)
         try:
-            y = resampy.resample(x, sample_rate_hz, 16000)
+            y = soxr.resample(x, sample_rate_hz, 16000)
         except:
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
-        x = y.astype(x.dtype)
-        x = x.astype(np.float32)
+        x = y.astype(np.float32)
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)
         with torch.no_grad():
