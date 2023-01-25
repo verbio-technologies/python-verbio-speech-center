@@ -3,13 +3,13 @@
         "basic": {
         },
         "upgraded": {
-            "oov": 45.4,
-            "accuracy": 17.86,
+            "oov": 43.75,
+            "accuracy": 13.1,
             "domains": {
-                "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": -3.07},
-                "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 22.33}
+                "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": -12.46},
+                "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 17.77}
             },
-            "domains_typical_deviation": 12.7
+            "domains_typical_deviation": 15.12
         }
     },
     "pt-br": {
