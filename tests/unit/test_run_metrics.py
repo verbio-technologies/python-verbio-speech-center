@@ -133,7 +133,7 @@ class TestCompareMetrics(unittest.TestCase):
 
     def testCompareHigherModelOOV(self):
         self.mockModelOutput.oov = 5
-        self.mockExpectedOutput.oov = 4
+        self.mockExpectedOutput.oov = 3
         metrics = MetricsComparison(
             self.mockModelOutput, self.mockExpectedOutput, "basic", "es"
         )
