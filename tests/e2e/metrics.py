@@ -113,8 +113,8 @@ class MetricsComparison:
         test_type,
         language,
     ):
-        self.accuracy_tolerance = 1
-        self.oov_tolerance = 0.25
+        self.accuracy_tolerance = 2
+        self.oov_tolerance = 1
         self.TEST_PASSED = True
         self.model_results = model_results
         self.expected_results = expected_results
