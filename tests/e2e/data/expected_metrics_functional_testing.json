@@ -7,9 +7,9 @@
             "accuracy": 13.1,
             "domains": {
                 "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": -12.46},
-                "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 17.77}
+                "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 12.61}
             },
-            "domains_typical_deviation": 15.12
+            "domains_typical_deviation": 12.54
         }
     },
     "pt-br": {
