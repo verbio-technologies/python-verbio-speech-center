@@ -167,10 +167,14 @@ class MetricsComparison:
     def compare_deviation(self, intratest_type):
         try:
             if intratest_type == "domains":
-                model_deviation = self.model_results.domains["Accuracy typical deviation"]
+                model_deviation = self.model_results.domains[
+                    "Accuracy typical deviation"
+                ]
                 reference_deviation = self.expected_results.domains_deviation
             else:
-                model_deviation = self.model_results.dialects["Accuracy typical deviation"]
+                model_deviation = self.model_results.dialects[
+                    "Accuracy typical deviation"
+                ]
                 reference_deviation = self.expected_results.dialects_deviation
             if model_deviation == reference_deviation:
                 print(
@@ -182,8 +186,9 @@ class MetricsComparison:
                 )
         except KeyError:
             self.TEST_PASSED = False
-            print(f"Test won't pass. Could not run deviation check for {intratest_type} as expected")    
-
+            print(
+                f"Test won't pass. Could not run deviation check for {intratest_type} as expected"
+            )
 
     def compare_domains(self):
         for key in self.expected_results.domains:
@@ -222,7 +227,7 @@ class MetricsComparison:
         if self.expected_results.domains:
             self.compare_deviation("domains")
             self.compare_domains()
-        
+
         if self.TEST_PASSED == False:
             print("Test did not pass")
             sys.exit(1)
