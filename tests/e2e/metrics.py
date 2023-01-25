@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import argparse
 
 
@@ -215,7 +216,8 @@ class MetricsComparison:
         self.compare_domains()
         self.compare_dialects()
         if self.TEST_PASSED == False:
-            raise Exception("Test did not pass")
+            print("Test did not pass")
+            sys.exit(1)
 
 
 def main():
