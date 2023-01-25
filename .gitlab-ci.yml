@@ -104,6 +104,16 @@ functional-testing:cpu:
   script:
     - pytest tests/functional --junit-xml=report.xml --verbose
 
+functional-testing:e2e:
+  stage: test
+  before_script:
+    - apt-get -y -q update && apt-get install -y asrtest-eval
+    - pip install .[server,cpu,test]
+    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
+  script:
+    - ./tests/e2e/run_metrics.sh en-us 0.0.0.0:50051 tests/e2e/data/test_en-us_upgraded-small.gui tests/e2e/data/expected_metrics_functional_testing.json
+
+
 integration-testing:cpu:
   extends: .template:integration-testing
   stage: test

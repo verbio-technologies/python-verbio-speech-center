@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import argparse
 
 
@@ -47,7 +48,7 @@ class ModelOutput:
                 else:
                     self.dialects = model_intratest_data
             except FileNotFoundError:
-                print(f"There is no data for {intratest_key}")
+                print(f"There is no data for {intratest_type}")
 
     def load_model_metrics(self):
         self.load_model_accuracy_metric()
@@ -164,19 +165,29 @@ class MetricsComparison:
             print(f"Test won't pass. Could not run OOV check")
 
     def compare_deviation(self, intratest_type):
-        if intratest_type == "domains":
-            model_deviation = self.model_results.domains["Accuracy typical deviation"]
-            reference_deviation = self.expected_results.domains_deviation
-        else:
-            model_deviation = self.model_results.dialects["Accuracy typical deviation"]
-            reference_deviation = self.expected_results.dialects_deviation
-        if model_deviation == reference_deviation:
+        try:
+            if intratest_type == "domains":
+                model_deviation = self.model_results.domains[
+                    "Accuracy typical deviation"
+                ]
+                reference_deviation = self.expected_results.domains_deviation
+            else:
+                model_deviation = self.model_results.dialects[
+                    "Accuracy typical deviation"
+                ]
+                reference_deviation = self.expected_results.dialects_deviation
+            if model_deviation == reference_deviation:
+                print(
+                    f"Deviation: intratest for {intratest_type}: Model values and expected values match ({model_deviation})"
+                )
+            else:
+                print(
+                    f"Deviation: Intratest for {intratest_type}: Model values ({model_deviation}) and expected values ({reference_deviation}) do not match"
+                )
+        except KeyError:
+            self.TEST_PASSED = False
             print(
-                f"Deviation: intratest for {intratest_type}: Model values and expected values match ({model_deviation})"
-            )
-        else:
-            print(
-                f"Deviation: Intratest for {intratest_type}: Model values ({model_deviation}) and expected values ({reference_deviation}) do not match"
+                f"Test won't pass. Could not run deviation check for {intratest_type} as expected"
             )
 
     def compare_domains(self):
@@ -210,12 +221,16 @@ class MetricsComparison:
             "Global accuracy",
         )
         self.compare_oov()
-        self.compare_deviation("dialects")
-        self.compare_deviation("domains")
-        self.compare_domains()
-        self.compare_dialects()
+        if self.expected_results.dialects:
+            self.compare_deviation("dialects")
+            self.compare_dialects()
+        if self.expected_results.domains:
+            self.compare_deviation("domains")
+            self.compare_domains()
+
         if self.TEST_PASSED == False:
-            raise Exception("Test did not pass")
+            print("Test did not pass")
+            sys.exit(1)
 
 
 def main():

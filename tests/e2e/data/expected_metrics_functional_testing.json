@@ -1,0 +1,20 @@
+{
+    "en-us": {
+        "basic": {
+        },
+        "upgraded": {
+            "oov": 100,
+            "accuracy": -100,
+            "domains": {
+                "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": -100},
+                "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": -100}
+            },
+            "domains_typical_deviation": 100
+        }
+    },
+    "pt-br": {
+    },
+    "es": {
+
+    }
+}
