@@ -5,6 +5,7 @@ set -eEuo pipefail
 language=$1
 AWS_IP=$2
 gui=$3
+expected_metrics=$4
 test=basic
 interval=1
 
@@ -22,7 +23,7 @@ sleep 10
 if [ -f "test_${language}_results.tsv" ]; then
 
 	python tests/e2e/metrics.py --model_accuracy "test_${language}_results.tsv" \
-	--expected_metrics "tests/e2e/data/expected_metrics.json" \
+	--expected_metrics "${expected_metrics}" \
 	--model_oov "test_${language}_oov.json" \
 	--model_intratest_folder "test_${language}_intratest/" \
 	--language "${language}" \
