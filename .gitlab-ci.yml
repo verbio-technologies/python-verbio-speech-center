@@ -20,6 +20,11 @@ variables:
   DOCKER_SPEECH_CENTER_IMAGE_NAME: docker.registry.verbio.com/voice-center/testing/asr4
   DOCKER_IMAGE_VERSION: ${CI_COMMIT_TAG}
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
+  AWS_ECR_URL: 321880733545.dkr.ecr.us-east-1.amazonaws.com
+  AWS_REGION: us-east-1
+  DOCKER_AWS_TEST_IMAGE_NAME: csr/testing/asr4
+  DOCKER_AWS_RELEASE_IMAGE_NAME: voice-center/testing/asr4
+
 
 lint:python:
   stage: lint
@@ -297,13 +302,19 @@ staging:promote:
       - LANGUAGE: [en-us, es, pt-br]
   script:
     - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $OLD_NAME $NEW_NAME
-    - docker push $NEW_NAME
+    - NEW_CPU_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_CPU_NAME
+    - docker push $NEW_CPU_NAME
     - OLD_NAME="${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $OLD_NAME $NEW_NAME
-    - docker push $NEW_NAME
+    - NEW_GPU_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_GPU_NAME
+    - docker push $NEW_GPU_NAME
+    - echo "Push to Amazon"
+    - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_REGION}" "${AWS_ECR_URL}" "${DOCKER_AWS_TEST_IMAGE_NAME}" "${LANGUAGE}"
+    - docker tag $NEW_CPU_NAME "${AWS_ECR_URL}/${DOCKER_AWS_TEST_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker push "${AWS_ECR_URL}/${DOCKER_AWS_TEST_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $NEW_GPU_NAME "${AWS_ECR_URL}/${DOCKER_AWS_TEST_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker push "${AWS_ECR_URL}/${DOCKER_AWS_TEST_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
 
 
 
@@ -330,13 +341,20 @@ stable:promote:
       - LANGUAGE: [en-us, es, pt-br]
   script:
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $OLD_NAME $NEW_NAME
-    - docker push $NEW_NAME
+    - NEW_CPU_NAME="${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_CPU_NAME
+    - docker push $NEW_CPU_NAME
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_NAME="${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $OLD_NAME $NEW_NAME
-    - docker push $NEW_NAME
+    - NEW_GPU_NAME="${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $OLD_NAME $NEW_GPU_NAME
+    - docker push $NEW_GPU_NAME
+    - echo "Push to Amazon"
+    - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_REGION}" "${AWS_ECR_URL}" "${DOCKER_AWS_RELEASE_IMAGE_NAME}" "${LANGUAGE}"
+    - docker tag $NEW_CPU_NAME "${AWS_ECR_URL}/${DOCKER_AWS_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker push "${AWS_ECR_URL}/${DOCKER_AWS_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $NEW_GPU_NAME "${AWS_ECR_URL}/${DOCKER_AWS_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker push "${AWS_ECR_URL}/${DOCKER_AWS_RELEASE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+
 
 speech-center:promote:
   stage: stable-promote
@@ -361,7 +379,6 @@ speech-center:promote:
     - docker tag $OLD_NAME $NEW_LATEST_NAME
     - docker push $NEW_NAME
     - docker push $NEW_LATEST_NAME
-
 
 stable:deploy:cpu:
   stage: stable-deploy
