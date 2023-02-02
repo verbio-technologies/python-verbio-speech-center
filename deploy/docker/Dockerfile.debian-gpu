@@ -1,4 +1,4 @@
-FROM docker.registry.verbio.com/engineering/devops/python-gpu:3.9-slim
+FROM docker.registry.verbio.com/csr/devops/asr4-base-gpu:0.0.4
 
 RUN apt-get update && apt-get install -y libgomp1 && apt-get clean
 
