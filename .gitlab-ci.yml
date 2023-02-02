@@ -204,7 +204,7 @@ testing:build:cpu:
     DEVICE: "cpu"
   extends: .template_docker_build
   only:
-    - merges
+    - merge_requests
 
 testing:build:gpu:
   variables:
@@ -213,7 +213,7 @@ testing:build:gpu:
     DOCKERFILE: "Dockerfile.debian-gpu"
   extends: .template_docker_build
   only:
-    - merges
+    - merge_requests
 
 testing:release:cpu:
   variables:
