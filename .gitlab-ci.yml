@@ -160,6 +160,7 @@ build:python:
   stage: build
   only:
     - tags
+    - merge_requests
   before_script:
     - echo JOB_ID=$CI_JOB_ID >> job.env
   script:
