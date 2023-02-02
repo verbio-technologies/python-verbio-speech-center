@@ -42,8 +42,8 @@ def _parseArgs():
     )
     return parser.parse_args()
 
-class AudioMultibatching:
 
+class AudioMultibatching:
     def __init__(self, batchLength):
         self.batchLength = batchLength
 
@@ -55,10 +55,12 @@ class AudioMultibatching:
             chunks = self.trimAudio(audio)
         elif audio["duration"] < self.batchLength:
             tfm = sox.Transformer()
-            audioData = tfm.build_array(input_array=audio["data"], sample_rate_in=audio["sample_rate"])
-            chunks = [ self.soxPadAudio(audioData, audio["duration"]) ]
+            audioData = tfm.build_array(
+                input_array=audio["data"], sample_rate_in=audio["sample_rate"]
+            )
+            chunks = [self.soxPadAudio(audioData, audio["duration"])]
         else:
-            chunks = [ audio["data"] ]
+            chunks = [audio["data"]]
         return chunks
 
     def trimAudio(self, audio: dict):
@@ -67,20 +69,27 @@ class AudioMultibatching:
         audiosTrimmed = []
         for segment in range(segments):
             if start + self.batchLength < audio["duration"]:
-                audiosTrimmed.append(self.soxTrimAudio(audio, start, start + self.batchLength))
+                audiosTrimmed.append(
+                    self.soxTrimAudio(audio, start, start + self.batchLength)
+                )
                 start = start + self.batchLength
             else:
                 audiosTrimmed.append(self.soxTrimAudio(audio, start, audio["duration"]))
         return audiosTrimmed
-    
-    def soxTrimAudio(self,
-        audio: dict, spanStart: float, spanEnd: float,
+
+    def soxTrimAudio(
+        self,
+        audio: dict,
+        spanStart: float,
+        spanEnd: float,
     ):
         audio_length = spanEnd - spanStart
 
         tfm = sox.Transformer()
         tfm.trim(spanStart, spanEnd)
-        audioTrimmed = tfm.build_array(input_array=audio["data"], sample_rate_in=audio["sample_rate"])
+        audioTrimmed = tfm.build_array(
+            input_array=audio["data"], sample_rate_in=audio["sample_rate"]
+        )
 
         if audio_length < self.batchLength:
             return self.soxPadAudio(audioTrimmed, audio_length)
@@ -93,6 +102,7 @@ class AudioMultibatching:
         tfm.pad(0, silence_lenth)
         return tfm.build_array(input_array=audio, sample_rate_in=8000)
 
+
 def loadAudio(audioPath: str):
     audio = {}
     with wave.open(audioPath) as f:
@@ -103,9 +113,9 @@ def loadAudio(audioPath: str):
         audio["sample_rate"] = rate
     return audio
 
+
 def saveAudio(audio, outputPath: Path):
     scipy.io.wavfile.write(outputPath, 8000, audio)
-
 
 
 if __name__ == "__main__":
@@ -120,13 +130,17 @@ if __name__ == "__main__":
     if args.gui:
         audios = open(args.gui, "r").read().split("\n")
         for audioFile in filter(lambda item: item, audios):
-            audioChunks = AudioMultibatching(args.length).segmentAudio(loadAudio(audioFile))
+            audioChunks = AudioMultibatching(args.length).segmentAudio(
+                loadAudio(audioFile)
+            )
             for i, audio in enumerate(audioChunks):
-                saveAudio(audio, args.output.joinpath(f"{Path(audioFile).stem}_{i}.wav"))
+                saveAudio(
+                    audio, args.output.joinpath(f"{Path(audioFile).stem}_{i}.wav")
+                )
 
     if args.audio:
-        audioChunks = AudioMultibatching(args.length).segmentAudio(loadAudio(args.audio))
+        audioChunks = AudioMultibatching(args.length).segmentAudio(
+            loadAudio(args.audio)
+        )
         for i, audio in enumerate(audioChunks):
             saveAudio(audio, args.output.joinpath(f"{Path(args.audio).stem}_{i}.wav"))
-
-
