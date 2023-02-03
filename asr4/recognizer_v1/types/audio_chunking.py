@@ -106,12 +106,15 @@ class AudioChunking:
 
 def loadAudio(audioPath: str):
     audio = {}
-    with wave.open(audioPath) as f:
-        n = f.getnframes()
-        audio["data"] = np.frombuffer(f.readframes(n), dtype=np.int16)
-        rate = f.getframerate()
-        audio["duration"] = n / float(rate)
-        audio["sample_rate"] = rate
+    try:
+        with wave.open(audioPath) as f:
+            n = f.getnframes()
+            audio["data"] = np.frombuffer(f.readframes(n), dtype=np.int16)
+            rate = f.getframerate()
+            audio["duration"] = n / float(rate)
+            audio["sample_rate"] = rate
+    except:
+        raise Exception("Audio is empty or does not have good format.")
     return audio
 
 
