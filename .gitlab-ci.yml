@@ -28,7 +28,7 @@ variables:
 settings:
   stage: .pre
   rules:
-    - if: $DOCKER_IMAGE_VERSION == ""
+    - if: $DOCKER_IMAGE_VERSION == null
       variables:
         DOCKER_IMAGE_VERSION: "${CI_COMMIT_REF_SLUG}"
     - when: always
