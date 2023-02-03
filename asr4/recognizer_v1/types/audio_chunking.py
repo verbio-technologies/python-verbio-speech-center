@@ -57,7 +57,7 @@ class AudioChunking:
             audioData = tfm.build_array(
                 input_array=audio["data"], sample_rate_in=audio["sample_rate"]
             )
-            chunks = [self.soxPadAudio(audioData, audio["duration"])]
+            chunks = [self.soxPadAudio(audioData, audio["sample_rate"], audio["duration"])]
         else:
             chunks = [audio["data"]]
         return chunks
