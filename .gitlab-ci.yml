@@ -1,12 +1,12 @@
 stages:
   - lint
   - test
-  - build
-  - testing-promote
-  - testing-integration
-  - staging-promote
-  - staging-e2e
-  - stable-promote
+  - package
+  - build-image
+  - integration-testing
+  - promote-to-staging
+  - end2end-testing
+  - promote-to-stable
   - stable-deploy
   - cleanup
   - speech-center-integration-testing
@@ -168,7 +168,7 @@ integration-testing:gpu:
 
 
 build:python:
-  stage: build
+  stage: package
   only:
     - tags
     - merge_requests
@@ -191,7 +191,7 @@ build:python:
       dotenv: job.env
 
 build:rust:
-  stage: build
+  stage: package
   only:
     - tags
   script:
@@ -209,7 +209,7 @@ build:rust:
 
 
 
-testing:build:cpu:
+image:build:cpu:
   variables:
     IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DOCKERFILE: "Dockerfile.debian"
@@ -218,7 +218,7 @@ testing:build:cpu:
   only:
     - merge_requests
 
-testing:build:gpu:
+image:build:gpu:
   variables:
     IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DEVICE: "gpu"
@@ -227,7 +227,7 @@ testing:build:gpu:
   only:
     - merge_requests
 
-testing:release:cpu:
+image:release:cpu:
   variables:
     IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DOCKERFILE: "Dockerfile.debian"
@@ -236,7 +236,7 @@ testing:release:cpu:
   only:
     - tags
 
-testing:release:gpu:
+image:release:gpu:
   variables:
     IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DEVICE: "gpu"
@@ -247,7 +247,7 @@ testing:release:gpu:
 
 
 .template_docker_build:
-  stage: testing-promote
+  stage: build-image
   image: docker:20.10.15
   only:
     - tags
@@ -307,7 +307,7 @@ testing:integration-testing:gpu:
 
 
 .template:integration-testing:
-  stage: testing-integration
+  stage: integration-testing
   only:
     - tags
   parallel:
@@ -334,7 +334,7 @@ testing:integration-testing:gpu:
 
 
 staging:promote:
-  stage: staging-promote
+  stage: promote-to-staging
   image: docker:20.10.15
   only:
     - tags
@@ -359,8 +359,8 @@ staging:promote:
 
 
 
-staging:e2e:
-  stage: staging-e2e
+asr4:benchmark:
+  stage: end2end-testing
   only:
     - tags
   variables:
@@ -373,7 +373,7 @@ staging:e2e:
 
 
 stable:promote:
-  stage: stable-promote
+  stage: promote-to-stable
   image: docker:20.10.15
   only:
     - tags
@@ -398,7 +398,7 @@ stable:promote:
 
 
 speech-center:promote:
-  stage: stable-promote
+  stage: promote-to-stable
   image: docker:20.10.15
   only:
     - tags
