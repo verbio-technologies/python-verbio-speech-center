@@ -34,8 +34,6 @@ settings:
     - when: always
   script:
     - echo "DOCKER_IMAGE_VERSION=${DOCKER_IMAGE_VERSION}" | tee -a settings.env
-    - echo "SERVICE_VERSION="$(cat VERSION) | tee -a settings.env
-    - cat settings.env
   artifacts:
     reports:
       dotenv: settings.env
@@ -262,6 +260,8 @@ image:release:gpu:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:${DEVICE} | awk '/1/ -F " " {print $2}')
     - echo ${MODEL_VERSION}
+    - SERVICE_VERSION=$(cat VERSION)
+    - echo SERVICE_VERSION=${SERVICE_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
