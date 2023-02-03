@@ -81,3 +81,15 @@ class TestAudioChunking(unittest.TestCase):
             / sampleRate,
             15,
         )
+
+    def testTrimAudios(self):
+        audio = loadAudio(self.audio_12_sec_path)
+        chunkLength = 5
+        a = AudioChunking(chunkLength)
+        self.assertEqual(len(a.trimAudio(audio)), 3)
+        chunkLength = 10
+        a = AudioChunking(chunkLength)
+        self.assertEqual(len(a.trimAudio(audio)), 2)
+        chunkLength = 15
+        a = AudioChunking(chunkLength)
+        self.assertEqual(len(a.trimAudio(audio)), 1)
