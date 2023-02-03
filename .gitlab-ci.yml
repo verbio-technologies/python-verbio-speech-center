@@ -260,6 +260,8 @@ image:release:gpu:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:${DEVICE} | awk '/1/ -F " " {print $2}')
     - echo ${MODEL_VERSION}
+    - SERVICE_VERSION=$(cat VERSION)
+    - echo SERVICE_VERSION=${SERVICE_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
@@ -268,7 +270,7 @@ image:release:gpu:
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
   script:
-    - docker build --pull deploy/docker/ -f deploy/docker/${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
+    - docker build --pull deploy/docker/ -f deploy/docker/${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg VERSION=${SERVICE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     
 .template_docker_deploy:
     extends:
