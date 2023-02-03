@@ -49,7 +49,7 @@ class AudioChunking:
     def segmentAudio(
         self,
         audio: dict,
-    ):
+    ) -> list:
         if audio["duration"] > self.chunkLength:
             chunks = self.trimAudio(audio)
         elif audio["duration"] < self.chunkLength:
