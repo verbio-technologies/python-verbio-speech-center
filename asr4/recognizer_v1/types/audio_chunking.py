@@ -7,9 +7,9 @@ import sox
 import scipy
 
 
-def _parseArgs():
+def parseArgs():
     parser = argparse.ArgumentParser(
-        description=__doc__,
+        description="Audio chunking with a specific chunk length."
     )
     parser.add_argument(
         "-g",
@@ -122,8 +122,31 @@ def saveAudio(audio, sample_rate: int, outputPath: Path):
     scipy.io.wavfile.write(outputPath, sample_rate, audio)
 
 
-if __name__ == "__main__":
-    args = _parseArgs()
+def saveAudioChunks(audioChunks, sampleRate: int, outputPath: str, audioPath: str):
+    for i, chunk in enumerate(audioChunks):
+        saveAudio(
+            chunk,
+            sampleRate,
+            outputPath.joinpath(f"{Path(audioPath).stem}_{i}.wav"),
+        )
+
+
+def processGuiFile(guiPath: str, chunksLength: float, outputPath: str):
+    audios = open(guiPath, "r").read().split("\n")
+    for audioPath in filter(lambda item: item, audios):
+        audio = loadAudio(audioPath)
+        audioChunks = AudioChunking(chunksLength).segmentAudio(loadAudio(audioPath))
+        saveAudioChunks(audioChunks, audio["sample_rate"], outputPath, audioPath)
+
+
+def processAudioFile(audioPath: str, chunksLength: float, outputPath: str):
+    audio = loadAudio(audioPath)
+    audioChunks = AudioChunking(chunksLength).segmentAudio(audio)
+    saveAudioChunks(audioChunks, audio["sample_rate"], outputPath, audioPath)
+
+
+def main():
+    args = parseArgs()
 
     outputDirectory = args.output
     try:
@@ -132,23 +155,11 @@ if __name__ == "__main__":
         print(f"Warning: Folder {outputDirectory} already exists!")
 
     if args.gui:
-        audios = open(args.gui, "r").read().split("\n")
-        for audioFile in filter(lambda item: item, audios):
-            audio = loadAudio(audioFile)
-            audioChunks = AudioChunking(args.length).segmentAudio(loadAudio(audioFile))
-            for i, chunk in enumerate(audioChunks):
-                saveAudio(
-                    chunk,
-                    audio["sample_rate"],
-                    args.output.joinpath(f"{Path(audioFile).stem}_{i}.wav"),
-                )
+        processGuiFile(args.gui, args.length, args.output)
 
     if args.audio:
-        audio = loadAudio(args.audio)
-        audioChunks = AudioChunking(args.length).segmentAudio(audio)
-        for i, chunk in enumerate(audioChunks):
-            saveAudio(
-                chunk,
-                audio["sample_rate"],
-                args.output.joinpath(f"{Path(args.audio).stem}_{i}.wav"),
-            )
+        processAudioFile(args.audio, args.length, args.output)
+
+
+if __name__ == "__main__":
+    main()
