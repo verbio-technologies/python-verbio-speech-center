@@ -364,15 +364,13 @@ speech-center:promote:
     - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
     - docker tag $OLD_NAME $NEW_CPU_NAME
     - docker tag $OLD_NAME $NEW_LATEST_NAME
-    - docker push $NEW_CPU_NAME
-    - docker push $NEW_LATEST_NAME
+    - docker push "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}"
     - OLD_NAME="${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_GPU_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
     - docker tag $OLD_NAME $NEW_GPU_NAME
     - docker tag $OLD_NAME $NEW_LATEST_NAME
-    - docker push $NEW_GPU_NAME
-    - docker push $NEW_LATEST_NAME
+    - docker push "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}"
     - echo "Push to Amazon"
     - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_REGION}" "${AWS_ECR_URL}" "${DOCKER_AWS_RELEASE_IMAGE_NAME}" "${LANGUAGE}"
     - docker tag $NEW_CPU_NAME "${AWS_ECR_URL}/${DOCKER_AWS_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
