@@ -42,7 +42,7 @@ def _parseArgs():
     return parser.parse_args()
 
 
-class AudioMultibatching:
+class AudioChunking:
     def __init__(self, chunkLength):
         self.chunkLength = chunkLength
 
@@ -130,9 +130,7 @@ if __name__ == "__main__":
         audios = open(args.gui, "r").read().split("\n")
         for audioFile in filter(lambda item: item, audios):
             audio = loadAudio(audioFile)
-            audioChunks = AudioMultibatching(args.length).segmentAudio(
-                loadAudio(audioFile)
-            )
+            audioChunks = AudioChunking(args.length).segmentAudio(loadAudio(audioFile))
             for i, chunk in enumerate(audioChunks):
                 saveAudio(
                     chunk,
@@ -142,7 +140,7 @@ if __name__ == "__main__":
 
     if args.audio:
         audio = loadAudio(args.audio)
-        audioChunks = AudioMultibatching(args.length).segmentAudio(loadAudio(audio))
+        audioChunks = AudioChunking(args.length).segmentAudio(audio)
         for i, chunk in enumerate(audioChunks):
             saveAudio(
                 chunk,
