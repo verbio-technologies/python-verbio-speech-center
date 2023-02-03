@@ -122,7 +122,7 @@ def saveAudio(audio, sample_rate: int, outputPath: Path):
     scipy.io.wavfile.write(outputPath, sample_rate, audio)
 
 
-def saveAudioChunks(audioChunks, sampleRate: int, outputPath: str, audioPath: str):
+def saveAudioChunks(audioChunks, sampleRate: int, outputPath: Path, audioPath: Path):
     for i, chunk in enumerate(audioChunks):
         saveAudio(
             chunk,
@@ -133,16 +133,20 @@ def saveAudioChunks(audioChunks, sampleRate: int, outputPath: str, audioPath: st
 
 def processGuiFile(guiPath: str, chunksLength: float, outputPath: str):
     audios = open(guiPath, "r").read().split("\n")
+    totalAudioChunks = []
     for audioPath in filter(lambda item: item, audios):
         audio = loadAudio(audioPath)
         audioChunks = AudioChunking(chunksLength).segmentAudio(loadAudio(audioPath))
         saveAudioChunks(audioChunks, audio["sample_rate"], outputPath, audioPath)
+        totalAudioChunks.append(audioChunks)
+    return totalAudioChunks
 
 
 def processAudioFile(audioPath: str, chunksLength: float, outputPath: str):
     audio = loadAudio(audioPath)
     audioChunks = AudioChunking(chunksLength).segmentAudio(audio)
     saveAudioChunks(audioChunks, audio["sample_rate"], outputPath, audioPath)
+    return audioChunks
 
 
 def main():

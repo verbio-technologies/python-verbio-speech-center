@@ -3,7 +3,13 @@ import os
 import shutil
 import unittest
 from pathlib import Path
-from asr4.recognizer_v1.types.audio_chunking import AudioChunking, loadAudio, saveAudio
+from asr4.recognizer_v1.types.audio_chunking import (
+    AudioChunking,
+    loadAudio,
+    saveAudio,
+    processAudioFile,
+    processGuiFile,
+)
 import wave
 import numpy as np
 
@@ -18,6 +24,7 @@ class TestAudioChunking(unittest.TestCase):
         self.audio_12_sec_path = os.path.join(self.datapath, "12.08s.wav")
         self.audio_8k_path = os.path.join(self.datapath, "en-us.8k.wav")
         self.audio_16k_path = os.path.join(self.datapath, "en-us.16k.wav")
+        self.gui = os.path.join(self.datapath, "audios.gui")
         self.empty_audio = os.path.join(self.datapath, "empty.wav")
 
     def setUp(self):
@@ -112,6 +119,20 @@ class TestAudioChunking(unittest.TestCase):
             rate = f.getframerate()
             self.assertEqual(rate, 8000)
             self.assertEqual(n / float(rate), 12.08)
+
+    def testGuiFile(self):
+        self.assertEqual(len(processGuiFile(self.gui, 10, Path(self._output))), 3)
+
+    def testAudioFile(self):
+        self.assertEqual(
+            len(processAudioFile(self.audio_5_sec_path, 10, Path(self._output))), 1
+        )
+        self.assertEqual(
+            len(processAudioFile(self.audio_5_sec_path, 5, Path(self._output))), 2
+        )
+        self.assertEqual(
+            len(processAudioFile(self.audio_12_sec_path, 5, Path(self._output))), 3
+        )
 
     def tearDown(self):
         try:
