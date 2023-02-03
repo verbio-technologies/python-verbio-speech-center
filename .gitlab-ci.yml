@@ -32,7 +32,7 @@ settings:
       variables:
         DOCKER_IMAGE_VERSION: "${CI_COMMIT_REF_SLUG}"
   script:
-    - echo "DOCKER_IMAGE_VERSION=${DOCKER_IMAGE_VERSION}" > settings.env
+    - echo "DOCKER_IMAGE_VERSION=${DOCKER_IMAGE_VERSION}" | tee -a settings.env
   artifacts:
     reports:
       dotenv: settings.env
