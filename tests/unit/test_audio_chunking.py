@@ -1,10 +1,11 @@
-import argparse
 import pytest
 import os
+import shutil
 import unittest
-from asr4.recognizer_v1.types.audio_chunking import AudioChunking, loadAudio, saveAudio
-
 from pathlib import Path
+from asr4.recognizer_v1.types.audio_chunking import AudioChunking, loadAudio, saveAudio
+import wave
+import numpy as np
 
 
 class TestAudioChunking(unittest.TestCase):
@@ -12,12 +13,15 @@ class TestAudioChunking(unittest.TestCase):
     def rootpath(self, pytestconfig):
         self.rootpath = pytestconfig.rootpath
         self.datapath = pytestconfig.rootpath.joinpath("tests/unit/data")
-
         self.audio_5_sec_path = os.path.join(self.datapath, "5.07s.wav")
         self.audio_10_sec_path = os.path.join(self.datapath, "10s.wav")
         self.audio_12_sec_path = os.path.join(self.datapath, "12.08s.wav")
         self.audio_8k_path = os.path.join(self.datapath, "en-us.8k.wav")
         self.audio_16k_path = os.path.join(self.datapath, "en-us.16k.wav")
+
+    def setUp(self):
+        self._output = "testOutput"
+        os.mkdir(self._output)
 
     def testLoadAudioDifferentLength(self):
         self.assertEqual(loadAudio(self.audio_5_sec_path)["duration"], 5.0735)
@@ -93,3 +97,19 @@ class TestAudioChunking(unittest.TestCase):
         chunkLength = 15
         a = AudioChunking(chunkLength)
         self.assertEqual(len(a.trimAudio(audio)), 1)
+
+    def testSaveAudios(self):
+        audio = loadAudio(self.audio_12_sec_path)
+        audioFile = os.path.join(self._output, Path(self.audio_12_sec_path).stem)
+        saveAudio(audio["data"], audio["sample_rate"], audioFile)
+        with wave.open(audioFile) as f:
+            n = f.getnframes()
+            rate = f.getframerate()
+            self.assertEqual(rate, 8000)
+            self.assertEqual(n / float(rate), 12.08)
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(self._output)
+        except OSError as e:
+            print("Error removing directory: %s - %s." % (e.filename, e.strerror))
