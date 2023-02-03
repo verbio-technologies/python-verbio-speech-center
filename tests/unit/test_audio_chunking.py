@@ -49,3 +49,35 @@ class TestAudioChunking(unittest.TestCase):
         self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_5_sec_path))), 2)
         self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_10_sec_path))), 2)
         self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_12_sec_path))), 3)
+
+    def testSoxTrimAudio(self):
+        audio = loadAudio(self.audio_12_sec_path)
+        chunkLength = 5
+        a = AudioChunking(chunkLength)
+        sampleRate = 8000
+        self.assertEqual(len(a.soxTrimAudio(audio, 0, chunkLength)) / sampleRate, 5)
+        self.assertEqual(len(a.soxTrimAudio(audio, 2, chunkLength)) / sampleRate, 5)
+        self.assertEqual(len(a.soxTrimAudio(audio, 0, 2)) / sampleRate, 5)
+        chunkLength = 10
+        a = AudioChunking(chunkLength)
+        sampleRate = 8000
+        self.assertEqual(len(a.soxTrimAudio(audio, 0, chunkLength)) / sampleRate, 10)
+        self.assertEqual(len(a.soxTrimAudio(audio, 0, 2)) / sampleRate, 10)
+
+    def testSoxPadAudio(self):
+        audio = loadAudio(self.audio_5_sec_path)
+        chunkLength = 10
+        sampleRate = 8000
+        a = AudioChunking(chunkLength)
+        self.assertEqual(
+            len(a.soxPadAudio(audio["data"], sampleRate, audio["duration"]))
+            / sampleRate,
+            10,
+        )
+        chunkLength = 15
+        a = AudioChunking(chunkLength)
+        self.assertEqual(
+            len(a.soxPadAudio(audio["data"], sampleRate, audio["duration"]))
+            / sampleRate,
+            15,
+        )
