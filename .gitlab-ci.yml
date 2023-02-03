@@ -31,6 +31,7 @@ settings:
     - if: $DOCKER_IMAGE_VERSION == ""
       variables:
         DOCKER_IMAGE_VERSION: "${CI_COMMIT_REF_SLUG}"
+    - when: always
   script:
     - echo "DOCKER_IMAGE_VERSION=${DOCKER_IMAGE_VERSION}" | tee -a settings.env
   artifacts:
