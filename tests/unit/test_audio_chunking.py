@@ -56,15 +56,33 @@ class TestAudioChunking(unittest.TestCase):
 
     def testSegmentAudioChunk10(self):
         a = AudioChunking(chunkLength=10)
-        self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_5_sec_path))), 1)
-        self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_10_sec_path))), 1)
-        self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_12_sec_path))), 2)
+        chunks = a.segmentAudio(loadAudio(self.audio_5_sec_path))
+        self.assertEqual(len(chunks), 1)
+        for chunk in chunks:
+            self.assertEqual(len(chunk), 80000)
+        chunks = a.segmentAudio(loadAudio(self.audio_10_sec_path))
+        self.assertEqual(len(chunks), 1)
+        for chunk in chunks:
+            self.assertEqual(len(chunk), 80000)
+        chunks = a.segmentAudio(loadAudio(self.audio_12_sec_path))
+        self.assertEqual(len(chunks), 2)
+        for chunk in chunks:
+            self.assertEqual(len(chunk), 80000)
 
     def testSegmentAudioChunk5(self):
         a = AudioChunking(chunkLength=5)
-        self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_5_sec_path))), 2)
-        self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_10_sec_path))), 2)
-        self.assertEqual(len(a.segmentAudio(loadAudio(self.audio_12_sec_path))), 3)
+        chunks = a.segmentAudio(loadAudio(self.audio_5_sec_path))
+        self.assertEqual(len(chunks), 2)
+        for chunk in chunks:
+            self.assertEqual(len(chunk), 40000)
+        chunks = a.segmentAudio(loadAudio(self.audio_10_sec_path))
+        self.assertEqual(len(chunks), 2)
+        for chunk in chunks:
+            self.assertEqual(len(chunk), 40000)
+        chunks = a.segmentAudio(loadAudio(self.audio_12_sec_path))
+        self.assertEqual(len(chunks), 3)
+        for chunk in chunks:
+            self.assertEqual(len(chunk), 40000)
 
     def testSoxTrimAudio(self):
         audio = loadAudio(self.audio_12_sec_path)
