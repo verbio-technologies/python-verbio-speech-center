@@ -25,6 +25,17 @@ variables:
   DOCKER_AWS_TEST_IMAGE_NAME: csr/testing/asr4
   DOCKER_AWS_RELEASE_IMAGE_NAME: voice-center/testing/asr4
 
+settings:
+  stage: .pre
+  rules:
+    - if: $DOCKER_IMAGE_VERSION == ""
+      variables:
+        DOCKER_IMAGE_VERSION: "${CI_COMMIT_REF_SLUG}"
+  script:
+    - echo "DOCKER_IMAGE_VERSION=${DOCKER_IMAGE_VERSION}" > settings.env
+  artifacts:
+    reports:
+      dotenv: settings.env
 
 lint:python:
   stage: lint
