@@ -64,7 +64,7 @@ class AudioChunking:
             chunks = [audio["data"]]
         return chunks
 
-    def trimAudio(self, audio: dict):
+    def trimAudio(self, audio: dict) -> list:
         segments = math.ceil(audio["duration"] / self.chunkLength)
         start = 0.0
         audiosTrimmed = []
