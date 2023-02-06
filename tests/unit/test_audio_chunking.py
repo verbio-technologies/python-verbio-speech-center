@@ -11,7 +11,6 @@ from asr4.recognizer_v1.types.audio_chunking import (
     processGuiFile,
 )
 import wave
-import numpy as np
 
 
 class TestAudioChunking(unittest.TestCase):
@@ -59,41 +58,58 @@ class TestAudioChunking(unittest.TestCase):
         chunks = a.segmentAudio(loadAudio(self.audio_5_sec_path))
         self.assertEqual(len(chunks), 1)
         for chunk in chunks:
-            self.assertEqual(len(chunk), 80000)
+            self.assertEqual(
+                len(chunk), 80000
+            )  # Nº samples = duration * sample_rate = 10 sec * 8000 = 80000
         chunks = a.segmentAudio(loadAudio(self.audio_10_sec_path))
         self.assertEqual(len(chunks), 1)
         for chunk in chunks:
-            self.assertEqual(len(chunk), 80000)
+            self.assertEqual(
+                len(chunk), 80000
+            )  # Nº samples = duration * sample_rate = 10 sec * 8000 = 80000
         chunks = a.segmentAudio(loadAudio(self.audio_12_sec_path))
         self.assertEqual(len(chunks), 2)
         for chunk in chunks:
-            self.assertEqual(len(chunk), 80000)
+            self.assertEqual(
+                len(chunk), 80000
+            )  # Nº samples = duration * sample_rate = 10 sec * 8000 = 80000
 
     def testSegmentAudioChunk5(self):
         a = AudioChunking(chunkLength=5)
+
         chunks = a.segmentAudio(loadAudio(self.audio_5_sec_path))
         self.assertEqual(len(chunks), 2)
         for chunk in chunks:
-            self.assertEqual(len(chunk), 40000)
+            self.assertEqual(
+                len(chunk), 40000
+            )  # Nº samples = duration * sample_rate = 5 sec * 8000 = 40000
+
         chunks = a.segmentAudio(loadAudio(self.audio_10_sec_path))
         self.assertEqual(len(chunks), 2)
         for chunk in chunks:
-            self.assertEqual(len(chunk), 40000)
+            self.assertEqual(
+                len(chunk), 40000
+            )  # Nº samples = duration * sample_rate = 5 sec * 8000 = 40000
+
         chunks = a.segmentAudio(loadAudio(self.audio_12_sec_path))
         self.assertEqual(len(chunks), 3)
         for chunk in chunks:
-            self.assertEqual(len(chunk), 40000)
+            self.assertEqual(
+                len(chunk), 40000
+            )  # Nº samples = duration * sample_rate = 5 sec * 8000 = 40000
 
     def testSoxTrimAudio(self):
         audio = loadAudio(self.audio_12_sec_path)
+
         chunkLength = 5
         a = AudioChunking(chunkLength)
         sampleRate = 8000
         self.assertEqual(len(a.soxTrimAudio(audio, 0, chunkLength)) / sampleRate, 5)
         self.assertEqual(len(a.soxTrimAudio(audio, 2, chunkLength)) / sampleRate, 5)
         self.assertEqual(len(a.soxTrimAudio(audio, 0, 2)) / sampleRate, 5)
+
         chunkLength = 10
-        a = AudioChunking(chunkLength)
+        a = AudioChunking(10)
         sampleRate = 8000
         self.assertEqual(len(a.soxTrimAudio(audio, 0, chunkLength)) / sampleRate, 10)
         self.assertEqual(len(a.soxTrimAudio(audio, 0, 2)) / sampleRate, 10)
@@ -104,29 +120,37 @@ class TestAudioChunking(unittest.TestCase):
         sampleRate = 8000
         a = AudioChunking(chunkLength)
         self.assertEqual(
-            len(a.soxPadAudio(audio["data"], sampleRate, audio["duration"]))
-            / sampleRate,
-            10,
-        )
+            len(a.soxPadAudio(audio["data"], sampleRate, audio["duration"])), 80000
+        )  # Nº samples = duration * sample_rate = 10 sec * 8000 = 80000
         chunkLength = 15
         a = AudioChunking(chunkLength)
         self.assertEqual(
-            len(a.soxPadAudio(audio["data"], sampleRate, audio["duration"]))
-            / sampleRate,
-            15,
-        )
+            len(a.soxPadAudio(audio["data"], sampleRate, audio["duration"])), 120000
+        )  # Nº samples = duration * sample_rate = 15 sec * 8000 = 120000
 
     def testTrimAudios(self):
         audio = loadAudio(self.audio_12_sec_path)
-        chunkLength = 5
-        a = AudioChunking(chunkLength)
-        self.assertEqual(len(a.trimAudio(audio)), 3)
-        chunkLength = 10
-        a = AudioChunking(chunkLength)
-        self.assertEqual(len(a.trimAudio(audio)), 2)
-        chunkLength = 15
-        a = AudioChunking(chunkLength)
-        self.assertEqual(len(a.trimAudio(audio)), 1)
+
+        chunks = AudioChunking(5).trimAudio(audio)
+        self.assertEqual(len(chunks), 3)
+        for chunk in chunks:
+            self.assertEqual(
+                len(chunk), 40000
+            )  # Nº samples = duration * sample_rate = 5 sec * 8000 = 40000
+
+        chunks = AudioChunking(10).trimAudio(audio)
+        self.assertEqual(len(chunks), 2)
+        for chunk in chunks:
+            self.assertEqual(
+                len(chunk), 80000
+            )  # Nº samples = duration * sample_rate = 10 sec * 8000 = 80000
+
+        chunks = AudioChunking(15).trimAudio(audio)
+        self.assertEqual(len(chunks), 1)
+        for chunk in chunks:
+            self.assertEqual(
+                len(chunk), 120000
+            )  # Nº samples = duration * sample_rate = 15 sec * 8000 = 120000
 
     def testSaveAudios(self):
         audio = loadAudio(self.audio_12_sec_path)
