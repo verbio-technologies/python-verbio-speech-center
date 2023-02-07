@@ -43,7 +43,6 @@ lint:python:
   before_script:
     - pip install flake8==3.9.2 black==22.6.0
   script:
-    - echo "DIV = ${DOCKER_IMAGE_VERSION}"
     - black --check .
     - flake8 --exit-zero --show-source --statistics
 
@@ -76,7 +75,6 @@ lint:rust:nightly:
 unit-testing:
   stage: test
   before_script:
-    - echo "DIV = ${DOCKER_IMAGE_VERSION}"
     - pip install .[server,cpu,test]
   script:
     - python3 --version
@@ -106,7 +104,6 @@ unit-testing:rust:
 functional-testing:endpoints:
   stage: test
   before_script:
-    - echo "DIV = ${DOCKER_IMAGE_VERSION}"
     - wget https://github.com/bojand/ghz/releases/download/v0.111.0/ghz-linux-x86_64.tar.gz
     - tar -xzf ghz-linux-x86_64.tar.gz
     - mv ghz /bin
@@ -177,7 +174,6 @@ build:python:
     - tags
     - merge_requests
   before_script:
-    - echo "DIV = ${DOCKER_IMAGE_VERSION}"
     - echo JOB_ID=$CI_JOB_ID >> settings.env
     - echo "DOCKER_IMAGE_VERSION = ${DOCKER_IMAGE_VERSION}" >> settings.env
   script:
