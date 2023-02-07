@@ -43,6 +43,7 @@ lint:python:
   before_script:
     - pip install flake8==3.9.2 black==22.6.0
   script:
+    - echo "DIV = ${DOCKER_IMAGE_VERSION}"
     - black --check .
     - flake8 --exit-zero --show-source --statistics
 
