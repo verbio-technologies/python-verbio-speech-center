@@ -1,12 +1,12 @@
 stages:
   - lint
   - test
-  - build
-  - testing-promote
-  - testing-integration
-  - staging-promote
-  - staging-e2e
-  - stable-promote
+  - package
+  - build-image
+  - integration-testing
+  - promote-to-staging
+  - end2end-testing
+  - promote-to-stable
   - stable-deploy
   - cleanup
   - speech-center-integration-testing
@@ -18,13 +18,25 @@ variables:
   DOCKER_STAGING_IMAGE_NAME: docker.registry.verbio.com/csr/staging/asr4
   DOCKER_STABLE_IMAGE_NAME: docker.registry.verbio.com/csr/stable/asr4
   DOCKER_SPEECH_CENTER_IMAGE_NAME: docker.registry.verbio.com/voice-center/testing/asr4
-  DOCKER_IMAGE_VERSION: ${CI_COMMIT_TAG}
+  DOCKER_IMAGE_VERSION: $CI_COMMIT_REF_SLUG
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
   AWS_ECR_URL: 321880733545.dkr.ecr.us-east-1.amazonaws.com
   AWS_REGION: us-east-1
   DOCKER_AWS_TEST_IMAGE_NAME: csr/testing/asr4
   DOCKER_AWS_RELEASE_IMAGE_NAME: voice-center/testing/asr4
 
+settings:
+  stage: .pre
+  rules:
+    - if: $CI_COMMIT_TAG
+      variables:
+        DOCKER_IMAGE_VERSION: $CI_COMMIT_TAG
+    - when: always
+  script:
+    - echo "DOCKER_IMAGE_VERSION=${DOCKER_IMAGE_VERSION}" | tee -a settings.env
+  artifacts:
+    reports:
+      dotenv: settings.env
 
 lint:python:
   stage: lint
@@ -157,9 +169,10 @@ integration-testing:gpu:
 
 
 build:python:
-  stage: build
+  stage: package
   only:
     - tags
+    - merge_requests
   before_script:
     - echo JOB_ID=$CI_JOB_ID >> job.env
   script:
@@ -179,7 +192,7 @@ build:python:
       dotenv: job.env
 
 build:rust:
-  stage: build
+  stage: package
   only:
     - tags
   script:
@@ -197,22 +210,45 @@ build:rust:
 
 
 
-testing:promote:cpu:
+image:build:cpu:
   variables:
     IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DOCKERFILE: "Dockerfile.debian"
     DEVICE: "cpu"
   extends: .template_docker_build
+  only:
+    - merge_requests
 
-testing:promote:gpu:
+image:build:gpu:
   variables:
     IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     DEVICE: "gpu"
     DOCKERFILE: "Dockerfile.debian-gpu"
   extends: .template_docker_build
+  only:
+    - merge_requests
+
+image:release:cpu:
+  variables:
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    DOCKERFILE: "Dockerfile.debian"
+    DEVICE: "cpu"
+  extends: .template_docker_deploy
+  only:
+    - tags
+
+image:release:gpu:
+  variables:
+    IMAGE_NAME: "${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    DEVICE: "gpu"
+    DOCKERFILE: "Dockerfile.debian-gpu"
+  extends: .template_docker_deploy
+  only: 
+    - tags
+
 
 .template_docker_build:
-  stage: testing-promote
+  stage: build-image
   image: docker:20.10.15
   only:
     - tags
@@ -220,10 +256,12 @@ testing:promote:gpu:
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  script:
+  before_script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:${DEVICE} | awk '/1/ -F " " {print $2}')
     - echo ${MODEL_VERSION}
+    - SERVICE_VERSION=$(cat VERSION)
+    - echo SERVICE_VERSION=${SERVICE_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
@@ -231,9 +269,15 @@ testing:promote:gpu:
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
     - cp bin/server.py deploy/docker/
-    - cd deploy/docker/
-    - docker build . -f ${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg VERSION=${DOCKER_IMAGE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
-    - docker push "${IMAGE_NAME}"
+  script:
+    - docker build --pull deploy/docker/ -f deploy/docker/${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg VERSION=${SERVICE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
+    
+.template_docker_deploy:
+    extends:
+      - .template_docker_build
+    after_script:
+      - docker push "${IMAGE_NAME}"
+    
 
 
 
@@ -266,7 +310,7 @@ testing:integration-testing:gpu:
 
 
 .template:integration-testing:
-  stage: testing-integration
+  stage: integration-testing
   only:
     - tags
   parallel:
@@ -293,7 +337,7 @@ testing:integration-testing:gpu:
 
 
 staging:promote:
-  stage: staging-promote
+  stage: promote-to-staging
   image: docker:20.10.15
   only:
     - tags
@@ -318,8 +362,8 @@ staging:promote:
 
 
 
-staging:e2e:
-  stage: staging-e2e
+asr4:benchmark:
+  stage: end2end-testing
   only:
     - tags
   variables:
@@ -332,7 +376,7 @@ staging:e2e:
 
 
 stable:promote:
-  stage: stable-promote
+  stage: promote-to-stable
   image: docker:20.10.15
   only:
     - tags
@@ -351,7 +395,7 @@ stable:promote:
 
 
 speech-center:promote:
-  stage: stable-promote
+  stage: promote-to-stable
   image: docker:20.10.15
   only:
     - tags
