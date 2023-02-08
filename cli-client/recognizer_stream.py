@@ -5,6 +5,7 @@ sys.path.insert(1, '../proto/generated')
 
 from concurrent.futures import ThreadPoolExecutor
 import threading
+from threading import Timer
 from typing import Iterator, Iterable
 import argparse
 import logging
@@ -43,6 +44,8 @@ def parse_command_line() -> Options:
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
+    parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
+
     
     args = parser.parse_args()
     options.token_file = args.token
@@ -51,6 +54,7 @@ def parse_command_line() -> Options:
     options.topic = args.topic
     options.language = args.language
     options.secure_channel = args.secure
+    options.inactivity_timeout = float(args.inactivity_timeout)
     
     return options
 
@@ -88,6 +92,15 @@ class SpeechCenterStreamingASRClient:
         self._credentials = Credentials(self.read_token(toke_file=options.token_file))
         self.token = self.read_token(toke_file=options.token_file)
         self._secure_channel = options.secure_channel
+        self._inactivity_timer = None
+        self._inactivity_timer_timeout = options.inactivity_timeout
+
+    def _close_stream_by_inactivity(self):
+        logging.info("Stream inactivity detected, closing stream...")
+        self._peer_responded.set()
+
+    def _start_inactivity_timer(self, inactivity_timeout : float):
+        self._inactivity_timer = Timer(inactivity_timeout, self._close_stream_by_inactivity)
 
     def _response_watcher(
             self,
@@ -98,9 +111,12 @@ class SpeechCenterStreamingASRClient:
                 json = MessageToJson(response)
                 logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
                 print(MessageToJson(response))
+
                 if response.result and response.result.is_final:
-                    logging.info("Final recognition from server detected")
-                    self._peer_responded.set()
+                    if self._inactivity_timer:
+                        self._inactivity_timer.cancel()
+                    self._start_inactivity_timer(self._inactivity_timer_timeout)
+                    self._inactivity_timer.start()
 
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
@@ -180,17 +196,16 @@ def run(command_line_options):
         credentials = Credentials(token)
         
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
-            runExecutor(command_line_options, executor, channel)
+            run_executor(command_line_options, executor, channel)
             
     else:
         with grpc.insecure_channel(command_line_options.host) as channel:
-            runExecutor(command_line_options, executor, channel)
+            run_executor(command_line_options, executor, channel)
 
-def runExecutor(command_line_options, executor, channel):
+def run_executor(command_line_options, executor, channel):
     logging.info("Running executor...")
     future = executor.submit(process_recognition, executor, channel, command_line_options)
     future.result()
-    logging.info("New result arrived")
     
 
 if __name__ == '__main__':
