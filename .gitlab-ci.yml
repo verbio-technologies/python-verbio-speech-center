@@ -174,7 +174,8 @@ build:python:
     - tags
     - merge_requests
   before_script:
-    - echo JOB_ID=$CI_JOB_ID >> job.env
+    - echo JOB_ID=$CI_JOB_ID >> settings.env
+    - echo "DOCKER_IMAGE_VERSION = ${DOCKER_IMAGE_VERSION}" >> settings.env
   script:
     - export MAKEFLAGS="-j4"
     - pip install build grpcio grpcio-tools
@@ -189,7 +190,7 @@ build:python:
       - "*.whl"
       - "*.pb"
     reports:
-      dotenv: job.env
+      dotenv: settings.env
 
 build:rust:
   stage: package
