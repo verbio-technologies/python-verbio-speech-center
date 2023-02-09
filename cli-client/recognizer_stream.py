@@ -101,6 +101,7 @@ class SpeechCenterStreamingASRClient:
 
     def _start_inactivity_timer(self, inactivity_timeout : float):
         self._inactivity_timer = Timer(inactivity_timeout, self._close_stream_by_inactivity)
+        self._inactivity_timer.start()
 
     def _response_watcher(
             self,
@@ -116,7 +117,6 @@ class SpeechCenterStreamingASRClient:
                     if self._inactivity_timer:
                         self._inactivity_timer.cancel()
                     self._start_inactivity_timer(self._inactivity_timer_timeout)
-                    self._inactivity_timer.start()
 
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
