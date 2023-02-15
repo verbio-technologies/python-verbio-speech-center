@@ -177,7 +177,12 @@ class OnnxRuntime(Runtime):
             raise ValueError("Input audio cannot be empty!")
         x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
-        return self._postprocess(y)
+        decode_result = _DecodeResult(
+            label_sequences=[[y[0][0]["label_sequences"]]],
+            scores=[[y[0][0]["score"]]],
+            timesteps=[[[]]],
+        )
+        return self._postprocess(decode_result)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         x = np.frombuffer(input, dtype=np.int16)
@@ -199,15 +204,17 @@ class OnnxRuntime(Runtime):
 
     @staticmethod
     def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
+        print(output.label_sequences)
         sequence = (
-            "".join(output[0][0]["label_sequences"])
+            "".join(output.label_sequences[0][0])
             .replace("|", " ")
             .replace("<s>", "")
             .replace("</s>", "")
             .replace("<pad>", "")
             .strip()
         )
-        score = 1 / np.exp(output[0][0]["score"]) if output[0][0]["score"] else 0.0
+        print(sequence)
+        score = 1 / np.exp(output.scores[0][0]) if output.scores else 0.0
         return OnnxRuntimeResult(
             sequence=sequence,
             score=score,

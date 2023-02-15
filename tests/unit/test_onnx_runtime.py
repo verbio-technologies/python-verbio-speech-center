@@ -157,4 +157,4 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""))
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
-        self.assertEqual(onnxResult.score, 0)
+        self.assertEqual(onnxResult.score, 1.0)
