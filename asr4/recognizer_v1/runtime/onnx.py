@@ -202,13 +202,11 @@ class OnnxRuntime(Runtime):
         except:
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
         x = y.astype(np.float32)
-        if (
-            hasattr(self, "_session")
-            and self._session._session._inputs_meta[0].shape[1] != "sequence_length"
-        ):
-            x = self._convertToFixedSizeMatrix(
-                x, self._session._session._inputs_meta[0].shape[1]
-            )
+        if hasattr(self, "_session"):
+            if self._session._session._inputs_meta[0].shape[1] != "sequence_length":
+                x = self._convertToFixedSizeMatrix(
+                    x, self._session._session._inputs_meta[0].shape[1]
+                )
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)
         with torch.no_grad():
