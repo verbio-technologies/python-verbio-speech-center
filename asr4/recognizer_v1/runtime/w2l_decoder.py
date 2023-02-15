@@ -25,7 +25,7 @@ class _DecodeResult:
 
 
 class W2lViterbiDecoder:
-    def __init__(self, useGpu: bool, vocabulary: List[str]):
+    def __init__(self, useGpu: bool, vocabulary: List[str]) -> None:
         self._vocabulary = vocabulary
 
         if useGpu:
@@ -41,7 +41,7 @@ class W2lViterbiDecoder:
             else vocabulary.index("<s>")
         )
 
-    def decode(self, emissions: npt.NDArray[np.float32]):
+    def decode(self, emissions: npt.NDArray[np.float32]) -> _DecodeResult:
         batchSize = emissions.shape[0]
         viterbiPath = self._computeViterbi(emissions)
         r = []
