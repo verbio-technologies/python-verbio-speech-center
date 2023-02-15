@@ -209,7 +209,7 @@ def run_executor(command_line_options, executor, channel):
     
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s]:%(message)s')
     logging.info("Running speechcenter streaming channel...")
     command_line_options = parse_command_line()
     command_line_options.check()
