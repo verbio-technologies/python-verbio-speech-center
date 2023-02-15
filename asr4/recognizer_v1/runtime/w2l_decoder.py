@@ -30,17 +30,13 @@ class W2lDecoder(object):
 
         # criterion-specific init
         self.criterion_type = CriterionType.CTC
-        self.blank = (
-            tgt_dict.index("<ctc_blank>")
-            if "<ctc_blank>" in tgt_dict.indices
-            else tgt_dict.bos()
-        )
-        if "<sep>" in tgt_dict.indices:
-            self.silence = tgt_dict.index("<sep>")
-        elif "|" in tgt_dict.indices:
-            self.silence = tgt_dict.index("|")
+        self.blank = "<pad>" if "<pad>" in tgt_dict else "<s>"
+        if "<sep>" in tgt_dict:
+            self.silence = "<sep>"
+        elif "|" in tgt_dict:
+            self.silence = "|"
         else:
-            self.silence = tgt_dict.eos()
+            self.silence = "</s>"
         self.asg_transitions = None
 
     def generate(self, models, sample, **unused):

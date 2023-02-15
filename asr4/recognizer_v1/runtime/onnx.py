@@ -190,12 +190,13 @@ class OnnxRuntime(Runtime):
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         y = self._session.run(None, {self._inputName: input.numpy()})
         normalized_y = F.softmax(torch.from_numpy(y[0]), dim=2)
-        return self._decoder.decode(normalized_y)
+        output = self._decoder.decode(normalized_y)
+        return output
 
     @staticmethod
     def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
-            "".join(output.label_sequences[0][0])
+            "".join(output[0][0])
             .replace("|", " ")
             .replace("<s>", "")
             .replace("</s>", "")
