@@ -5,7 +5,6 @@ import numpy as np
 
 import torch
 import torch.nn.functional as F
-import simple_ctc
 
 import onnx
 import onnxruntime
@@ -20,6 +19,8 @@ from onnxruntime.quantization.quant_utils import (
 
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
+from asr4.recognizer_v1.runtime.w2l_decoder import W2lViterbiDecoder, W2lKenLMDecoder, W2lFairseqLMDecoder
+
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
@@ -163,14 +164,24 @@ class OnnxRuntime(Runtime):
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        self._decoder = simple_ctc.BeamSearchDecoder(
-            vocabulary,
-            cutoff_top_n=32,
-            cutoff_prob=0.8,
-            beam_size=100,
-            blank_id=0,
-            is_nll=False,
-        )
+        options = {}
+        options["nbest"] = 32
+        self._decoder = self._buildGenerator("viterbi", options, vocabulary)
+
+    def _buildGenerator(self, w2l_decoder, options, vocabulary):
+        if w2l_decoder == "viterbi":
+            return W2lViterbiDecoder(options, vocabulary)
+
+        elif w2l_decoder == "kenlm":
+            return W2lKenLMDecoder(options, vocabulary)
+
+        elif w2l_decoder == "fairseqlm":
+            return W2lFairseqLMDecoder(options, vocabulary)
+
+        else:
+            print(
+                "only flashlight decoders with (viterbi, kenlm, fairseqlm) options are supported at the moment"
+            )
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
