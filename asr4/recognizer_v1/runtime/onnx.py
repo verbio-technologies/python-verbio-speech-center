@@ -51,7 +51,9 @@ class Session(abc.ABC):
 
 
 class OnnxSession(Session):
-    def __init__(self, path_or_bytes: Union[str, bytes], useGpu: bool, **kwargs) -> None:
+    def __init__(
+        self, path_or_bytes: Union[str, bytes], useGpu: bool, **kwargs
+    ) -> None:
         super().__init__(path_or_bytes)
         self.logger = logging.getLogger("ASR4")
         self._gpu = useGpu
@@ -114,7 +116,7 @@ class OnnxSession(Session):
 
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]
-    
+
     @property
     def gpu(self) -> bool:
         self._gpu
@@ -157,13 +159,13 @@ class OnnxRuntime(Runtime):
     ]
 
     def __init__(
-        self, session: Session, vocabulary: List[str] = DEFAULT_VOCABULARY, nBest: int = 32,
+        self, session: Session, vocabulary: List[str] = DEFAULT_VOCABULARY
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        self._decoder = W2lViterbiDecoder(self._session.gpu, nBest, vocabulary)
+        self._decoder = W2lViterbiDecoder(self._session.gpu, vocabulary)
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
@@ -188,7 +190,7 @@ class OnnxRuntime(Runtime):
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         y = self._session.run(None, {self._inputName: input.numpy()})
         normalized_y = F.softmax(torch.from_numpy(y[0]), dim=2)
-        return self._decoder.decode(normalized_y)
+        return self._decoder.decode(normalized_y.numpy())
 
     @staticmethod
     def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
