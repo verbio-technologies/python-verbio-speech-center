@@ -9,12 +9,8 @@
 Flashlight decoders.
 """
 
-import gc
 import itertools as it
-import os.path as osp
 from typing import List
-import warnings
-from collections import deque, namedtuple
 
 import numpy as np
 import torch
