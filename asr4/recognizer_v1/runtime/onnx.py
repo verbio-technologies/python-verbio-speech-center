@@ -195,14 +195,14 @@ class OnnxRuntime(Runtime):
     @staticmethod
     def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
-            "".join(output.label_sequences[0][0])
+            "".join(output[0][0]["label_sequences"])
             .replace("|", " ")
             .replace("<s>", "")
             .replace("</s>", "")
             .replace("<pad>", "")
             .strip()
         )
-        score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+        score = 1 / np.exp(output[0][0]["score"]) if output[0][0]["score"] else 0.0
         return OnnxRuntimeResult(
             sequence=sequence,
             score=score,

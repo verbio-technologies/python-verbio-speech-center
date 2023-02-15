@@ -63,7 +63,10 @@ class W2lDecoder(object):
         """Normalize tokens by handling CTC blank, ASG replabels, etc."""
         idxs = (g[0] for g in it.groupby(idxs))
         idxs = filter(lambda x: x != self.blank, idxs)
-        return torch.LongTensor(list(idxs))
+        labels = []
+        for i in list(idxs):
+            labels.append(self.tgt_dict[i])
+        return labels
 
 
 class W2lViterbiDecoder(W2lDecoder):
@@ -89,6 +92,6 @@ class W2lViterbiDecoder(W2lDecoder):
             get_data_ptr_as_bytes(workspace),
         )
         return [
-            [{"tokens": self.get_tokens(viterbi_path[b].tolist()), "score": 0}]
+            [{"label_sequences": self.get_tokens(viterbi_path[b].tolist()), "score": 0}]
             for b in range(B)
         ]
