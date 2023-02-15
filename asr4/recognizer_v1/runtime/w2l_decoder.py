@@ -2,7 +2,8 @@ import struct
 import itertools
 import numpy as np
 import numpy.typing as npt
-from typing import List, Any
+from dataclass import dataclass
+from typing import List, Any, NamedTuple
 
 from flashlight.lib.sequence.criterion import CpuViterbiPath
 
@@ -12,6 +13,13 @@ try:
     from flashlight.lib.sequence.flashlight_lib_sequence_criterion import CudaViterbiPath
 except Exception as e:
     _CUDA_ERROR = f"Could not load Flashlight Sequence CudaViterbiPath: {e}"
+
+
+@dataclass
+class _DecodeResult(NamedTuple):
+    label_sequences: List[List[List[str]]]
+    scores: List[List[float]] = [[0]]
+    timesteps: List[List[List[int]]] = [[[]]]
 
 
 class W2lViterbiDecoder:
@@ -44,7 +52,7 @@ class W2lViterbiDecoder:
         for idx in range(min(batchSize, self._nBest)):
             hypotesis = self._ctc(viterbiPath[idx].tolist())
             hypotesis = self._postProcessHypothesis(hypotesis)
-            r.append({"label_sequences": hypotesis, "score": 0})
+            r.append(_DecodeResult(label_sequences=[[hypotesis]]))
         return r
     
     def _computeViterbi(self, emissions: npt.NDArray[np.float32]) -> npt.NDArray[np.uint8]:

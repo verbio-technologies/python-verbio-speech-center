@@ -19,7 +19,7 @@ from onnxruntime.quantization.quant_utils import (
 
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
-from asr4.recognizer_v1.runtime.w2l_decoder import W2lViterbiDecoder
+from asr4.recognizer_v1.runtime.w2l_decoder import W2lViterbiDecoder, _DecodeResult
 
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
@@ -28,12 +28,6 @@ MODEL_QUANTIZATION_PRECISION = "INT8"
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
-
-
-class _DecodeResult(NamedTuple):
-    label_sequences: List[List[List[str]]]
-    scores: List[List[float]]
-    timesteps: List[List[List[int]]]
 
 
 class Session(abc.ABC):
@@ -163,26 +157,20 @@ class OnnxRuntime(Runtime):
     ]
 
     def __init__(
-        self, session: Session, vocabulary: List[str] = DEFAULT_VOCABULARY
+        self, session: Session, vocabulary: List[str] = DEFAULT_VOCABULARY, nBest: int = 32,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        nbest = 32
-        self._decoder = W2lViterbiDecoder(self._session.gpu, nbest, vocabulary)
+        self._decoder = W2lViterbiDecoder(self._session.gpu, nBest, vocabulary)
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
             raise ValueError("Input audio cannot be empty!")
         x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
-        decode_result = _DecodeResult(
-            label_sequences=[[y[0][0]["label_sequences"]]],
-            scores=[[y[0][0]["score"]]],
-            timesteps=[[[]]],
-        )
-        return self._postprocess(decode_result)
+        return self._postprocess(y)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         x = np.frombuffer(input, dtype=np.int16)
@@ -204,7 +192,6 @@ class OnnxRuntime(Runtime):
 
     @staticmethod
     def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
-        print(output.label_sequences)
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
@@ -213,8 +200,7 @@ class OnnxRuntime(Runtime):
             .replace("<pad>", "")
             .strip()
         )
-        print(sequence)
-        score = 1 / np.exp(output.scores[0][0]) if output.scores else 0.0
+        score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
         return OnnxRuntimeResult(
             sequence=sequence,
             score=score,
