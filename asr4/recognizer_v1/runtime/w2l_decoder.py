@@ -1,97 +1,82 @@
-#!/usr/bin/env python3
-
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
-"""
-Flashlight decoders.
-"""
-
-import itertools as it
-from typing import List
-
+import struct
+import itertools
 import numpy as np
-import torch
+import numpy.typing as npt
+from typing import List, Any
 
-from flashlight.lib.text.decoder import CriterionType
-from flashlight.lib.sequence.criterion import CpuViterbiPath, get_data_ptr_as_bytes
+from flashlight.lib.sequence.criterion import CpuViterbiPath
 
-LM = object
-LMState = object
+_CUDA_ERROR = ''
+
+try:
+    from flashlight.lib.sequence.flashlight_lib_sequence_criterion import CudaViterbiPath
+except Exception as e:
+    _CUDA_ERROR = f"Could not load Flashlight Sequence CudaViterbiPath: {e}"
 
 
-class W2lDecoder(object):
-    def __init__(self, nbest, tgt_dict):
-        self.tgt_dict = tgt_dict
-        self.vocab_size = len(tgt_dict)
-        self.nbest = nbest
+class W2lViterbiDecoder:
+    def __init__(
+        self, 
+        useGpu: bool, 
+        nBest: int,
+        vocabulary: List[str]
+    ):
+        self._nBest = nBest
+        self._vocabulary = vocabulary
 
-        # criterion-specific init
-        self.criterion_type = CriterionType.CTC
-        self.blank = "<pad>" if "<pad>" in tgt_dict else "<s>"
-        if "<sep>" in tgt_dict:
-            self.silence = "<sep>"
-        elif "|" in tgt_dict:
-            self.silence = "|"
+        if useGpu:
+            if _CUDA_ERROR:
+                raise Exception(_CUDA_ERROR)
+            self._flashlight = CudaViterbiPath
         else:
-            self.silence = "</s>"
-        self.asg_transitions = None
+            self._flashlight = CpuViterbiPath
 
-    def generate(self, models, sample, **unused):
-        """Generate a batch of inferences."""
-        # model.forward normally channels prev_output_tokens into the decoder
-        # separately, but SequenceGenerator directly calls model.encoder
-        encoder_input = {
-            k: v for k, v in sample["net_input"].items() if k != "prev_output_tokens"
-        }
-        emissions = self.get_emissions(models, encoder_input)
-        return self.decode(emissions)
+        self._blank = (
+            vocabulary.index("<pad>") 
+            if "<pad>" in vocabulary else 
+            vocabulary.index("<s>")
+        )
 
-    def get_emissions(self, models, encoder_input):
-        """Run encoder and normalize emissions"""
-        model = models[0]
-        encoder_out = model(**encoder_input)
-        if hasattr(model, "get_logits"):
-            emissions = model.get_logits(encoder_out)  # no need to normalize emissions
-        else:
-            emissions = model.get_normalized_probs(encoder_out, log_probs=True)
-        return emissions.transpose(0, 1).float().cpu().contiguous()
-
-    def get_tokens(self, idxs):
-        """Normalize tokens by handling CTC blank, ASG replabels, etc."""
-        idxs = (g[0] for g in it.groupby(idxs))
-        idxs = filter(lambda x: x != self.blank, idxs)
-        labels = []
-        for i in list(idxs):
-            labels.append(self.tgt_dict[i])
-        return labels
-
-
-class W2lViterbiDecoder(W2lDecoder):
-    def __init__(self, nbest, tgt_dict):
-        super().__init__(nbest, tgt_dict)
-
-    def decode(self, emissions):
+    def decode(self, emissions: npt.NDArray[np.float32]):
+        batchSize = emissions.size()[0]
+        viterbiPath = self._computeViterbi(emissions)
+        r = []
+        for idx in range(min(batchSize, self._nBest)):
+            hypotesis = self._ctc(viterbiPath[idx].tolist())
+            hypotesis = self._postProcessHypothesis(hypotesis)
+            r.append({"label_sequences": hypotesis, "score": 0})
+        return r
+    
+    def _computeViterbi(self, emissions: npt.NDArray[np.float32]) -> npt.NDArray[np.uint8]:
         B, T, N = emissions.size()
-        hypos = []
-        if self.asg_transitions is None:
-            transitions = torch.FloatTensor(N, N).zero_()
-        else:
-            transitions = torch.FloatTensor(self.asg_transitions).view(N, N)
-        viterbi_path = torch.IntTensor(B, T)
-        workspace = torch.ByteTensor(CpuViterbiPath.get_workspace_size(B, T, N))
-        CpuViterbiPath.compute(
+        transitions = np.empty([N, N], dtype=np.float32)
+        viterbiPath = np.empty([B, T], dtype=np.int32)
+        workspace = np.array(self._flashlight.get_workspace_size(B, T, N), dtype=np.uint8)
+        self._flashlight.compute(
             B,
             T,
             N,
-            get_data_ptr_as_bytes(emissions),
-            get_data_ptr_as_bytes(transitions),
-            get_data_ptr_as_bytes(viterbi_path),
-            get_data_ptr_as_bytes(workspace),
+            W2lViterbiDecoder.getDataPtrAsBytes(emissions),
+            W2lViterbiDecoder.getDataPtrAsBytes(transitions),
+            W2lViterbiDecoder.getDataPtrAsBytes(viterbiPath),
+            W2lViterbiDecoder.getDataPtrAsBytes(workspace),
         )
-        return [
-            [{"label_sequences": self.get_tokens(viterbi_path[b].tolist()), "score": 0}]
-            for b in range(B)
-        ]
+        return viterbiPath
+    
+    @staticmethod
+    def getDataPtrAsBytes(tensor: npt.NDArray[Any]):
+        return struct.pack("P", tensor.__array_interface__["data"][0])
+    
+    def _ctc(self, hypotesis: List[int]):
+        hypotesis = (g[0] for g in itertools.groupby(hypotesis))
+        hypotesis = filter(lambda x: x != self._blank, hypotesis)
+        return hypotesis
+    
+    def _postProcessHypothesis(self, hypotesis: List[int]):
+        return " ".join(
+            self._vocabulary[letter]
+            for letter in hypotesis
+            if letter < len(self._vocabulary)
+        )
+
+

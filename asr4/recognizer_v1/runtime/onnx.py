@@ -57,9 +57,10 @@ class Session(abc.ABC):
 
 
 class OnnxSession(Session):
-    def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
+    def __init__(self, path_or_bytes: Union[str, bytes], useGpu: bool, **kwargs) -> None:
         super().__init__(path_or_bytes)
         self.logger = logging.getLogger("ASR4")
+        self._gpu = useGpu
         self.__checkModelWeightPrecision(path_or_bytes)
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
@@ -119,6 +120,10 @@ class OnnxSession(Session):
 
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]
+    
+    @property
+    def gpu(self) -> bool:
+        self._gpu
 
 
 class OnnxRuntime(Runtime):
@@ -165,7 +170,7 @@ class OnnxRuntime(Runtime):
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
         nbest = 32
-        self._decoder = W2lViterbiDecoder(nbest, vocabulary)
+        self._decoder = W2lViterbiDecoder(self._session.gpu, nbest, vocabulary)
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
