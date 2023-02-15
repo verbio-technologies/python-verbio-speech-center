@@ -19,7 +19,7 @@ from onnxruntime.quantization.quant_utils import (
 
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
-from asr4.recognizer_v1.runtime.w2l_decoder import W2lViterbiDecoder, W2lKenLMDecoder, W2lFairseqLMDecoder
+from asr4.recognizer_v1.runtime.w2l_decoder import W2lViterbiDecoder
 
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
