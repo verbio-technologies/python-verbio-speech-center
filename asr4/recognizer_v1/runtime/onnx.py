@@ -164,24 +164,8 @@ class OnnxRuntime(Runtime):
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        options = {}
-        options["nbest"] = 32
-        self._decoder = self._buildGenerator("viterbi", options, vocabulary)
-
-    def _buildGenerator(self, w2l_decoder, options, vocabulary):
-        if w2l_decoder == "viterbi":
-            return W2lViterbiDecoder(options, vocabulary)
-
-        elif w2l_decoder == "kenlm":
-            return W2lKenLMDecoder(options, vocabulary)
-
-        elif w2l_decoder == "fairseqlm":
-            return W2lFairseqLMDecoder(options, vocabulary)
-
-        else:
-            print(
-                "only flashlight decoders with (viterbi, kenlm, fairseqlm) options are supported at the moment"
-            )
+        nbest = 32
+        self._decoder = W2lViterbiDecoder(nbest, vocabulary)
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
