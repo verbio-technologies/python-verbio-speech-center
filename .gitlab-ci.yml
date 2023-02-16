@@ -6,7 +6,7 @@ stages:
   - integration-testing
   - promote-to-staging
   - end2end-testing
-  - changelog
+  - update-changelog
   - promote-to-stable
   - stable-deploy
   - cleanup
@@ -377,18 +377,12 @@ asr4:benchmark:
 
 
 update-changelog:
-  stage: changelog
+  stage: update-changelog
   image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.1
   only:
     - tags
   script:
-    - export BRANCH=main
-    - echo "Doing release with ${BRANCH}"
-    - echo "Release to project ${CI_PROJECT_ID}"
-    - curl  --header "PRIVATE-TOKEN:glpat-qghyfDkmN1vcKUhJGeYX" "https://gitlab.lan.verbio.com/api/v4/projects/${CI_PROJECT_ID}/repository/commits?ref_name=${BRANCH}&per_page=1&page=1" > x
-    - echo "This was the pre-ceviche head:"
-    - cat x
-    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${BRANCH} --no-manual-review
+    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review
 
 
 stable:promote:
