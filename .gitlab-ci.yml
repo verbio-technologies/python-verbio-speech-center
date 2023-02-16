@@ -46,34 +46,11 @@ lint:python:
     - black --check .
     - flake8 --exit-zero --show-source --statistics
 
-lint:rust:stable:
-  stage: lint
-  image: docker.registry.verbio.com/rust/centos:stable
-  variables:
-    RUSTC_WRAPPER: sccache
-    RUST_BACKTRACE: "FULL"
-  script:
-    - cargo --version
-    - rustc --version
-    - cargo fmt --all -- --check
-    - cargo clippy --all --all-targets -- -D warnings
-
-lint:rust:nightly:
-  stage: lint
-  image: docker.registry.verbio.com/rust/centos:stable
-  variables:
-    RUSTC_WRAPPER: sccache
-    RUST_BACKTRACE: "FULL"
-  allow_failure: true
-  script:
-    - cargo +nightly --version
-    - cargo fmt --all -- --check
-    - cargo +nightly clippy --all --all-targets -- -D warnings
-
 
 
 unit-testing:
   stage: test
+  when: always
   before_script:
     - pip install .[server,cpu,test]
   script:
@@ -87,22 +64,9 @@ unit-testing:
       - coverage/**
   coverage: '/^TOTAL\s+\d+\s+\d+\s+(\d+\.?\d*)\%$/'
 
-unit-testing:rust:
-  stage: test
-  before_script:
-    - cargo install cargo-tarpaulin 
-  script:
-    - cargo --version
-    - cargo test --all
-    - cargo tarpaulin -o Html --all --avoid-cfg-tarpaulin
-  artifacts:
-    expire_in: 5 days
-    paths:
-      - tarpaulin-report.html
-  coverage: '/^(\d+\.\d*)\% coverage, .+$/'
-
 functional-testing:endpoints:
   stage: test
+  when: always
   before_script:
     - wget https://github.com/bojand/ghz/releases/download/v0.111.0/ghz-linux-x86_64.tar.gz
     - tar -xzf ghz-linux-x86_64.tar.gz
@@ -116,6 +80,7 @@ functional-testing:endpoints:
 
 functional-testing:cpu:
   stage: test
+  when: always
   before_script:
     - pip install .[server,cpu,test]
   script:
@@ -123,6 +88,7 @@ functional-testing:cpu:
 
 functional-testing:e2e:
   stage: test
+  when: always
   before_script:
     - apt-get -y -q update && apt-get install -y asrtest-eval
     - pip install .[server,cpu,test]
@@ -191,23 +157,6 @@ build:python:
       - "*.pb"
     reports:
       dotenv: settings.env
-
-build:rust:
-  stage: package
-  only:
-    - tags
-  script:
-    - cargo --version
-    - cargo build --release
-    # - cpack -G "DEB;RPM" ./
-    # - cargo deb -v
-    # - mv *.deb ../
-    # - mv *.rpm ../
-  artifacts:
-    expire_in: 2 days
-    paths:
-      - "*.deb"
-      - "*.rpm"
 
 
 
