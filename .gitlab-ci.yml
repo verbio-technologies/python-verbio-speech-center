@@ -40,7 +40,13 @@ settings:
 
 lint:python:
   stage: lint
-  when: always
+  only:
+    - tags
+    - merge_requests
+    - pushes
+    - branches
+    - master
+    - web
   before_script:
     - pip install flake8==3.9.2 black==22.6.0
   script:
@@ -51,7 +57,13 @@ lint:python:
 
 unit-testing:
   stage: test
-  when: always
+  only:
+    - tags
+    - merge_requests
+    - pushes
+    - branches
+    - master
+    - web
   before_script:
     - pip install .[server,cpu,test]
   script:
@@ -67,7 +79,13 @@ unit-testing:
 
 functional-testing:endpoints:
   stage: test
-  when: always
+  only:
+    - tags
+    - merge_requests
+    - pushes
+    - branches
+    - master
+    - web
   before_script:
     - wget https://github.com/bojand/ghz/releases/download/v0.111.0/ghz-linux-x86_64.tar.gz
     - tar -xzf ghz-linux-x86_64.tar.gz
@@ -81,7 +99,13 @@ functional-testing:endpoints:
 
 functional-testing:cpu:
   stage: test
-  when: always
+  only:
+    - tags
+    - merge_requests
+    - pushes
+    - branches
+    - master
+    - web
   before_script:
     - pip install .[server,cpu,test]
   script:
@@ -89,7 +113,13 @@ functional-testing:cpu:
 
 functional-testing:e2e:
   stage: test
-  when: always
+  only:
+    - tags
+    - merge_requests
+    - pushes
+    - branches
+    - master
+    - web
   before_script:
     - apt-get -y -q update && apt-get install -y asrtest-eval
     - pip install .[server,cpu,test]
