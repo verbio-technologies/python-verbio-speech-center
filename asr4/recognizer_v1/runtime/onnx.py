@@ -247,10 +247,7 @@ class OnnxRuntime(Runtime):
             )
 
     def _decodeTotal(self, y):
-        y = np.reshape(
-            np.vstack([y[i][0, :, :] for i in range(len(y))]),
-            [1, len(y) * y[0].shape[1], y[0].shape[2]],
-        )
+        y = np.concatenate(y, axis=1)
         normalized_y = F.softmax(torch.from_numpy(y), dim=2)
         return self._decoder.decode(normalized_y)
 
