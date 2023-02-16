@@ -16,7 +16,9 @@ from asr4.recognizer import Language
 
 
 class MockOnnxSession(Session):
-    def __init__(self, _path_or_bytes: Union[str, bytes], useGpu=False, **kwargs) -> None:
+    def __init__(
+        self, _path_or_bytes: Union[str, bytes], useGpu=False, **kwargs
+    ) -> None:
         super().__init__(_path_or_bytes, **kwargs)
         self.gpu = useGpu
         session_options = kwargs.pop("sess_options", None)
