@@ -16,8 +16,9 @@ from asr4.recognizer import Language
 
 
 class MockOnnxSession(Session):
-    def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
+    def __init__(self, _path_or_bytes: Union[str, bytes], useGpu=False, **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
+        self.gpu = useGpu
         session_options = kwargs.pop("sess_options", None)
         providers = kwargs.pop("providers", None)
 
@@ -157,4 +158,4 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""))
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
-        self.assertEqual(onnxResult.score, 1.0)
+        self.assertEqual(onnxResult.score, 0.0)

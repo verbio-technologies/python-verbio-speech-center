@@ -202,7 +202,9 @@ class OnnxRuntime(Runtime):
             .replace("<pad>", "")
             .strip()
         )
+        print(output.scores[0][0])
         score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+        print(score)
         return OnnxRuntimeResult(
             sequence=sequence,
             score=score,
