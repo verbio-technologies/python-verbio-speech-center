@@ -347,7 +347,6 @@ asr4:benchmark:
     strategy: depend
 
 
-
 stable:promote:
   stage: promote-to-stable
   image: docker:20.10.15
@@ -387,7 +386,8 @@ speech-center:promote:
     - NEW_LATEST_NAME="${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
     - docker tag $OLD_NAME $NEW_GPU_NAME
     - docker tag $OLD_NAME $NEW_LATEST_NAME
-    - docker push "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}"
+    - docker push $NEW_GPU_NAME
+    - docker push $NEW_LATEST_NAME
     - echo "Push to Amazon"
     - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_REGION}" "${AWS_ECR_URL}" "${DOCKER_AWS_RELEASE_IMAGE_NAME}" "${LANGUAGE}"
     - docker tag $NEW_CPU_NAME "${AWS_ECR_URL}/${DOCKER_AWS_RELEASE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
@@ -414,24 +414,6 @@ stable:deploy:cpu:
     - export NOMAD_ADDR=http://$NOMAD_IP:4646
     - echo "Deploying CPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
     - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable.nomad
-
-#stable:deploy:gpu:
-#  stage: stable-deploy
-#  image: docker.registry.verbio.com/cognitive/nomad:1.0.2
-#  only:
-#    - tags
-#  dependencies:
-#    - build:python
-#  environment:
-#    name: production/asr4-gpu
-#    action: start
-#  script:
-#    - cd deploy/nomad
-#    - export NOMAD_IP=$(echo ${CI_ENVIRONMENT_URL} | cut -d / -f 3 | cut -d ':' -f 1)
-#    - export NOMAD_ADDR=http://$NOMAD_IP:4646
-#    - echo "Deploying GPU stable version ${DOCKER_IMAGE_VERSION} into ${NOMAD_ADDR}"
-#    - NOMAD_VAR_VERSION=${DOCKER_IMAGE_VERSION} NOMAD_VAR_ASR4_JOB_ID=${JOB_ID} NOMAD_VAR_GITLAB_TOKEN=${GITLAB_TOKEN} nomad job run asr4-stable-gpu.nomad
-
 
 
 cleanup:
