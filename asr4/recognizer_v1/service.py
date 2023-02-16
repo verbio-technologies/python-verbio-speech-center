@@ -44,7 +44,9 @@ class RecognitionServiceConfiguration:
             self.model = arguments.model
             self.gpu = arguments.gpu
             self.numberOfWorkers = arguments.workers
-            self.decodingType = DecodingType[arguments.decoding_type]
+            self.decodingType = DecodingType[
+                getattr(arguments, "decoding_type", "GLOBAL")
+            ]
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
