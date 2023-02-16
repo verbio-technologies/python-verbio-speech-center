@@ -10,7 +10,6 @@ import simple_ctc
 import onnx
 import onnxruntime
 import onnxruntime.quantization
-
 from enum import Enum
 
 from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
