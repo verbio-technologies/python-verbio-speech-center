@@ -19,6 +19,7 @@ from asr4.recognizer_v1 import RecognitionConfig
 from asr4.recognizer_v1 import RecognitionParameters
 from asr4.recognizer_v1 import RecognitionResource
 from asr4.recognizer_v1 import RecognizerStub
+from asr4.recognizer_v1 import DecodingType
 
 from asr4.recognizer_v1 import Language
 
@@ -34,6 +35,7 @@ except Exception as e:
 __all__ = (
     "SERVICES_NAMES",
     "Session",
+    "DecodingType",
     "OnnxSession",
     "OnnxRuntime",
     "OnnxRuntimeResult",

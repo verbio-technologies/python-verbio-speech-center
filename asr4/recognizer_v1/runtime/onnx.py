@@ -27,7 +27,10 @@ from asr4.recognizer_v1.runtime.base import Runtime
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
-DecodingType = Enum("DecodingType", ["Global", "Local"])
+
+class DecodingType(Enum):
+    GLOBAL = 1
+    LOCAL = 2
 
 
 class OnnxRuntimeResult(NamedTuple):
@@ -73,6 +76,7 @@ class OnnxSession(Session):
             provider_options=kwargs.get("provider_options"),
             **kwargs,
         )
+        self.decoding_type = kwargs.pop("decoding_type", DecodingType["GLOBAL"])
 
     def __getSessionOptions(self, **kwargs) -> SessionOptions:
         session_options = OnnxSession._createSessionOptions(**kwargs)
@@ -215,9 +219,7 @@ class OnnxRuntime(Runtime):
             x = F.layer_norm(x, x.shape)
         return x
 
-    def _runOnnxruntimeSession(
-        self, input: torch.Tensor, decoding_mode: DecodingType = DecodingType.Global
-    ) -> _DecodeResult:
+    def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         y = []
         label_sequences = []
         scores = []
@@ -227,22 +229,18 @@ class OnnxRuntime(Runtime):
             y = self._session.run(None, {self._inputName: input.numpy()})
             return self._decodeTotal(y)
         else:
-            return self._batchingDecode(
-                decoding_mode, input, label_sequences, scores, timesteps, y
-            )
+            return self._batchingDecode(input, label_sequences, scores, timesteps, y)
 
-    def _batchingDecode(
-        self, decoding_mode, input, label_sequences, scores, timesteps, y
-    ):
+    def _batchingDecode(self, input, label_sequences, scores, timesteps, y):
         for i in range(input.shape[1]):
             yi = self._session.run(None, {self._inputName: input[:, i, :].numpy()})
-            if decoding_mode == DecodingType.Global:
+            if self._session.decoding_type == DecodingType.GLOBAL:
                 y += yi
             else:
                 label_sequences, scores, timesteps = self._decodePartial(
                     label_sequences, scores, timesteps, yi
                 )
-        if decoding_mode == DecodingType.Global:
+        if self._session.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(y)
         else:
             return _DecodeResult(
