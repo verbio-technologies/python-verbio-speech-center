@@ -60,7 +60,6 @@ unit-testing:
   only:
     - tags
     - merge_requests
-    - pushes
     - branches
     - master
     - web
@@ -82,7 +81,6 @@ functional-testing:endpoints:
   only:
     - tags
     - merge_requests
-    - pushes
     - branches
     - master
     - web
@@ -102,7 +100,6 @@ functional-testing:cpu:
   only:
     - tags
     - merge_requests
-    - pushes
     - branches
     - master
     - web
@@ -116,7 +113,6 @@ functional-testing:e2e:
   only:
     - tags
     - merge_requests
-    - pushes
     - branches
     - master
     - web
