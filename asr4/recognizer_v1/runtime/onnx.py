@@ -61,6 +61,20 @@ class Session(abc.ABC):
     def get_inputs_names(self) -> List[str]:
         raise NotImplementedError()
 
+    def getInputsShapes(self) -> List[List[Union[int, str]]]:
+        return [input.shape for input in self._session.get_inputs()]
+
+    def isModelShapeStatic(self) -> bool:
+        shapes = self.getInputsShapes()
+        if not shapes:
+            return False
+        for shape in shapes:
+            if len(shape) == 1 and isinstance(shape[0], str):
+                return False
+            if len(shape) > 1 and any([isinstance(d, str) for d in shape[1:]]):
+                return False
+        return True
+
 
 class OnnxSession(Session):
     def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
@@ -126,20 +140,6 @@ class OnnxSession(Session):
 
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]
-
-    def getInputsShapes(self) -> List[List[Union[int, str]]]:
-        return [input.shape for input in self._session.get_inputs()]
-
-    def isModelShapeStatic(self) -> bool:
-        shapes = self.getInputsShapes()
-        if not shapes:
-            return False
-        for shape in shapes:
-            if len(shape) == 1 and isinstance(shape[0], str):
-                return False
-            if len(shape) > 1 and any([isinstance(d, str) for d in shape[1:]]):
-                return False
-        return True
 
 
 class OnnxRuntime(Runtime):
@@ -217,7 +217,10 @@ class OnnxRuntime(Runtime):
         except:
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
         x = y.astype(np.float32)
-        if self._session.isModelShapeStatic():
+        if (
+            hasattr(self._session, "isModelShapeStatic")
+            and self._session.isModelShapeStatic()
+        ):
             x = self._convertToFixedSizeMatrix(
                 x, self._session._session._inputs_meta[0].shape[1]
             )
