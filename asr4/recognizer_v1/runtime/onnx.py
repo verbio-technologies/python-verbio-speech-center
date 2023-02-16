@@ -232,15 +232,16 @@ class OnnxRuntime(Runtime):
             return self._batchingDecode(input, label_sequences, scores, timesteps, y)
 
     def _batchingDecode(self, input, label_sequences, scores, timesteps, y):
+        decoding_type = getattr(self._session,'decoding_type', DecodingType.GLOBAL)
         for i in range(input.shape[1]):
             yi = self._session.run(None, {self._inputName: input[:, i, :].numpy()})
-            if self._session.decoding_type == DecodingType.GLOBAL:
+            if decoding_type == DecodingType.GLOBAL:
                 y += yi
             else:
                 label_sequences, scores, timesteps = self._decodePartial(
                     label_sequences, scores, timesteps, yi
                 )
-        if self._session.decoding_type == DecodingType.GLOBAL:
+        if decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(y)
         else:
             return _DecodeResult(
