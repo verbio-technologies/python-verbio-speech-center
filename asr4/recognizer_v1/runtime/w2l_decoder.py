@@ -26,7 +26,7 @@ class _DecodeResult:
 
 class W2lViterbiDecoder:
     def __init__(self, useGpu: bool, vocabulary: List[str]) -> None:
-        self._vocabulary = vocabulary
+        self.vocabulary = vocabulary
 
         if useGpu:
             if _CUDA_ERROR:
@@ -82,7 +82,7 @@ class W2lViterbiDecoder:
 
     def _postProcessHypothesis(self, hypotesis: List[int]) -> List[str]:
         return [
-            self._vocabulary[letter]
+            self.vocabulary[letter]
             for letter in hypotesis
-            if letter < len(self._vocabulary)
+            if letter < len(self.vocabulary)
         ]

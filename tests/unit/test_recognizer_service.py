@@ -73,8 +73,9 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
 
 
 class MockOnnxSession(Session):
-    def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
+    def __init__(self, _path_or_bytes: Union[str, bytes], useGpu=False, **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
+        self.gpu = useGpu
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,
@@ -162,7 +163,7 @@ class TestRecognizerService(unittest.TestCase):
         configuration = MockRecognitionServiceConfiguration(arguments)
         service = RecognizerService(configuration)
         self.assertEqual(
-            service._runtime._decoder.labels, arguments.getVocabularyLabels()
+            service._runtime._decoder.vocabulary, arguments.getVocabularyLabels()
         )
 
     def testInvalidAudio(self):
