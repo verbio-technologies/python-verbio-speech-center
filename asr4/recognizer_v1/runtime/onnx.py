@@ -52,7 +52,7 @@ class Session(abc.ABC):
 
 class OnnxSession(Session):
     def __init__(
-        self, path_or_bytes: Union[str, bytes], useGpu: bool, **kwargs
+        self, path_or_bytes: Union[str, bytes], useGpu=False, **kwargs
     ) -> None:
         super().__init__(path_or_bytes)
         self.logger = logging.getLogger("ASR4")
