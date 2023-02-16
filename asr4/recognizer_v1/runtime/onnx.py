@@ -187,12 +187,10 @@ class OnnxRuntime(Runtime):
         return self._postprocess(y)
 
     @staticmethod
-    def _convertToFixedSizeMatrix(audio: numpy.ndarray, width: int):
+    def _convertToFixedSizeMatrix(audio: np.ndarray, width: int):
         if sizeOfTheLastFrame := audio.shape[0] % width:
             totalToBePadded = width - sizeOfTheLastFrame
-            audio = numpy.concatenate(
-                (audio, numpy.zeros(totalToBePadded, dtype=np.float32))
-            )
+            audio = np.pad(audio, (0, totalToBePadded))
         audio = audio.reshape([int(audio.shape[0] / width), width])
         return audio
 
