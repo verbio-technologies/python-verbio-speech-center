@@ -203,7 +203,8 @@ class OnnxRuntime(Runtime):
 
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
-        if sizeOfTheLastFrame := audio.shape[0] % width:
+        sizeOfTheLastFrame = audio.shape[0] % width
+        if sizeOfTheLastFrame:
             totalToBePadded = width - sizeOfTheLastFrame
             audio = np.pad(audio, (0, totalToBePadded))
         audio = audio.reshape([audio.shape[0] // width, width])
@@ -227,29 +228,33 @@ class OnnxRuntime(Runtime):
         return x
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
-        y = []
-        label_sequences = []
-        scores = []
-        timesteps = []
-
         if len(input.shape) == 2:
             y = self._session.run(None, {self._inputName: input.numpy()})
             return self._decodeTotal(y)
         else:
-            return self._batchingDecode(input, label_sequences, scores, timesteps, y)
+            return self._batchDecode(input)
 
-    def _batchingDecode(self, input, label_sequences, scores, timesteps, y):
+    def _batchDecode(self, input):
         decoding_type = getattr(self._session, "decoding_type", DecodingType.GLOBAL)
+
+        total_probs = []
+        label_sequences = []
+        scores = []
+        timesteps = []
+
         for i in range(input.shape[1]):
-            yi = self._session.run(None, {self._inputName: input[:, i, :].numpy()})
+            frame_probs = self._session.run(
+                None, {self._inputName: input[:, i, :].numpy()}
+            )
             if decoding_type == DecodingType.GLOBAL:
-                y += yi
+                total_probs += frame_probs
             else:
                 label_sequences, scores, timesteps = self._decodePartial(
-                    label_sequences, scores, timesteps, yi
+                    label_sequences, scores, timesteps, frame_probs
                 )
+
         if decoding_type == DecodingType.GLOBAL:
-            return self._decodeTotal(y)
+            return self._decodeTotal(total_probs)
         else:
             return _DecodeResult(
                 label_sequences=[[label_sequences]],
