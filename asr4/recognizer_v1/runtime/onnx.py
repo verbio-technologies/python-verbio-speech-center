@@ -191,7 +191,7 @@ class OnnxRuntime(Runtime):
         if sizeOfTheLastFrame := audio.shape[0] % width:
             totalToBePadded = width - sizeOfTheLastFrame
             audio = np.pad(audio, (0, totalToBePadded))
-        audio = audio.reshape([int(audio.shape[0] / width), width])
+        audio = audio.reshape([audio.shape[0] // width, width])
         return audio
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
