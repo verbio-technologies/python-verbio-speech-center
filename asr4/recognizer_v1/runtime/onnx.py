@@ -2,6 +2,7 @@ import abc
 import logging
 import soxr
 import numpy as np
+import numpy.typing as npt
 
 import torch
 import torch.nn.functional as F
@@ -187,7 +188,7 @@ class OnnxRuntime(Runtime):
         return self._postprocess(y)
 
     @staticmethod
-    def _convertToFixedSizeMatrix(audio: np.ndarray, width: int):
+    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
         if sizeOfTheLastFrame := audio.shape[0] % width:
             totalToBePadded = width - sizeOfTheLastFrame
             audio = np.pad(audio, (0, totalToBePadded))
