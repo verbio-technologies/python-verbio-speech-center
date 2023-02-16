@@ -127,6 +127,20 @@ class OnnxSession(Session):
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]
 
+    def getInputsShapes(self) -> List[List[Union[int, str]]]:
+        return [input.shape for input in self._session.get_inputs()]
+
+    def isModelShapeStatic(self) -> bool:
+        shapes = self.getInputsShapes()
+        if not shapes:
+            return False
+        for shape in shapes:
+            if len(shape) == 1 and isinstance(shape[0], str):
+                return False
+            if len(shape) > 1 and any([isinstance(d, str) for d in shape[1:]]):
+                return False
+        return True
+
 
 class OnnxRuntime(Runtime):
     DEFAULT_VOCABULARY: List[str] = [
@@ -175,7 +189,7 @@ class OnnxRuntime(Runtime):
             vocabulary,
             cutoff_top_n=32,
             cutoff_prob=0.8,
-            beam_size=1,
+            beam_size=300,
             blank_id=0,
             is_nll=False,
         )
@@ -202,10 +216,7 @@ class OnnxRuntime(Runtime):
         except:
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
         x = y.astype(np.float32)
-        if (
-            hasattr(self._session, "_session")
-            and self._session._session._inputs_meta[0].shape[1] != "sequence_length"
-        ):
+        if self._session.isModelShapeStatic():
             x = self._convertToFixedSizeMatrix(
                 x, self._session._session._inputs_meta[0].shape[1]
             )
