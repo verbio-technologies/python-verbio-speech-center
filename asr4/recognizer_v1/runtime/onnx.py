@@ -1,7 +1,5 @@
 import abc
 import logging
-
-import numpy
 import soxr
 import numpy as np
 
