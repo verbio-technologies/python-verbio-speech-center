@@ -91,7 +91,6 @@ def _getMetrics(
     encoding: str,
     language: str,
 ) -> Popen:
-
     _LOGGER.info("Running evaluation.")
 
     if not os.path.exists(outputDir):

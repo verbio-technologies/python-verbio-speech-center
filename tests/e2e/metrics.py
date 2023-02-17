@@ -16,7 +16,6 @@ class ModelOutput:
 
     def load_model_accuracy_metric(self):
         with open(self.model_accuracy_file) as ac_file:
-
             for line in ac_file.readlines()[::-1]:
                 if "Accuracy" in line:
                     self.accuracy = float(line.strip().split("\t")[1].split(" ")[1])
