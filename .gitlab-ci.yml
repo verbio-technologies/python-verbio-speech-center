@@ -378,7 +378,7 @@ asr4:benchmark:
 
 update-changelog:
   stage: update-changelog
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.1
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.2
   only:
     - tags
   script:
