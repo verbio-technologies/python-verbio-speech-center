@@ -2,6 +2,7 @@ import abc
 import logging
 import soxr
 import numpy as np
+import numpy.typing as npt
 
 import torch
 import torch.nn.functional as F
@@ -10,6 +11,7 @@ import simple_ctc
 import onnx
 import onnxruntime
 import onnxruntime.quantization
+from enum import Enum
 
 from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
 from onnxruntime.quantization.quant_utils import (
@@ -22,6 +24,11 @@ from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
+
+
+class DecodingType(Enum):
+    GLOBAL = 1
+    LOCAL = 2
 
 
 class OnnxRuntimeResult(NamedTuple):
@@ -54,6 +61,22 @@ class Session(abc.ABC):
     def get_inputs_names(self) -> List[str]:
         raise NotImplementedError()
 
+    def getInputsShapes(self) -> List[List[Union[int, str]]]:
+        return [input.shape for input in self._session.get_inputs()]
+
+    def isModelShapeStatic(self) -> bool:
+        if not hasattr(self, "_session"):
+            return False
+        shapes = self.getInputsShapes()
+        if not shapes:
+            return False
+        for shape in shapes:
+            if len(shape) == 1 and isinstance(shape[0], str):
+                return False
+            if len(shape) > 1 and any([isinstance(d, str) for d in shape[1:]]):
+                return False
+        return True
+
 
 class OnnxSession(Session):
     def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
@@ -67,6 +90,7 @@ class OnnxSession(Session):
             provider_options=kwargs.get("provider_options"),
             **kwargs,
         )
+        self.decoding_type = kwargs.pop("decoding_type", DecodingType["GLOBAL"])
 
     def __getSessionOptions(self, **kwargs) -> SessionOptions:
         session_options = OnnxSession._createSessionOptions(**kwargs)
@@ -179,6 +203,15 @@ class OnnxRuntime(Runtime):
         y = self._runOnnxruntimeSession(x)
         return self._postprocess(y)
 
+    @staticmethod
+    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
+        sizeOfTheLastFrame = audio.shape[0] % width
+        if sizeOfTheLastFrame:
+            totalToBePadded = width - sizeOfTheLastFrame
+            audio = np.pad(audio, (0, totalToBePadded))
+        audio = audio.reshape([audio.shape[0] // width, width])
+        return audio
+
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         x = np.frombuffer(input, dtype=np.int16)
         try:
@@ -186,6 +219,10 @@ class OnnxRuntime(Runtime):
         except:
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
         x = y.astype(np.float32)
+        if self._session.isModelShapeStatic():
+            x = self._convertToFixedSizeMatrix(
+                x, self._session._session._inputs_meta[0].shape[1]
+            )
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)
         with torch.no_grad():
@@ -193,9 +230,52 @@ class OnnxRuntime(Runtime):
         return x
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
-        y = self._session.run(None, {self._inputName: input.numpy()})
-        normalized_y = F.softmax(torch.from_numpy(y[0]), dim=2)
+        if len(input.shape) == 2:
+            y = self._session.run(None, {self._inputName: input.numpy()})
+            return self._decodeTotal(y)
+        else:
+            return self._batchDecode(input)
+
+    def _batchDecode(self, input):
+        decoding_type = getattr(self._session, "decoding_type", DecodingType.GLOBAL)
+
+        total_probs = []
+        label_sequences = []
+        scores = []
+        timesteps = []
+
+        for i in range(input.shape[1]):
+            frame_probs = self._session.run(
+                None, {self._inputName: input[:, i, :].numpy()}
+            )
+            if decoding_type == DecodingType.GLOBAL:
+                total_probs += frame_probs
+            else:
+                label_sequences, scores, timesteps = self._decodePartial(
+                    label_sequences, scores, timesteps, frame_probs
+                )
+
+        if decoding_type == DecodingType.GLOBAL:
+            return self._decodeTotal(total_probs)
+        else:
+            return _DecodeResult(
+                label_sequences=[[label_sequences]],
+                scores=[scores],
+                timesteps=timesteps,
+            )
+
+    def _decodeTotal(self, y):
+        y = np.concatenate(y, axis=1)
+        normalized_y = F.softmax(torch.from_numpy(y), dim=2)
         return self._decoder.decode(normalized_y)
+
+    def _decodePartial(self, label_sequences, scores, timesteps, yi):
+        normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
+        decoded_part = self._decoder.decode(normalized_y)
+        label_sequences += decoded_part.label_sequences[0][0]
+        scores += [decoded_part.scores[0][0]]
+        timesteps += [decoded_part.timesteps]
+        return label_sequences, scores, timesteps
 
     @staticmethod
     def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:

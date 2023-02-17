@@ -96,7 +96,7 @@ class MockOnnxSession(Session):
             -10.0,
             np.float32,
         )
-        for (i, letter) in enumerate(defaultMessage):
+        for i, letter in enumerate(defaultMessage):
             defaultMessageArray[
                 0, i, OnnxRuntime.DEFAULT_VOCABULARY.index(letter)
             ] = 10.0
@@ -109,7 +109,7 @@ class MockOnnxSession(Session):
     ) -> np.ndarray:
         lastLetter, offset = "", 0
         blank_row = self._getBlankArray()
-        for (i, letter) in enumerate(defaultMessage):
+        for i, letter in enumerate(defaultMessage):
             if lastLetter == letter:
                 defaultMessageArray = np.insert(
                     defaultMessageArray, i + offset, blank_row, axis=1

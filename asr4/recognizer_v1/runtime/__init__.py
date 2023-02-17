@@ -1,6 +1,6 @@
 from .base import Runtime
 
-from .onnx import Session, OnnxSession, OnnxRuntime, OnnxRuntimeResult
+from .onnx import Session, OnnxSession, OnnxRuntime, OnnxRuntimeResult, DecodingType
 
 
 __all__ = (
@@ -9,4 +9,5 @@ __all__ = (
     "OnnxSession",
     "OnnxRuntime",
     "OnnxRuntimeResult",
+    "DecodingType",
 )
