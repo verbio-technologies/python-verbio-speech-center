@@ -57,7 +57,7 @@ class W2lViterbiDecoder:
         B, T, N = emissions.shape
         transitions = np.zeros([N, N], dtype=np.float32)
         viterbiPath = np.empty([B, T], dtype=np.int32)
-        workspace = np.array(
+        workspace = np.empty(
             self._flashlight.get_workspace_size(B, T, N), dtype=np.uint8
         )
         self._flashlight.compute(
@@ -73,7 +73,7 @@ class W2lViterbiDecoder:
 
     @staticmethod
     def getDataPtrAsBytes(tensor: npt.NDArray[Any]) -> bytes:
-        return struct.pack("P", tensor.__array_interface__["data"][0])
+        return struct.pack("P", tensor.ctypes.data)
 
     def _ctc(self, hypotesis: List[int]) -> List[int]:
         hypotesis = (g[0] for g in itertools.groupby(hypotesis))
