@@ -6,6 +6,7 @@ import multiprocessing
 from asr4.recognizer import Language
 from asr4.recognizer import LoggerService
 from asr4.recognizer import Server, ServerConfiguration
+from asr4.recognizer import DecodingType
 
 
 def main():
@@ -116,6 +117,15 @@ def _parseArguments() -> argparse.Namespace:
         choices=LoggerService.getLogLevelOptions(),
         default=os.environ.get("LOG_LEVEL", LoggerService.getDefaultLogLevel()),
         help="Log levels. By default reads env variable LOG_LEVEL.",
+    )
+    parser.add_argument(
+        "-D",
+        "--decoding-type",
+        type=str,
+        dest="decoding_type",
+        choices=DecodingType._member_names_,
+        default=os.environ.get("DECODING_TYPE", "GLOBAL"),
+        help="Perform Decoding for each chunk (Local) or for all chunks (Global)",
     )
     return parser.parse_args()
 

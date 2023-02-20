@@ -4,6 +4,7 @@ try:
     from .runtime import OnnxSession
     from .runtime import OnnxRuntime
     from .runtime import OnnxRuntimeResult
+    from .runtime import DecodingType
     from .formatter import FormatterFactory
     from .loggerService import Logger, LoggerQueue, LoggerService
 except Exception as e:
@@ -40,6 +41,7 @@ __all__ = (
     "OnnxSession",
     "OnnxRuntime",
     "OnnxRuntimeResult",
+    "DecodingType",
     "RecognizeRequest",
     "StreamingRecognizeRequest",
     "RecognizeResponse",

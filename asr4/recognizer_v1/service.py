@@ -3,7 +3,7 @@ import grpc
 import logging
 import argparse
 
-from .runtime import OnnxRuntime, Session, OnnxSession
+from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
 
 from asr4.types.language import Language
 from .types import RecognizerServicer
@@ -33,6 +33,7 @@ class RecognitionServiceConfiguration:
         self.model = None
         self.gpu = False
         self.numberOfWorkers = 1
+        self.decodingType = DecodingType["GLOBAL"]
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -43,11 +44,15 @@ class RecognitionServiceConfiguration:
             self.model = arguments.model
             self.gpu = arguments.gpu
             self.numberOfWorkers = arguments.workers
+            self.decodingType = DecodingType[
+                getattr(arguments, "decoding_type", "GLOBAL")
+            ]
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
             self.model,
             self.gpu,
+            decoding_type=self.decodingType,
             providers=RecognitionServiceConfiguration._createProvidersList(self.gpu),
             number_of_workers=self.numberOfWorkers,
         )
