@@ -98,8 +98,8 @@ gpu = [
     "onnxruntime-gpu @ https://__token__:glpat-2aabCj5voGjGLsDZJhZw@gitlab.lan.verbio.com/api/v4/projects/1452/packages/pypi/files/93e8bd4a4aadf2ee1be72cbdd00ae9342f56df6e7697f8ab557fcc94a2c2f043/onnxruntime_gpu-1.14.0-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "onnxruntime-gpu @ https://__token__:glpat-2aabCj5voGjGLsDZJhZw@gitlab.lan.verbio.com/api/v4/projects/1452/packages/pypi/files/28213e773ada613e73e61489e19807a950f4a139dd49e03d016ee0c7253d9417/onnxruntime_gpu-1.14.0-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "onnxruntime-gpu >= 1.13.1 ; python_version!='3.7' and python_version!='3.9'",
-    "flashlight-sequence @ https://__token__:glpat-W-DgCwRNpnDnLktyN-2S@gitlab.lan.verbio.com/api/v4/projects/1486/packages/pypi/files/dddc2e4e4be8b728a4750759d2efa08191db44f43ccc450a05984cc0a3677298/flashlight_sequence-0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "flashlight-sequence @ https://__token__:glpat-W-DgCwRNpnDnLktyN-2S@gitlab.lan.verbio.com/api/v4/projects/1486/packages/pypi/files/e6c5655beebd90f110a203d2c8c4ee14250ae69c5ded58420141a1ac3f9bcfe2/flashlight_sequence-0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "flashlight-sequence @ https://__token__:glpat-yknKGRQtR64Ab5qLyxp4@gitlab.lan.verbio.com/api/v4/projects/1487/packages/pypi/files/1f85708525ea7c45be58ee530847555fe7caf9cf77488d4454aa3c01879d0f7e/flashlight_sequence-0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "flashlight-sequence @ https://__token__:glpat-yknKGRQtR64Ab5qLyxp4@gitlab.lan.verbio.com/api/v4/projects/1487/packages/pypi/files/39ded32e756ee52d0a15ec21d2eb7dd38987450f8661de26425f9ffd8a55f6cc/flashlight_sequence-0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "flashlight-sequence @ git+https://gitlab.lan.verbio.com/csr/asr4-python-wheels/gpu/flashlight-sequence.git ; python_version!='3.7' and python_version!='3.9'"
 ]
 test = [
