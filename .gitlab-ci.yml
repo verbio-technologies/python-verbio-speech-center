@@ -349,6 +349,8 @@ update-changelog:
   image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.2
   only:
     - tags
+  except:
+    - branches
   script:
     - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review
 
