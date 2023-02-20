@@ -113,10 +113,16 @@ functional-testing:e2e:
     - master
     - web
   before_script:
-    - apt-get -y -q update && apt-get install -y asrtest-eval
-    - pip install .[server,cpu,test]
+    - python -m venv venv-server
+    - . ./venv-server/bin/activate
+    - pip install .[server,cpu]
     - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
   script:
+    - apt-get -y -q update && apt-get install -y asrtest-eval
+    - deactivate
+    - python -m venv venv-client
+    - pip install .[client,cpu]
+    - . ./venv-client/bin/activate
     - ./tests/e2e/run_metrics.sh en-us 0.0.0.0:50051 tests/e2e/data/test_en-us_upgraded-small.gui tests/e2e/data/expected_metrics_functional_testing.json
 
 
