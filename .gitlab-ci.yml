@@ -6,6 +6,7 @@ stages:
   - integration-testing
   - promote-to-staging
   - end2end-testing
+  - update-changelog
   - promote-to-stable
   - stable-deploy
   - cleanup
@@ -343,6 +344,17 @@ asr4:benchmark:
     strategy: depend
 
 
+update-changelog:
+  stage: update-changelog
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.2
+  only:
+    - tags
+  except:
+    - branches
+  script:
+    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review
+
+
 stable:promote:
   stage: promote-to-stable
   image: docker:20.10.15
@@ -486,4 +498,6 @@ speech-center-integration-testing:pt-br:gpu:
   trigger:
     project: voice-center/operations/integration/integration-tests
     strategy: depend
+
+
 
