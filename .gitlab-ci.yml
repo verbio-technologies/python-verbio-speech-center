@@ -121,7 +121,7 @@ functional-testing:e2e:
     - apt-get -y -q update && apt-get install -y asrtest-eval
     - deactivate
     - python -m venv venv-client
-    - pip install .[client,cpu]
+    - pip install .[client]
     - . ./venv-client/bin/activate
     - ./tests/e2e/run_metrics.sh en-us 0.0.0.0:50051 tests/e2e/data/test_en-us_upgraded-small.gui tests/e2e/data/expected_metrics_functional_testing.json
 

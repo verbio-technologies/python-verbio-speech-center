@@ -42,3 +42,4 @@ lib*.so.*
 .coverage
 asr4/version.py
 results.xml
+venv*
