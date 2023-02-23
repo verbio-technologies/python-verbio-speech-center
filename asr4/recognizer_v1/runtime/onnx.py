@@ -191,7 +191,7 @@ class OnnxRuntime(Runtime):
             vocabulary,
             cutoff_top_n=32,
             cutoff_prob=0.8,
-            beam_size=100,
+            beam_size=8,
             blank_id=0,
             is_nll=False,
         )
