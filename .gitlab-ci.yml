@@ -18,7 +18,7 @@ variables:
   DOCKER_IMAGE_VERSION: $CI_COMMIT_REF_SLUG
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
   VERBIO_REGISTRY_URL: docker.registry.verbio.com
-  AWS_ECR_URL: 321880733545.dkr.ecr.us-east-1.amazonaws.com
+  AWS_ECR_URL: 321880733545.dkr.ecr.us-east-2.amazonaws.com
   AWS_REGION: us-east-1
   DOCKER_TESTING_IMAGE_NAME:  csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME:  csr/staging/asr4
