@@ -229,8 +229,6 @@ image:release:gpu:
 .template_docker_build:
   stage: build-image
   image: docker:20.10.15
-  only:
-    - tags
   needs: ["build:python"]
   parallel:
     matrix:
@@ -441,20 +439,10 @@ cleanup:
       - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
+    - merge_requests
   script:
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-
+    - docker images --filter 'label=service=asr4'
+    - docker images --filter 'label=service=asr4' -q | xargs docker image rm --force
 
 speech-center-integration-testing:en-us:cpu:
   variables:
