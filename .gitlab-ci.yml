@@ -440,7 +440,7 @@ cleanup:
     - merge_requests
   script:
     - docker images --filter 'label=service=asr4'
-    - docker images --filter 'label=service=asr4' -qa | xargs docker image rm
+    - docker images --filter 'label=service=asr4' -q | xargs docker image rm --force
 
 speech-center-integration-testing:en-us:cpu:
   variables:
