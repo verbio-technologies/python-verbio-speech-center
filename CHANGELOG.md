@@ -6,6 +6,12 @@
 
 ### Removed :no_entry:
 
+## 0.2.6 (2023-02-28)
+
+### Patch (1 change)
+
+- [Feature/cleanup with labels](csr/asr4@36b9eab4d81bec7a35c53bf2a7404a36a1f8332e) ([merge request](csr/asr4!199))
+
 ## 0.2.5 (2023-02-27)
 
 ### Patch (1 change)
