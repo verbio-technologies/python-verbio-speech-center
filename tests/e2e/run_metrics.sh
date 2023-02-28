@@ -17,6 +17,7 @@ if [[ "$gui" == *"_upgraded"* ]]; then
   test=upgraded
 fi
 
+pip install .[client]
 python bin/client.py -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
 sleep 10
 if [ -f "test_${language}_results.tsv" ]; then
