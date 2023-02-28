@@ -22,7 +22,7 @@ RUN python -m pip uninstall cmake ninja -y
 ENV LANGUAGE=${LANGUAGE}
 ENV LOG_LEVEL=${LOG_LEVEL}
 
-LABEL engine=asr4
+LABEL service=asr4
 LABEL device=CPU
 LABEL vendor="Verbio Technologies"
 LABEL model_version=${MODEL_VERSION}
