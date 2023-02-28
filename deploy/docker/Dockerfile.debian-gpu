@@ -24,7 +24,7 @@ ENV LANGUAGE=${LANGUAGE}
 ENV LOG_LEVEL=${LOG_LEVEL}
 
 LABEL service=asr4
-LABEL devide=GPU
+LABEL device=GPU
 LABEL vendor="Verbio Technologies"
 LABEL model_version=${MODEL_VERSION}
 LABEL service_version=${VERSION}
