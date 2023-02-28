@@ -434,9 +434,6 @@ stable:deploy:cpu:
 cleanup:
   stage: cleanup
   image: docker:20.10.15
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
     - merge_requests
