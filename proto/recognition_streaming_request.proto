@@ -11,8 +11,15 @@ message RecognitionStreamingRequest {
   
   // An init message with the recognition data.
   message RecognitionConfig {
+
+    enum AsrVersion {
+      V1 = 0;
+      V2 = 1;
+    }
+
     RecognitionParameters parameters = 1; // General parameters for the recognition, such as language.
     RecognitionResource resource = 2; // The request must specify a topic.
+    AsrVersion version = 3;
   }
   
   // This message will contain the language locale of your audio in IETF BCP 47 format.
