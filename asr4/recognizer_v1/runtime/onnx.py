@@ -66,14 +66,18 @@ class Session(abc.ABC):
 
     def isModelShapeStatic(self) -> bool:
         if not hasattr(self, "_session"):
+            print("-> has attr session")
             return False
         shapes = self.getInputsShapes()
         if not shapes:
+            print("-> not shapes")
             return False
         for shape in shapes:
             if len(shape) == 1 and isinstance(shape[0], str):
+                print("-> len(shape)==1")
                 return False
             if len(shape) > 1 and any([isinstance(d, str) for d in shape[1:]]):
+                print("-> len(shape)>1")
                 return False
         return True
 
@@ -203,16 +207,8 @@ class OnnxRuntime(Runtime):
         y = self._runOnnxruntimeSession(x)
         return self._postprocess(y)
 
-    @staticmethod
-    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
-        sizeOfTheLastFrame = audio.shape[0] % width
-        if sizeOfTheLastFrame:
-            totalToBePadded = width - sizeOfTheLastFrame
-            audio = np.pad(audio, (0, totalToBePadded))
-        audio = audio.reshape([audio.shape[0] // width, width])
-        return audio
-
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
+        print("[+] Process")
         x = np.frombuffer(input, dtype=np.int16)
         try:
             y = soxr.resample(x, sample_rate_hz, 16000)
@@ -223,11 +219,35 @@ class OnnxRuntime(Runtime):
             x = self._convertToFixedSizeMatrix(
                 x, self._session._session._inputs_meta[0].shape[1]
             )
+        parts = self._splitToChunks(x)
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)
         with torch.no_grad():
             x = F.layer_norm(x, x.shape)
+        print("[-] final shape",x.shape)
         return x
+
+    @staticmethod
+    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
+        sizeOfTheLastFrame = audio.shape[0] % width
+        if sizeOfTheLastFrame:
+            totalToBePadded = width - sizeOfTheLastFrame
+            audio = np.pad(audio, (0, totalToBePadded))
+        audio = audio.reshape([audio.shape[0] // width, width])
+        print("[>] shape",audio.shape)
+        return audio
+
+    @staticmethod
+    def _splitToChunks(audio: npt.NDArray[np.float32]):
+        width = 8000
+        print("[<] shape",audio.shape, width)
+        sizeOfTheLastFrame = audio.shape[0] % width
+        if sizeOfTheLastFrame:
+            totalToBePadded = width - sizeOfTheLastFrame
+            audio = np.pad(audio, (0, totalToBePadded))
+        audio = audio.reshape([audio.shape[0] // width, width])
+        print("[>] shape",audio.shape)
+        return audio
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         if len(input.shape) == 2:
