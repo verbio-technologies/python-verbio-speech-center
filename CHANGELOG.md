@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.2.7 (2023-03-01)
+
+### Patch (2 changes)
+
+- [removed unnecessary parallel matrix](csr/asr4@0cd660e4805073c3754f4fb196b804c9d465e9ee) ([merge request](csr/asr4!201))
+- [Increase patch version](csr/asr4@353010c934631b7dbeee16be44628bd4cf0e1f40) ([merge request](csr/asr4!202))
+
 ## 0.2.6 (2023-02-28)
 
 ### Patch (1 change)
