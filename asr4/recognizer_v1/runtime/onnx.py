@@ -208,18 +208,19 @@ class OnnxRuntime(Runtime):
         return self._postprocess(y)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
-        print("[+] Process")
+        self._session.logger.debug(f" - preprocess audio of length {len(input)}")
         x = np.frombuffer(input, dtype=np.int16)
         try:
             y = soxr.resample(x, sample_rate_hz, 16000)
         except:
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
         x = y.astype(np.float32)
+        print("[-]", self._session)
         if self._session.isModelShapeStatic():
+            self._session.logger.debug(" - split chunks")
             x = self._convertToFixedSizeMatrix(
                 x, self._session._session._inputs_meta[0].shape[1]
             )
-        parts = self._splitToChunks(x)
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)
         with torch.no_grad():
@@ -229,25 +230,8 @@ class OnnxRuntime(Runtime):
 
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
-        sizeOfTheLastFrame = audio.shape[0] % width
-        if sizeOfTheLastFrame:
-            totalToBePadded = width - sizeOfTheLastFrame
-            audio = np.pad(audio, (0, totalToBePadded))
-        audio = audio.reshape([audio.shape[0] // width, width])
-        print("[>] shape",audio.shape)
-        return audio
-
-    @staticmethod
-    def _splitToChunks(audio: npt.NDArray[np.float32]):
-        width = 8000
-        print("[<] shape",audio.shape, width)
-        sizeOfTheLastFrame = audio.shape[0] % width
-        if sizeOfTheLastFrame:
-            totalToBePadded = width - sizeOfTheLastFrame
-            audio = np.pad(audio, (0, totalToBePadded))
-        audio = audio.reshape([audio.shape[0] // width, width])
-        print("[>] shape",audio.shape)
-        return audio
+        # 800 frames are 50ms
+        return MatrixOperations.splitToOverlappingChunks(audio, width, 800)
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         if len(input.shape) == 2:
@@ -312,3 +296,27 @@ class OnnxRuntime(Runtime):
             sequence=sequence,
             score=score,
         )
+
+class MatrixOperations:
+    def __init__(self) -> None:
+        self.window = 5
+        self.overlap = 1
+
+    def splitToOverlappingChunks(self, audio: npt.NDArray[np.float32], window=None, overlap=None):
+        if window==None:
+            window = self.window
+        if overlap==None:
+            overlap = self.overlap
+        window = window - 2*overlap
+        assert window>0, "Can not split into overlapping chunks if overlap is bigger than window"
+            
+        sizeOfTheLastFrame = (overlap + audio.shape[0]) % window
+        totalToBePadded = window - sizeOfTheLastFrame
+        if sizeOfTheLastFrame == 0:
+            totalToBePadded = 0
+        audio = np.pad(audio, (overlap, totalToBePadded))
+        audio = audio.reshape([audio.shape[0] // window, window])
+        repetition = audio[1:,0:2*overlap]
+        repetition = np.vstack(( repetition, np.zeros((1,repetition.shape[1])) ))
+        audio = np.hstack((audio, repetition))
+        return audio
