@@ -230,8 +230,8 @@ class OnnxRuntime(Runtime):
 
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
-        # 800 frames are 50ms
-        return MatrixOperations.splitToOverlappingChunks(audio, width, 800)
+        overlap = 800 #800 frames are 50ms
+        return MatrixOperations().splitToOverlappingChunks(audio, width, overlap)
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         if len(input.shape) == 2:
@@ -310,6 +310,7 @@ class MatrixOperations:
         window = window - 2*overlap
         assert window>0, "Can not split into overlapping chunks if overlap is bigger than window"
             
+        print("[>]",audio,type(audio))
         sizeOfTheLastFrame = (overlap + audio.shape[0]) % window
         totalToBePadded = window - sizeOfTheLastFrame
         if sizeOfTheLastFrame == 0:
@@ -319,4 +320,5 @@ class MatrixOperations:
         repetition = audio[1:,0:2*overlap]
         repetition = np.vstack(( repetition, np.zeros((1,repetition.shape[1])) ))
         audio = np.hstack((audio, repetition))
+        print("[<]",audio,type(audio))
         return audio
