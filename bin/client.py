@@ -157,7 +157,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         initializer=_initializeWorker,
         initargs=(args.host,),
     )
-
+    length = len(audios)
     for n, audio_path in enumerate(audios):
         audio, sample_rate_hz = _getAudio(audio_path)
         response = workerPool.apply(
@@ -166,7 +166,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
                 audio,
                 sample_rate_hz,
                 Language.parse(args.language),
-                n,
+                f"{n}/{length}",
             ),
         )
         responses.append(response)
@@ -229,7 +229,7 @@ def _runWorkerQuery(
         audio=audio,
     )
     _LOGGER.info(
-        f"Running recognition {queryID}. The process may take several seconds to complete for audios longer that one minute."
+        f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
         return _workerStubSingleton.Recognize(
@@ -324,4 +324,4 @@ if __name__ == "__main__":
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
-    _LOGGER.info(f"Returned responses: {_repr(responses)}")
+    _LOGGER.debug(f"Returned responses: {_repr(responses)}")
