@@ -229,8 +229,10 @@ class OnnxRuntime(Runtime):
 
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
-        #800 frames are 50ms
-        return MatrixOperations(window=width, overlap=800).splitIntoOverlappingChunks(audio)
+        # 800 frames are 50ms
+        return MatrixOperations(window=width, overlap=800).splitIntoOverlappingChunks(
+            audio
+        )
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         self._session.logger.debug(f" - decoding {len(input.shape)}")
@@ -297,6 +299,7 @@ class OnnxRuntime(Runtime):
             score=score,
         )
 
+
 class MatrixOperations:
     def __init__(self, window=160000, overlap=800) -> None:
         self.window = window
@@ -308,8 +311,10 @@ class MatrixOperations:
         return self._addRightPadding(audio)
 
     def _setCorrectDimesions(self):
-        self.window = self.window - 2*self.overlap
-        assert self.window>0, "Can not split into overlapping chunks if overlap is bigger than window"
+        self.window = self.window - 2 * self.overlap
+        assert (
+            self.window > 0
+        ), "Can not split into overlapping chunks if overlap is bigger than window"
 
     def _makeIntoMatrix(self, audio: npt.NDArray[np.float32]):
         sizeOfTheLastFrame = (self.overlap + audio.shape[0]) % self.window
@@ -320,6 +325,8 @@ class MatrixOperations:
         return audio.reshape([audio.shape[0] // self.window, self.window])
 
     def _addRightPadding(self, audio: npt.NDArray[np.float32]):
-        repetition = audio[1:,0:2*self.overlap]
-        repetition = np.vstack(( repetition, np.zeros((1,repetition.shape[1]), dtype=audio.dtype) ))
+        repetition = audio[1:, 0 : 2 * self.overlap]
+        repetition = np.vstack(
+            (repetition, np.zeros((1, repetition.shape[1]), dtype=audio.dtype))
+        )
         return np.hstack((audio, repetition))
