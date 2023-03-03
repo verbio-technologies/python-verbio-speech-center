@@ -27,6 +27,8 @@ class Options:
         self.topic = None
         self.language = 'en-US'
         self.secure_channel = True
+        self.formatting = False
+        self.inactivity_timeout = False
         self.asr_version = None
 
     def check(self):
@@ -44,6 +46,8 @@ def parse_command_line() -> Options:
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')', required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
+    parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_false')
+    parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     
@@ -54,6 +58,8 @@ def parse_command_line() -> Options:
     options.topic = args.topic
     options.language = args.language
     options.secure_channel = args.secure
+    options.formatting = args.formatting
+    options.diarization = args.diarization
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     
@@ -96,6 +102,8 @@ class SpeechCenterStreamingASRClient:
         self._inactivity_timer = None
         self._inactivity_timer_timeout = options.inactivity_timeout
         self._asr_version = options.asr_version
+        self._formatting = options.formatting
+        self._diarization = options.diarization
 
     def _close_stream_by_inactivity(self):
         logging.info("Stream inactivity detected, closing stream...")
@@ -133,9 +141,9 @@ class SpeechCenterStreamingASRClient:
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate))
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization))
         else:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate), metadata=metadata)
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization), metadata=metadata)
         
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
@@ -154,7 +162,9 @@ class SpeechCenterStreamingASRClient:
         asr_version: str,
         topic: str = "",
         language: str = "",
-        sample_rate: int = 16000
+        sample_rate: int = 16000,
+        diarization = False,
+        formatting = False
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
         
         if len(topic):
@@ -174,7 +184,9 @@ class SpeechCenterStreamingASRClient:
                     config=recognition_streaming_request_pb2.RecognitionConfig(
                         parameters=recognition_streaming_request_pb2.RecognitionParameters(
                             language=language,
-                            pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate)
+                            pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate),
+                            enable_formatting = formatting,
+                            enable_diarization = diarization
                         ), 
                         resource=var_resource,
                         version=selected_asr_version))),
