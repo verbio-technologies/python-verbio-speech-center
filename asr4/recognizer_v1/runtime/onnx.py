@@ -231,7 +231,7 @@ class OnnxRuntime(Runtime):
         )
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
-        self._session.logger.debug(f" - decoding {len(input.shape)}")
+        self._session.logger.debug(f" - softmax")
         if len(input.shape) == 2:
             y = self._session.run(None, {self._inputName: input.numpy()})
             return self._decodeTotal(y)
@@ -256,7 +256,6 @@ class OnnxRuntime(Runtime):
                 label_sequences, scores, timesteps = self._decodePartial(
                     label_sequences, scores, timesteps, frame_probs
                 )
-
         if decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs)
         else:
@@ -269,10 +268,12 @@ class OnnxRuntime(Runtime):
     def _decodeTotal(self, y):
         y = np.concatenate(y, axis=1)
         normalized_y = F.softmax(torch.from_numpy(y), dim=2)
+        self._session.logger.debug(" - decoding global")
         return self._decoder.decode(normalized_y)
 
     def _decodePartial(self, label_sequences, scores, timesteps, yi):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
+        self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
