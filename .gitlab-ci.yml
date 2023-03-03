@@ -6,6 +6,7 @@ stages:
   - integration-testing
   - promote-to-staging
   - end2end-testing
+  - update-changelog
   - promote-to-stable
   - stable-deploy
   - cleanup
@@ -18,7 +19,9 @@ variables:
   MODELS_PATH: /mnt/shared/squad2/projects/asr4models/
   VERBIO_REGISTRY_URL: docker.registry.verbio.com
   AWS_ECR_URL: 321880733545.dkr.ecr.us-east-1.amazonaws.com
+  SPEECH_CENTER_AWS_ECR_URL: 321880733545.dkr.ecr.us-east-2.amazonaws.com
   AWS_REGION: us-east-1
+  AWS_SC_REGION: us-east-2
   DOCKER_TESTING_IMAGE_NAME:  csr/testing/asr4
   DOCKER_STAGING_IMAGE_NAME:  csr/staging/asr4
   DOCKER_STABLE_IMAGE_NAME:   csr/stable/asr4
@@ -112,10 +115,16 @@ functional-testing:e2e:
     - master
     - web
   before_script:
-    - apt-get -y -q update && apt-get install -y asrtest-eval
-    - pip install .[server,cpu,test]
+    - python -m venv venv-server
+    - . ./venv-server/bin/activate
+    - pip install .[server,cpu]
     - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
   script:
+    - apt-get -y -q update && apt-get install -y asrtest-eval
+    - deactivate
+    - python -m venv venv-client
+    - pip install .[client]
+    - . ./venv-client/bin/activate
     - ./tests/e2e/run_metrics.sh en-us 0.0.0.0:50051 tests/e2e/data/test_en-us_upgraded-small.gui tests/e2e/data/expected_metrics_functional_testing.json
 
 
@@ -220,8 +229,6 @@ image:release:gpu:
 .template_docker_build:
   stage: build-image
   image: docker:20.10.15
-  only:
-    - tags
   needs: ["build:python"]
   parallel:
     matrix:
@@ -343,6 +350,17 @@ asr4:benchmark:
     strategy: depend
 
 
+update-changelog:
+  stage: update-changelog
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.2
+  only:
+    - tags
+  except:
+    - branches
+  script:
+    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review
+
+
 stable:promote:
   stage: promote-to-stable
   image: docker:20.10.15
@@ -386,11 +404,11 @@ speech-center:promote:
     - docker push $NEW_GPU_NAME
     - docker push $NEW_LATEST_NAME
     - echo "Push to Amazon"
-    - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_REGION}" "${AWS_ECR_URL}" "${DOCKER_AWS_RELEASE_IMAGE_NAME}" "${LANGUAGE}"
-    - docker tag $NEW_CPU_NAME "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker push "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $NEW_GPU_NAME "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker push "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_SC_REGION}" "${SPEECH_CENTER_AWS_ECR_URL}" "${DOCKER_AWS_RELEASE_IMAGE_NAME}" "${LANGUAGE}"
+    - docker tag $NEW_CPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker tag $NEW_GPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
 
 
 
@@ -416,25 +434,12 @@ stable:deploy:cpu:
 cleanup:
   stage: cleanup
   image: docker:20.10.15
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   only:
     - tags
+    - merge_requests
   script:
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
-    - docker image rm "${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker image rm "${AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-
+    - docker images --filter 'label=service=asr4'
+    - docker images --filter 'label=service=asr4' -q | xargs -r docker image rm --force
 
 speech-center-integration-testing:en-us:cpu:
   variables:
@@ -486,4 +491,6 @@ speech-center-integration-testing:pt-br:gpu:
   trigger:
     project: voice-center/operations/integration/integration-tests
     strategy: depend
+
+
 
