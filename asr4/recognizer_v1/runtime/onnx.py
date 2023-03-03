@@ -1,6 +1,7 @@
 import abc
 import logging
 import soxr
+import math
 import numpy as np
 import numpy.typing as npt
 
@@ -21,8 +22,8 @@ from onnxruntime.quantization.quant_utils import (
 
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
-from asr4.recognizer_v1.runtime.w2l_decoder import W2lViterbiDecoder, _DecodeResult
 
+from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
@@ -75,7 +76,13 @@ class Session(abc.ABC):
 
 class OnnxSession(Session):
     def __init__(
-        self, path_or_bytes: Union[str, bytes], useGpu=False, **kwargs
+        self,
+        path_or_bytes: Union[str, bytes],
+        lm_model="",
+        lexicon="",
+        lm_algorithm="viterbi",
+        useGpu=False,
+        **kwargs,
     ) -> None:
         super().__init__(path_or_bytes)
         self.logger = logging.getLogger("ASR4")
@@ -89,6 +96,9 @@ class OnnxSession(Session):
             **kwargs,
         )
         self.decoding_type = kwargs.pop("decoding_type", DecodingType["GLOBAL"])
+        self.lm_algorithm = lm_algorithm
+        self.lm_model = lm_model
+        self.lexicon = lexicon
 
     def __getSessionOptions(self, **kwargs) -> SessionOptions:
         session_options = OnnxSession._createSessionOptions(**kwargs)
@@ -189,7 +199,44 @@ class OnnxRuntime(Runtime):
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        self._decoder = W2lViterbiDecoder(self._session.gpu, vocabulary)
+        self.logger = logging.getLogger("ASR4")
+
+        if self._session.lm_algorithm == "viterbi":
+            self.logger.debug(f" Using Viterbi algorithm for decoding")
+            import simple_ctc
+
+            self._decoder = simple_ctc.BeamSearchDecoder(
+                vocabulary,
+                cutoff_top_n=32,
+                cutoff_prob=0.8,
+                beam_size=8,
+                blank_id=0,
+                is_nll=False,
+            )
+
+        elif self._session.lm_algorithm == "kenlm":
+            from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
+
+            self._decoder = W2lKenLMDecoder(
+                self._session.gpu,
+                vocabulary,
+                self._session.lexicon,
+                self._session.lm_model,
+                decoder_opts=self._decoder_opts(),
+            )
+            self.logger.debug(f" Using KenLM algorithm for decoding")
+
+    def _decoder_opts(self):
+        return {
+            "beam": 5,
+            "beam_size_token": len(self.DEFAULT_VOCABULARY),
+            "beam_threshold": 25.0,
+            "lm_weight": 0.2,
+            "word_score": -1,
+            "unk_weight": -math.inf,
+            "sil_weight": 0.0,
+            "nbest": 1,
+        }
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
@@ -261,11 +308,17 @@ class OnnxRuntime(Runtime):
 
     def _decodeTotal(self, y):
         y = np.concatenate(y, axis=1)
-        normalized_y = F.softmax(torch.from_numpy(y), dim=2).numpy()
+        if self._session.lm_algorithm == "viterbi":
+            normalized_y = F.softmax(torch.from_numpy(y), dim=2)
+        else:
+            normalized_y = F.softmax(torch.from_numpy(y), dim=2).numpy()
         return self._decoder.decode(normalized_y)
 
     def _decodePartial(self, label_sequences, scores, timesteps, yi):
-        normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2).numpy()
+        if self._session.lm_algorithm == "viterbi":
+            normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
+        else:
+            normalized_y = F.softmax(torch.from_numpy(y), dim=2).numpy()
         decoded_part = self._decoder.decode(normalized_y)
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
