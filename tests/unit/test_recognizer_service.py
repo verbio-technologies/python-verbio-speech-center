@@ -1,4 +1,5 @@
 import unittest
+import logging
 import random
 import string
 import tempfile
@@ -75,6 +76,7 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
 class MockOnnxSession(Session):
     def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
+        self.logger = logging.getLogger("TEST")
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,
