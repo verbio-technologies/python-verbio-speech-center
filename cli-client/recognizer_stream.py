@@ -22,11 +22,12 @@ from google.protobuf.json_format import MessageToJson
 class Options:
     def __init__(self):
         self.token_file = None
-        self.host = "eu.speechcenter.verbio.com"
+        self.host = ""
         self.audio_file = None
         self.topic = None
         self.language = 'en-US'
         self.secure_channel = True
+        self.asr_version = None
 
     def check(self):
         if self.topic is None:
@@ -41,11 +42,10 @@ def parse_command_line() -> Options:
     argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
     parser.add_argument('--language', '-l', choices=['en-US', 'en-GB', 'pt-BR', 'es', 'es-419', 'tr', 'ja', 'fr', 'fr-CA', 'de', 'it'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
-    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
-                        default=options.host)
+    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')', required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
-
+    parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     
     args = parser.parse_args()
     options.token_file = args.token
@@ -55,6 +55,7 @@ def parse_command_line() -> Options:
     options.language = args.language
     options.secure_channel = args.secure
     options.inactivity_timeout = float(args.inactivity_timeout)
+    options.asr_version = args.asr_version
     
     return options
 
@@ -94,6 +95,7 @@ class SpeechCenterStreamingASRClient:
         self._secure_channel = options.secure_channel
         self._inactivity_timer = None
         self._inactivity_timer_timeout = options.inactivity_timeout
+        self._asr_version = options.asr_version
 
     def _close_stream_by_inactivity(self):
         logging.info("Stream inactivity detected, closing stream...")
@@ -131,9 +133,9 @@ class SpeechCenterStreamingASRClient:
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate))
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate))
         else:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate), metadata=metadata)
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate), metadata=metadata)
         
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
@@ -149,17 +151,22 @@ class SpeechCenterStreamingASRClient:
     @staticmethod
     def __generate_inferences(
         wav_audio: bytes,
+        asr_version: str,
         topic: str = "",
         language: str = "",
         sample_rate: int = 16000
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
-        """
-        Inferences always start with a topic and a language, then audio is passed in a second message
-        """
+        
         if len(topic):
-            var_resource = recognition_streaming_request_pb2.RecognitionResource(topic=0)
+            var_resource = recognition_streaming_request_pb2.RecognitionResource(topic=topic)
         else:
             raise Exception("Topic must be declared in order to perform the recognition")
+        
+        if len(asr_version):
+            asr_versions = {"V1":0, "V2":1}
+            selected_asr_version = asr_versions[asr_version]
+        else:
+            raise Exception("ASR version must be declared in order to perform the recognition")
 
         messages = [
             ("config", 
@@ -169,7 +176,8 @@ class SpeechCenterStreamingASRClient:
                             language=language,
                             pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate)
                         ), 
-                        resource=var_resource))),
+                        resource=var_resource,
+                        version=selected_asr_version))),
             ("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
         ]
         for message_type, message in messages:
@@ -180,13 +188,17 @@ class SpeechCenterStreamingASRClient:
 def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options) -> None:
     client = SpeechCenterStreamingASRClient(executor, channel, options)
     client.call()
-    logging.info("Press CTRL+C to exit")
     if client.wait_server():
         logging.info("Recognition finished")
     else:
         logging.error("Recognition failed: server didn't answer")
 
 
+def run_executor(command_line_options, executor, channel):
+    logging.info("Running executor...")
+    future = executor.submit(process_recognition, executor, channel, command_line_options)
+    future.result()
+ 
 def run(command_line_options):
     executor = ThreadPoolExecutor()
     logging.info("Connecting to %s", command_line_options.host)
@@ -194,7 +206,6 @@ def run(command_line_options):
     if command_line_options.secure_channel:
         token = SpeechCenterStreamingASRClient.read_token(toke_file=command_line_options.token_file)
         credentials = Credentials(token)
-        
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
             run_executor(command_line_options, executor, channel)
             
@@ -202,11 +213,7 @@ def run(command_line_options):
         with grpc.insecure_channel(command_line_options.host) as channel:
             run_executor(command_line_options, executor, channel)
 
-def run_executor(command_line_options, executor, channel):
-    logging.info("Running executor...")
-    future = executor.submit(process_recognition, executor, channel, command_line_options)
-    future.result()
-    
+   
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s]:%(message)s')
