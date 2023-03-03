@@ -66,18 +66,14 @@ class Session(abc.ABC):
 
     def isModelShapeStatic(self) -> bool:
         if not hasattr(self, "_session"):
-            print("-> has attr session")
             return False
         shapes = self.getInputsShapes()
         if not shapes:
-            print("-> not shapes")
             return False
         for shape in shapes:
             if len(shape) == 1 and isinstance(shape[0], str):
-                print("-> len(shape)==1")
                 return False
             if len(shape) > 1 and any([isinstance(d, str) for d in shape[1:]]):
-                print("-> len(shape)>1")
                 return False
         return True
 
