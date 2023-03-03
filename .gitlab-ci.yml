@@ -22,5 +22,5 @@ settings:
 changelog:
   stage: changelog
   script:
-    - 'RESPONSE="$(curl -s -H "PRIVATE-TOKEN: ${PRIVATE_TOKEN}" "https://gitlab.lan.verbio.com/api/v4/projects/${CI_PROJECT_ID}/repository/changelog?version=999.999.999&to=c7b13d890832c84b3ec2be205c5822c322f045f4")"'
+    - 'RESPONSE="$(curl -s -H "PRIVATE-TOKEN: ${PRIVATE_TOKEN}" "https://gitlab.lan.verbio.com/api/v4/projects/${CI_PROJECT_ID}/repository/changelog?version=999.999.999&to=298f32a33815c86206c4d92c9e8af57a94d19ef7")"'
     - echo $RESPONSE
