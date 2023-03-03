@@ -21,15 +21,14 @@ class TestMatrixOperation(unittest.TestCase):
         self.assertEqual(result.shape, (2, 12))
 
         result = MatrixOperations(window=5, overlap=1).splitIntoOverlappingChunks(data)
-        self.assertEqual(result.shape, (5, 5))
-        self.assertTrue((result[0] == [0, 1, 2, 3, 4]).all())
-        self.assertTrue((result[1] == [3, 4, 5, 6, 7]).all())
-        self.assertTrue((result[2] == [6, 7, 8, 9, 10]).all())
-        self.assertTrue((result[3] == [9, 10, 11, 12, 0]).all())
-        self.assertTrue((result[4] == [12, 0, 0, 0, 0]).all())
+        self.assertEqual(result.shape, (4, 5))
+        self.assertTrue((result[0] == [1, 2, 3, 4, 5]).all())
+        self.assertTrue((result[1] == [4, 5, 6, 7, 8]).all())
+        self.assertTrue((result[2] == [7, 8, 9, 10, 11]).all())
+        self.assertTrue((result[3] == [10, 11, 12, 0, 0]).all())
 
         result = MatrixOperations(window=4, overlap=1).splitIntoOverlappingChunks(data)
-        self.assertEqual(result.shape, (7, 4))
+        self.assertEqual(result.shape, (6, 4))
 
         result = MatrixOperations(window=11, overlap=2).splitIntoOverlappingChunks(data)
         self.assertEqual(result.shape, (2, 11))

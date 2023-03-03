@@ -301,24 +301,24 @@ class MatrixOperations:
     def __init__(self, window=160000, overlap=800) -> None:
         self.window = window
         self.overlap = overlap
+        self._setCorrectDimensions()
 
     def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
-        self._setCorrectDimesions()
         audio = self._makeIntoMatrix(audio)
         return self._addRightPadding(audio)
 
-    def _setCorrectDimesions(self):
+    def _setCorrectDimensions(self):
         self.window = self.window - 2 * self.overlap
         assert (
             self.window > 0
         ), "Can not split into overlapping chunks if overlap is bigger than window"
 
     def _makeIntoMatrix(self, audio: npt.NDArray[np.float32]):
-        sizeOfTheLastFrame = (self.overlap + audio.shape[0]) % self.window
+        sizeOfTheLastFrame = (audio.shape[0]) % self.window
         totalToBePadded = self.window - sizeOfTheLastFrame
         if sizeOfTheLastFrame == 0:
             totalToBePadded = 0
-        audio = np.pad(audio, (self.overlap, totalToBePadded))
+        audio = np.pad(audio, (0, totalToBePadded))
         return audio.reshape([audio.shape[0] // self.window, self.window])
 
     def _addRightPadding(self, audio: npt.NDArray[np.float32]):
