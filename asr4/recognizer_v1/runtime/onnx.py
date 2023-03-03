@@ -199,6 +199,7 @@ class OnnxRuntime(Runtime):
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
+<<<<<<< HEAD
         self.logger = logging.getLogger("ASR4")
 
         if self._session.lm_algorithm == "viterbi":

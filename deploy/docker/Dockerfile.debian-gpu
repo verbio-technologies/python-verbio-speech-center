@@ -23,6 +23,8 @@ ENV MAKEFLAGS="-j4"
 ENV LANGUAGE=${LANGUAGE}
 ENV LOG_LEVEL=${LOG_LEVEL}
 
+LABEL service=asr4
+LABEL device=GPU
 LABEL vendor="Verbio Technologies"
 LABEL model_version=${MODEL_VERSION}
 LABEL service_version=${VERSION}
