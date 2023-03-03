@@ -1,11 +1,21 @@
-import struct
-import itertools
 import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass, field
-from typing import List, Any
+from typing import Dict, List, Tuple
 
 from flashlight.lib.sequence.criterion import CpuViterbiPath
+
+
+from flashlight.lib.text.dictionary import create_word_dict, load_words
+from flashlight.lib.sequence.criterion import CpuViterbiPath, get_data_ptr_as_bytes
+from flashlight.lib.text.decoder import (
+    CriterionType,
+    LexiconDecoderOptions,
+    KenLM,
+    SmearingMode,
+    Trie,
+    LexiconDecoder,
+)
 
 _CUDA_ERROR = ""
 
@@ -24,9 +34,18 @@ class _DecodeResult:
     timesteps: List[List[List[int]]] = field(default_factory=lambda: [[[]]])
 
 
-class W2lViterbiDecoder:
-    def __init__(self, useGpu: bool, vocabulary: List[str]) -> None:
+class W2lKenLMDecoder:
+    def __init__(
+        self,
+        useGpu: bool,
+        vocabulary: List[str],
+        lexicon: str,
+        kenlm_model: str,
+        decoder_opts: Dict[str, float],
+    ) -> None:
         self.vocabulary = vocabulary
+        self.criterion_type = CriterionType.CTC
+        self.asg_transitions = None
 
         if useGpu:
             if _CUDA_ERROR:
@@ -40,49 +59,95 @@ class W2lViterbiDecoder:
             if "<pad>" in vocabulary
             else vocabulary.index("<s>")
         )
+        self.silence = vocabulary.index("|")
+        self.unk_word = vocabulary.index("<unk>")
 
-    def decode(self, emissions: npt.NDArray[np.float32]) -> _DecodeResult:
-        batchSize = emissions.shape[0]
-        viterbiPath = self._computeViterbi(emissions)
-        r = []
-        for idx in range(batchSize):
-            hypotesis = self._ctc(viterbiPath[idx].tolist())
-            hypotesis = self._postProcessHypothesis(hypotesis)
-            r.append(hypotesis)
-        return _DecodeResult(label_sequences=[r])
+        self.nbest = decoder_opts["nbest"]
 
-    def _computeViterbi(
-        self, emissions: npt.NDArray[np.float32]
-    ) -> npt.NDArray[np.uint8]:
+        self.lexicon = load_words(lexicon)
+        self.word_dict = create_word_dict(self.lexicon)
+        self.unk_word = self.word_dict.get_index("<unk>")
+
+        self.lm = KenLM(kenlm_model, self.word_dict)
+        self.trie = Trie(len(self.vocabulary), self.silence)
+
+        start_state = self.lm.start(False)
+        for i, (word, spellings) in enumerate(self.lexicon.items()):
+            word_idx = self.word_dict.get_index(word)
+            _, score = self.lm.score(start_state, word_idx)
+            for spelling in spellings:
+                spelling_idxs = [
+                    self.vocabulary.index(token.lower()) for token in spelling
+                ]
+                assert self.unk_word not in spelling_idxs, f"{spelling} {spelling_idxs}"
+                self.trie.insert(spelling_idxs, word_idx, score)
+        self.trie.smear(SmearingMode.MAX)
+
+        self.decoder_opts = LexiconDecoderOptions(
+            beam_size=decoder_opts["beam"],
+            beam_size_token=decoder_opts["beam_size_token"],
+            beam_threshold=decoder_opts["beam_threshold"],
+            lm_weight=decoder_opts["lm_weight"],
+            word_score=decoder_opts["word_score"],
+            unk_score=decoder_opts["unk_weight"],
+            sil_score=decoder_opts["sil_weight"],
+            log_add=False,
+            criterion_type=self.criterion_type,
+        )
+
+        if self.asg_transitions is None:
+            N = 768
+            self.asg_transitions = []
+
+        self.decoder = LexiconDecoder(
+            self.decoder_opts,
+            self.trie,
+            self.lm,
+            self.silence,
+            self._blank,
+            self.unk_word,
+            self.asg_transitions,
+            False,
+        )
+
+    def get_timesteps(self, token_idxs: List[int]) -> List[int]:
+        timesteps = []
+        for i, token_idx in enumerate(token_idxs):
+            if token_idx == self._blank:
+                continue
+            if i == 0 or token_idx != token_idxs[i - 1]:
+                timesteps.append(i)
+        return timesteps
+
+    def decode(self, emissions: npt.NDArray[np.float32]):
+        B = emissions.shape[0]
+        results = []
+        for b in range(B):
+            hypothesis = self._decodeLexicon(emissions, b)
+            results.append(hypothesis)
+
+        words, scores, timesteps = self._postProcessHypothesis(hypothesis)
+        return _DecodeResult(
+            label_sequences=[[" ".join(words)]], scores=[scores], timesteps=[timesteps]
+        )
+
+    def _decodeLexicon(self, emissions: npt.NDArray[np.float32], b: int):
         B, T, N = emissions.shape
-        transitions = np.zeros([N, N], dtype=np.float32)
-        viterbiPath = np.empty([B, T], dtype=np.int32)
-        workspace = np.empty(
-            self._flashlight.get_workspace_size(B, T, N), dtype=np.uint8
-        )
-        self._flashlight.compute(
-            B,
-            T,
-            N,
-            W2lViterbiDecoder.getDataPtrAsBytes(emissions),
-            W2lViterbiDecoder.getDataPtrAsBytes(transitions),
-            W2lViterbiDecoder.getDataPtrAsBytes(viterbiPath),
-            W2lViterbiDecoder.getDataPtrAsBytes(workspace),
-        )
-        return viterbiPath
+        emissions_ptr = emissions.ctypes.data + b * (emissions.strides[0] // 2)
+        results = self.decoder.decode(emissions_ptr, T, N)
+        return results[: self.nbest]
 
-    @staticmethod
-    def getDataPtrAsBytes(tensor: npt.NDArray[Any]) -> bytes:
-        return struct.pack("P", tensor.ctypes.data)
+    def _postProcessHypothesis(
+        self, hypotesis: List[int]
+    ) -> Tuple[List[str], List[float], List[float]]:
+        words = []
+        scores = []
+        timesteps = []
+        for result in hypotesis:
+            for x in result.words:
+                if x >= 0:
+                    words.append(self.word_dict.get_entry(x))
+            scores.append(result.score)
+            timesteps.append(self.get_timesteps(result.tokens))
 
-    def _ctc(self, hypotesis: List[int]) -> List[int]:
-        hypotesis = (g[0] for g in itertools.groupby(hypotesis))
-        hypotesis = filter(lambda x: x != self._blank, hypotesis)
-        return list(hypotesis)
-
-    def _postProcessHypothesis(self, hypotesis: List[int]) -> List[str]:
-        return [
-            self.vocabulary[letter]
-            for letter in hypotesis
-            if letter < len(self.vocabulary)
-        ]
+        return words, scores, timesteps

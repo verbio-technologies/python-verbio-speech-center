@@ -127,6 +127,28 @@ def _parseArguments() -> argparse.Namespace:
         default=os.environ.get("DECODING_TYPE", "GLOBAL"),
         help="Perform Decoding for each chunk (Local) or for all chunks (Global)",
     )
+    parser.add_argument(
+        "--lm-algorithm",
+        type=str,
+        dest="lm_algorithm",
+        choices=["viterbi", "kenlm"],
+        default="viterbi",
+        help="Type of algorithm for language model decoding.",
+    )
+    parser.add_argument(
+        "--lexicon",
+        type=str,
+        dest="lexicon",
+        required=False,
+        help="Lexicon for language model.",
+    )
+    parser.add_argument(
+        "--lm-model",
+        type=str,
+        dest="lm_model",
+        required=False,
+        help="Path to the language model file.",
+    )
     return parser.parse_args()
 
 

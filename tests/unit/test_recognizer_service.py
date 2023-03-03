@@ -52,6 +52,10 @@ class MockArguments(argparse.Namespace):
         self.model = "path_to_models/model.onnx"
         self.gpu = False
         self.workers = 4
+        self.lexicon = None
+        self.lm_model = None
+        self.unit_lm = False
+        self.lm_algorithm = "viterbi"
 
     def createVocabulary(self) -> str:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
@@ -69,15 +73,32 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
         super().__init__(arguments)
 
     def createOnnxSession(self):
-        return MockOnnxSession(self.model, language=self.language)
+        return MockOnnxSession(
+            self.model,
+            self.lexicon,
+            self.lm_model,
+            self.lm_algorithm,
+            language=self.language,
+        )
 
 
 class MockOnnxSession(Session):
     def __init__(
-        self, _path_or_bytes: Union[str, bytes], useGpu=False, **kwargs
+        self,
+        _path_or_bytes: Union[str, bytes],
+        lm_model: str,
+        lexicon: str,
+        lm_algorithm: str,
+        unit_lm=False,
+        useGpu=False,
+        **kwargs,
     ) -> None:
         super().__init__(_path_or_bytes, **kwargs)
         self.gpu = useGpu
+        self.lexicon = lexicon
+        self.lm_model = lm_model
+        self.unit_lm = unit_lm
+        self.lm_algorithm = lm_algorithm
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,
@@ -165,7 +186,7 @@ class TestRecognizerService(unittest.TestCase):
         configuration = MockRecognitionServiceConfiguration(arguments)
         service = RecognizerService(configuration)
         self.assertEqual(
-            service._runtime._decoder.vocabulary, arguments.getVocabularyLabels()
+            service._runtime._decoder.labels, arguments.getVocabularyLabels()
         )
 
     def testInvalidAudio(self):

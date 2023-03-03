@@ -17,9 +17,20 @@ from asr4.recognizer import Language
 
 class MockOnnxSession(Session):
     def __init__(
-        self, _path_or_bytes: Union[str, bytes], useGpu=False, **kwargs
+        self,
+        _path_or_bytes: Union[str, bytes],
+        lm_model: None,
+        lexicon: None,
+        lm_algorithm="viterbi",
+        unit_lm=False,
+        useGpu=False,
+        **kwargs,
     ) -> None:
         super().__init__(_path_or_bytes, **kwargs)
+        self.lm_model = lm_model
+        self.lexicon = lexicon
+        self.lm_algorithm = lm_algorithm
+        self.unit_lm = unit_lm
         self.gpu = useGpu
         session_options = kwargs.pop("sess_options", None)
         providers = kwargs.pop("providers", None)
@@ -63,16 +74,20 @@ class TestOnnxSession(unittest.TestCase):
 
     def testEmptyModel(self):
         with self.assertRaises(FileNotFoundError):
-            _session = OnnxSession("")
+            _session = OnnxSession("", "", "", "viterbi")
 
     def testInvalidModel(self):
         with self.assertRaises(google.protobuf.message.DecodeError):
-            _session = OnnxSession(self.rootpath.joinpath("README.md"))
+            _session = OnnxSession(
+                self.rootpath.joinpath("README.md"), "", "", "viterbi"
+            )
 
     def testNonQuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.WARNING):
-            _session = OnnxSession(str(self.datapath.joinpath("mnist-12.onnx")))
+            _session = OnnxSession(
+                str(self.datapath.joinpath("mnist-12.onnx")), "", "", "viterbi"
+            )
         self.assertTrue(
             "Model not quantized - weight precision: 'FLOAT32'" in self.caplog.text
         )
@@ -80,7 +95,9 @@ class TestOnnxSession(unittest.TestCase):
     def testINT8QuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.INFO):
-            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-int8.onnx")))
+            _session = OnnxSession(
+                str(self.datapath.joinpath("mnist-12-int8.onnx")), "", "", "viterbi"
+            )
         self.assertTrue(
             "Model quantized - weight precision: 'INT8'" in self.caplog.text
         )
@@ -88,7 +105,9 @@ class TestOnnxSession(unittest.TestCase):
     def testFLOAT16QuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.WARNING):
-            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-float16.onnx")))
+            _session = OnnxSession(
+                str(self.datapath.joinpath("mnist-12-float16.onnx")), "", "", "viterbi"
+            )
         self.assertTrue(
             "Model Quantization Error: expected 'INT8' but retrieved 'FLOAT16' weight precision"
             in self.caplog.text
@@ -97,7 +116,9 @@ class TestOnnxSession(unittest.TestCase):
     def testUINT8QuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.WARNING):
-            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-uint8.onnx")))
+            _session = OnnxSession(
+                str(self.datapath.joinpath("mnist-12-uint8.onnx")), "", "", "viterbi"
+            )
         self.assertTrue(
             "Model Quantization Error: expected 'INT8' but retrieved 'UINT8' weight precision"
             in self.caplog.text
@@ -112,18 +133,18 @@ class TestOnnxRuntime(unittest.TestCase):
 
     def testEmptyInput(self):
         with self.assertRaises(ValueError):
-            runtime = OnnxRuntime(MockOnnxSession(""))
+            runtime = OnnxRuntime(MockOnnxSession("", "", "", "viterbi"))
             runtime.run(b"", 8000)
 
     def testRandomInput(self):
-        runtime = OnnxRuntime(MockOnnxSession(""))
+        runtime = OnnxRuntime(MockOnnxSession("", "", ""))
         result = runtime.run(b"0000", 8000)
         vocabulary = set(runtime.DEFAULT_VOCABULARY[5:] + [" ", "<", ">"])  # letters
         self.assertEqual(set(result.sequence) - vocabulary, set())
         self.assertTrue(1.0 >= result.score >= 0.0)
 
     def testPreProcess(self):
-        runtime = OnnxRuntime(MockOnnxSession(""))
+        runtime = OnnxRuntime(MockOnnxSession("", "", "", "viterbi"))
         tensor = runtime._preprocess(b"0123", 8000)
         self.assertTrue(isinstance(tensor, torch.Tensor))
         self.assertTrue(tensor.shape[0], 1)  # batch size
@@ -157,7 +178,7 @@ class TestOnnxRuntime(unittest.TestCase):
             scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
             timesteps=[[[]]],
         )
-        runtime = OnnxRuntime(MockOnnxSession(""))
+        runtime = OnnxRuntime(MockOnnxSession("", "", "", "viterbi"))
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
