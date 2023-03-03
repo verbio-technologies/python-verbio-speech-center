@@ -22,4 +22,4 @@ settings:
 changelog:
   stage: changelog
   script:
-    - curl --header "PRIVATE-TOKEN: ${PRIVATE_TOKEN}" "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/repository/changelog?version=999.999.999&to=c7b13d890832c84b3ec2be205c5822c322f045f4"
+    - 'curl --header "PRIVATE-TOKEN: ${PRIVATE_TOKEN}" "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/repository/changelog?version=999.999.999&to=c7b13d890832c84b3ec2be205c5822c322f045f4"'
