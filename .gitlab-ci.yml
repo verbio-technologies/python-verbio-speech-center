@@ -25,4 +25,4 @@ changelog:
   only:
     - tags
   script:
-    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH --no-manual-review
+    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review --manual-version ${CI_COMMIT_TAG}
