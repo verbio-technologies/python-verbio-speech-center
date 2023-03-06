@@ -201,18 +201,11 @@ class OnnxRuntime(Runtime):
             raise ValueError("Input audio cannot be empty!")
         x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
+        self._session.logger.debug(" - postprocess")
         return self._postprocess(y)
 
-    @staticmethod
-    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
-        sizeOfTheLastFrame = audio.shape[0] % width
-        if sizeOfTheLastFrame:
-            totalToBePadded = width - sizeOfTheLastFrame
-            audio = np.pad(audio, (0, totalToBePadded))
-        audio = audio.reshape([audio.shape[0] // width, width])
-        return audio
-
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
+        self._session.logger.debug(f" - preprocess audio of length {len(input)}")
         x = np.frombuffer(input, dtype=np.int16)
         try:
             y = soxr.resample(x, sample_rate_hz, 16000)
@@ -220,6 +213,7 @@ class OnnxRuntime(Runtime):
             raise ValueError(f"Invalid audio sample rate: '{sample_rate_hz}'")
         x = y.astype(np.float32)
         if self._session.isModelShapeStatic():
+            self._session.logger.debug(" - split chunks")
             x = self._convertToFixedSizeMatrix(
                 x, self._session._session._inputs_meta[0].shape[1]
             )
@@ -229,7 +223,15 @@ class OnnxRuntime(Runtime):
             x = F.layer_norm(x, x.shape)
         return x
 
+    @staticmethod
+    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
+        # Note that 800 frames are 50ms
+        return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
+            audio
+        )
+
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
+        self._session.logger.debug(f" - softmax")
         if len(input.shape) == 2:
             y = self._session.run(None, {self._inputName: input.numpy()})
             return self._decodeTotal(y)
@@ -254,7 +256,6 @@ class OnnxRuntime(Runtime):
                 label_sequences, scores, timesteps = self._decodePartial(
                     label_sequences, scores, timesteps, frame_probs
                 )
-
         if decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs)
         else:
@@ -267,10 +268,12 @@ class OnnxRuntime(Runtime):
     def _decodeTotal(self, y):
         y = np.concatenate(y, axis=1)
         normalized_y = F.softmax(torch.from_numpy(y), dim=2)
+        self._session.logger.debug(" - decoding global")
         return self._decoder.decode(normalized_y)
 
     def _decodePartial(self, label_sequences, scores, timesteps, yi):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
+        self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
@@ -292,3 +295,35 @@ class OnnxRuntime(Runtime):
             sequence=sequence,
             score=score,
         )
+
+
+class MatrixOperations:
+    def __init__(self, window=160000, overlap=800) -> None:
+        self.window = window
+        self.overlap = overlap
+        self._setCorrectDimensions()
+
+    def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
+        audio = self._makeIntoMatrix(audio)
+        return self._addRightPadding(audio)
+
+    def _setCorrectDimensions(self):
+        self.window = self.window - 2 * self.overlap
+        assert (
+            self.window > 0
+        ), "Can not split into overlapping chunks if overlap is bigger than window"
+
+    def _makeIntoMatrix(self, audio: npt.NDArray[np.float32]):
+        sizeOfTheLastFrame = (audio.shape[0]) % self.window
+        totalToBePadded = self.window - sizeOfTheLastFrame
+        if sizeOfTheLastFrame == 0:
+            totalToBePadded = 0
+        audio = np.pad(audio, (0, totalToBePadded))
+        return audio.reshape([audio.shape[0] // self.window, self.window])
+
+    def _addRightPadding(self, audio: npt.NDArray[np.float32]):
+        repetition = audio[1:, 0 : 2 * self.overlap]
+        repetition = np.vstack(
+            (repetition, np.zeros((1, repetition.shape[1]), dtype=audio.dtype))
+        )
+        return np.hstack((audio, repetition))
