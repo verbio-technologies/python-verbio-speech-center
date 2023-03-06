@@ -21,7 +21,7 @@ settings:
 
 changelog:
   stage: changelog
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.3
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.4
   only:
     - tags
   script:
