@@ -1,4 +1,5 @@
 import unittest
+import logging
 import random
 import string
 import tempfile
@@ -99,6 +100,7 @@ class MockOnnxSession(Session):
         self.lm_model = lm_model
         self.unit_lm = unit_lm
         self.lm_algorithm = lm_algorithm
+        self.logger = logging.getLogger("TEST")
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,

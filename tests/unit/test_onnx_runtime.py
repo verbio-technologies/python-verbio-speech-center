@@ -34,6 +34,7 @@ class MockOnnxSession(Session):
         self.gpu = useGpu
         session_options = kwargs.pop("sess_options", None)
         providers = kwargs.pop("providers", None)
+        self.logger = logging.getLogger("TEST")
 
     def run(
         self,
