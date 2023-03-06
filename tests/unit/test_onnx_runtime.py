@@ -20,6 +20,7 @@ class MockOnnxSession(Session):
         super().__init__(_path_or_bytes, **kwargs)
         session_options = kwargs.pop("sess_options", None)
         providers = kwargs.pop("providers", None)
+        self.logger = logging.getLogger("TEST")
 
     def run(
         self,

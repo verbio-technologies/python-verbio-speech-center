@@ -241,7 +241,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
         if self._formatter and words:
             self.logger.debug(f"Pre-formatter text: {words}")
-            return " ".join(self._formatter.classify(words))
+            try:
+                return " ".join(self._formatter.classify(words))
+            except:
+                self.logger.error(f"Error formatting sentence '{transcription}'")
+                return " ".join(words)
         else:
             return " ".join(words)
 
