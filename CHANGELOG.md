@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.2.9 (2023-03-06)
+
+### Patch (2 changes)
+
+- [Add everlapped chunking and better logging](csr/asr4@6c2dd9b3f8e718ccd8e866217863c091cdac1282) ([merge request](csr/asr4!205))
+- [Add everlapped chunking and better logging](csr/asr4@7cb3205bfd85b73dbbfaffee47fd2d3d4226b26c) ([merge request](csr/asr4!205))
+
 ## 0.2.7 (2023-03-01)
 
 ### Patch (2 changes)
