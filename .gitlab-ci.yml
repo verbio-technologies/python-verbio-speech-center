@@ -21,6 +21,7 @@ settings:
 
 changelog:
   stage: changelog
+  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:1.11.3
   script:
     - 'RESPONSE="$(curl -s -H "PRIVATE-TOKEN: ${PRIVATE_TOKEN}" "https://gitlab.lan.verbio.com/api/v4/projects/${CI_PROJECT_ID}/repository/changelog?version=999.999.999&to=298f32a33815c86206c4d92c9e8af57a94d19ef7")"'
     - echo $RESPONSE
