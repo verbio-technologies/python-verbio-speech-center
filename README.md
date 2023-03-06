@@ -205,52 +205,15 @@ cargo clippy --all --all-targets -- -D warnings # Linting
 black . # Formatting & Linting
 ```
 
+## Annotate Merge Requests with Trailers
+
+Changelogs are generated based on commit titles and Git trailers. To be included in a changelog, a commit must contain a specific Git trailer. Changelogs are generated from commit titles, and categorized by Git trailer type. Though you can add trailers manually when you write a commit message, we suggest using Merge Request Templates which are already available in this repository. You just need to choose the most appropriate template at the creation of the Merge Request (e.g. Changelog: Patch, Changelog: Minor or Changelog: Major).
+
+If you wish to know more, you can check [Gitlab's Changelogs documentation](https://docs.gitlab.com/ee/user/project/changelogs.html).
+
+
 ## How to generate a new release
 
-In order to manage releases we will use `cargo-release`: https://github.com/sunng87/cargo-release
+In order to generate a new release you will have to manually update the [VERSION](https://gitlab.lan.verbio.com/csr/asr4/-/blob/master/VERSION) file under the repository root. Once you have done it, proceed by creating a Tag in the [Tags section](https://gitlab.lan.verbio.com/csr/asr4/-/tags). It is important that a tag is generated from the `master` branch.
 
-If you want to install it, run the following command:
-
-```
-$ cargo install cargo-release
-```
-
-In order to generate a new release, you can invoke the following command (the flag `--workspace` is required in order to update all the subcrates):
-
-```
-# Increment major
-$ cargo release major --workspace
-
-# Increment minor
-$ cargo release minor --workspace
-
-# Increment patch
-$ cargo release patch --workspace
-
-# Set specific version
-$ cargo release 1.2.3 --workspace 
-```
-
-It will:
-
-1. Set the new version to all the `Cargo.toml` of the main crate and subcrates. It also updates the `Cargo.lock`.
-2. Set the new version to the `CMakeLists.txt` file.
-3. Update the `VERSION` file.
-4. Create a "Bump version" commit.
-
-⚠ NOTE: IT DOES NOT ACTUALLY PERFORM ANY MODIFICATION UNLESS THE FLAG `--execute` IS PROVIDED
-⚠ NOTE: IT DOES NOT CREATE THE TAG NOR PUSH ANYTHING
-
-So, a typical workflow would be the following:
-
-```
-$ cargo release patch --workspace --execute
-$ git push 
-$ git tag VERSION_NUMBER
-$ git push --tags 
-```
-The user must be able to perform both the `git push` to upload the commit and the `git push --tags` to upload the newly created tag.
-
-Once the tag has been pushed, you should edit the tag's Release notes via the GitLab UI and add the changelog for the version.
-
-Then, the CI system will start doing its job and it will generate a `.deb` package, and via webhook the package will be available at the Verbio staging repositories.
+Thanks to the commits annotated with a trailer, the tag CI Pipeline will automatically update the CHANGELOG file and create a new release associated with the tag, containing a small description of the latest changes included in said release.
