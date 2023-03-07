@@ -31,8 +31,8 @@ class RecognitionServiceConfiguration:
         self.formatterModelPath = None
         self.language = Language.EN_US
         self.model = None
-        self.lm_model = (None,)
-        self.lexicon = (None,)
+        self.lm_model = None
+        self.lexicon = None
         self.gpu = False
         self.numberOfWorkers = 1
         self.decodingType = DecodingType["GLOBAL"]
