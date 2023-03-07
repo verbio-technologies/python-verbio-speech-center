@@ -1,11 +1,11 @@
+import math
 import numpy as np
 import numpy.typing as npt
-import math
-from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
+from dataclasses import dataclass, field
 
+from flashlight.lib.sequence.criterion import CpuViterbiPath
 from flashlight.lib.text.dictionary import create_word_dict, load_words
-from flashlight.lib.sequence.criterion import CpuViterbiPath, get_data_ptr_as_bytes
 from flashlight.lib.text.decoder import (
     CriterionType,
     LexiconDecoderOptions,
@@ -13,9 +13,11 @@ from flashlight.lib.text.decoder import (
     SmearingMode,
     Trie,
     LexiconDecoder,
+    DecodeResult,
 )
 
 _CUDA_ERROR = ""
+LEXICON = Dict[str, List[List[str]]]
 
 try:
     from flashlight.lib.sequence.flashlight_lib_sequence_criterion import (
@@ -40,9 +42,6 @@ class W2lKenLMDecoder:
         lexicon: str,
         kenlm_model: str,
     ) -> None:
-        self.vocabulary = vocabulary
-        self.criterion_type = CriterionType.CTC
-
         if useGpu:
             if _CUDA_ERROR:
                 raise Exception(_CUDA_ERROR)
@@ -55,99 +54,92 @@ class W2lKenLMDecoder:
             if "<pad>" in vocabulary
             else vocabulary.index("<s>")
         )
-        self.silence = vocabulary.index("|")
-        self.unk_word = vocabulary.index("<unk>")
-
         self.nbest = 1
+        lexicon = load_words(lexicon)
+        self.word_dict = create_word_dict(lexicon)
+        lm = KenLM(kenlm_model, self.word_dict)
+        trie = self._initializeTrie(vocabulary, lexicon, lm)
 
-        self.lexicon = load_words(lexicon)
-        self.word_dict = create_word_dict(self.lexicon)
-        self.unk_word = self.word_dict.get_index("<unk>")
-
-        self.lm = KenLM(kenlm_model, self.word_dict)
-
-        self.trie = self._initializeTrie()
-
-        self.decoder_opts = LexiconDecoderOptions(
+        decoder_opts = LexiconDecoderOptions(
             beam_size=5,
-            beam_size_token=len(self.vocabulary),
+            beam_size_token=len(vocabulary),
             beam_threshold=25.0,
             lm_weight=0.2,
             word_score=-1,
             unk_score=-math.inf,
             sil_score=0.0,
             log_add=False,
-            criterion_type=self.criterion_type,
+            criterion_type=CriterionType.CTC,
         )
 
         self.decoder = LexiconDecoder(
-            self.decoder_opts,
-            self.trie,
-            self.lm,
-            self.silence,
-            self._blank,
-            self.unk_word,
-            [],
-            False,
+            options=decoder_opts,
+            trie=trie,
+            lm=lm,
+            sil_token_idx=vocabulary.index("|"),
+            blank_token_idx=self._blank,
+            unk_token_idx=self.word_dict.get_index("<unk>"),
+            transitions=[],
+            is_token_lm=False,
         )
 
     def _initializeTrie(
         self,
+        vocabulary: List[str],
+        lexicon: LEXICON,
+        languageModel: KenLM,
     ) -> Trie:
-        trie = Trie(len(self.vocabulary), self.silence)
-        start_state = self.lm.start(False)
-        for word, spellings in self.lexicon.items():
-            word_idx = self.word_dict.get_index(word)
-            _, score = self.lm.score(start_state, word_idx)
+        trie = Trie(len(vocabulary), vocabulary.index("|"))
+        startState = languageModel.start(False)
+        unkWord = vocabulary.index("<unk>")
+        for word, spellings in lexicon.items():
+            wordIdx = self.word_dict.get_index(word)
+            _, score = languageModel.score(startState, wordIdx)
             for spelling in spellings:
-                spelling_idxs = [
-                    self.vocabulary.index(token.lower()) for token in spelling
-                ]
+                spellingIdxs = [vocabulary.index(token.lower()) for token in spelling]
                 assert (
-                    self.unk_word not in spelling_idxs
-                ), f"Some tokens in spelling '{spelling}' were unknown: {spelling_idxs}"
-                trie.insert(spelling_idxs, word_idx, score)
+                    unkWord not in spellingIdxs
+                ), f"Some tokens in spelling '{spelling}' were unknown: {spellingIdxs}"
+                trie.insert(spellingIdxs, wordIdx, score)
         trie.smear(SmearingMode.MAX)
         return trie
 
-    def get_timesteps(self, token_idxs: List[int]) -> List[int]:
-        timesteps = []
-        for i, token_idx in enumerate(token_idxs):
-            if token_idx == self._blank:
-                continue
-            if i == 0 or token_idx != token_idxs[i - 1]:
-                timesteps.append(i)
-        return timesteps
-
     def decode(self, emissions: npt.NDArray[np.float32]):
         B = emissions.shape[0]
-        results = []
+        allWords, allScores, allTimesteps = [], [], []
         for b in range(B):
             hypothesis = self._decodeLexicon(emissions, b)
-            results.append(hypothesis)
-
-        words, scores, timesteps = self._postProcessHypothesis(hypothesis)
+            words, scores, timesteps = self._postProcessHypothesis(hypothesis)
+            allWords.append(words)
+            allScores.append(scores)
+            allTimesteps.append(timesteps)
         return _DecodeResult(
-            label_sequences=[[" ".join(words)]], scores=[scores], timesteps=[timesteps]
+            label_sequences=allWords, scores=allScores, timesteps=allTimesteps
         )
 
-    def _decodeLexicon(self, emissions: npt.NDArray[np.float32], b: int):
-        B, T, N = emissions.shape
+    def _decodeLexicon(
+        self, emissions: npt.NDArray[np.float32], b: int
+    ) -> List[DecodeResult]:
+        _, T, N = emissions.shape
         emissions_ptr = emissions.ctypes.data + b * (emissions.strides[0] // 2)
         results = self.decoder.decode(emissions_ptr, T, N)
         return results[: self.nbest]
 
     def _postProcessHypothesis(
-        self, hypotesis: List[int]
-    ) -> Tuple[List[str], List[float], List[float]]:
-        words = []
-        scores = []
-        timesteps = []
+        self, hypotesis: List[DecodeResult]
+    ) -> Tuple[List[List[str]], List[float], List[List[int]]]:
+        words, scores, timesteps = [], [], []
         for result in hypotesis:
-            for x in result.words:
-                if x >= 0:
-                    words.append(self.word_dict.get_entry(x))
+            words.append([self.word_dict.get_entry(x) for x in result.words if x >= 0])
             scores.append(result.score)
-            timesteps.append(self.get_timesteps(result.tokens))
+            timesteps.append(self._getTimesteps(result.tokens))
+        return (words, scores, timesteps)
 
-        return words, scores, timesteps
+    def _getTimesteps(self, tokenIdxs: List[int]) -> List[int]:
+        timesteps = []
+        for i, tokenIdx in enumerate(tokenIdxs):
+            if tokenIdx == self._blank:
+                continue
+            if i == 0 or tokenIdx != tokenIdxs[i - 1]:
+                timesteps.append(i)
+        return timesteps

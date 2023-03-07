@@ -57,7 +57,7 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             str(self.datapath.joinpath("en-us_lm.bin")),
         )
         token_idxs = [7, 8, 9, 10]
-        self.assertEqual(decoder.get_timesteps([token_idxs]), [0])
+        self.assertEqual(decoder._getTimesteps([token_idxs]), [0])
 
     def testDecode(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
