@@ -42,7 +42,6 @@ class W2lKenLMDecoder:
     ) -> None:
         self.vocabulary = vocabulary
         self.criterion_type = CriterionType.CTC
-        self.asg_transitions = None
 
         if useGpu:
             if _CUDA_ERROR:
