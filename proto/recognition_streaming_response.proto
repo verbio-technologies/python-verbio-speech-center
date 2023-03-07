@@ -4,31 +4,51 @@ package speechcenter.recognizer.v1;
 
 message RecognitionStreamingResponse {
     oneof recognition_response {
-      RecognitionError error = 1; // If set, specifies the error for the operation.
-      RecognitionResult result = 2; // List of results corresponding to portions of the audio currently being processed.
+        // If set, specifies the error for the operation.
+        RecognitionError error = 1;
+
+        // List of results corresponding to portions of the audio currently being processed.
+        RecognitionResult result = 2;
     }
+    uint32 completion_cause = 3; //Numerical code corresponding to the MRCP standard completion causes.
 }
 
 // A streaming recognition result corresponding to a portion of the audio that is currently being processed.
 message RecognitionResult {
-    repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
-    Duration end_time = 2; // Time offset relative to the beginning of the audio.
-    bool is_final = 3; // Indicates whether a result represents an interim result that may change or not.
+    // List of one or more recognition hypotheses ordered in terms of accuracy.
+    repeated RecognitionAlternative alternatives = 1;
+
+    // Time offset relative to the beginning of the audio.
+    float duration = 2;
+
+    // Indicates whether a result represents an interim result that may change or not.
+    bool is_final = 3;
 }
 
 // Hypothesis-specific information.
 message RecognitionAlternative {
-    string transcript = 1; // Transcript text representing the words that the user spoke.
-    float confidence = 2; // The confidence estimate between 0.0 and 1.0.
-    repeated WordInfo words = 3; // A list of word-specific information for each recognized word.
+    // Transcript text representing the words that the user spoke.
+    string transcript = 1;
+
+    // The confidence estimate between 0.0 and 1.0.
+    float confidence = 2;
+
+    // A list of word-specific information for each recognized word.
+    repeated WordInfo words = 3;
 }
 
 // Word-specific information for recognized words.
 message WordInfo {
-    Duration start_time = 1; // Time offset relative to the beginning of the audio corresponding to the start of the spoken word.
-    Duration end_time = 2; // Time offset relative to the beginning of the audio corresponding to the end of the spoken word.
-    string word = 3; // The spoken word.
-    float confidence = 4; // The confidence estimate between 0.0 and 1.0.
+    // Time offset in seconds relative to the beginning of the audio corresponding to the start of the spoken word.
+    float start_time = 1;
+    // Time offset in seconds relative to the beginning of the audio corresponding to the end of the spoken word.
+    float end_time = 2;
+    // The spoken word.
+    string word = 3;
+    // The confidence estimate between 0.0 and 1.0.
+    float confidence = 4;
+    //Natural number identifying the speaker
+    uint32 speaker_id = 5;
 }
 
 message RecognitionError {
@@ -43,19 +63,4 @@ message RecognitionError {
 
     // Additional structured details about this error. Usually pictured as a JSON.
     map<string, string> metadata = 3;
-}
-
-// A Duration represents a signed, fixed-length span of time represented
-// as a count of seconds and fractions of seconds at nanosecond
-// resolution.
-message Duration {
-    int64 seconds = 1;
-  
-    // Signed fractions of a second at nanosecond resolution of the span
-    // of time. Durations less than one second are represented with a 0
-    // `seconds` field and a positive or negative `nanos` field. For durations
-    // of one second or more, a non-zero value for the `nanos` field must be
-    // of the same sign as the `seconds` field. Must be from -999,999,999
-    // to +999,999,999 inclusive.
-    int32 nanos = 2;
 }
