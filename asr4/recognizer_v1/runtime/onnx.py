@@ -199,6 +199,7 @@ class OnnxRuntime(Runtime):
         if lmAlgorithm == "viterbi":
             self._session.logger.debug(f" Using Viterbi algorithm for decoding")
             import simple_ctc
+
             self._decoder = simple_ctc.BeamSearchDecoder(
                 vocabulary,
                 cutoff_top_n=32,
@@ -210,13 +211,12 @@ class OnnxRuntime(Runtime):
         elif lmAlgorithm == "kenlm":
             self._session.logger.debug(f" Using KenLM algorithm for decoding")
             from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
-            self._decoder = W2lKenLMDecoder(
-                vocabulary,
-                lmFile,
-                lexicon
-            )
+
+            self._decoder = W2lKenLMDecoder(vocabulary, lmFile, lexicon)
         else:
-            raise ValueError(f"Language Model algorithm should be either 'viterbi' or 'kenlm' but '{lmAlgorithm}' was found.")
+            raise ValueError(
+                f"Language Model algorithm should be either 'viterbi' or 'kenlm' but '{lmAlgorithm}' was found."
+            )
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
