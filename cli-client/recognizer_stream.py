@@ -195,6 +195,7 @@ class SpeechCenterStreamingASRClient:
         for message_type, message in messages:
             logging.info("Sending streaming message " + message_type)
             yield message
+        logging.info("All audio messages sent")
 
     
 def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options) -> None:
