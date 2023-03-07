@@ -75,20 +75,16 @@ class TestOnnxSession(unittest.TestCase):
 
     def testEmptyModel(self):
         with self.assertRaises(FileNotFoundError):
-            _session = OnnxSession("", "", "", "viterbi")
+            _session = OnnxSession("")
 
     def testInvalidModel(self):
         with self.assertRaises(google.protobuf.message.DecodeError):
-            _session = OnnxSession(
-                self.rootpath.joinpath("README.md"), "", "", "viterbi"
-            )
+            _session = OnnxSession(self.rootpath.joinpath("README.md"))
 
     def testNonQuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.WARNING):
-            _session = OnnxSession(
-                str(self.datapath.joinpath("mnist-12.onnx")), "", "", "viterbi"
-            )
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12.onnx")))
         self.assertTrue(
             "Model not quantized - weight precision: 'FLOAT32'" in self.caplog.text
         )
@@ -96,9 +92,7 @@ class TestOnnxSession(unittest.TestCase):
     def testINT8QuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.INFO):
-            _session = OnnxSession(
-                str(self.datapath.joinpath("mnist-12-int8.onnx")), "", "", "viterbi"
-            )
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-int8.onnx")))
         self.assertTrue(
             "Model quantized - weight precision: 'INT8'" in self.caplog.text
         )
@@ -106,9 +100,7 @@ class TestOnnxSession(unittest.TestCase):
     def testFLOAT16QuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.WARNING):
-            _session = OnnxSession(
-                str(self.datapath.joinpath("mnist-12-float16.onnx")), "", "", "viterbi"
-            )
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-float16.onnx")))
         self.assertTrue(
             "Model Quantization Error: expected 'INT8' but retrieved 'FLOAT16' weight precision"
             in self.caplog.text
@@ -117,9 +109,7 @@ class TestOnnxSession(unittest.TestCase):
     def testUINT8QuantizedModel(self):
         LoggerService.configureLogger(logging.INFO)
         with self.caplog.at_level(logging.WARNING):
-            _session = OnnxSession(
-                str(self.datapath.joinpath("mnist-12-uint8.onnx")), "", "", "viterbi"
-            )
+            _session = OnnxSession(str(self.datapath.joinpath("mnist-12-uint8.onnx")))
         self.assertTrue(
             "Model Quantization Error: expected 'INT8' but retrieved 'UINT8' weight precision"
             in self.caplog.text

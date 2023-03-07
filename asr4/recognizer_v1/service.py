@@ -57,9 +57,6 @@ class RecognitionServiceConfiguration:
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
             self.model,
-            self.lm_model,
-            self.lexicon,
-            self.lm_algorithm,
             self.gpu,
             decoding_type=self.decodingType,
             providers=RecognitionServiceConfiguration._createProvidersList(self.gpu),
@@ -104,7 +101,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self._language = configuration.language
         self._formatter = formatter
         self._runtime = self._createRuntime(
-            configuration.createOnnxSession(), configuration.vocabulary
+            configuration.createOnnxSession(),
+            configuration.vocabulary,
+            configuration.lm_model,
+            configuration.lexicon,
+            configuration.lm_algorithm,
         )
         if formatter is None:
             self.logger.warning(
@@ -115,10 +116,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def _createRuntime(
         session: Session,
         vocabularyPath: Optional[str],
+        lexicon="",
+        lm_model="",
+        lm_algorithm="viterbi",
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
-            return OnnxRuntime(session, vocabulary)
+            return OnnxRuntime(session, vocabulary, lexicon, lm_model, lm_algorithm)
         else:
             return OnnxRuntime(session)
 
