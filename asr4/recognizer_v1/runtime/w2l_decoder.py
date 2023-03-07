@@ -92,10 +92,6 @@ class W2lKenLMDecoder:
             criterion_type=self.criterion_type,
         )
 
-        if self.asg_transitions is None:
-            N = 768
-            self.asg_transitions = []
-
         self.decoder = LexiconDecoder(
             self.decoder_opts,
             self.trie,
@@ -103,7 +99,7 @@ class W2lKenLMDecoder:
             self.silence,
             self._blank,
             self.unk_word,
-            self.asg_transitions,
+            [],
             False,
         )
 
