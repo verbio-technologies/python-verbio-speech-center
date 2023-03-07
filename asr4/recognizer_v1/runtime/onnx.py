@@ -1,7 +1,6 @@
 import abc
 import logging
 import soxr
-import math
 import numpy as np
 import numpy.typing as npt
 
@@ -225,21 +224,8 @@ class OnnxRuntime(Runtime):
                 vocabulary,
                 self.lexicon,
                 self.lm_model,
-                decoder_opts=self._decoder_opts(),
             )
             self.logger.debug(f" Using KenLM algorithm for decoding")
-
-    def _decoder_opts(self):
-        return {
-            "beam": 5,
-            "beam_size_token": len(self.DEFAULT_VOCABULARY),
-            "beam_threshold": 25.0,
-            "lm_weight": 0.2,
-            "word_score": -1,
-            "unk_weight": -math.inf,
-            "sil_weight": 0.0,
-            "nbest": 1,
-        }
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:

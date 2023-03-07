@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.typing as npt
+import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
@@ -38,7 +39,6 @@ class W2lKenLMDecoder:
         vocabulary: List[str],
         lexicon: str,
         kenlm_model: str,
-        decoder_opts: Dict[str, float],
     ) -> None:
         self.vocabulary = vocabulary
         self.criterion_type = CriterionType.CTC
@@ -58,7 +58,7 @@ class W2lKenLMDecoder:
         self.silence = vocabulary.index("|")
         self.unk_word = vocabulary.index("<unk>")
 
-        self.nbest = decoder_opts["nbest"]
+        self.nbest = 1
 
         self.lexicon = load_words(lexicon)
         self.word_dict = create_word_dict(self.lexicon)
@@ -69,13 +69,13 @@ class W2lKenLMDecoder:
         self.trie = self._initializeTrie()
 
         self.decoder_opts = LexiconDecoderOptions(
-            beam_size=decoder_opts["beam"],
-            beam_size_token=decoder_opts["beam_size_token"],
-            beam_threshold=decoder_opts["beam_threshold"],
-            lm_weight=decoder_opts["lm_weight"],
-            word_score=decoder_opts["word_score"],
-            unk_score=decoder_opts["unk_weight"],
-            sil_score=decoder_opts["sil_weight"],
+            beam_size=5,
+            beam_size_token=len(self.vocabulary),
+            beam_threshold=25.0,
+            lm_weight=0.2,
+            word_score=-1,
+            unk_score=-math.inf,
+            sil_score=0.0,
             log_add=False,
             criterion_type=self.criterion_type,
         )
