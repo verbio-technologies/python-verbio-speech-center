@@ -136,6 +136,11 @@ class TestOnnxRuntime(unittest.TestCase):
             runtime = OnnxRuntime(MockOnnxSession("", "", "", "viterbi"))
             runtime.run(b"", 8000)
 
+    def testEmptyInputKenLM(self):
+        with self.assertRaises(ValueError):
+            runtime = OnnxRuntime(MockOnnxSession("", "", "", "kenlm"))
+            runtime.run(b"", 8000)
+
     def testRandomInput(self):
         runtime = OnnxRuntime(MockOnnxSession("", "", ""))
         result = runtime.run(b"0000", 8000)
