@@ -65,19 +65,8 @@ class W2lKenLMDecoder:
         self.unk_word = self.word_dict.get_index("<unk>")
 
         self.lm = KenLM(kenlm_model, self.word_dict)
-        self.trie = Trie(len(self.vocabulary), self.silence)
 
-        start_state = self.lm.start(False)
-        for i, (word, spellings) in enumerate(self.lexicon.items()):
-            word_idx = self.word_dict.get_index(word)
-            _, score = self.lm.score(start_state, word_idx)
-            for spelling in spellings:
-                spelling_idxs = [
-                    self.vocabulary.index(token.lower()) for token in spelling
-                ]
-                assert self.unk_word not in spelling_idxs, f"{spelling} {spelling_idxs}"
-                self.trie.insert(spelling_idxs, word_idx, score)
-        self.trie.smear(SmearingMode.MAX)
+        self.trie = self._initializeTrie()
 
         self.decoder_opts = LexiconDecoderOptions(
             beam_size=decoder_opts["beam"],
@@ -101,6 +90,25 @@ class W2lKenLMDecoder:
             [],
             False,
         )
+
+    def _initializeTrie(
+        self,
+    ) -> Trie:
+        trie = Trie(len(self.vocabulary), self.silence)
+        start_state = self.lm.start(False)
+        for word, spellings in self.lexicon.items():
+            word_idx = self.word_dict.get_index(word)
+            _, score = self.lm.score(start_state, word_idx)
+            for spelling in spellings:
+                spelling_idxs = [
+                    self.vocabulary.index(token.lower()) for token in spelling
+                ]
+                assert (
+                    self.unk_word not in spelling_idxs
+                ), f"Some tokens in spelling '{spelling}' were unknown: {spelling_idxs}"
+                trie.insert(spelling_idxs, word_idx, score)
+        trie.smear(SmearingMode.MAX)
+        return trie
 
     def get_timesteps(self, token_idxs: List[int]) -> List[int]:
         timesteps = []
