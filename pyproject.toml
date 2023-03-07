@@ -84,10 +84,7 @@ cpu = [
     "numpy @ https://pypi.anaconda.org/intel/simple/numpy/1.22.3/numpy-1.22.3-0-cp39-cp39-manylinux2014_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "simple-ctc @ https://__token__:glpat-WfjrtC5qsrDz34rkc5yD@gitlab.lan.verbio.com/api/v4/projects/1445/packages/pypi/files/a100d92ebad4c6d2aa137c1e0a530143f00bf953a9ee9c883b9faead4effdb8c/simple_ctc-0.0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "simple-ctc @ https://__token__:glpat-WfjrtC5qsrDz34rkc5yD@gitlab.lan.verbio.com/api/v4/projects/1445/packages/pypi/files/cbf64abf1824339194ac608e7d5d4c0135e01bb56c2faac7e923972d7a373fc9/simple_ctc-0.0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'",
-    "flashlight-sequence @ https://__token__:glpat-W-DgCwRNpnDnLktyN-2S@gitlab.lan.verbio.com/api/v4/projects/1486/packages/pypi/files/dddc2e4e4be8b728a4750759d2efa08191db44f43ccc450a05984cc0a3677298/flashlight_sequence-0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "flashlight-sequence @ https://__token__:glpat-W-DgCwRNpnDnLktyN-2S@gitlab.lan.verbio.com/api/v4/projects/1486/packages/pypi/files/e6c5655beebd90f110a203d2c8c4ee14250ae69c5ded58420141a1ac3f9bcfe2/flashlight_sequence-0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "flashlight-sequence @ git+https://gitlab.lan.verbio.com/csr/asr4-python-wheels/cpu/flashlight-sequence.git ; python_version!='3.7' and python_version!='3.9'"
+    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'"
 ]
 gpu = [
     "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/8e401aff0afb20599bbaec6c958b5ae44c5535e14835328fea1d36a657ce3898/torch-1.12.0a0+git8c5c07c-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
@@ -104,10 +101,7 @@ gpu = [
     "onnxruntime-gpu >= 1.13.1 ; python_version!='3.7' and python_version!='3.9'",
     "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/dd46c5d18a1078b5e46bb3dfde441adb3a5cc00b29939396cd522154e84abaa2/simple_ctc-0.0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/00c8abf05423d962eced6a108bedf70895954c28d501caad27942a7d1607c8da/simple_ctc-0.0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'",
-    "flashlight-sequence @ https://__token__:glpat-yknKGRQtR64Ab5qLyxp4@gitlab.lan.verbio.com/api/v4/projects/1487/packages/pypi/files/1f85708525ea7c45be58ee530847555fe7caf9cf77488d4454aa3c01879d0f7e/flashlight_sequence-0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "flashlight-sequence @ https://__token__:glpat-yknKGRQtR64Ab5qLyxp4@gitlab.lan.verbio.com/api/v4/projects/1487/packages/pypi/files/39ded32e756ee52d0a15ec21d2eb7dd38987450f8661de26425f9ffd8a55f6cc/flashlight_sequence-0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "flashlight-sequence @ git+https://gitlab.lan.verbio.com/csr/asr4-python-wheels/gpu/flashlight-sequence.git ; python_version!='3.7' and python_version!='3.9'"
+    "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'"
 ]
 test = [
     "pytest >= 6.2.5",

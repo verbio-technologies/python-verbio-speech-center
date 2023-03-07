@@ -1,30 +1,22 @@
 import math
+import torch
 import numpy as np
 import numpy.typing as npt
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 
-from flashlight.lib.sequence.criterion import CpuViterbiPath
 from flashlight.lib.text.dictionary import create_word_dict, load_words
+from flashlight.lib.text.decoder.kenlm import KenLM
 from flashlight.lib.text.decoder import (
     CriterionType,
     LexiconDecoderOptions,
-    KenLM,
     SmearingMode,
     Trie,
     LexiconDecoder,
     DecodeResult,
 )
 
-_CUDA_ERROR = ""
 LEXICON = Dict[str, List[List[str]]]
-
-try:
-    from flashlight.lib.sequence.flashlight_lib_sequence_criterion import (
-        CudaViterbiPath,
-    )
-except Exception as e:
-    _CUDA_ERROR = f"Could not load Flashlight Sequence CudaViterbiPath: {e}"
 
 
 @dataclass
@@ -37,30 +29,26 @@ class _DecodeResult:
 class W2lKenLMDecoder:
     def __init__(
         self,
-        useGpu: bool,
         vocabulary: List[str],
-        lexicon: str,
-        kenlm_model: str,
+        lmFile: Optional[str],
+        lexicon: Optional[str],
     ) -> None:
-        if useGpu:
-            if _CUDA_ERROR:
-                raise Exception(_CUDA_ERROR)
-            self._flashlight = CudaViterbiPath
-        else:
-            self._flashlight = CpuViterbiPath
+        assert (
+            lmFile and lexicon
+        ), f"If KenLM is used, neither the language model nor the lexicon can be empty!"
 
+        self._nbest = 1
         self._blank = (
             vocabulary.index("<pad>")
             if "<pad>" in vocabulary
             else vocabulary.index("<s>")
         )
-        self.nbest = 1
         lexicon = load_words(lexicon)
-        self.word_dict = create_word_dict(lexicon)
-        lm = KenLM(kenlm_model, self.word_dict)
-        trie = self._initializeTrie(vocabulary, lexicon, lm)
+        self._wordDict = create_word_dict(lexicon)
+        lm = KenLM(lmFile, self._wordDict)
+        trie = self._initializeTrie(vocabulary, lm, lexicon)
 
-        decoder_opts = LexiconDecoderOptions(
+        decoderOpts = LexiconDecoderOptions(
             beam_size=5,
             beam_size_token=len(vocabulary),
             beam_threshold=25.0,
@@ -72,13 +60,13 @@ class W2lKenLMDecoder:
             criterion_type=CriterionType.CTC,
         )
 
-        self.decoder = LexiconDecoder(
-            options=decoder_opts,
+        self._decoder = LexiconDecoder(
+            options=decoderOpts,
             trie=trie,
             lm=lm,
             sil_token_idx=vocabulary.index("|"),
             blank_token_idx=self._blank,
-            unk_token_idx=self.word_dict.get_index("<unk>"),
+            unk_token_idx=self._wordDict.get_index("<unk>"),
             transitions=[],
             is_token_lm=False,
         )
@@ -86,14 +74,14 @@ class W2lKenLMDecoder:
     def _initializeTrie(
         self,
         vocabulary: List[str],
-        lexicon: LEXICON,
         languageModel: KenLM,
+        lexicon: LEXICON,
     ) -> Trie:
         trie = Trie(len(vocabulary), vocabulary.index("|"))
         startState = languageModel.start(False)
         unkWord = vocabulary.index("<unk>")
         for word, spellings in lexicon.items():
-            wordIdx = self.word_dict.get_index(word)
+            wordIdx = self._wordDict.get_index(word)
             _, score = languageModel.score(startState, wordIdx)
             for spelling in spellings:
                 spellingIdxs = [vocabulary.index(token.lower()) for token in spelling]
@@ -104,8 +92,9 @@ class W2lKenLMDecoder:
         trie.smear(SmearingMode.MAX)
         return trie
 
-    def decode(self, emissions: npt.NDArray[np.float32]):
+    def decode(self, emissions: torch.Tensor):
         B = emissions.shape[0]
+        emissions = emissions.numpy()
         allWords, allScores, allTimesteps = [], [], []
         for b in range(B):
             hypothesis = self._decodeLexicon(emissions, b)
@@ -121,16 +110,16 @@ class W2lKenLMDecoder:
         self, emissions: npt.NDArray[np.float32], b: int
     ) -> List[DecodeResult]:
         _, T, N = emissions.shape
-        emissions_ptr = emissions.ctypes.data + b * (emissions.strides[0] // 2)
-        results = self.decoder.decode(emissions_ptr, T, N)
-        return results[: self.nbest]
+        emissionsPtr = emissions.ctypes.data + b * (emissions.strides[0] // 2)
+        results = self._decoder.decode(emissionsPtr, T, N)
+        return results[: self._nbest]
 
     def _postProcessHypothesis(
         self, hypotesis: List[DecodeResult]
     ) -> Tuple[List[List[str]], List[float], List[List[int]]]:
         words, scores, timesteps = [], [], []
         for result in hypotesis:
-            words.append([self.word_dict.get_entry(x) for x in result.words if x >= 0])
+            words.append([self._wordDict.get_entry(x) for x in result.words if x >= 0])
             scores.append(result.score)
             timesteps.append(self._getTimesteps(result.tokens))
         return (words, scores, timesteps)
