@@ -19,24 +19,6 @@ import torch.nn.functional as F
 import math
 
 
-class MockW2lKenLMDecoder:
-    def __init__(
-        self,
-        useGpu: bool,
-        vocabulary: List[str],
-        lexicon: str,
-        kenlm_model: str,
-        decoder_opts: Dict[str, float],
-        **kwargs,
-    ) -> None:
-        self.kenlm_model = kenlm_model
-        self.lexicon = lexicon
-        self.vocabulary = vocabulary
-        self.gpu = useGpu
-        session_options = kwargs.pop("sess_options", None)
-        providers = kwargs.pop("providers", None)
-
-
 class TestW2lKenLMDecoder(unittest.TestCase):
     @pytest.fixture(autouse=True)
     def rootpath(self, pytestconfig):
@@ -80,26 +62,12 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             "z",
         ]
 
-    @pytest.fixture(autouse=True)
-    def decoderOpts(self):
-        self.decoder_opts = {
-            "beam": 5,
-            "beam_size_token": 32,
-            "beam_threshold": 25.0,
-            "lm_weight": 0.2,
-            "word_score": -1,
-            "unk_weight": -math.inf,
-            "sil_weight": 0.0,
-            "nbest": 1,
-        }
-
     def testGetTimesteps(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
             False,
             self.vocabulary,
             str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
             str(self.datapath.joinpath("en-us_lm.bin")),
-            self.decoder_opts,
         )
         token_idxs = [7, 8, 9, 10]
         self.assertEqual(decoder.get_timesteps([token_idxs]), [0])
@@ -110,7 +78,6 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             self.vocabulary,
             str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
             str(self.datapath.joinpath("en-us_lm.bin")),
-            self.decoder_opts,
         )
         self.assertEqual(
             len(decoder.decode(np.array([[[0, 0, 0]]])).label_sequences), 1
