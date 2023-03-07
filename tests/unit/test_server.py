@@ -20,7 +20,6 @@ class MockArguments(argparse.Namespace):
         self.workers = 4
         self.lexicon = None
         self.lm_model = None
-        self.unit_lm = False
         self.lm_algorithm = "viterbi"
 
 

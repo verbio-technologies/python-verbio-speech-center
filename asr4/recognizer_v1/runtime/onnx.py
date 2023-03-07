@@ -74,15 +74,9 @@ class Session(abc.ABC):
 
 
 class OnnxSession(Session):
-    def __init__(
-        self,
-        path_or_bytes: Union[str, bytes],
-        useGpu=False,
-        **kwargs,
-    ) -> None:
+    def __init__(self, path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(path_or_bytes)
         self.logger = logging.getLogger("ASR4")
-        self._gpu = useGpu
         self.__checkModelWeightPrecision(path_or_bytes)
         self._session = onnxruntime.InferenceSession(
             path_or_bytes,
@@ -144,10 +138,6 @@ class OnnxSession(Session):
     def get_inputs_names(self) -> List[str]:
         return [input.name for input in self._session.get_inputs()]
 
-    @property
-    def gpu(self) -> bool:
-        self._gpu
-
 
 class OnnxRuntime(Runtime):
     DEFAULT_VOCABULARY: List[str] = [
@@ -189,24 +179,26 @@ class OnnxRuntime(Runtime):
         self,
         session: Session,
         vocabulary: List[str] = DEFAULT_VOCABULARY,
-        lm_model="",
-        lexicon="",
-        lm_algorithm="viterbi",
+        lmFile: Optional[str] = None,
+        lexicon: Optional[str] = None,
+        lmAlgorithm: str = "viterbi",
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        self.logger = logging.getLogger("ASR4")
+        self._initializeDecoder(vocabulary, lmFile, lexicon, lmAlgorithm)
 
-        self.lm_algorithm = lm_algorithm
-        self.lm_model = lm_model
-        self.lexicon = lexicon
-
-        if self.lm_algorithm == "viterbi":
-            self.logger.debug(f" Using Viterbi algorithm for decoding")
+    def _initializeDecoder(
+        self,
+        vocabulary: List[str],
+        lmFile: Optional[str],
+        lexicon: Optional[str],
+        lmAlgorithm: str,
+    ) -> None:
+        if lmAlgorithm == "viterbi":
+            self._session.logger.debug(f" Using Viterbi algorithm for decoding")
             import simple_ctc
-
             self._decoder = simple_ctc.BeamSearchDecoder(
                 vocabulary,
                 cutoff_top_n=32,
@@ -215,17 +207,16 @@ class OnnxRuntime(Runtime):
                 blank_id=0,
                 is_nll=False,
             )
-
-        elif self.lm_algorithm == "kenlm":
+        elif lmAlgorithm == "kenlm":
+            self._session.logger.debug(f" Using KenLM algorithm for decoding")
             from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
-
             self._decoder = W2lKenLMDecoder(
-                self._session.gpu,
                 vocabulary,
-                self.lexicon,
-                self.lm_model,
+                lmFile,
+                lexicon
             )
-            self.logger.debug(f" Using KenLM algorithm for decoding")
+        else:
+            raise ValueError(f"Language Model algorithm should be either 'viterbi' or 'kenlm' but '{lmAlgorithm}' was found.")
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:
@@ -299,15 +290,11 @@ class OnnxRuntime(Runtime):
     def _decodeTotal(self, y):
         y = np.concatenate(y, axis=1)
         normalized_y = F.softmax(torch.from_numpy(y), dim=2)
-        if self.lm_algorithm != "viterbi":
-            normalized_y = normalized_y.numpy()
         self._session.logger.debug(" - decoding global")
         return self._decoder.decode(normalized_y)
 
     def _decodePartial(self, label_sequences, scores, timesteps, yi):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
-        if self.lm_algorithm != "viterbi":
-            normalized_y = normalized_y.numpy()
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
         label_sequences += decoded_part.label_sequences[0][0]

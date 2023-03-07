@@ -16,18 +16,10 @@ from asr4.recognizer import Language
 
 
 class MockOnnxSession(Session):
-    def __init__(
-        self,
-        _path_or_bytes: Union[str, bytes],
-        unit_lm=False,
-        useGpu=False,
-        **kwargs,
-    ) -> None:
+    def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
-        self.unit_lm = unit_lm
-        self.gpu = useGpu
-        session_options = kwargs.pop("sess_options", None)
-        providers = kwargs.pop("providers", None)
+        _session_options = kwargs.pop("sess_options", None)
+        _providers = kwargs.pop("providers", None)
         self.logger = logging.getLogger("TEST")
 
     def run(

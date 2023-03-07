@@ -55,7 +55,6 @@ class MockArguments(argparse.Namespace):
         self.workers = 4
         self.lexicon = None
         self.lm_model = None
-        self.unit_lm = False
         self.lm_algorithm = "viterbi"
 
     def createVocabulary(self) -> str:
@@ -76,30 +75,13 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
     def createOnnxSession(self):
         return MockOnnxSession(
             self.model,
-            self.lexicon,
-            self.lm_model,
-            self.lm_algorithm,
             language=self.language,
         )
 
 
 class MockOnnxSession(Session):
-    def __init__(
-        self,
-        _path_or_bytes: Union[str, bytes],
-        lm_model: str,
-        lexicon: str,
-        lm_algorithm: str,
-        unit_lm=False,
-        useGpu=False,
-        **kwargs,
-    ) -> None:
+    def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
-        self.gpu = useGpu
-        self.lexicon = lexicon
-        self.lm_model = lm_model
-        self.unit_lm = unit_lm
-        self.lm_algorithm = lm_algorithm
         self.logger = logging.getLogger("TEST")
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,

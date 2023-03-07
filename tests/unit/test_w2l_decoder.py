@@ -1,7 +1,6 @@
 import unittest
 import pytest
-
-import numpy as np
+import torch
 
 from asr4.recognizer_v1.runtime import w2l_decoder
 
@@ -51,23 +50,21 @@ class TestW2lKenLMDecoder(unittest.TestCase):
 
     def testGetTimesteps(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
-            False,
             self.vocabulary,
-            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
             str(self.datapath.joinpath("en-us_lm.bin")),
+            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
         )
         token_idxs = [7, 8, 9, 10]
         self.assertEqual(decoder._getTimesteps([token_idxs]), [0])
 
     def testDecode(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
-            False,
             self.vocabulary,
-            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
             str(self.datapath.joinpath("en-us_lm.bin")),
+            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
         )
         self.assertEqual(
-            len(decoder.decode(np.array([[[0, 0, 0]]])).label_sequences), 1
+            len(decoder.decode(torch.tensor([[[0, 0, 0]]])).label_sequences), 1
         )
-        self.assertEqual(len(decoder.decode(np.array([[[0, 0, 0]]])).scores), 1)
-        self.assertEqual(len(decoder.decode(np.array([[[0, 0, 0]]])).timesteps), 1)
+        self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).scores), 1)
+        self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).timesteps), 1)
