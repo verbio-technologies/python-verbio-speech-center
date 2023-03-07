@@ -119,7 +119,9 @@ class W2lKenLMDecoder:
     ) -> Tuple[List[List[str]], List[float], List[List[int]]]:
         words, scores, timesteps = [], [], []
         for result in hypotesis:
-            words.append([self._wordDict.get_entry(x) for x in result.words if x >= 0])
+            words.append(
+                " ".join([self._wordDict.get_entry(x) for x in result.words if x >= 0])
+            )
             scores.append(result.score)
             timesteps.append(self._getTimesteps(result.tokens))
         return (words, scores, timesteps)
