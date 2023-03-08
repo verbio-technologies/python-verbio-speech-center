@@ -31,9 +31,12 @@ class RecognitionServiceConfiguration:
         self.formatterModelPath = None
         self.language = Language.EN_US
         self.model = None
+        self.lmFile = None
+        self.lexicon = None
         self.gpu = False
         self.numberOfWorkers = 1
         self.decodingType = DecodingType["GLOBAL"]
+        self.lmAlgorithm = "viterbi"
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -42,11 +45,14 @@ class RecognitionServiceConfiguration:
             self.formatterModelPath = arguments.formatter
             self.language = self._validateLanguage(arguments.language)
             self.model = arguments.model
+            self.lexicon = arguments.lexicon
+            self.lmFile = arguments.lm_model
             self.gpu = arguments.gpu
             self.numberOfWorkers = arguments.workers
             self.decodingType = DecodingType[
                 getattr(arguments, "decoding_type", "GLOBAL")
             ]
+            self.lmAlgorithm = arguments.lm_algorithm
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
@@ -94,7 +100,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self._language = configuration.language
         self._formatter = formatter
         self._runtime = self._createRuntime(
-            configuration.createOnnxSession(), configuration.vocabulary
+            configuration.createOnnxSession(),
+            configuration.vocabulary,
+            configuration.lmFile,
+            configuration.lexicon,
+            configuration.lmAlgorithm,
         )
         if formatter is None:
             self.logger.warning(
@@ -105,10 +115,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def _createRuntime(
         session: Session,
         vocabularyPath: Optional[str],
+        lmFile: Optional[str],
+        lexicon: Optional[str],
+        lmAlgorithm: Optional[str],
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
-            return OnnxRuntime(session, vocabulary)
+            return OnnxRuntime(session, vocabulary, lmFile, lexicon, lmAlgorithm)
         else:
             return OnnxRuntime(session)
 

@@ -18,8 +18,8 @@ from asr4.recognizer import Language
 class MockOnnxSession(Session):
     def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
-        session_options = kwargs.pop("sess_options", None)
-        providers = kwargs.pop("providers", None)
+        _session_options = kwargs.pop("sess_options", None)
+        _providers = kwargs.pop("providers", None)
         self.logger = logging.getLogger("TEST")
 
     def run(
@@ -110,7 +110,12 @@ class TestOnnxRuntime(unittest.TestCase):
 
     def testEmptyInput(self):
         with self.assertRaises(ValueError):
-            runtime = OnnxRuntime(MockOnnxSession(""))
+            runtime = OnnxRuntime(MockOnnxSession(""), "", "", "viterbi")
+            runtime.run(b"", 8000)
+
+    def testEmptyInputKenLM(self):
+        with self.assertRaises(ValueError):
+            runtime = OnnxRuntime(MockOnnxSession(""), "", "", "kenlm")
             runtime.run(b"", 8000)
 
     def testRandomInput(self):
@@ -155,7 +160,7 @@ class TestOnnxRuntime(unittest.TestCase):
             scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
             timesteps=[[[]]],
         )
-        runtime = OnnxRuntime(MockOnnxSession(""))
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "viterbi")
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
-        self.assertEqual(onnxResult.score, 0)
+        self.assertEqual(onnxResult.score, 0.0)

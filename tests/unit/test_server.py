@@ -18,6 +18,9 @@ class MockArguments(argparse.Namespace):
         self.model = "model.onnx"
         self.gpu = False
         self.workers = 4
+        self.lexicon = None
+        self.lm_model = None
+        self.lm_algorithm = "viterbi"
 
 
 class TestServerConfiguration(unittest.TestCase):

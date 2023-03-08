@@ -1,0 +1,357 @@
+a	a |
+abbreviation	a b b r e v i a t i o n |
+about	a b o u t |
+aboutshow	a b o u t s h o w |
+after	a f t e r |
+again	a g a i n |
+againwhat	a g a i n w h a t |
+air	a i r |
+aircraft	a i r c r a f t |
+airfare	a i r f a r e |
+airline	a i r l i n e |
+airlines	a i r l i n e s |
+airlinesi	a i r l i n e s i |
+airlinesi'd	a i r l i n e s i ' d |
+airlinesshow	a i r l i n e s s h o w |
+airlineswhat	a i r l i n e s w h a t |
+airlineswhich	a i r l i n e s w h i c h |
+airplane	a i r p l a n e |
+airport	a i r p o r t |
+airportdo	a i r p o r t d o |
+airportwhat	a i r p o r t w h a t |
+all	a l l |
+american	a m e r i c a n |
+and	a n d |
+angeles	a n g e l e s |
+any	a n y |
+april	a p r i l |
+are	a r e |
+arrange	a r r a n g e |
+arrival	a r r i v a l |
+arriving	a r r i v i n g |
+aspenhow	a s p e n h o w |
+at	a t |
+atlanta	a t l a n t a |
+august	a u g u s t |
+available	a v a i l a b l e |
+bangor	b a n g o r |
+based	b a s e d |
+be	b e |
+beach	b e a c h |
+beachfor	b e a c h f o r |
+beachwhat	b e a c h w h a t |
+before	b e f o r e |
+between	b e t w e e n |
+book	b o o k |
+boston	b o s t o n |
+burbank	b u r b a n k |
+burbankwhat	b u r b a n k w h a t |
+burlington	b u r l i n g t o n |
+burlingtonwhat	b u r l i n g t o n w h a t |
+by	b y |
+can	c a n |
+cee	c e e |
+charleston	c h a r l e s t o n |
+charlottewhat	c h a r l o t t e w h a t |
+cheapest	c h e a p e s t |
+chicago	c h i c a g o |
+chicagolist	c h i c a g o l i s t |
+chicagomake	c h i c a g o m a k e |
+chicagothe	c h i c a g o t h e |
+chicagowhat	c h i c a g o w h a t |
+cincinnati	c i n c i n n a t i |
+cincinnatiin	c i n c i n n a t i i n |
+city	c i t y |
+cityi'd	c i t y i ' d |
+cityshow	c i t y s h o w |
+class	c l a s s |
+classhow	c l a s s h o w |
+classplease	c l a s s p l e a s e |
+classshow	c l a s s s h o w |
+cleveland	c l e v e l a n d |
+coach	c o a c h |
+columbus	c o l u m b u s |
+columbushow	c o l u m b u s h o w |
+come	c o m e |
+cost	c o s t |
+costi	c o s t i |
+costs	c o s t s |
+countyare	c o u n t y a r e |
+countycost	c o u n t y c o s t |
+countywhat	c o u n t y w h a t |
+daylist	d a y l i s t |
+days	d a y s |
+dee	d e e |
+delta	d e l t a |
+denver	d e n v e r |
+denveri'd	d e n v e r i ' d |
+depart	d e p a r t |
+departs	d e p a r t s |
+departure	d e p a r t u r e |
+detroit	d e t r o i t |
+detroitwhat	d e t r o i t w h a t |
+diego	d i e g o |
+display	d i s p l a y |
+do	d o |
+does	d o e s |
+dollarshow	d o l l a r s h o w |
+dollarslist	d o l l a r s l i s t |
+double	d o u b l e |
+downtown	d o w n t o w n |
+earliest	e a r l i e s t |
+earlyshow	e a r l y s h o w |
+eastern	e a s t e r n |
+economy	e c o n o m y |
+eight	e i g h t |
+eighti'll	e i g h t i ' l l |
+el	e l |
+eleventhhow	e l e v e n t h h o w |
+eli	e l i |
+em	e m |
+emhow	e m h o w |
+emis	e m i s |
+emplease	e m p l e a s e |
+emwhat	e m w h a t |
+ess	e s s |
+expensive	e x p e n s i v e |
+fare	f a r e |
+farelist	f a r e l i s t |
+faresi'd	f a r e s i ' d |
+fewhat	f e w h a t |
+fifteen	f i f t e e n |
+fifteenthwhat	f i f t e e n t h w h a t |
+fifty	f i f t y |
+first	f i r s t |
+five	f i v e |
+fiveplease	f i v e p l e a s e |
+flight	f l i g h t |
+flightall	f l i g h t a l l |
+flightat	f l i g h t a t |
+flightfind	f l i g h t f i n d |
+flightgive	f l i g h t g i v e |
+flightplease	f l i g h t p l e a s e |
+flights	f l i g h t s |
+flightshow	f l i g h t s h o w |
+flightsshow	f l i g h t s s h o w |
+flightswhat	f l i g h t s w h a t |
+flightwhat	f l i g h t w h a t |
+fly	f l y |
+flying	f l y i n g |
+flywhat	f l y w h a t |
+for	f o r |
+forty	f o r t y |
+four	f o u r |
+fourgive	f o u r g i v e |
+fourteen	f o u r t e e n |
+from	f r o m |
+get	g e t |
+give	g i v e |
+go	g o |
+ground	g r o u n d |
+hartford	h a r t f o r d |
+hartfordbook	h a r t f o r d b o o k |
+hartfordcan	h a r t f o r d c a n |
+has	h a s |
+have	h a v e |
+havehow	h a v e h o w |
+hours	h o u r s |
+houston	h o u s t o n |
+houstonwhich	h o u s t o n w h i c h |
+hundred	h u n d r e d |
+i	i |
+if	i f |
+in	i n |
+indianapolis	i n d i a n a p o l i s |
+information	i n f o r m a t i o n |
+initials	i n i t i a l s |
+into	i n t o |
+is	i s |
+it	i t |
+itcan	i t c a n |
+itis	i t i s |
+january	j a n u a r y |
+jose	j o s e |
+josewhat	j o s e w h a t |
+juan	j u a n |
+july	j u l y |
+just	j u s t |
+kansas	k a n s a s |
+kind	k i n d |
+know	k n o w |
+lake	l a k e |
+las	l a s |
+last	l a s t |
+latest	l a t e s t |
+layover	l a y o v e r |
+least	l e a s t |
+leave	l e a v e |
+leaves	l e a v e s |
+leaving	l e a v i n g |
+less	l e s s |
+like	l i k e |
+list	l i s t |
+little	l i t t l e |
+long	l o n g |
+longer	l o n g e r |
+los	l o s |
+louishow	l o u i s h o w |
+lunch	l u n c h |
+make	m a k e |
+many	m a n y |
+may	m a y |
+me	m e |
+meal	m e a l |
+meali'd	m e a l i ' d |
+meals	m e a l s |
+meanplease	m e a n p l e a s e |
+meanshow	m e a n s h o w |
+memphis	m e m p h i s |
+memphiscan	m e m p h i s c a n |
+memphisi	m e m p h i s i |
+miami	m i a m i |
+miamiwhat	m i a m i w h a t |
+milwaukee	m i l w a u k e e |
+minneapolis	m i n n e a p o l i s |
+monday	m o n d a y |
+montreal	m o n t r e a l |
+montreali'll	m o n t r e a l i ' l l |
+morningi	m o r n i n g i |
+morninginformation	m o r n i n g i n f o r m a t i o n |
+much	m u c h |
+nashville	n a s h v i l l e |
+need	n e e d |
+new	n e w |
+newarkinformation	n e w a r k i n f o r m a t i o n |
+nightwhat	n i g h t w h a t |
+nine	n i n e |
+nineteenthlittle	n i n e t e e n t h l i t t l e |
+ninewhat	n i n e w h a t |
+nonstop	n o n s t o p |
+nonstopwhat	n o n s t o p w h a t |
+november	n o v e m b e r |
+nowhow	n o w h o w |
+number	n u m b e r |
+o	o |
+o'clock	o ' c l o c k |
+of	o f |
+oh	o h |
+on	o n |
+one	o n e |
+onei	o n e i |
+onei'll	o n e i ' l l |
+onewhat	o n e w h a t |
+onewhen	o n e w h e n |
+ontario	o n t a r i o |
+ontariowhat	o n t a r i o w h a t |
+onwhat	o n w h a t |
+or	o r |
+orlando	o r l a n d o |
+orlandolist	o r l a n d o l i s t |
+out	o u t |
+paul	p a u l |
+pee	p e e |
+petersburg	p e t e r s b u r g |
+phoenix	p h o e n i x |
+pitt	p i t t |
+pittsburghwhat	p i t t s b u r g h w h a t |
+plane	p l a n e |
+pleaselist	p l e a s e l i s t |
+pleasewhat	p l e a s e w h a t |
+remain	r e m a i n |
+reservation	r e s e r v a t i o n |
+return	r e t u r n |
+rock	r o c k |
+rocki	r o c k i |
+rockplease	r o c k p l e a s e |
+rockwhat	r o c k w h a t |
+round	r o u n d |
+saint	s a i n t |
+salt	s a l t |
+same	s a m e |
+san	s a n |
+santa	s a n t a |
+saturday	s a t u r d a y |
+saturdaywhat	s a t u r d a y w h a t |
+schedule	s c h e d u l e |
+seattle	s e a t t l e |
+serve	s e r v e |
+served	s e r v e d |
+serves	s e r v e s |
+service	s e r v i c e |
+seven	s e v e n |
+sevenis	s e v e n i s |
+seventy	s e v e n t y |
+show	s h o w |
+six	s i x |
+sixplease	s i x p l e a s e |
+stop	s t o p |
+stopover	s t o p o v e r |
+stopswhat	s t o p s w h a t |
+subways	s u b w a y s |
+sundayalso	s u n d a y a l s o |
+tacoma	t a c o m a |
+tacomadoes	t a c o m a d o e s |
+take	t a k e |
+tampa	t a m p a |
+tampaare	t a m p a a r e |
+tampashow	t a m p a s h o w |
+tampawhat	t a m p a w h a t |
+tee	t e e |
+ten	t e n |
+than	t h a n |
+that	t h a t |
+the	t h e |
+then	t h e n |
+there	t h e r e |
+these	t h e s e |
+third	t h i r d |
+thirtiethi'd	t h i r t i e t h i ' d |
+thirty	t h i r t y |
+this	t h i s |
+those	t h o s e |
+thousand	t h o u s a n d |
+three	t h r e e |
+threeshow	t h r e e s h o w |
+threewhat	t h r e e w h a t |
+thursday	t h u r s d a y |
+ticket	t i c k e t |
+ticketi	t i c k e t i |
+tickets	t i c k e t s |
+time	t i m e |
+times	t i m e s |
+timewhat	t i m e w h a t |
+to	t o |
+torna	t o r n a |
+toronto	t o r o n t o |
+torontoi	t o r o n t o i |
+torontoshow	t o r o n t o s h o w |
+transportation	t r a n s p o r t a t i o n |
+travel	t r a v e l |
+trip	t r i p |
+twelve	t w e l v e |
+twenty	t w e n t y |
+twentycould	t w e n t y c o u l d |
+two	t w o |
+twocan	t w o c a n |
+twoi'd	t w o i ' d |
+type	t y p e |
+u	u |
+united	u n i t e d |
+used	u s e d |
+vegas	v e g a s |
+want	w a n t |
+way	w a y |
+wednesdaydo	w e d n e s d a y d o |
+wednesdayplease	w e d n e s d a y p l e a s e |
+week	w e e k |
+westchester	w e s t c h e s t e r |
+what	w h a t |
+which	w h i c h |
+with	w i t h |
+would	w o u l d |
+york	y o r k |
+yorkplease	y o r k p l e a s e |
+yorkwhat	y o r k w h a t |
+you	y o u |
+zero	z e r o |
+zerosort	z e r o s o r t |
