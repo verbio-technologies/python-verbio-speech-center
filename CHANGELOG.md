@@ -6,6 +6,14 @@
 
 ### Removed :no_entry:
 
+## 0.2.9 (2023-03-10)
+
+### Patch (3 changes)
+
+- [Update formatter version to have logs](csr/asr4@3ed1582c978f923943a68151c4dffb70b822fba5) ([merge request](csr/asr4!213))
+- [Feature/eee 456 using lm in decoder](csr/asr4@79bd3e2915706740160421f4c6c4a8483a1eb0ed) ([merge request](csr/asr4!203))
+- [Feature/eee 456 using lm in decoder](csr/asr4@7f48ade3d98fc26fc5747471882545a6fdf064ac) ([merge request](csr/asr4!203))
+
 ## 0.2.8 (2023-03-08)
 
 ### Patch (8 changes)
