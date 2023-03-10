@@ -6,7 +6,6 @@ import numpy.typing as npt
 
 import torch
 import torch.nn.functional as F
-import simple_ctc
 
 import onnx
 import onnxruntime
@@ -23,6 +22,8 @@ from onnxruntime.quantization.quant_utils import (
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
 
+from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
+
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
 
@@ -34,12 +35,6 @@ class DecodingType(Enum):
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
-
-
-class _DecodeResult(NamedTuple):
-    label_sequences: List[List[List[str]]]
-    scores: List[List[float]]
-    timesteps: List[List[List[int]]]
 
 
 class Session(abc.ABC):
@@ -181,20 +176,47 @@ class OnnxRuntime(Runtime):
     ]
 
     def __init__(
-        self, session: Session, vocabulary: List[str] = DEFAULT_VOCABULARY
+        self,
+        session: Session,
+        vocabulary: List[str] = DEFAULT_VOCABULARY,
+        lmFile: Optional[str] = None,
+        lexicon: Optional[str] = None,
+        lmAlgorithm: str = "viterbi",
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        self._decoder = simple_ctc.BeamSearchDecoder(
-            vocabulary,
-            cutoff_top_n=32,
-            cutoff_prob=0.8,
-            beam_size=8,
-            blank_id=0,
-            is_nll=False,
-        )
+        self._initializeDecoder(vocabulary, lmFile, lexicon, lmAlgorithm)
+
+    def _initializeDecoder(
+        self,
+        vocabulary: List[str],
+        lmFile: Optional[str],
+        lexicon: Optional[str],
+        lmAlgorithm: str,
+    ) -> None:
+        if lmAlgorithm == "viterbi":
+            self._session.logger.debug(f" Using Viterbi algorithm for decoding")
+            import simple_ctc
+
+            self._decoder = simple_ctc.BeamSearchDecoder(
+                vocabulary,
+                cutoff_top_n=32,
+                cutoff_prob=0.8,
+                beam_size=8,
+                blank_id=0,
+                is_nll=False,
+            )
+        elif lmAlgorithm == "kenlm":
+            self._session.logger.debug(f" Using KenLM algorithm for decoding")
+            from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
+
+            self._decoder = W2lKenLMDecoder(vocabulary, lmFile, lexicon)
+        else:
+            raise ValueError(
+                f"Language Model algorithm should be either 'viterbi' or 'kenlm' but '{lmAlgorithm}' was found."
+            )
 
     def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
         if not input:

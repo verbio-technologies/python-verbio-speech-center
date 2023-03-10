@@ -53,6 +53,9 @@ class MockArguments(argparse.Namespace):
         self.model = "path_to_models/model.onnx"
         self.gpu = False
         self.workers = 4
+        self.lexicon = None
+        self.lm_model = None
+        self.lm_algorithm = "viterbi"
 
     def createVocabulary(self) -> str:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
@@ -70,7 +73,10 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
         super().__init__(arguments)
 
     def createOnnxSession(self):
-        return MockOnnxSession(self.model, language=self.language)
+        return MockOnnxSession(
+            self.model,
+            language=self.language,
+        )
 
 
 class MockOnnxSession(Session):
