@@ -196,6 +196,7 @@ class OnnxRuntime(Runtime):
         lexicon: Optional[str],
         lmAlgorithm: str,
     ) -> None:
+        self.lmAlgorithm = lmAlgorithm
         if lmAlgorithm == "viterbi":
             self._session.logger.debug(f" Using Viterbi algorithm for decoding")
             import simple_ctc
@@ -224,7 +225,7 @@ class OnnxRuntime(Runtime):
         x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
         self._session.logger.debug(" - postprocess")
-        return self._postprocess(y)
+        return self._postprocess(y, lmAlgorithm=self.lmAlgorithm)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -289,7 +290,11 @@ class OnnxRuntime(Runtime):
 
     def _decodeTotal(self, y):
         y = np.concatenate(y, axis=1)
-        normalized_y = F.softmax(torch.from_numpy(y), dim=2)
+        normalized_y = (
+            F.softmax(torch.from_numpy(y), dim=2)
+            if self.lmAlgorithm == "viterbi"
+            else torch.from_numpy(y)
+        )
         self._session.logger.debug(" - decoding global")
         return self._decoder.decode(normalized_y)
 
@@ -303,7 +308,7 @@ class OnnxRuntime(Runtime):
         return label_sequences, scores, timesteps
 
     @staticmethod
-    def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
+    def _postprocess(output: _DecodeResult, lmAlgorithm="viterbi") -> OnnxRuntimeResult:
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
@@ -312,7 +317,10 @@ class OnnxRuntime(Runtime):
             .replace("<pad>", "")
             .strip()
         )
-        score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+        if lmAlgorithm == "viterbi":
+            score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+        else:
+            score = output.scores[0][0]
         return OnnxRuntimeResult(
             sequence=sequence,
             score=score,
