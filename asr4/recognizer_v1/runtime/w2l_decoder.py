@@ -1,4 +1,3 @@
-import math
 import torch
 import numpy as np
 import numpy.typing as npt
@@ -38,23 +37,31 @@ class W2lKenLMDecoder:
         ), f"If KenLM is used, neither the language model nor the lexicon can be empty!"
 
         self._nbest = 1
-        self._blank = (
-            vocabulary.index("<pad>")
-            if "<pad>" in vocabulary
+
+        self.blank = (
+            vocabulary.index("<ctc_blank>")
+            if "<ctc_blank>" in vocabulary
             else vocabulary.index("<s>")
         )
+        if "<sep>" in vocabulary:
+            self.silence = vocabulary.index("<sep>")
+        elif "|" in vocabulary:
+            self.silence = vocabulary.index("|")
+        else:
+            self.silence = vocabulary.index("</s>")
+
         lexicon = load_words(lexicon)
         self._wordDict = create_word_dict(lexicon)
         lm = KenLM(lmFile, self._wordDict)
         trie = self._initializeTrie(vocabulary, lm, lexicon)
 
         decoderOpts = LexiconDecoderOptions(
-            beam_size=5,
+            beam_size=15,
             beam_size_token=len(vocabulary),
             beam_threshold=25.0,
             lm_weight=0.2,
             word_score=-1,
-            unk_score=-math.inf,
+            unk_score=-np.inf,
             sil_score=0.0,
             log_add=False,
             criterion_type=CriterionType.CTC,
@@ -64,8 +71,8 @@ class W2lKenLMDecoder:
             options=decoderOpts,
             trie=trie,
             lm=lm,
-            sil_token_idx=vocabulary.index("|"),
-            blank_token_idx=self._blank,
+            sil_token_idx=self.silence,
+            blank_token_idx=self.blank,
             unk_token_idx=self._wordDict.get_index("<unk>"),
             transitions=[],
             is_token_lm=False,
@@ -77,7 +84,7 @@ class W2lKenLMDecoder:
         languageModel: KenLM,
         lexicon: LEXICON,
     ) -> Trie:
-        trie = Trie(len(vocabulary), vocabulary.index("|"))
+        trie = Trie(len(vocabulary), self.silence)
         startState = languageModel.start(False)
         unkWord = vocabulary.index("<unk>")
         for word, spellings in lexicon.items():
@@ -129,7 +136,7 @@ class W2lKenLMDecoder:
     def _getTimesteps(self, tokenIdxs: List[int]) -> List[int]:
         timesteps = []
         for i, tokenIdx in enumerate(tokenIdxs):
-            if tokenIdx == self._blank:
+            if tokenIdx == self.blank:
                 continue
             if i == 0 or tokenIdx != tokenIdxs[i - 1]:
                 timesteps.append(i)

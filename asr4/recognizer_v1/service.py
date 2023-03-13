@@ -6,6 +6,7 @@ import argparse
 from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
 
 from asr4.types.language import Language
+
 from .types import RecognizerServicer
 from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
