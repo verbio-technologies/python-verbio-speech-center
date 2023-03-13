@@ -14,27 +14,3 @@ aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
 aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
 aws configure set region "${AWS_REGION}"
 aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${AWS_URL}"
-
-
-repository="${REPO}-${LANGUAGE}"
-output=$(aws ecr describe-repositories --repository-names "${repository}" 2>&1)
-if [ $? -ne 0 ]; then
-    if echo ${output} | grep -q RepositoryNotFoundException; then
-	echo "Creating repository ${repository}"
-	aws ecr create-repository --repository-name "${repository}"
-    else
-	>&2 echo ${output}
-    fi
-fi
-
-
-repository="${REPO}-gpu-${LANGUAGE}"
-output=$(aws ecr describe-repositories --repository-names "${repository}" 2>&1)
-if [ $? -ne 0 ]; then
-    if echo ${output} | grep -q RepositoryNotFoundException; then
-	echo "Creating repository ${repository}"
-	aws ecr create-repository --repository-name "${repository}"
-    else
-	>&2 echo ${output}
-    fi
-fi
