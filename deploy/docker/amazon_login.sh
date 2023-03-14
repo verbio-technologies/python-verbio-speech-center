@@ -19,16 +19,17 @@ aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AW
 
 create_ecr_repository () {
     repository=$1
-    AWS_URL=$2
+    url=$2
+    ecr_id=$3
     
-	echo "Creating repository ${repository} in ${AWS_URL}"
+	echo "Creating repository ${repository} in ${url}"
     export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" \
         $(aws sts assume-role \
         --role-arn arn:aws:iam::321880733545:role/ECS-AssumeRole-Squad2 \
         --role-session-name AWSCLI-Session-Asr4 \ 
         --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" \
         --output text))
-	aws ecr create-repository --repository-name "${repository}"
+	aws ecr create-repository --registry-id ${ecr_id} --repository-name "${repository}"
 }
 
 
@@ -36,7 +37,7 @@ repository="${REPO}-${LANGUAGE}"
 output=$(aws ecr describe-repositories --registry-id ${AWS_ECR_ID} --repository-names "${repository}" 2>&1)
 if [ $? -ne 0 ]; then
     if echo ${output} | grep -q RepositoryNotFoundException; then
-    create_ecr_repository ${repository} ${AWS_URL}
+    create_ecr_repository ${repository} ${AWS_URL} ${AWS_ECR_ID}
     else
 	>&2 echo ${output}
     fi
@@ -47,7 +48,7 @@ repository="${REPO}-gpu-${LANGUAGE}"
 output=$(aws ecr describe-repositories --registry-id ${AWS_ECR_ID} --repository-names "${repository}" 2>&1)
 if [ $? -ne 0 ]; then
     if echo ${output} | grep -q RepositoryNotFoundException; then
-	create_ecr_repository ${repository} ${AWS_URL}
+	create_ecr_repository ${repository} ${AWS_URL} ${AWS_ECR_ID}
     else
 	>&2 echo ${output}
     fi
