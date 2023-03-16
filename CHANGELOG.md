@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.2.10 (2023-03-16)
+
+### Patch (2 changes)
+
+- [fix/ Replace invalid Speech Center ECR Repository Name](csr/asr4@505e0ab906e916752e95cab50d96f3ddf3bb3e4b) ([merge request](csr/asr4!216))
+- [New AWS account settings](csr/asr4@292b8448640801abbde6c4dffdce0bf4200a28f0) ([merge request](csr/asr4!214))
+
 ## 0.2.9 (2023-03-10)
 
 ### Patch (3 changes)
