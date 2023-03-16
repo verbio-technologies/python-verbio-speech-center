@@ -302,7 +302,7 @@ class OnnxRuntime(Runtime):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
-        if len(label_sequences)>0 and self.lmAlgorithm == "kenlm":
+        if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
             label_sequences += " "
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
