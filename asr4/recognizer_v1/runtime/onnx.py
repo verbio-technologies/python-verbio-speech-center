@@ -309,8 +309,7 @@ class OnnxRuntime(Runtime):
         timesteps += [decoded_part.timesteps]
         return label_sequences, scores, timesteps
 
-    @staticmethod
-    def _postprocess(output: _DecodeResult) -> OnnxRuntimeResult:
+    def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
