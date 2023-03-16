@@ -225,7 +225,7 @@ class OnnxRuntime(Runtime):
         x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
         self._session.logger.debug(" - postprocess")
-        return self._postprocess(y, lmAlgorithm=self.lmAlgorithm)
+        return self._postprocess(y)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -302,13 +302,14 @@ class OnnxRuntime(Runtime):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
+        if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
+            label_sequences += " "
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
         timesteps += [decoded_part.timesteps]
         return label_sequences, scores, timesteps
 
-    @staticmethod
-    def _postprocess(output: _DecodeResult, lmAlgorithm="viterbi") -> OnnxRuntimeResult:
+    def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
@@ -317,7 +318,7 @@ class OnnxRuntime(Runtime):
             .replace("<pad>", "")
             .strip()
         )
-        if lmAlgorithm == "viterbi":
+        if self.lmAlgorithm == "viterbi":
             score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
         else:
             score = output.scores[0][0]
