@@ -14,6 +14,8 @@ ARG MODEL_VERSION
 COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
 
+COPY dummy asr4-$LANGUAGE-lm.* /
+
 COPY server.py /server.py
 COPY init-gpu.sh /init.sh
 

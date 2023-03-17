@@ -14,6 +14,7 @@ COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
 COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
+COPY dummy asr4-$LANGUAGE-lm.* /
 
 RUN pip install asr4-$VERSION-py3-none-any.whl[server,cpu]
 RUN python -m pip install intel_extension_for_pytorch -f https://software.intel.com/ipex-whl-stable-cpu
