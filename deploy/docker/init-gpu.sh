@@ -9,7 +9,7 @@ export LM="--lm-algorithm viterbi"
 
 if [ -e asr4-${LANGUAGE}-lm.bin ]
 do
-    export LM="--lm-algorithm kenlm --lm-model /asr4-${LANGUAGE}-lm.bin"
+    export LM="--lm-algorithm kenlm --lm-model /asr4-${LANGUAGE}-lm.bin --lexicon /asr4-${LANGUAGE}-lm.lexicon.txt"
 done
 
 python3 server.py -s ${workers} -L 1 -w 0 -m /asr4-$LANGUAGE.onnx -d /dict.ltr.txt ${LM} -l $LANGUAGE -v "${LOG_LEVEL}" -f /format-model.$LANGUAGE.fm --host [::]:${port} --gpu
