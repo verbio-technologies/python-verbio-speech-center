@@ -14,6 +14,7 @@ ARG MODEL_VERSION
 COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /asr4-$LANGUAGE.onnx
 COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
 
+ARG LM_VERSION
 COPY dummy asr4-$LANGUAGE-lm.* /
 
 COPY server.py /server.py
@@ -29,7 +30,7 @@ LABEL service=asr4
 LABEL device=GPU
 LABEL vendor="Verbio Technologies"
 LABEL model_version=${MODEL_VERSION}
-LABEL lm_version=${MODEL_VERSION}
+LABEL lm_version=${LM_VERSION}
 LABEL service_version=${VERSION}
 LABEL language=${LANGUAGE}
 LABEL flags="LOG_LEVEL${LOG_LEVEL}, WORKERS=${WORKERS}"
