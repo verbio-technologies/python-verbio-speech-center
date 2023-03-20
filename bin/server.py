@@ -136,7 +136,7 @@ def _parseArguments() -> argparse.Namespace:
         help="Type of algorithm for language model decoding.",
     )
     parser.add_argument(
-        "--lexicon",
+        "--lm-lexicon",
         type=str,
         dest="lexicon",
         required=False,
