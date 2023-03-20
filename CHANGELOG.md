@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.2.11 (2023-03-20)
+
+### Patch (2 changes)
+
+- [Add LM to EN-US](csr/asr4@de8bb1d3db15459b0eb6839a8a3dcb52966d5d66) ([merge request](csr/asr4!218))
+- [Fixes output format issues when using language model](csr/asr4@9f603454ec4fb67744e86b3571183492c891b72f) ([merge request](csr/asr4!217))
+
 ## 0.2.10 (2023-03-16)
 
 ### Patch (2 changes)
