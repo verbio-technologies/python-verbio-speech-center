@@ -27,6 +27,7 @@ LABEL service=asr4
 LABEL device=CPU
 LABEL vendor="Verbio Technologies"
 LABEL model_version=${MODEL_VERSION}
+LABEL lm_version=${MODEL_VERSION}
 LABEL service_version=${VERSION}
 LABEL language=${LANGUAGE}
 LABEL flags="LOG_LEVEL${LOG_LEVEL}, WORKERS=${WORKERS}"
