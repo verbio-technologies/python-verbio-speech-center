@@ -239,15 +239,20 @@ image:release:gpu:
     - echo ${MODEL_VERSION}
     - SERVICE_VERSION=$(cat VERSION)
     - echo SERVICE_VERSION=${SERVICE_VERSION}
+    - export LM_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:lm | awk '/1/ -F " " {print $2}')
+    - echo LM_VERSION=${LM_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx deploy/docker/
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
+    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.bin deploy/docker/asr4-${LANGUAGE}-lm.bin || true
+    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.lexicon.txt deploy/docker/asr4-${LANGUAGE}-lm.lexicon.txt || true
+    - touch deploy/docker/dummy
     - cp bin/server.py deploy/docker/
   script:
-    - docker build --pull deploy/docker/ -f deploy/docker/${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg VERSION=${SERVICE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
+    - docker build --pull deploy/docker/ -f deploy/docker/${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg LM_VERSION=${LM_VERSION} --build-arg VERSION=${SERVICE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
     
 .template_docker_deploy:
     extends:
