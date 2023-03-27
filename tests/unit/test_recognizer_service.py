@@ -18,7 +18,7 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
-from asr4.types import Duration
+from asr4.recognizer.types import Duration
 
 from typing import Any, Dict, List, Optional, Union
 
