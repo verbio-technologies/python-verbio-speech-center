@@ -6,6 +6,7 @@ import tempfile
 import numpy as np
 import argparse
 
+from asr4.recognizer import Duration
 from asr4.recognizer import RecognizerService
 from asr4.recognizer import RecognitionServiceConfiguration
 from asr4.recognizer import RecognizeRequest
@@ -18,7 +19,6 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
-from asr4.recognizer.types import Duration
 
 from typing import Any, Dict, List, Optional, Union
 
