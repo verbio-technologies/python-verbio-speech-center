@@ -142,6 +142,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as bytes and receive the transcription of the audio.
         """
+        duration = self.calculateAudioDuration(request)
         self.logger.info(
             "Received request "
             f"[language={request.config.parameters.language}] "
@@ -151,7 +152,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self.eventSource(request)
         response = self.eventHandle(request)
         self.logger.info(f"Recognition result: '{response}'")
-        return self.eventSink(response)
+        return self.eventSink(response, duration)
 
     async def StreamingRecognize(
         self,
@@ -263,7 +264,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         else:
             return " ".join(words)
 
-    def eventSink(self, response: str) -> RecognizeResponse:
+    def eventSink(self, response: str, duration: Duration) -> RecognizeResponse:
         words = map(
             lambda token: WordInfo(
                 start_time=Duration(seconds=0, nanos=0),
@@ -274,8 +275,18 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             response.split(" "),
         )
         alternative = RecognitionAlternative(
-            transcript=response, confidence=1.0, words=words
+            transcript=response, confidence=1.0, words=words, duration=duration
         )
         return RecognizeResponse(
             alternatives=[alternative], end_time=Duration(seconds=0, nanos=0)
         )
+
+    def calculateAudioDuration(self, request: RecognizeRequest) -> (int,int):
+        if request.HasField("audio"):
+            duration = len(request.audio)
+            frames = duration / 4
+            timeSec = math.floor(frames / 160_000)
+            timeNanoSec = (frames * 6250) % 1_000_000_000
+            self.logger.info(f"[+] AUDIO BYTES LENGTH = {duration}")
+            return Duration(seconds=timeSec, nanos=timeNanoSec)
+        return Duration(seconds=0, nanos=0)
