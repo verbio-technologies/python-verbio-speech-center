@@ -264,7 +264,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         else:
             return " ".join(words)
 
-    def eventSink(self, response: str, duration: Duration=Duration(seconds=0,nanos=0)) -> RecognizeResponse:
+    def eventSink(
+        self, response: str, duration: Duration = Duration(seconds=0, nanos=0)
+    ) -> RecognizeResponse:
         words = map(
             lambda token: WordInfo(
                 start_time=Duration(seconds=0, nanos=0),

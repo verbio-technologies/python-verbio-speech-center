@@ -601,7 +601,9 @@ class TestRecognizerService(unittest.TestCase):
         transcription = "".join(
             random.choices(string.ascii_letters + string.digits, k=16)
         )
-        innerRecognizeResponse = service.eventSink(transcription, Duration(seconds=1, nanos=0))
+        innerRecognizeResponse = service.eventSink(
+            transcription, Duration(seconds=1, nanos=0)
+        )
         streamingResponse = StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
