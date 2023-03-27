@@ -18,6 +18,7 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
+from asr4.types import Duration
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -600,7 +601,7 @@ class TestRecognizerService(unittest.TestCase):
         transcription = "".join(
             random.choices(string.ascii_letters + string.digits, k=16)
         )
-        innerRecognizeResponse = service.eventSink(transcription)
+        innerRecognizeResponse = service.eventSink(transcription, Duration(seconds=1, nanos=0))
         streamingResponse = StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
