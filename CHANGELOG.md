@@ -6,6 +6,10 @@
 
 ### Removed :no_entry:
 
+## 0.2.12 (2023-03-27)
+
+No changes.
+
 ## 0.2.11 (2023-03-20)
 
 ### Patch (2 changes)
