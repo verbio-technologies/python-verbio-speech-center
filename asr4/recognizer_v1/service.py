@@ -281,7 +281,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             alternatives=[alternative], end_time=Duration(seconds=0, nanos=0)
         )
 
-    def calculateAudioDuration(self, request: RecognizeRequest) -> (int,int):
+    def calculateAudioDuration(self, request: RecognizeRequest) -> Duration:
         if request.HasField("audio"):
             duration = len(request.audio)
             frames = duration / 4
