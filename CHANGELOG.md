@@ -6,6 +6,12 @@
 
 ### Removed :no_entry:
 
+## 0.2.13 (2023-03-27)
+
+### Patch (1 change)
+
+- [Update expected metrics](csr/asr4@6949d0ac461b2e30f145abaab9fbcff62ebce08a) ([merge request](csr/asr4!221))
+
 ## 0.2.12 (2023-03-27)
 
 No changes.
