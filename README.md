@@ -191,6 +191,12 @@ optional arguments:
                         Log levels. Options: CRITICAL, ERROR, WARNING, INFO and DEBUG. By default reads env variable LOG_LEVEL.
 ```
 
+## GRPC
+
+In case of needing to modify the definition of the GRPC protocol, you need to recompile the protobuf files this way:
+```sh
+python3 -m grpc_tools.protoc --proto_path=proto asr4.proto --python_out=asr4/recognizer_v1/types --grpc_python_out=asr4/recognizer_v1/types/
+```
 
 ## Formatting & Linting
 
