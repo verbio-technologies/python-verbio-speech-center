@@ -10,7 +10,6 @@ try:
 except:
     pass
 
-from asr4.recognizer_v1 import Duration
 from asr4.recognizer_v1 import RecognitionConfig
 from asr4.recognizer_v1 import RecognitionParameters
 from asr4.recognizer_v1 import RecognitionResource
@@ -37,7 +36,6 @@ __all__ = (
     "SERVICES_NAMES",
     "Session",
     "DecodingType",
-    "Duration",
     "OnnxSession",
     "OnnxRuntime",
     "OnnxRuntimeResult",

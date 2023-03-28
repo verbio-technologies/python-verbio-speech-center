@@ -13,7 +13,6 @@ except Exception as e:
         % str(e),
     )
 
-from .types import Duration
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
@@ -43,7 +42,6 @@ __all__ = (
     "OnnxRuntime",
     "OnnxRuntimeResult",
     "DecodingType",
-    "Duration",
     "RecognizeRequest",
     "StreamingRecognizeRequest",
     "RecognizeResponse",
