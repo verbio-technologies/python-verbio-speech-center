@@ -277,10 +277,12 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             response.split(" "),
         )
         alternative = RecognitionAlternative(
-            transcript=response, confidence=1.0, words=words, duration=duration
+            transcript=response, confidence=1.0, words=words
         )
         return RecognizeResponse(
-            alternatives=[alternative], end_time=Duration(seconds=0, nanos=0)
+            alternatives=[alternative],
+            end_time=Duration(seconds=0, nanos=0),
+            duration=duration,
         )
 
     def calculateAudioDuration(self, request: RecognizeRequest) -> Duration:
