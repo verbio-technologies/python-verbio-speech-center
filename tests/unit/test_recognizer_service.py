@@ -560,6 +560,7 @@ class TestRecognizerService(unittest.TestCase):
                     ),
                 }
             ],
+            "duration": {},
             "end_time": {"seconds": 0, "nanos": 0},
         }
         self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
