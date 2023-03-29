@@ -152,8 +152,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-            f"[length={duration.seconds}.{duration.nanos}] "
-            f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
+            f"[length={duration.seconds}.%09d]"
+            f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]" % duration.nanos
         )
         self.eventSource(request)
         response = self.eventHandle(request)
@@ -185,7 +185,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         self.eventSource(innerRecognizeRequest)
         duration = self.calculateAudioDuration(innerRecognizeRequest)
         self.logger.debug(
-            f" Processig audio with length [length={duration.seconds}.{duration.nanos}]"
+            f" Processig audio with length [length={duration.seconds}.%09d]" % duration.nanos
         )
         response = self.eventHandle(innerRecognizeRequest)
         self.logger.info(f"Recognition result: '{response}'")
