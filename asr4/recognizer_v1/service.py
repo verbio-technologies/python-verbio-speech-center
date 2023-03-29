@@ -26,6 +26,8 @@ from .types import AudioEncoding
 from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
+_PCM_FRAME_SIZE = 2
+_SAMPLE_RATE = 160_000
 
 class RecognitionServiceConfiguration:
     def __init__(self, arguments: Optional[argparse.Namespace] = None):
@@ -289,7 +291,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def calculateAudioDuration(self, request: RecognizeRequest) -> Duration:
         duration = len(request.audio)
-        frames = duration / 4
-        timeSec = int(math.floor(frames / 160_000))
+        frames = duration / _PCM_FRAME_SIZE
+        timeSec = int(math.floor(frames / _SAMPLE_RATE))
         timeNanoSec = (int(frames) * 6250) % 1_000_000_000
         return Duration(seconds=timeSec, nanos=timeNanoSec)
