@@ -27,7 +27,6 @@ from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
 
-
 class RecognitionServiceConfiguration:
     def __init__(self, arguments: Optional[argparse.Namespace] = None):
         self.vocabulary = None
