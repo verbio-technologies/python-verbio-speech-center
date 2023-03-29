@@ -216,6 +216,41 @@ class TestRecognizerService(unittest.TestCase):
             DEFAULT_ENGLISH_MESSAGE,
         )
 
+    def testCheckDurationInStreaming(self):
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=16000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                ),
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"01234567890123456789",
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"01234567890123456789",
+            )
+            yield StreamingRecognizeRequest(
+                audio=b"0123456789",
+            )
+
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
+
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.duration.nanos,
+                5 * 312500,
+            )
+            self.assertEqual(
+                response.results.duration.seconds,
+                0,
+            )
+
     @classmethod
     def tearDownClass(cls):
         cls._worker.kill()
