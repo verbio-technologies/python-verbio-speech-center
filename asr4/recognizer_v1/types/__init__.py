@@ -34,6 +34,7 @@ __all__ = (
     "StreamingRecognizeResponse",
     "StreamingRecognitionResult",
     "RecognitionAlternative",
+    "Duration",
     "WordInfo",
     "RecognitionConfig",
     "RecognitionParameters",

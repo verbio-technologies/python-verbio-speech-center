@@ -2,6 +2,7 @@ import abc
 import grpc
 import logging
 import argparse
+import math
 
 from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
 
@@ -147,6 +148,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+            f"[length={duration.seconds}.{duration.nanos}] "
             f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
         )
         self.eventSource(request)
@@ -286,11 +288,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
 
     def calculateAudioDuration(self, request: RecognizeRequest) -> Duration:
-        if request.HasField("audio"):
-            duration = len(request.audio)
-            frames = duration / 4
-            timeSec = math.floor(frames / 160_000)
-            timeNanoSec = (frames * 6250) % 1_000_000_000
-            self.logger.info(f"[+] AUDIO BYTES LENGTH = {duration}")
-            return Duration(seconds=timeSec, nanos=timeNanoSec)
-        return Duration(seconds=0, nanos=0)
+        duration = len(request.audio)
+        frames = duration / 4
+        timeSec = int(math.floor(frames / 160_000))
+        timeNanoSec = (int(frames) * 6250) % 1_000_000_000
+        return Duration(seconds=timeSec, nanos=timeNanoSec)
