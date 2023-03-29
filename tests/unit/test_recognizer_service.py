@@ -615,3 +615,24 @@ class TestRecognizerService(unittest.TestCase):
             streamingResponse.results.alternatives[0].transcript, transcription
         )
         self.assertEqual(streamingResponse.results.alternatives[0].confidence, 1.0)
+
+    def testAudioDuration(self):
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
+
+        request = RecognizeRequest(audio=b"")
+        duration = service.calculateAudioDuration(request)
+        self.assertEqual(duration.seconds, 0)
+        self.assertEqual(duration.nanos, 0)
+
+        request = RecognizeRequest(audio=b"0124")
+        duration = service.calculateAudioDuration(request)
+        self.assertEqual(duration.seconds, 0)
+        self.assertEqual(duration.nanos, 6250)
+
+        request = RecognizeRequest(audio=b"12345678901234567890")
+        duration = service.calculateAudioDuration(request)
+        self.assertEqual(duration.seconds, 0)
+        self.assertEqual(duration.nanos, 31250)
