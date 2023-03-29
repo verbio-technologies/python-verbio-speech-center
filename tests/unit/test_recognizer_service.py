@@ -622,17 +622,30 @@ class TestRecognizerService(unittest.TestCase):
         arguments.vocabulary = None
         service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
 
-        request = RecognizeRequest(audio=b"")
+        config16=RecognitionConfig(parameters=RecognitionParameters(sample_rate_hz=16000))
+        config1=RecognitionConfig(parameters=RecognitionParameters(sample_rate_hz=1))
+
+        request = RecognizeRequest(audio=b"", config=config16)
         duration = service.calculateAudioDuration(request)
         self.assertEqual(duration.seconds, 0)
         self.assertEqual(duration.nanos, 0)
 
-        request = RecognizeRequest(audio=b"0124")
+        request = RecognizeRequest(audio=b"0124", config=config16)
         duration = service.calculateAudioDuration(request)
         self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 12500)
+        self.assertEqual(duration.nanos, 125000)
 
-        request = RecognizeRequest(audio=b"12345678901234567890")
+        request = RecognizeRequest(audio=b"12345678901234567890", config=config16)
         duration = service.calculateAudioDuration(request)
         self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 62500)
+        self.assertEqual(duration.nanos, 625000)
+       
+        request = RecognizeRequest(audio=b"0124", config=config1)
+        duration = service.calculateAudioDuration(request)
+        self.assertEqual(duration.seconds, 2)
+        self.assertEqual(duration.nanos, 0)
+
+        with self.assertRaises(ZeroDivisionError):
+            request = RecognizeRequest(audio=b"0124",
+                                       config=RecognitionConfig(parameters=RecognitionParameters(sample_rate_hz=0)))
+            service.calculateAudioDuration(request)
