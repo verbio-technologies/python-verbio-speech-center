@@ -630,9 +630,9 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(audio=b"0124")
         duration = service.calculateAudioDuration(request)
         self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 6250)
+        self.assertEqual(duration.nanos, 12500)
 
         request = RecognizeRequest(audio=b"12345678901234567890")
         duration = service.calculateAudioDuration(request)
         self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 31250)
+        self.assertEqual(duration.nanos, 62500)
