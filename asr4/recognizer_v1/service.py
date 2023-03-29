@@ -189,12 +189,12 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         response = self.eventHandle(innerRecognizeRequest)
         self.logger.info(f"Recognition result: '{response}'")
-        innerRecognizeResponse = self.eventSink(response)
+        innerRecognizeResponse = self.eventSink(response, duration)
         yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
                 end_time=innerRecognizeResponse.end_time,
-                duration=duration,
+                duration=innerRecognizeResponse.duration,
                 is_final=True,
             )
         )
