@@ -28,6 +28,7 @@ from google.protobuf.reflection import GeneratedProtocolMessageType
 
 _PCM_FRAME_SIZE = 2
 _SAMPLE_RATE = 160_000
+_NANOS_PER_SAMPLE = 6250
 
 
 class RecognitionServiceConfiguration:
@@ -182,8 +183,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     innerRecognizeRequest.audio + request.audio
                 )
         self.eventSource(innerRecognizeRequest)
+        duration = self.calculateAudioDuration(innerRecognizeRequest)
         self.logger.debug(
-            f" Processig audio with length %d" % len(innerRecognizeRequest.audio)
+            f" Processig audio with length [length={duration.seconds}.{duration.nanos}]"
         )
         response = self.eventHandle(innerRecognizeRequest)
         self.logger.info(f"Recognition result: '{response}'")
@@ -192,6 +194,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
                 end_time=innerRecognizeResponse.end_time,
+                duration=duration,
                 is_final=True,
             )
         )
@@ -294,5 +297,5 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         duration = len(request.audio)
         frames = duration / _PCM_FRAME_SIZE
         timeSec = int(math.floor(frames / _SAMPLE_RATE))
-        timeNanoSec = (int(frames) * 6250) % 1_000_000_000
+        timeNanoSec = (int(frames) * _NANOS_PER_SAMPLE) % 1_000_000_000
         return Duration(seconds=timeSec, nanos=timeNanoSec)
