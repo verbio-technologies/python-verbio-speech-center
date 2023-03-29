@@ -29,6 +29,7 @@ from google.protobuf.reflection import GeneratedProtocolMessageType
 _PCM_FRAME_SIZE = 2
 _SAMPLE_RATE = 160_000
 
+
 class RecognitionServiceConfiguration:
     def __init__(self, arguments: Optional[argparse.Namespace] = None):
         self.vocabulary = None
