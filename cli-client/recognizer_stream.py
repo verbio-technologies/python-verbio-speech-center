@@ -11,6 +11,7 @@ import argparse
 import logging
 import wave
 import grpc
+import json
 
 import recognition_pb2_grpc
 import recognition_streaming_request_pb2
@@ -117,7 +118,7 @@ class SpeechCenterStreamingASRClient:
         duration = response.result.duration
         for alternative in response.result.alternatives:
             if alternative.transcript:
-                logging.info("Transcript: '%s', Confidence: %f, Duration: %f", alternative.transcript, alternative.confidence, duration)
+                print('\t"transcript": "%s",\n\t"confidence": "%f",\n\t"duration": "%f"' % (alternative.transcript, alternative.confidence, duration))
 
     def _response_watcher(
             self,
@@ -126,7 +127,7 @@ class SpeechCenterStreamingASRClient:
             logging.info("Running response watcher")
             for response in response_iterator:
                 json = MessageToJson(response)
-                logging.debug("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
+                logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
                 self._print_result(response)
 
                 if response.result and response.result.is_final:
