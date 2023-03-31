@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.3.0 (2023-03-31)
+
+### Patch (2 changes)
+
+- [feature/ Add duration field to the ASR4 Streaming Response](csr/asr4@59b6b04b7629fa066adad939c31070e329e4d03f) ([merge request](csr/asr4!222))
+- [Bump minor version](csr/asr4@ae4b6d22d957a0a3e98754b46225bab6c597048f) ([merge request](csr/asr4!223))
+
 ## 0.2.13 (2023-03-27)
 
 ### Patch (1 change)
