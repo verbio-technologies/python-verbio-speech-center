@@ -1,5 +1,6 @@
 import os
 import grpc
+import wave
 import pytest
 import asyncio
 import unittest
@@ -244,11 +245,107 @@ class TestRecognizerService(unittest.TestCase):
         for response in response_iterator:
             self.assertEqual(
                 response.results.duration.nanos,
-                5 * 312500,
+                5 * 312400,
             )
             self.assertEqual(
                 response.results.duration.seconds,
                 0,
+            )
+
+    def testCheckDurationInStreamingWithRealAudio(self):
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=16000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                ),
+            )
+
+            FIVE_SECONDS_IN_BYTES = 40000
+            totalRead = 0
+            with wave.open(
+                os.path.join(
+                    self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut.wav"
+                ),
+                "r",
+            ) as f:
+                n = f.getnframes()
+                while totalRead < n:
+                    audio = f.readframes(FIVE_SECONDS_IN_BYTES)
+                    yield StreamingRecognizeRequest(audio=audio)
+                    totalRead += FIVE_SECONDS_IN_BYTES
+
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
+
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.duration.nanos,
+                960000000,
+            )
+            self.assertEqual(
+                response.results.duration.seconds,
+                31,
+            )
+            self.assertEqual(
+                response.results.end_time.nanos,
+                960000000,
+            )
+            self.assertEqual(
+                response.results.end_time.seconds,
+                31,
+            )
+
+    def testCheckDurationInStreamingWithRealAudioAndWrongSampleRate(self):
+        def _streamingRecognize():
+            yield StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language="en-US", sample_rate_hz=8000
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                ),
+            )
+
+            FIVE_SECONDS_IN_BYTES = 40000
+            totalRead = 0
+            with wave.open(
+                os.path.join(
+                    self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut.wav"
+                ),
+                "r",
+            ) as f:
+                n = f.getnframes()
+                while totalRead < n:
+                    audio = f.readframes(FIVE_SECONDS_IN_BYTES)
+                    yield StreamingRecognizeRequest(audio=audio)
+                    totalRead += FIVE_SECONDS_IN_BYTES
+
+        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
+        response_iterator = RecognizerStub(channel).StreamingRecognize(
+            _streamingRecognize(), timeout=10
+        )
+
+        for response in response_iterator:
+            self.assertEqual(
+                response.results.duration.nanos,
+                920000000,
+            )
+            self.assertEqual(
+                response.results.duration.seconds,
+                63,
+            )
+            self.assertEqual(
+                response.results.end_time.nanos,
+                920000000,
+            )
+            self.assertEqual(
+                response.results.end_time.seconds,
+                63,
             )
 
     @classmethod

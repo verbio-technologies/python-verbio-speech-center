@@ -2,7 +2,7 @@ import abc
 import grpc
 import logging
 import argparse
-import math
+from datetime import timedelta
 
 from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
 
@@ -143,19 +143,19 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as bytes and receive the transcription of the audio.
         """
+        self.eventSource(request)
         duration = self.calculateAudioDuration(request)
         self.logger.info(
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-            f"[length={duration.seconds}.%09d]"
+            f"[length={len(request.audio)}] "
+            f"[duration={duration.ToTimedelta().total_seconds()}] "
             f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
-            % duration.nanos
         )
-        self.eventSource(request)
         response = self.eventHandle(request)
         self.logger.info(f"Recognition result: '{response}'")
-        return self.eventSink(response, duration)
+        return self.eventSink(response, duration, duration)
 
     async def StreamingRecognize(
         self,
@@ -165,7 +165,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        innerRecognizeRequest = RecognizeRequest()
+        innerRecognizeRequest, totalDuration = RecognizeRequest(), Duration()
         async for request in request_iterator:
             if request.HasField("config"):
                 self.logger.info(
@@ -179,15 +179,17 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 innerRecognizeRequest.audio = (
                     innerRecognizeRequest.audio + request.audio
                 )
-        self.eventSource(innerRecognizeRequest)
-        duration = self.calculateAudioDuration(innerRecognizeRequest)
-        self.logger.debug(
-            f" Processig audio with length [length={duration.seconds}.%09d]"
-            % duration.nanos
-        )
+                self.eventSource(innerRecognizeRequest)
+                duration = self.calculateAudioDuration(innerRecognizeRequest)
+                self.logger.info(
+                    f" Received partial audio "
+                    f"[length={len(request.audio)}] "
+                    f"[duration={duration.ToTimedelta().total_seconds()}] "
+                )
+        totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
         response = self.eventHandle(innerRecognizeRequest)
         self.logger.info(f"Recognition result: '{response}'")
-        innerRecognizeResponse = self.eventSink(response, duration)
+        innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
         yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
@@ -271,7 +273,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return " ".join(words)
 
     def eventSink(
-        self, response: str, duration: Duration = Duration(seconds=0, nanos=0)
+        self,
+        response: str,
+        duration: Duration = Duration(seconds=0, nanos=0),
+        endTime: Duration = Duration(seconds=0, nanos=0),
     ) -> RecognizeResponse:
         words = map(
             lambda token: WordInfo(
@@ -287,16 +292,25 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         return RecognizeResponse(
             alternatives=[alternative],
-            end_time=duration,
+            end_time=endTime,
             duration=duration,
         )
 
     def calculateAudioDuration(self, request: RecognizeRequest) -> Duration:
-        FRAME_SIZE = 2
-        if request.config.parameters.audio_encoding == 0:
-            FRAME_SIZE = 2
-        NANOS_PER_SAMPLE = int(1_000_000_000 / request.config.parameters.sample_rate_hz)
-        frames = len(request.audio) / FRAME_SIZE
-        timeSec = int(math.floor(frames / request.config.parameters.sample_rate_hz))
-        timeNanoSec = (int(frames) * NANOS_PER_SAMPLE) % 1_000_000_000
-        return Duration(seconds=timeSec, nanos=timeNanoSec)
+        duration = Duration()
+        audioEncoding = AudioEncoding.parse(request.config.parameters.audio_encoding)
+        # We only support 1 channel
+        bytesPerFrame = audioEncoding.getSampleSizeInBytes() * 1
+        framesNumber = len(request.audio) / bytesPerFrame
+        td = timedelta(
+            seconds=(framesNumber / request.config.parameters.sample_rate_hz)
+        )
+        duration.FromTimedelta(td=td)
+        return duration
+
+    @staticmethod
+    def addAudioDuration(a: Duration, b: Duration) -> Duration:
+        duration = Duration()
+        total = a.ToTimedelta().total_seconds() + b.ToTimedelta().total_seconds()
+        duration.FromTimedelta(td=timedelta(seconds=total))
+        return duration
