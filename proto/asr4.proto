@@ -61,6 +61,7 @@ message RecognitionResource {
 message RecognizeResponse {
   repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
   google.protobuf.Duration end_time = 2; // Time offset relative to the beginning of the audio.
+  google.protobuf.Duration duration = 3; // Duration in seconds of the submitted audio that corresponds to this result.
 }
 
 message StreamingRecognizeResponse {
@@ -75,6 +76,7 @@ message StreamingRecognitionResult {
   repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
   google.protobuf.Duration end_time = 2; // Time offset relative to the beginning of the audio.
   bool is_final = 3; // Indicates whether a result represents an interim result that may change or not.
+  google.protobuf.Duration duration = 4; // Duration in seconds of the submitted audio that corresponds to this result.
 }
 
 // Hypothesis-specific information.

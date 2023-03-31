@@ -13,14 +13,15 @@ except Exception as e:
         % str(e),
     )
 
-from .types import RecognizeRequest
-from .types import StreamingRecognizeRequest
-from .types import RecognizeResponse
-from .types import StreamingRecognizeResponse
-from .types import StreamingRecognitionResult
+from .types import Duration
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
+from .types import RecognizeRequest
+from .types import RecognizeResponse
+from .types import StreamingRecognitionResult
+from .types import StreamingRecognizeRequest
+from .types import StreamingRecognizeResponse
 
 from asr4.types.language import Language
 

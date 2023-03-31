@@ -17,3 +17,6 @@ class AudioEncoding(Enum):
     @classmethod
     def check(cls, audio_encoding: int) -> bool:
         return cls.parse(audio_encoding) is not None
+
+    def getSampleSizeInBytes(self) -> int:
+        return {self.PCM: 2}[self]
