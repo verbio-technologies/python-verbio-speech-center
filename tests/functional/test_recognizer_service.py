@@ -254,8 +254,10 @@ class TestRecognizerService(unittest.TestCase):
             )
 
     def testCheckDurationInStreamingWithRealAudio8K(self):
-        _AUDIO = os.path.join(self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel.wav")
-        
+        _AUDIO = os.path.join(
+            self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel.wav"
+        )
+
         def _streamingRecognize():
             with wave.open(_AUDIO, "rb") as f:
                 yield StreamingRecognizeRequest(
@@ -274,7 +276,6 @@ class TestRecognizerService(unittest.TestCase):
                     yield StreamingRecognizeRequest(audio=audio)
                     totalRead += fiveSeconds
 
-        
         with wave.open(_AUDIO, "rb") as f:
             frames = f.getnframes()
             rate = f.getframerate()
@@ -304,8 +305,10 @@ class TestRecognizerService(unittest.TestCase):
             )
 
     def testCheckDurationInStreamingWithRealAudio8KWrongSampleRate(self):
-        _AUDIO = os.path.join(self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel.wav")
-        
+        _AUDIO = os.path.join(
+            self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel.wav"
+        )
+
         def _streamingRecognize():
             with wave.open(_AUDIO, "rb") as f:
                 yield StreamingRecognizeRequest(
@@ -324,7 +327,6 @@ class TestRecognizerService(unittest.TestCase):
                     yield StreamingRecognizeRequest(audio=audio)
                     totalRead += fiveSeconds
 
-        
         with wave.open(_AUDIO, "rb") as f:
             frames = f.getnframes()
             rate = f.getframerate()
@@ -354,8 +356,10 @@ class TestRecognizerService(unittest.TestCase):
             )
 
     def testCheckDurationInStreamingWithRealAudio16K(self):
-        _AUDIO = os.path.join(self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel-16k.wav")
-        
+        _AUDIO = os.path.join(
+            self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel-16k.wav"
+        )
+
         def _streamingRecognize():
             with wave.open(_AUDIO, "rb") as f:
                 yield StreamingRecognizeRequest(
@@ -374,7 +378,6 @@ class TestRecognizerService(unittest.TestCase):
                     yield StreamingRecognizeRequest(audio=audio)
                     totalRead += fiveSeconds
 
-        
         with wave.open(_AUDIO, "rb") as f:
             frames = f.getnframes()
             rate = f.getframerate()
