@@ -11,6 +11,7 @@ import argparse
 import logging
 import wave
 import grpc
+import json
 
 import recognition_pb2_grpc
 import recognition_streaming_request_pb2
@@ -113,6 +114,12 @@ class SpeechCenterStreamingASRClient:
         self._inactivity_timer = Timer(inactivity_timeout, self._close_stream_by_inactivity)
         self._inactivity_timer.start()
 
+    def _print_result(self, response):
+        duration = response.result.duration
+        for alternative in response.result.alternatives:
+            if alternative.transcript:
+                print('\t"transcript": "%s",\n\t"confidence": "%f",\n\t"duration": "%f"' % (alternative.transcript, alternative.confidence, duration))
+
     def _response_watcher(
             self,
             response_iterator: Iterator[recognition_streaming_response_pb2.RecognitionStreamingResponse]) -> None:
@@ -121,7 +128,7 @@ class SpeechCenterStreamingASRClient:
             for response in response_iterator:
                 json = MessageToJson(response)
                 logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
-                print(MessageToJson(response))
+                self._print_result(response)
 
                 if response.result and response.result.is_final:
                     if self._inactivity_timer:
@@ -229,7 +236,7 @@ def run(command_line_options):
    
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s]:%(message)s')
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s]:%(message)s')
     logging.info("Running speechcenter streaming channel...")
     command_line_options = parse_command_line()
     command_line_options.check()
