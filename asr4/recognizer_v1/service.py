@@ -122,11 +122,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: Optional[str],
-        subwords: bool=False,
+        subwords: bool = False,
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
-            return OnnxRuntime(session, vocabulary, lmFile, lexicon, lmAlgorithm, subwords)
+            return OnnxRuntime(
+                session, vocabulary, lmFile, lexicon, lmAlgorithm, subwords
+            )
         else:
             return OnnxRuntime(session)
 
