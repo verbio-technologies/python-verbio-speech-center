@@ -31,12 +31,15 @@ class W2lKenLMDecoder:
         vocabulary: List[str],
         lmFile: Optional[str],
         lexicon: Optional[str],
+        subwords: bool = False,
     ) -> None:
         assert (
             lmFile and lexicon
         ), f"If KenLM is used, neither the language model nor the lexicon can be empty!"
 
         self._nbest = 1
+
+        self._subwords = subwords
 
         self.blank = (
             vocabulary.index("<ctc_blank>")
@@ -121,14 +124,33 @@ class W2lKenLMDecoder:
         results = self._decoder.decode(emissionsPtr, T, N)
         return results[: self._nbest]
 
+    @staticmethod
+    def process_word_piece(words: list):
+        return "".join(words).replace("_", " ").split()
+
     def _postProcessHypothesis(
         self, hypotesis: List[DecodeResult]
     ) -> Tuple[List[List[str]], List[float], List[List[int]]]:
         words, scores, timesteps = [], [], []
         for result in hypotesis:
-            words.append(
-                " ".join([self._wordDict.get_entry(x) for x in result.words if x >= 0])
-            )
+            if not getattr(self, "_subwords", False):
+                words.append(
+                    " ".join(
+                        [self._wordDict.get_entry(x) for x in result.words if x >= 0]
+                    )
+                )
+            else:
+                words.append(
+                    " ".join(
+                        self.process_word_piece(
+                            [
+                                self._wordDict.get_entry(x)
+                                for x in result.words
+                                if x >= 0
+                            ]
+                        )
+                    )
+                )
             scores.append(result.score)
             timesteps.append(self._getTimesteps(result.tokens))
         return (words, scores, timesteps)

@@ -65,6 +65,14 @@ def _parseArguments() -> argparse.Namespace:
         help="Path to the formatter model file.",
     )
     parser.add_argument(
+        "-W",
+        "--subwords",
+        dest="subwords",
+        default=False,
+        action="store_true",
+        help="The final words have to be constructed from word-pieces",
+    )
+    parser.add_argument(
         "-g",
         "--gpu",
         dest="gpu",

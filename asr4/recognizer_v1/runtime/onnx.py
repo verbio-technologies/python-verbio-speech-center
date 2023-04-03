@@ -182,12 +182,13 @@ class OnnxRuntime(Runtime):
         lmFile: Optional[str] = None,
         lexicon: Optional[str] = None,
         lmAlgorithm: str = "viterbi",
+        subwords: bool = False,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
-        self._initializeDecoder(vocabulary, lmFile, lexicon, lmAlgorithm)
+        self._initializeDecoder(vocabulary, lmFile, lexicon, lmAlgorithm, subwords)
 
     def _initializeDecoder(
         self,
@@ -195,6 +196,7 @@ class OnnxRuntime(Runtime):
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: str,
+        subwords: bool = False,
     ) -> None:
         self.lmAlgorithm = lmAlgorithm
         if lmAlgorithm == "viterbi":
@@ -213,7 +215,7 @@ class OnnxRuntime(Runtime):
             self._session.logger.debug(f" Using KenLM algorithm for decoding")
             from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
 
-            self._decoder = W2lKenLMDecoder(vocabulary, lmFile, lexicon)
+            self._decoder = W2lKenLMDecoder(vocabulary, lmFile, lexicon, subwords)
         else:
             raise ValueError(
                 f"Language Model algorithm should be either 'viterbi' or 'kenlm' but '{lmAlgorithm}' was found."
