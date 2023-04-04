@@ -144,3 +144,5 @@ proto/generated/verbio_speech_center_synthesizer_pb2.py
 
 # token resource
 resources
+
+.idea

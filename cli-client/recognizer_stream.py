@@ -31,6 +31,7 @@ class Options:
         self.formatting = False
         self.inactivity_timeout = False
         self.asr_version = None
+        self.labels = None
 
     def check(self):
         if self.topic is None:
@@ -51,6 +52,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
+    parser.add_argument('--labels', help='String with space separated list of labels', required=False, default="")
     
     args = parser.parse_args()
     options.token_file = args.token
@@ -63,6 +65,7 @@ def parse_command_line() -> Options:
     options.diarization = args.diarization
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
+    options.labels = args.labels
     
     return options
 
@@ -105,6 +108,7 @@ class SpeechCenterStreamingASRClient:
         self._asr_version = options.asr_version
         self._formatting = options.formatting
         self._diarization = options.diarization
+        self._labels = options.labels
 
     def _close_stream_by_inactivity(self):
         logging.info("Stream inactivity detected, closing stream...")
@@ -148,9 +152,9 @@ class SpeechCenterStreamingASRClient:
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization))
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization, labels=self._labels))
         else:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization), metadata=metadata)
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization, labels=self._labels), metadata=metadata)
         
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
@@ -171,7 +175,8 @@ class SpeechCenterStreamingASRClient:
         language: str = "",
         sample_rate: int = 16000,
         diarization = False,
-        formatting = False
+        formatting = False,
+        labels: str = "",
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
         
         if len(topic):
@@ -196,6 +201,7 @@ class SpeechCenterStreamingASRClient:
                             enable_diarization = diarization
                         ), 
                         resource=var_resource,
+                        label=labels.split(),
                         version=selected_asr_version))),
             ("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
         ]

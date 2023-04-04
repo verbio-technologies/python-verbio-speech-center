@@ -182,7 +182,8 @@ def parse_command_line() -> Options:
 
 
 if __name__ == '__main__':
+    print("This module is deprecated.")
     # Setup minimal logger and run example.
-    logging.basicConfig(level=logging.INFO)
+    #logging.basicConfig(level=logging.INFO)
 
-    SpeechCenterSynthesisClient(parse_command_line()).run()
+    #SpeechCenterSynthesisClient(parse_command_line()).run()
