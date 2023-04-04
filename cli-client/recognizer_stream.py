@@ -65,7 +65,7 @@ def parse_command_line() -> Options:
     options.diarization = args.diarization
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
-    options.labels = args.labels.split()
+    options.labels = args.labels
     
     return options
 
@@ -176,7 +176,7 @@ class SpeechCenterStreamingASRClient:
         sample_rate: int = 16000,
         diarization = False,
         formatting = False,
-        labels: list[str] = []
+        labels: str = "",
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
         
         if len(topic):
@@ -201,7 +201,7 @@ class SpeechCenterStreamingASRClient:
                             enable_diarization = diarization
                         ), 
                         resource=var_resource,
-                        label=labels,
+                        label=labels.split(),
                         version=selected_asr_version))),
             ("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
         ]
