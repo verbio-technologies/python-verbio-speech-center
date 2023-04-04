@@ -31,7 +31,7 @@ class Options:
         self.formatting = False
         self.inactivity_timeout = False
         self.asr_version = None
-        self.labels = []
+        self.labels = None
 
     def check(self):
         if self.topic is None:
