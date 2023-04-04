@@ -51,59 +51,50 @@ verbio_speech_center_recognizer_pb2_grpc.py
 
 ### Run a client
 
-The CLI clients will use the generated code to connect to the speech center cloud to process your speech file or synthesize your input.  
+The CLI clients will use the generated code to connect to the speech center cloud to process your speech file.  
   
 
-#### Recognizer batch and stream
+#### Recognizer stream
 
-Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following commands:
+Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following command:
 
 **Example**
 
 ```commandline
-python3 ./recognizer.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
 
-or for a streaming version
+python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --labels 'project1'
 
-python3 ./recognizer_stream.py --audio-file file.wav --topic GENERIC --token you.speech-center.token.file
 
 ```
 
 This code will generate the following terminal output on success:
 ```commandline
-INFO:root:Running Recognizer inference example...
-INFO:root:Sending message RegonitionInit
-INFO:root:Sending message Audio
-INFO:root:Inference response: 'this is a test sentence' [status=StatusCode.OK]
+[2023-04-04 12:28:29,078][INFO]:Running speechcenter streaming channel...
+[2023-04-04 12:28:29,080][INFO]:Connecting to us.speechcenter.verbio.com
+[2023-04-04 12:28:29,082][INFO]:Running executor...
+[2023-04-04 12:28:29,083][INFO]:Sending streaming message config
+[2023-04-04 12:28:29,083][INFO]:Running response watcher
+[2023-04-04 12:28:29,083][INFO]:Waiting for server to respond...
+[2023-04-04 12:28:29,084][INFO]:Sending streaming message audio
+[2023-04-04 12:28:29,084][INFO]:All audio messages sent
+[2023-04-04 12:31:27,109][INFO]:New incoming response: '{  "result": {    "alternatives": [      {     ...'
+	"transcript": "Hi. My name is John Doe.",
+	"confidence": "0.899752",
+	"duration": "4.460000"
+[2023-04-04 12:31:27,110][INFO]:New incoming response: '{  "result": {    "alternatives": [      {     ...'
+	"transcript": "I'd like to check my account balance, please.",
+	"confidence": "0.994662",
+	"duration": "7.000000"
+[2023-04-04 12:31:32,111][INFO]:Stream inactivity detected, closing stream...
+[2023-04-04 12:31:32,112][INFO]:Recognition finished
+
+
 ```
-with response.text as your speech recognition inference response and response.status as the result of the process.  
+
+You can also run:
+```commandline
+
+python3 recognizer_stream.py --help
+```
   
-
-#### Synthesizer
-
-Our Synthesizer will convert your text into speech. In order to run the CLI Speech Center Synthesizer client, check out the following commands:
-
-**Example**
-
-```commandline
-python3 ./synthesizer.py --text "this is a test sentence" --voice Tommy --token you.speech-center.token --audio-file file.wav
-```
-
-This code will generate the following terminal output on success:
-```commandline
-INFO:root:Running Synthesizer inference example...
-INFO:root:Sending message SynthesisRequest
-INFO:root:Inference response [status=StatusCode.OK]
-INFO:root:Stored resulting audio at file.wav
-```
-with response.audio as your speech synthesis infenrece response stored in the 'file.wav' `audio-file` and response.status as the result of the process.
-
-**Notice**
-
-As a notice of the Speech Center Synthesizer, not all Voice / Language combinations are available. Currently, we support the following ones:
-
-* Tommy [en-US]
-* Annie [en-US]
-* Aurora [es-ES]
-* Luma [pt-BR]
-* David [es-ES, ca-ES]
+to list all the available options.
