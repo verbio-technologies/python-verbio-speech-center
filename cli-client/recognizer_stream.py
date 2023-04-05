@@ -65,9 +65,9 @@ def parse_command_line() -> Options:
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--labels', help='String with space separated list of labels', required=False, default="")
     
-    credentialGroup = parser.add_argument_group('credentials', 'Client authentication credentials')
-    credentialGroup.add_argument('--client-id', help='Client id for authentication')
-    credentialGroup.add_argument('--client-secret', help='Client secret for authentication')
+    credentialGroup = parser.add_argument_group('credentials', '[OPTIONAL] Client authentication credentials used to refresh the token. You can find your credentials on the dashboard at https://dashboard.speechcenter.verbio.com/access-token')
+    credentialGroup.add_argument('--client-id', help='Client id for authentication. MUST be written as --client-id=CLIENT_ID')
+    credentialGroup.add_argument('--client-secret', help='Client secret for authentication. MUST be written as --client-secret=CLIENT_SECRET')
 
     args = parser.parse_args()
     parse_credential_args(args, options)
