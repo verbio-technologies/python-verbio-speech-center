@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Used to make sure python find proto files
 import sys
+
+import jwt
 sys.path.insert(1, '../proto/generated')
 
 from concurrent.futures import ThreadPoolExecutor
@@ -10,12 +12,12 @@ from typing import Iterator, Iterable
 import argparse
 import logging
 import wave
-import grpc
 import json
+import grpc
+import requests
+from datetime import datetime
 
-import recognition_pb2_grpc
-import recognition_streaming_request_pb2
-import recognition_streaming_response_pb2
+import recognition_pb2_grpc, recognition_streaming_request_pb2, recognition_streaming_response_pb2
 
 from google.protobuf.json_format import MessageToJson
 
@@ -32,19 +34,28 @@ class Options:
         self.inactivity_timeout = False
         self.asr_version = None
         self.labels = None
+        self.client_id = None
+        self.client_secret = None
 
     def check(self):
         if self.topic is None:
             raise Exception("You must provide a least a topic")
 
+def parse_credential_args(args, options):
+    if args.client_id and not args.client_secret:
+        raise argparse.ArgumentError(None, "If --client-id is specified, then --client-secret must also be specified.")
+    elif args.client_secret and not args.client_id:
+        raise argparse.ArgumentError(None, "If --client-secret is specified, then --client-id must also be specified.")
+    options.client_id = args.client_id or None
+    options.client_secret = args.client_secret or None
 
 def parse_command_line() -> Options:
     options = Options()
     parser = argparse.ArgumentParser(description='Perform speech recognition on an audio file')
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
-    argGroup = parser.add_mutually_exclusive_group(required=True)
-    argGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
-    parser.add_argument('--language', '-l', choices=['en-US', 'en-GB', 'pt-BR', 'es', 'es-419', 'tr', 'ja', 'fr', 'fr-CA', 'de', 'it'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    topicGroup = parser.add_mutually_exclusive_group(required=True)
+    topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
+    parser.add_argument('--language', '-l', choices=['en', 'en-US', 'en-GB', 'pt-BR', 'es', 'es-419', 'tr', 'ja', 'fr', 'fr-CA', 'de', 'it'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')', required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
@@ -54,7 +65,13 @@ def parse_command_line() -> Options:
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--labels', help='String with space separated list of labels', required=False, default="")
     
+    credentialGroup = parser.add_argument_group('credentials', 'Client authentication credentials')
+    credentialGroup.add_argument('--client-id', help='Client id for authentication')
+    credentialGroup.add_argument('--client-secret', help='Client secret for authentication')
+
     args = parser.parse_args()
+    parse_credential_args(args, options)
+
     options.token_file = args.token
     options.host = args.host
     options.audio_file = args.audio_file
@@ -69,8 +86,55 @@ def parse_command_line() -> Options:
     
     return options
 
+class SpeechCenterCredentials:
+    @staticmethod
+    def get_refreshed_token(client_id, client_secret, token_file):
+        currentToken = read_token(token_file=token_file)
+        refresh = False
+        try:
+            payload = jwt.decode(currentToken, options={"verify_signature": False})
+            if datetime.now().timestamp() >= payload['exp']:
+                logging.info("Provided token is expired, proceeding to refresh")
+                refresh = True
+        except Exception:
+            logging.info("Provided file does not contain a valid JWT token, proceeding to retrieve a new token")
+            refresh = True
+        if refresh:
+            newToken = SpeechCenterCredentials._refresh_token(client_id, client_secret)
+            SpeechCenterCredentials._writeNewToken(newToken, token_file)
+            return newToken
+        else:
+            logging.info("Provided token is still valid, skipping refresh")
+            return currentToken
+    
+    @staticmethod
+    def _refresh_token(client_id, client_secret):
 
-class Credentials:
+        headers = {'Accept': 'application/json',
+                   'Content-Type': 'application/json'}
+        body = """{
+        "client_id":"%s",
+        "client_secret": "%s"
+        }""" % (client_id, client_secret)
+
+        response = requests.post("https://auth.speechcenter.verbio.com:444/api/v1/token", headers=headers, data=body)
+        parsedResponse = json.loads(response.content)
+
+        if response.status_code != 200:
+            raise ConnectionRefusedError("Cannot refresh token. Error: " + parsedResponse['error'] + ": " + parsedResponse['message'])
+        else:
+            logging.info("Succesfully updated service token:\n" + parsedResponse['access_token'])
+            logging.info("New expiration time is:\n" + str(parsedResponse['expiration_time']))
+        
+
+        return parsedResponse['access_token']
+    
+    @staticmethod
+    def _writeNewToken(token, file):
+        with open(file, "w") as tokenFile:
+            tokenFile.write(token)
+
+class GrpcChannelCredentials:
     def __init__(self, token):
         # Set JWT token for service access.
         self.call_credentials = grpc.access_token_call_credentials(token)
@@ -100,8 +164,7 @@ class SpeechCenterStreamingASRClient:
         self._topic = options.topic
         self._language = options.language
         self._peer_responded = threading.Event()
-        self._credentials = Credentials(self.read_token(toke_file=options.token_file))
-        self.token = self.read_token(toke_file=options.token_file)
+        self.token = retrieve_token(options)
         self._secure_channel = options.secure_channel
         self._inactivity_timer = None
         self._inactivity_timer_timeout = options.inactivity_timeout
@@ -143,11 +206,6 @@ class SpeechCenterStreamingASRClient:
             logging.error("Error running response watcher: %s", str(e))
             self._peer_responded.set()
             raise
-
-    @staticmethod
-    def read_token(toke_file: str) -> str:
-        with open(toke_file) as token_hdl:
-            return ''.join(token_hdl.read().splitlines())
     
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
@@ -210,7 +268,11 @@ class SpeechCenterStreamingASRClient:
             yield message
         logging.info("All audio messages sent")
 
-    
+@staticmethod
+def read_token(token_file: str) -> str:
+    with open(token_file) as token_hdl:
+        return ''.join(token_hdl.read().splitlines())
+
 def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options) -> None:
     client = SpeechCenterStreamingASRClient(executor, channel, options)
     client.call()
@@ -225,13 +287,19 @@ def run_executor(command_line_options, executor, channel):
     future = executor.submit(process_recognition, executor, channel, command_line_options)
     future.result()
  
+def retrieve_token(options):
+    if options.client_id:
+        return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
+    else:
+        return read_token(token_file=options.token_file)
+
 def run(command_line_options):
     executor = ThreadPoolExecutor()
     logging.info("Connecting to %s", command_line_options.host)
 
     if command_line_options.secure_channel:
-        token = SpeechCenterStreamingASRClient.read_token(toke_file=command_line_options.token_file)
-        credentials = Credentials(token)
+        token = retrieve_token(command_line_options)
+        credentials = GrpcChannelCredentials(token)
         with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
             run_executor(command_line_options, executor, channel)
             
