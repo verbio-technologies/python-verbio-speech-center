@@ -21,6 +21,7 @@ protobuf==3.19.1
 grpcio==1.51.1
 grpcio-tools==1.41.1
 requests==2.26.0
+pyjwt==2.6.0
 ```
 they are already written in the requirements.txt in this repository.
 
