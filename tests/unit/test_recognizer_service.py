@@ -484,7 +484,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=8000, audio_encoding="PCM"
+                    language="en-US", sample_rate_hz=8000, audio_encoding="PCM", enable_formatting=False
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -503,7 +503,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="es", sample_rate_hz=8000, audio_encoding="PCM"
+                    language="es", sample_rate_hz=8000, audio_encoding="PCM", enable_formatting=False
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -522,7 +522,7 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="pt-BR", sample_rate_hz=8000, audio_encoding="PCM"
+                    language="pt-BR", sample_rate_hz=8000, audio_encoding="PCM", enable_formatting=False
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
@@ -582,10 +582,20 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"0000",
         )
+
+
+        request.config.parameters.enable_formatting = True
         self.assertEqual(
             service.eventHandle(request),
             FORMATTED_SPANISH_MESSAGE,
         )
+
+        request.config.parameters.enable_formatting = False
+        self.assertEqual(
+            service.eventHandle(request),
+            DEFAULT_CORRECT_SPANISH_MESSAGE,
+        )
+        
 
     def testResponseParameters(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())

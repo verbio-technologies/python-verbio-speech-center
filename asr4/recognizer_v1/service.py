@@ -250,7 +250,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def eventHandle(self, request: RecognizeRequest) -> str:
         transcription = self._runRecognition(request)
-        if request.config.enable_formatting:
+        if request.config.parameters.enable_formatting:
             return self._formatWords(transcription)
         else:
             words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
