@@ -271,5 +271,5 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self.ensureLowerCase(hypothesis)
 
     def ensureLowerCase(self, text):
-        match = re.search('[A-Z]', text)
+        match = re.search("[A-Z]", text)
         self.assertEqual(match, None)
