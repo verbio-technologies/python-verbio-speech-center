@@ -166,6 +166,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
                 audio,
                 sample_rate_hz,
                 Language.parse(args.language),
+                args.format,
                 f"{n}/{length}",
             ),
         )
@@ -217,12 +218,18 @@ def _shutdownWorker():
 
 
 def _runWorkerQuery(
-    audio: bytes, sample_rate_hz: int, language: Language, queryID: int
+    audio: bytes,
+    sample_rate_hz: int,
+    language: Language,
+    useFormat: bool,
+    queryID: int,
 ) -> bytes:
     request = RecognizeRequest(
         config=RecognitionConfig(
             parameters=RecognitionParameters(
-                language=language.value, sample_rate_hz=sample_rate_hz
+                language=language.value,
+                sample_rate_hz=sample_rate_hz,
+                enable_formatting=useFormat,
             ),
             resource=RecognitionResource(topic="GENERIC"),
         ),
@@ -255,6 +262,13 @@ def _parseArguments() -> argparse.Namespace:
         "--audio-path",
         dest="audio",
         help="Path to the audio file.",
+    )
+    parser.add_argument(
+        "--format",
+        dest="format",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Automatically improve the format of the recognized text.",
     )
     group.add_argument(
         "-g",
@@ -320,7 +334,6 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
