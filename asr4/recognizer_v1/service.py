@@ -149,6 +149,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+            f"[formatting={request.config.enable_formatting}] "
             f"[length={len(request.audio)}] "
             f"[duration={duration.ToTimedelta().total_seconds()}] "
             f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
@@ -172,6 +173,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+                    f"[formatting={request.config.enable_formatting}] "
                     f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
@@ -248,7 +250,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def eventHandle(self, request: RecognizeRequest) -> str:
         transcription = self._runRecognition(request)
-        return self._formatWords(transcription)
+        if request.config.enable_formatting:
+            return self._formatWords(transcription)
+        else:
+            words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
+            return " ".join(words)
 
     def _runRecognition(self, request: RecognizeRequest) -> str:
         language = Language.parse(request.config.parameters.language)
