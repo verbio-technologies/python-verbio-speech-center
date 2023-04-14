@@ -260,9 +260,11 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis = (match.group(match.lastindex)
-                      if match is not None and match.lastindex is not None
-                      else "")
+        hypothesis = (
+            match.group(match.lastindex)
+            if match is not None and match.lastindex is not None
+            else ""
+        )
 
         self.assertGreater(len(hypothesis), 1)
         self.evaluateHypothesis(self._reference, hypothesis)
