@@ -149,7 +149,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-            f"[formatting={request.config.enable_formatting}] "
+            f"[formatting={request.config.parameters.enable_formatting}] "
             f"[length={len(request.audio)}] "
             f"[duration={duration.ToTimedelta().total_seconds()}] "
             f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
@@ -173,7 +173,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-                    f"[formatting={request.config.enable_formatting}] "
+                    f"[formatting={request.config.parameters.enable_formatting}] "
                     f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
