@@ -255,7 +255,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             else ""
         )
 
-    def testRecognizeRequestFormatted(self):
+    def testRecognizeRequestNoFormatted(self):
         process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
@@ -266,6 +266,10 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
-
         self.assertGreater(len(hypothesis), 1)
         self.evaluateHypothesis(self._reference, hypothesis)
+        self.ensureLowerCase(hypothesis)
+
+    def ensureLowerCase(self, text):
+        match = re.search('[A-Z]', text)
+        self.assertEqual(match, None)
