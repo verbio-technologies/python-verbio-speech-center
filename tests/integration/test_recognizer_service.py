@@ -28,7 +28,7 @@ class TestRecognizerUtils(object):
             f"{self.rootdir}/bin/client.py",
             "-v",
             "TRACE",
-            "--format"
+            "--format",
             "--language",
             language,
             "--host",
