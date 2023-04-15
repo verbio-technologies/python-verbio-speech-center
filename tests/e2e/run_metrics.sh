@@ -18,10 +18,9 @@ if [[ "$gui" == *"_upgraded"* ]]; then
 fi
 
 pip install .[client]
-python bin/client.py -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
+python bin/client.py --no-format -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
 sleep 10
 if [ -f "test_${language}_results.tsv" ]; then
-
 	python tests/e2e/metrics.py --model_accuracy "test_${language}_results.tsv" \
 	--expected_metrics "${expected_metrics}" \
 	--model_oov "test_${language}_oov.json" \
