@@ -92,25 +92,25 @@
             "domains_typical_deviation": 18.09
         },
         "upgraded": {
-            "oov": 4.27,
-            "accuracy": 57.76,
+            "oov": 6.05,
+            "accuracy": 75.95,
             "dialects": {
-                "es-co": {"accuracy": 46.8},
-                "es-es": {"accuracy": 47.11},
-                "es-mx": {"accuracy": 46.91},
-                "es-cl": {"accuracy": 41.36}
+                "es-co": {"accuracy": 67.07},
+                "es-es": {"accuracy": 78.02},
+                "es-mx": {"accuracy": 73.75},
+                "es-cl": {"accuracy": 63.57}
             },
-            "dialects_typical_deviation": 2.42,
+            "dialects_typical_deviation": 5.63,
             "domains": {
-                "multidomain_extended-appen_cut_fmt-hh-banking": {"accuracy": 46.1 },
-                "multidomain_extended-appen_cut_fmt-hh-telco": {"accuracy": 42.22 },
-                "multidomain_extended-defined-ai_cut_fmt-hh-banking": {"accuracy": 50.45 },
-                "multidomain_extended-defined-ai_cut_fmt-hh-insurance": {"accuracy": 50.24 },
-                "multidomain_extended-defined-ai_cut_fmt-hh-retail": {"accuracy": 44.14 },
-                "multidomain_extended-defined-ai_cut_fmt-hh-telco": {"accuracy": 47.78 },
-                "multidomain_extended-defined-ai_cut_fmt-hh-telcojpt": {"accuracy": 38.2 }
+                "multidomain_extended-appen_cut-hh-banking": {"accuracy": 65.34 },
+                "multidomain_extended-appen_cut-hh-telco": {"accuracy": 65.47 },
+                "multidomain_extended-defined-ai_cut-hh-banking": {"accuracy": 80.91 },
+                "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 74.91 },
+                "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 73.16 },
+                "multidomain_extended-defined-ai_cut-hh-telco": {"accuracy": 74.87 },
+                "multidomain_extended-defined-ai_cut-hh-telcojpt": {"accuracy": 79.54 }
             },
-            "domains_typical_deviation": 4.16
+            "domains_typical_deviation": 5.7
         }
     }
 }
