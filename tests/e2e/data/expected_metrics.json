@@ -19,15 +19,15 @@
             "domains_typical_deviation": 14.71
         },
         "upgraded": {
-            "oov": 1.51,
+            "oov": 1.49,
             "accuracy": 84.28,
             "domains": {
                 "multidomain_extended-defined-ai_cut-hh-banking":  {"accuracy": 79.38},
-                "multidomain_extended-defined-ai_cut-hh-insurance":  {"accuracy": 83.08},
+                "multidomain_extended-defined-ai_cut-hh-insurance":  {"accuracy": 84.88},
                 "multidomain_extended-defined-ai_cut-hh-retail":  {"accuracy": 82.72},
-                "multidomain_extended-defined-ai_cut-hh-telco":  {"accuracy": 83.99}
+                "multidomain_extended-defined-ai_cut-hh-telco":  {"accuracy": 84.06}
             },
-            "domains_typical_deviation": 1.49
+            "domains_typical_deviation": 2.16
         }
     },
     "pt-br": {
