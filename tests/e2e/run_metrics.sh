@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -eEuo pipefail
 
 language=$1
