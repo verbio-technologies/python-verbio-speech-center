@@ -102,7 +102,7 @@
             },
             "dialects_typical_deviation": 6.44,
             "domains": {
-                "multidomain_extended-appen_cut-hh-banking": {"accuracy": 67398 },
+                "multidomain_extended-appen_cut-hh-banking": {"accuracy": 67.91 },
                 "multidomain_extended-appen_cut-hh-telco": {"accuracy": 67.5 },
                 "multidomain_extended-defined-ai_cut-hh-banking": {"accuracy": 83.76 },
                 "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 78.58 },
