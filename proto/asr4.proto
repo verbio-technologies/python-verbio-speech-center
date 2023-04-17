@@ -47,6 +47,7 @@ message RecognitionParameters {
   string language = 1; // Currently supported: en-US, es, pt-BR.
   uint32 sample_rate_hz = 2; // Audio sample rate in Hertz. Currently supported: 8000, 16000.
   AudioEncoding audio_encoding = 3; // Audio encoding.
+  bool enable_formatting = 4; // Format the transcription.
 }
 
 // The request must specify a topic.

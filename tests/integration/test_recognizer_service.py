@@ -28,6 +28,41 @@ class TestRecognizerUtils(object):
             f"{self.rootdir}/bin/client.py",
             "-v",
             "TRACE",
+            "--format",
+            "--language",
+            language,
+            "--host",
+            self._host,
+        ]
+
+        if audioPath:
+            cmd.extend(["--audio-path", audioPath])
+        elif guiPath:
+            cmd.extend(["--gui-path", guiPath])
+        if output:
+            cmd.extend(["--metrics", "--output", output])
+
+        return Popen(
+            cmd,
+            stdout=PIPE,
+            stderr=PIPE,
+            universal_newlines=True,
+        )
+
+    def _runNoFormatRecognition(
+        self,
+        language: str,
+        *,
+        audioPath: Optional[str] = None,
+        guiPath: Optional[str] = None,
+        output: Optional[str] = None,
+    ) -> Popen:
+        cmd = [
+            "python3",
+            f"{self.rootdir}/bin/client.py",
+            "-v",
+            "TRACE",
+            "--no-format",
             "--language",
             language,
             "--host",
@@ -50,6 +85,9 @@ class TestRecognizerUtils(object):
 
     def launchRecognitionProcess(self, audioPath: str, language: str) -> Popen:
         return self._runRecognition(language, audioPath=audioPath)
+
+    def launchRecognitionWithNoFormatting(self, audioPath: str, language: str) -> Popen:
+        return self._runNoFormatRecognition(language, audioPath=audioPath)
 
     def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
         return self._runRecognition(language, guiPath=guiPath)
@@ -216,3 +254,22 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
+
+    def testRecognizeRequestNoFormatted(self):
+        process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
+        status = process.wait(timeout=900)
+        self.checkStatus(status, process.stderr.read())
+        output = process.stdout.read()
+        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
+        hypothesis = (
+            match.group(match.lastindex)
+            if match is not None and match.lastindex is not None
+            else ""
+        )
+        self.assertGreater(len(hypothesis), 1)
+        self.evaluateHypothesis(self._reference, hypothesis)
+        self.ensureLowerCase(hypothesis)
+
+    def ensureLowerCase(self, text):
+        match = re.search("[A-Z]", text)
+        self.assertEqual(match, None)
