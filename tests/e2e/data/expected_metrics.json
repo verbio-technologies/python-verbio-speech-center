@@ -93,24 +93,24 @@
         },
         "upgraded": {
             "oov": 1.54,
-            "accuracy": 78.65,
+            "accuracy": 78.00,
             "dialects": {
-                "es-co": {"accuracy": 70.04},
-                "es-es": {"accuracy": 81.81},
-                "es-mx": {"accuracy": 77.76},
-                "es-cl": {"accuracy": 65.33}
+                "es-co": {"accuracy": 65.00},
+                "es-es": {"accuracy": 81.00},
+                "es-mx": {"accuracy": 77.00},
+                "es-cl": {"accuracy": 63.00}
             },
-            "dialects_typical_deviation": 6.44,
+            "dialects_typical_deviation": 7.00,
             "domains": {
-                "multidomain_extended-appen_cut-hh-banking": {"accuracy": 67.91 },
-                "multidomain_extended-appen_cut-hh-telco": {"accuracy": 67.5 },
+                "multidomain_extended-appen_cut-hh-banking": {"accuracy": 65.00 },
+                "multidomain_extended-appen_cut-hh-telco": {"accuracy": 63.00 },
                 "multidomain_extended-defined-ai_cut-hh-banking": {"accuracy": 83.76 },
-                "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 78.58 },
-                "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 77.5 },
-                "multidomain_extended-defined-ai_cut-hh-telco": {"accuracy": 79.36 },
-                "multidomain_extended-defined-ai_cut-hh-telcojpt": {"accuracy": 83.59 }
+                "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 78.00 },
+                "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 77.00 },
+                "multidomain_extended-defined-ai_cut-hh-telco": {"accuracy": 79.00 },
+                "multidomain_extended-defined-ai_cut-hh-telcojpt": {"accuracy": 83.00 }
             },
-            "domains_typical_deviation": 6.2
+            "domains_typical_deviation": 7.00
         }
     }
 }
