@@ -2,7 +2,6 @@
 # Used to make sure python find proto files
 import sys
 
-import jwt
 sys.path.insert(1, '../proto/generated')
 
 from concurrent.futures import ThreadPoolExecutor
@@ -12,11 +11,8 @@ from typing import Iterator, Iterable
 import argparse
 import logging
 import wave
-import json
 import grpc
-import requests
-from datetime import datetime
-
+from speechcenterauth import SpeechCenterCredentials
 import recognition_pb2_grpc, recognition_streaming_request_pb2, recognition_streaming_response_pb2
 
 from google.protobuf.json_format import MessageToJson
@@ -85,54 +81,6 @@ def parse_command_line() -> Options:
     options.labels = args.labels
     
     return options
-
-class SpeechCenterCredentials:
-    @staticmethod
-    def get_refreshed_token(client_id, client_secret, token_file):
-        currentToken = read_token(token_file=token_file)
-        refresh = False
-        try:
-            payload = jwt.decode(currentToken, options={"verify_signature": False})
-            if datetime.now().timestamp() >= payload['exp']:
-                logging.info("Provided token is expired, proceeding to refresh")
-                refresh = True
-        except Exception:
-            logging.info("Provided file does not contain a valid JWT token, proceeding to retrieve a new token")
-            refresh = True
-        if refresh:
-            newToken = SpeechCenterCredentials._refresh_token(client_id, client_secret)
-            SpeechCenterCredentials._writeNewToken(newToken, token_file)
-            return newToken
-        else:
-            logging.info("Provided token is still valid, skipping refresh")
-            return currentToken
-    
-    @staticmethod
-    def _refresh_token(client_id, client_secret):
-
-        headers = {'Accept': 'application/json',
-                   'Content-Type': 'application/json'}
-        body = """{
-        "client_id":"%s",
-        "client_secret": "%s"
-        }""" % (client_id, client_secret)
-
-        response = requests.post("https://auth.speechcenter.verbio.com:444/api/v1/token", headers=headers, data=body)
-        parsedResponse = json.loads(response.content)
-
-        if response.status_code != 200:
-            raise ConnectionRefusedError("Cannot refresh token. Error: " + parsedResponse['error'] + ": " + parsedResponse['message'])
-        else:
-            logging.info("Succesfully updated service token:\n" + parsedResponse['access_token'])
-            logging.info("New expiration time is:\n" + str(parsedResponse['expiration_time']))
-        
-
-        return parsedResponse['access_token']
-    
-    @staticmethod
-    def _writeNewToken(token, file):
-        with open(file, "w") as tokenFile:
-            tokenFile.write(token)
 
 class GrpcChannelCredentials:
     def __init__(self, token):
@@ -268,11 +216,6 @@ class SpeechCenterStreamingASRClient:
             yield message
         logging.info("All audio messages sent")
 
-@staticmethod
-def read_token(token_file: str) -> str:
-    with open(token_file) as token_hdl:
-        return ''.join(token_hdl.read().splitlines())
-
 def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, options: Options) -> None:
     client = SpeechCenterStreamingASRClient(executor, channel, options)
     client.call()
@@ -291,7 +234,7 @@ def retrieve_token(options):
     if options.client_id:
         return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
     else:
-        return read_token(token_file=options.token_file)
+        return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
 def run(command_line_options):
     executor = ThreadPoolExecutor()
