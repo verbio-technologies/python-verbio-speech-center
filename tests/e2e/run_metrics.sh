@@ -17,22 +17,22 @@ if [[ "$gui" == *"_upgraded"* ]]; then
   test=upgraded
 fi
 
-pip install .[client]
-python bin/client.py -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
+#pip install .[client]
+python3 bin/client.py -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m 
 sleep 10
 if [ -f "test_${language}_results.tsv" ]; then
 
-	python tests/e2e/metrics.py --model_accuracy "test_${language}_results.tsv" \
+	python3 tests/e2e/metrics.py --model_accuracy "test_${language}_results.tsv" \
 	--expected_metrics "${expected_metrics}" \
 	--model_oov "test_${language}_oov.json" \
 	--model_intratest_folder "test_${language}_intratest/" \
 	--language "${language}" \
 	--test_type "${test}"
 
-	rm "test_${language}_results.tsv"
-	rm "test_${language}_oov.json"
-	rm -rf "test_${language}_intratest"
-	rm -rf "wer"
+	#rm "test_${language}_results.tsv"
+	#rm "test_${language}_oov.json"
+	#rm -rf "test_${language}_intratest"
+	#rm -rf "wer"
 
 else
 	echo "There are not results for ${language} ${test} test"
