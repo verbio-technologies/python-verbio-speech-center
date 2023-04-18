@@ -18,10 +18,12 @@ Before to start you will need:
 ### Python packages:
 ```requirements.txt
 protobuf==3.19.1
-grpcio==1.48.0
+grpcio==1.51.1
 grpcio-tools==1.41.1
+requests==2.26.0
+pyjwt==2.6.0
 ```
-they are already write in the requirements.txt in this repository.
+they are already written in the requirements.txt in this repository.
 
 The grpc and protobuf packages are necessary to automatically generate from the .proto specification all the necessary code that the main python script will use to connect with the gRCP server in the cloud.
 
@@ -36,14 +38,14 @@ pip install -r requirements.txt
 
 ### Generate grpc code with python
 In scritps repository there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you.
-```commandline
+```console
 .>$ cd scripts/
 ./scripts>$ ./generate_grpc_code.sh
 
 ```
 It will generate all needed grpc files on the project root directory `proto/generated` like:
 
-```commandline
+```console
 verbio_speech_center_recognizer_pb2.py
 verbio_speech_center_recognizer_pb2_grpc.py
 ...
@@ -60,15 +62,12 @@ Our Recognizer will allow you to easily convert an audio resource into its assoc
 
 **Example**
 
-```commandline
-
+```console
 python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --labels 'project1'
-
-
 ```
 
 This code will generate the following terminal output on success:
-```commandline
+```console
 [2023-04-04 12:28:29,078][INFO]:Running speechcenter streaming channel...
 [2023-04-04 12:28:29,080][INFO]:Connecting to us.speechcenter.verbio.com
 [2023-04-04 12:28:29,082][INFO]:Running executor...
@@ -92,9 +91,33 @@ This code will generate the following terminal output on success:
 ```
 
 You can also run:
-```commandline
-
+```console
 python3 recognizer_stream.py --help
 ```
   
 to list all the available options.
+
+## Automatically Refresh Service Token
+This repository optionally implements an automatic token update. To do so, you must specify your credentials (find them in the Client Credentials section of the [user dashboard](https://dashboard.speechcenter.verbio.com)).
+
+You must also specify a token file, where the token will be stored and updated in case it is invalid or expired.
+
+**Example**
+```console
+python3 recognizer_stream.py --client-id="your-client-id" --client-secret="your-client-secret"
+ --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --labels 'project1'
+
+```
+
+**WARNING**
+
+Please note that due to a limitation of the command line argument parser, the `client_id` and `client_secret` arguments MUST be written in the following format since they might contain hyphens.
+
+```
+--client-id="your-client-id"
+           ^
+```
+> Note the usage of the `=` sign
+
+
+Not defining the arguments like this will yield an error.
