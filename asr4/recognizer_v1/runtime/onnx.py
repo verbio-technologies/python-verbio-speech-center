@@ -285,7 +285,7 @@ class OnnxRuntime(Runtime):
                     label_sequences, scores, timesteps, frame_probs, previous_chunk
                 )
                 previous_chunk = current_chunk
-                print('previous_chunk', [*previous_chunk])
+                print('previous_chunk set: ', previous_chunk)
         if decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs)
         else:
@@ -315,6 +315,7 @@ class OnnxRuntime(Runtime):
 
     #@staticmethod
     def solve_chunk_overlap_naive(self, first_chunk, second_chunk, accumulation):
+        print('accumulation state: ', accumulation)
         first_chunk = self.convert_to_words(first_chunk)
         second_chunk = self.convert_to_words(second_chunk)
 
@@ -330,27 +331,47 @@ class OnnxRuntime(Runtime):
         print('l:', left_context)
         print('a:', agreed)
         print('r:', right_context)
+
+        # there's no match
         if agreed == [] or agreed == '':
+            # because it is the first chunk
             if accumulation == []: 
                 chunk = first_chunk+second_chunk
                 print('c:', chunk)
                 print('overwrite: ', accumulation[-len(right_context):])
                 accumulation[-len(first_chunk):] = chunk
                 print('inserted: ', accumulation)
+            # because there's a silence o sth else
             else:
-                pass
-        else:
-            if accumulation == [] or accumulation == '':
-                chunk = left_context + agreed + right_context
-            else:
-                chunk = agreed+right_context
-            substitution_point = len(first_chunk)-corrected_match_a
-            print('c:', chunk, substitution_point)
-            print('insert in: ', accumulation[:-substitution_point])
 
-            accumulation[-substitution_point:] = chunk
-            print('inserted: ', accumulation)
-        print(accumulation)
+                # just append the second chunk
+                if len(second_chunk) >= 3:
+                    accumulation += second_chunk
+                    print('inserted after no match: ', accumulation)
+
+                # possibly noisy chunk
+                else:
+                    print('*** missing something?')
+        
+        # there's a match
+        else:
+            if right_context != []:
+
+                if len(agreed) <= 2:
+                    accumulation += second_chunk
+                    print('short match: ', accumulation)
+
+
+                else:
+                    # stitching chunks together
+                    chunk = agreed+right_context
+                    substitution_point = len(first_chunk)-corrected_match_a
+                    print('c:', chunk, substitution_point)
+                    print('insert in: ', accumulation[:-substitution_point])
+
+                    accumulation[-substitution_point:] = chunk
+                    print('inserted: ', accumulation)
+
 
 
 
@@ -365,7 +386,6 @@ class OnnxRuntime(Runtime):
         print('-->', decoded_part.label_sequences[0][0])
         #if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
         #    label_sequences += " "
-        print('label sequences',label_sequences)
         current_chunk = decoded_part.label_sequences[0][0]
         self.solve_chunk_overlap_naive(previous_chunk, current_chunk, label_sequences)
         #label_sequences += decoded_part.label_sequences[0][0]
