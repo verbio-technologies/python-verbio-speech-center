@@ -249,7 +249,7 @@ class OnnxRuntime(Runtime):
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
         # Note that 800 frames are 50ms
-        return MatrixOperations(window=width, overlap=36000).splitIntoOverlappingChunks(
+        return MatrixOperations(window=width, overlap=48000).splitIntoOverlappingChunks(
         #return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
             audio
         )
@@ -324,7 +324,6 @@ class OnnxRuntime(Runtime):
         corrected_match_a = len(first_chunk)-(match.a+match.size)
         corrected_match_b = len(second_chunk)-(match.b+match.size)
 
-
         left_context = first_chunk[:corrected_match_a]
         agreed = first_chunk[corrected_match_a:corrected_match_a + match.size]
         right_context = second_chunk[corrected_match_b+match.size:]
@@ -352,6 +351,7 @@ class OnnxRuntime(Runtime):
                 # possibly noisy chunk
                 else:
                     print('*** missing something?')
+
         
         # there's a match
         else:
@@ -375,10 +375,8 @@ class OnnxRuntime(Runtime):
 
 
 
+
     def _decodePartial(self, label_sequences, scores, timesteps, yi, previous_chunk):
-        #comprobar si el overlap esta activo
-        #si lo esta, comprobar si hay algo en label_sequences
-        #si lo hay, esta con overlap, reconstruir
 
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
