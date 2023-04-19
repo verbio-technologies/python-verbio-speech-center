@@ -1,0 +1,35 @@
+
+[global]
+listeners = 1
+workers = 0
+verbose = "ERROR"
+host = "[::]"
+port = 50051
+gpu = 1
+
+[en-us]
+cpu = "1.1.0"
+gpu = "1.2.0"
+lm = "1.2.0"
+lm-weight = "0.91715"
+word-score = "-0.29761"
+sil-weight = "0.31423"
+formatter = "format-model.en-us.fm"
+
+[es]
+cpu = "1.1.0"
+gpu = "1.2.0"
+lm = "1.2.0"
+lm-weight = "1.0"
+word-score = "-0.25422"
+sil-weight = "0.24403"
+formatter = "format-model.es.fm"
+
+[pt-br]
+cpu = "1.1.0"
+gpu = "1.2.0"
+lm = "1.2.0"
+lm-weight = "0.91447"
+word-score = "-0.56194"
+sil-weight = "0.44272"
+formatter = "format-model.pt-br.fm"
