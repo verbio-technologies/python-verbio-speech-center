@@ -239,7 +239,7 @@ image:release:gpu:
   before_script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
-    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.${DEVICE})
+    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.${DEVICE}_version)
     - echo ${MODEL_VERSION}
     - SERVICE_VERSION=$(cat VERSION)
     - echo SERVICE_VERSION=${SERVICE_VERSION}
