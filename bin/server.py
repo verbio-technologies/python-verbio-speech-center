@@ -172,7 +172,7 @@ def setDefaultBindAddress(args, config):
 def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
     config_file = args.config or "asr4_config.toml"
     args.language = args.language or Language.EN_US.value
-    args.bindAddress = args.bindAddress or "[::]:50051"
+
     if os.path.exists(config_file):
         config = toml.load(config_file)
         config.setdefault("global", {})
@@ -184,6 +184,8 @@ def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
         if args.language.lower() in config:
             for k, v in config[args.language.lower()].items():
                 setattr(args, k, v)
+    else:
+        args.bindAddress = args.bindAddress or "[::]:50051"
 
     return args
 
