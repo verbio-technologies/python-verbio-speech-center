@@ -23,8 +23,8 @@ def main():
 
 
 def serve(
-        configuration,
-        loggerService: LoggerService,
+    configuration,
+    loggerService: LoggerService,
 ) -> None:
     logger = loggerService.getLogger()
     servers = []
@@ -145,6 +145,7 @@ def _parseArguments() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+
 class TestParseArguments(unittest.TestCase):
     def test_parseArguments_with_minimum_args(self):
         # Test with minimum arguments
@@ -170,22 +171,37 @@ class TestParseArguments(unittest.TestCase):
     def test_parseArguments_with_all_args(self):
         # Test with all arguments set
         args = _parseArguments(
-            "-m", "/path/to/model",
-            "-d", "/path/to/dictionary",
-            "-l", "en",
-            "-f", "/path/to/formatter",
+            "-m",
+            "/path/to/model",
+            "-d",
+            "/path/to/dictionary",
+            "-l",
+            "en",
+            "-f",
+            "/path/to/formatter",
             "-g",
-            "--host", "localhost",
-            "-j", 2,
-            "-s", 3,
-            "-L", 4,
-            "-w", 5,
-            "-v", "debug",
-            "-D", "local",
-            "--lm-algorithm", "viterbi",
-            "--lm-lexicon", "/path/to/lexicon",
-            "--lm-model", "/path/to/lm_model",
-            "-C", "/path/to/config"
+            "--host",
+            "localhost",
+            "-j",
+            2,
+            "-s",
+            3,
+            "-L",
+            4,
+            "-w",
+            5,
+            "-v",
+            "debug",
+            "-D",
+            "local",
+            "--lm-algorithm",
+            "viterbi",
+            "--lm-lexicon",
+            "/path/to/lexicon",
+            "--lm-model",
+            "/path/to/lm_model",
+            "-C",
+            "/path/to/config",
         )
         self.assertIsInstance(args, Namespace)
         self.assertEqual(args.model, "/path/to/model")
@@ -213,12 +229,13 @@ class TestParseArguments(unittest.TestCase):
         with self.assertRaises(SystemExit):
             _ = _parseArguments("-D", "invalid_decoding_type")
 
+
 def setDefaultBindAddress(args, config):
-    config['global'].setdefault('host', '[::]')
-    config['global'].setdefault('port', 50051)
-    args.bindAddress = config['global']['host'] + ':' + str(config['global']['port'])
-    del config['global']['host']
-    del config['global']['port']
+    config["global"].setdefault("host", "[::]")
+    config["global"].setdefault("port", 50051)
+    args.bindAddress = config["global"]["host"] + ":" + str(config["global"]["port"])
+    del config["global"]["host"]
+    del config["global"]["port"]
 
 
 def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
@@ -228,7 +245,7 @@ def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
 
         setDefaultBindAddress(args, config)
 
-        for k, v in config['global'].items():
+        for k, v in config["global"].items():
             setattr(args, k, v)
 
         args.language = args.language or Language.EN_US.value
@@ -238,23 +255,32 @@ def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
                 setattr(args, k, v)
 
     return args
+
+
 def SystemVarsOverride(args: argparse.Namespace) -> argparse.Namespace:
-    args.verbose = args.verbose or os.environ.get("LOG_LEVEL", LoggerService.getDefaultLogLevel())
+    args.verbose = args.verbose or os.environ.get(
+        "LOG_LEVEL", LoggerService.getDefaultLogLevel()
+    )
     args.gpu = args.gpu or bool(os.environ.get("ASR4_GPU", False))
     args.servers = args.servers or int(os.environ.get("ASR4_SERVERS", 1))
     args.listeners = args.listeners or int(os.environ.get("ASR4_LISTENERS", 1))
     args.workers = args.workers or int(os.environ.get("ASR4_WORKERS", 2))
-    args.decoding_type = args.decoding_type or os.environ.get("ASR4_DECODING_TYPE", "GLOBAL")
-    args.lm_algorithm = args.lm_algorithm or os.environ.get("ASR4_LM_ALGORITHM", "viterbi")
+    args.decoding_type = args.decoding_type or os.environ.get(
+        "ASR4_DECODING_TYPE", "GLOBAL"
+    )
+    args.lm_algorithm = args.lm_algorithm or os.environ.get(
+        "ASR4_LM_ALGORITHM", "viterbi"
+    )
 
     return args
+
 
 def checkArgsRequired(args):
 
     if not args.model_path:
         pass
 
-    if args.lm_algorithm and not ( args.lm_model or args.lexicon ):
+    if args.lm_algorithm and not (args.lm_model or args.lexicon):
         pass
 
     pass
