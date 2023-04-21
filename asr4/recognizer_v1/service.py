@@ -39,6 +39,9 @@ class RecognitionServiceConfiguration:
         self.numberOfWorkers = 1
         self.decodingType = DecodingType["GLOBAL"]
         self.lmAlgorithm = "viterbi"
+        self.lm_weight = 0.2
+        self.word_score = -1
+        self.sil_score = 0
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -55,6 +58,9 @@ class RecognitionServiceConfiguration:
                 getattr(arguments, "decoding_type", "GLOBAL")
             ]
             self.lmAlgorithm = arguments.lm_algorithm
+            self.lm_weight = arguments.lm_weight
+            self.word_score = arguments.word_score
+            self.sil_score = arguments.sil_score
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
@@ -107,6 +113,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.lmFile,
             configuration.lexicon,
             configuration.lmAlgorithm,
+            configuration.lm_weight,
+            configuration.word_score,
+            configuration.sil_score,
         )
         if formatter is None:
             self.logger.warning(
@@ -120,10 +129,22 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: Optional[str],
+        lm_weight: Optional[float],
+        word_score: Optional[float],
+        sil_score: Optional[float],
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
-            return OnnxRuntime(session, vocabulary, lmFile, lexicon, lmAlgorithm)
+            return OnnxRuntime(
+                session,
+                vocabulary,
+                lmFile,
+                lexicon,
+                lmAlgorithm,
+                lm_weight,
+                word_score,
+                sil_score,
+            )
         else:
             return OnnxRuntime(session)
 
