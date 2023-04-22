@@ -16,8 +16,6 @@ if [[ "$gui" == *"_upgraded"* ]]; then
   test=upgraded
 fi
 
-pip install .[client]
-
 rm "test_${language}_results.tsv" || true
 rm "test_${language}_oov.json" || true
 rm -rf "test_${language}_intratest" || true

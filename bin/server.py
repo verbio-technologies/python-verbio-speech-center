@@ -164,7 +164,7 @@ def _parseArguments(args: list) -> argparse.Namespace:
 def setDefaultBindAddress(args, config):
     config["global"].setdefault("host", "[::]")
     config["global"].setdefault("port", 50051)
-    args.bindAddress = config["global"]["host"] + ":" + str(config["global"]["port"])
+    args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
     del config["global"]["host"]
     del config["global"]["port"]
 
@@ -179,11 +179,11 @@ def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
         setDefaultBindAddress(args, config)
 
         for k, v in config["global"].items():
-            setattr(args, k, v)
+            setattr(args, k, getattr(args, k, None) or v)
 
         if args.language.lower() in config:
             for k, v in config[args.language.lower()].items():
-                setattr(args, k, v)
+                setattr(args, k, getattr(args, k, None) or v)
     else:
         args.bindAddress = args.bindAddress or "[::]:50051"
 
