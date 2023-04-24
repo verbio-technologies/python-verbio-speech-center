@@ -1,0 +1,31 @@
+
+[global]
+listeners = 1
+workers = 0
+verbose = "INFO"
+host = "[::]"
+port = 50051
+
+[en-us]
+cpu_version = "1.1.0"
+gpu_version = "1.2.0"
+lm_version = "1.2.0"
+lm_weight = "0.91715"
+word_score = "-0.29761"
+sil_score = "0.31423"
+
+[es]
+cpu_version = "1.1.0"
+gpu_version = "1.2.0"
+lm_version = "1.2.0"
+lm_weight = "1.0"
+word_score = "-0.25422"
+sil_score = "0.24403"
+
+[pt-br]
+cpu_version = "1.1.0"
+gpu_version = "1.2.0"
+lm_version = "1.2.0"
+lm-weight = "0.91447"
+word_score = "-0.56194"
+sil_score = "0.44272"

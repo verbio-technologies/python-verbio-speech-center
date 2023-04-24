@@ -53,6 +53,9 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             self.vocabulary,
             str(self.datapath.joinpath("en-us_lm.bin")),
             str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
+            0.2,
+            -1,
+            0,
         )
         token_idxs = [7, 8, 9, 10]
         self.assertEqual(decoder._getTimesteps([token_idxs]), [0])
@@ -62,6 +65,9 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             self.vocabulary,
             str(self.datapath.joinpath("en-us_lm.bin")),
             str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
+            0.2,
+            -1,
+            0,
         )
         self.assertEqual(
             len(decoder.decode(torch.tensor([[[0, 0, 0]]])).label_sequences), 1
