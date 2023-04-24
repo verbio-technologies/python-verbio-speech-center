@@ -33,6 +33,7 @@ class MockArguments(argparse.Namespace):
         self.lm_weight = None
         self.word_score = None
         self.sil_score = None
+        self.subwords = None
 
 
 class TestServerConfiguration(unittest.TestCase):
