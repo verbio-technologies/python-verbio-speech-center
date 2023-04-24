@@ -117,7 +117,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.lm_weight,
             configuration.word_score,
             configuration.sil_score,
-            configuration.subwords
+            configuration.subwords,
         )
         if formatter is None:
             self.logger.warning(
@@ -134,7 +134,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         lm_weight: Optional[float],
         word_score: Optional[float],
         sil_score: Optional[float],
-        subwords: bool = False
+        subwords: bool = False,
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
@@ -147,7 +147,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 lm_weight,
                 word_score,
                 sil_score,
-                subwords
+                subwords,
             )
         else:
             return OnnxRuntime(session)

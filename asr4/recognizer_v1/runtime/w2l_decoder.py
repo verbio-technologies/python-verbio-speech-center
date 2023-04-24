@@ -34,7 +34,7 @@ class W2lKenLMDecoder:
         lm_weight: Optional[float],
         word_score: Optional[float],
         sil_score: Optional[float],
-        subwords: bool = False
+        subwords: bool = False,
     ) -> None:
         assert (
             lmFile and lexicon
