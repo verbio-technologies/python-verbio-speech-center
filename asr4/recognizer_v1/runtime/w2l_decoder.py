@@ -31,6 +31,9 @@ class W2lKenLMDecoder:
         vocabulary: List[str],
         lmFile: Optional[str],
         lexicon: Optional[str],
+        lm_weight: Optional[float],
+        word_score: Optional[float],
+        sil_score: Optional[float],
     ) -> None:
         assert (
             lmFile and lexicon
@@ -59,10 +62,10 @@ class W2lKenLMDecoder:
             beam_size=15,
             beam_size_token=len(vocabulary),
             beam_threshold=25.0,
-            lm_weight=0.2,
-            word_score=-1,
+            lm_weight=lm_weight,
+            word_score=word_score,
             unk_score=-np.inf,
-            sil_score=0.0,
+            sil_score=sil_score,
             log_add=False,
             criterion_type=CriterionType.CTC,
         )
