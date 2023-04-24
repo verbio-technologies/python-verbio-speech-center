@@ -6,6 +6,25 @@
 
 ### Removed :no_entry:
 
+## 0.4.0 (2023-04-18)
+
+### Minor (1 change)
+
+- [Optional formatting in query](csr/asr4@75f4f1794c06ad36de6b3774479e02d4aa7f2600) ([merge request](csr/asr4!228))
+
+### Patch (4 changes)
+
+- [Lower accuracy metrics for ES because CPU is worse than GPU](csr/asr4@7545fcaca60e8e89cfb4210984f5e3f56cac8a58) ([merge request](csr/asr4!231))
+- [Bump version to 0.4.0](csr/asr4@fc44a2b6baab856cbc0f2010adad9e93c2bb7557) ([merge request](csr/asr4!230))
+- [fix/ Update E2E ES Upgraded test metrics](csr/asr4@28b802cf86e86b1de065714723ef728d4000955c) ([merge request](csr/asr4!227))
+- [feature/ Added ES formatted references GUI to E2E testing data](csr/asr4@5e7485176cece2d9063b84ab4c81328d341d0f11) ([merge request](csr/asr4!226))
+
+## 0.3.1 (2023-04-03)
+
+### Patch (1 change)
+
+- [feature/ Add duration field to the ASR4 Streaming Response](csr/asr4@59b6b04b7629fa066adad939c31070e329e4d03f) ([merge request](csr/asr4!222))
+
 ## 0.3.0 (2023-03-31)
 
 ### Patch (2 changes)

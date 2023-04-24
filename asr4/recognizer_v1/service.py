@@ -39,6 +39,9 @@ class RecognitionServiceConfiguration:
         self.numberOfWorkers = 1
         self.decodingType = DecodingType["GLOBAL"]
         self.lmAlgorithm = "viterbi"
+        self.lm_weight = 0.2
+        self.word_score = -1
+        self.sil_score = 0
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -56,6 +59,9 @@ class RecognitionServiceConfiguration:
                 getattr(arguments, "decoding_type", "GLOBAL")
             ]
             self.lmAlgorithm = arguments.lm_algorithm
+            self.lm_weight = arguments.lm_weight
+            self.word_score = arguments.word_score
+            self.sil_score = arguments.sil_score
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
@@ -108,7 +114,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.lmFile,
             configuration.lexicon,
             configuration.lmAlgorithm,
-            configuration.subwords,
+            configuration.lm_weight,
+            configuration.word_score,
+            configuration.sil_score,
+            configuration.subwords
         )
         if formatter is None:
             self.logger.warning(
@@ -122,12 +131,23 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: Optional[str],
-        subwords: bool = False,
+        lm_weight: Optional[float],
+        word_score: Optional[float],
+        sil_score: Optional[float],
+        subwords: bool = False
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
             return OnnxRuntime(
-                session, vocabulary, lmFile, lexicon, lmAlgorithm, subwords
+                session,
+                vocabulary,
+                lmFile,
+                lexicon,
+                lmAlgorithm,
+                lm_weight,
+                word_score,
+                sil_score,
+                subwords
             )
         else:
             return OnnxRuntime(session)
@@ -154,6 +174,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+            f"[formatting={request.config.parameters.enable_formatting}] "
             f"[length={len(request.audio)}] "
             f"[duration={duration.ToTimedelta().total_seconds()}] "
             f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
@@ -177,6 +198,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
+                    f"[formatting={request.config.parameters.enable_formatting}] "
                     f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
@@ -253,7 +275,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def eventHandle(self, request: RecognizeRequest) -> str:
         transcription = self._runRecognition(request)
-        return self._formatWords(transcription)
+        if request.config.parameters.enable_formatting:
+            return self._formatWords(transcription)
+        else:
+            words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
+            return " ".join(words)
 
     def _runRecognition(self, request: RecognizeRequest) -> str:
         language = Language.parse(request.config.parameters.language)
