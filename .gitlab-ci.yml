@@ -251,6 +251,7 @@ image:release:gpu:
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx deploy/docker/
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
+    - cp asr4_config.toml deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.bin deploy/docker/asr4-${LANGUAGE}-lm.bin || true
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.lexicon.txt deploy/docker/asr4-${LANGUAGE}-lm.lexicon.txt || true
     - touch deploy/docker/dummy
