@@ -88,8 +88,9 @@ functional-testing:endpoints:
     - wget https://github.com/bojand/ghz/releases/download/v0.111.0/ghz-linux-x86_64.tar.gz
     - tar -xzf ghz-linux-x86_64.tar.gz
     - mv ghz /bin
+    - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
     - pip install .[client,server,cpu,test]
-    - export MODEL_VERSION=$(cat MODELS_VERSION | grep en-us:cpu | awk '/1/ -F " " {print $2}')
+    - export MODEL_VERSION=$(stoml asr4_config.toml en-us.cpu_version)
     - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
   script:
     - cd tests/functional/data
@@ -138,7 +139,8 @@ integration-testing:cpu:
     - master
   before_script:
     - pip install .[client,server,cpu,test]
-    - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:cpu | awk '/1/ -F " " {print $2}')
+    - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
+    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.cpu_version)
     - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 0
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
@@ -157,7 +159,8 @@ integration-testing:gpu:
   before_script:
     - . /opt/intel/oneapi/setvars.sh
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
-    - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:gpu | awk '/1/ -F " " {print $2}')
+    - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
+    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.gpu_version)
     - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
     - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
     - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
@@ -235,11 +238,12 @@ image:release:gpu:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
-    - export MODEL_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:${DEVICE} | awk '/1/ -F " " {print $2}')
+    - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
+    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.${DEVICE}_version)
     - echo ${MODEL_VERSION}
     - SERVICE_VERSION=$(cat VERSION)
     - echo SERVICE_VERSION=${SERVICE_VERSION}
-    - export LM_VERSION=$(cat MODELS_VERSION | grep ${LANGUAGE}:lm | awk '/1/ -F " " {print $2}')
+    - export LM_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.lm_version)
     - echo LM_VERSION=${LM_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
