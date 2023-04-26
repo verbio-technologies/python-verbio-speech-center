@@ -29,7 +29,7 @@ class Options:
         self.formatting = False
         self.inactivity_timeout = False
         self.asr_version = None
-        self.labels = None
+        self.label = None
         self.client_id = None
         self.client_secret = None
 
@@ -59,7 +59,7 @@ def parse_command_line() -> Options:
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
-    parser.add_argument('--labels', help='String with space separated list of labels', required=False, default="")
+    parser.add_argument('--label', help='"Label for the request', required=False, default="")
     
     credentialGroup = parser.add_argument_group('credentials', '[OPTIONAL] Client authentication credentials used to refresh the token. You can find your credentials on the dashboard at https://dashboard.speechcenter.verbio.com/access-token')
     credentialGroup.add_argument('--client-id', help='Client id for authentication. MUST be written as --client-id=CLIENT_ID')
@@ -78,7 +78,7 @@ def parse_command_line() -> Options:
     options.diarization = args.diarization
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
-    options.labels = args.labels
+    options.label = args.label
     
     return options
 
@@ -119,7 +119,7 @@ class SpeechCenterStreamingASRClient:
         self._asr_version = options.asr_version
         self._formatting = options.formatting
         self._diarization = options.diarization
-        self._labels = options.labels
+        self._label = options.label
 
     def _close_stream_by_inactivity(self):
         logging.info("Stream inactivity detected, closing stream...")
@@ -158,9 +158,9 @@ class SpeechCenterStreamingASRClient:
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization, labels=self._labels))
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization, label=self._label))
         else:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization, labels=self._labels), metadata=metadata)
+            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, wav_audio=self._resources.audio, language=self._language, sample_rate=self._resources.sample_rate, formatting=self._formatting, diarization=self._diarization, label=self._label), metadata=metadata)
         
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
     
@@ -182,7 +182,7 @@ class SpeechCenterStreamingASRClient:
         sample_rate: int = 16000,
         diarization = False,
         formatting = False,
-        labels: str = "",
+        label: str = "",
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
         
         if len(topic):
@@ -207,7 +207,7 @@ class SpeechCenterStreamingASRClient:
                             enable_diarization = diarization
                         ), 
                         resource=var_resource,
-                        label=labels.split(),
+                        label=[label],
                         version=selected_asr_version))),
             ("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
         ]

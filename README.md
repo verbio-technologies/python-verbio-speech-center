@@ -63,7 +63,7 @@ Our Recognizer will allow you to easily convert an audio resource into its assoc
 **Example**
 
 ```console
-python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --labels 'project1'
+python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
 ```
 
 This code will generate the following terminal output on success:
@@ -105,7 +105,7 @@ You must also specify a token file, where the token will be stored and updated i
 **Example**
 ```console
 python3 recognizer_stream.py --client-id="your-client-id" --client-secret="your-client-secret"
- --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --labels 'project1'
+ --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
 
 ```
 
