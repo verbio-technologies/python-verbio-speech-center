@@ -13,8 +13,8 @@ from asr4.recognizer import DecodingType
 def main():
     multiprocessing.set_start_method("spawn", force=True)
     args = fixNumberOfJobs(_parseArguments(sys.argv[1:]))
-    args = TomlConfigurationOverride(args)
     args = SystemVarsOverride(args)
+    args = TomlConfigurationOverride(args)
     args = checkArgsRequired(args)
     logService = LoggerService(args.verbose)
     logService.configureGlobalLogger()
@@ -162,11 +162,17 @@ def _parseArguments(args: list) -> argparse.Namespace:
 
 
 def setDefaultBindAddress(args, config):
-    config["global"].setdefault("host", "[::]")
-    config["global"].setdefault("port", 50051)
-    args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
-    del config["global"]["host"]
-    del config["global"]["port"]
+    if not args.bindAddress:
+        if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
+            args.bindAddress = (
+                f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
+            )
+        else:
+            config["global"].setdefault("host", "[::]")
+            config["global"].setdefault("port", 50051)
+            args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
+            del config["global"]["host"]
+            del config["global"]["port"]
 
 
 def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:

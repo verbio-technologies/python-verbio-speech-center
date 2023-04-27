@@ -62,7 +62,7 @@ class ArgumentParserTests(unittest.TestCase):
             "formatter.pth",
             "-g",
             "--host",
-            "localhost",
+            "[::]:50052",
             "-j",
             "4",
             "-s",
@@ -97,7 +97,7 @@ class ArgumentParserTests(unittest.TestCase):
         self.assertEqual(args.language, "en-us")
         self.assertEqual(args.formatter, "formatter.pth")
         self.assertEqual(args.gpu, True)
-        self.assertEqual(args.bindAddress, "localhost")
+        self.assertEqual(args.bindAddress, "[::]:50052")
         self.assertEqual(args.jobs, 4)
         self.assertEqual(args.servers, 2)
         self.assertEqual(args.listeners, 4)
@@ -117,6 +117,7 @@ class SetDefaultBindAddressTests(unittest.TestCase):
     def test_setDefaultBindAddress(self):
         # Test case 1: Test setting default bind address
         args = argparse.Namespace()
+        args.bindAddress = None
         config = {"global": {"host": "[::]", "port": 50051}}
         setDefaultBindAddress(args, config)
         self.assertEqual(args.bindAddress, "[::]:50051")
@@ -128,9 +129,8 @@ class TestTomlConfigurationOverride(unittest.TestCase):
     def test_toml_configuration_override(self):
         args = argparse.Namespace()
         args.language = "en-us"
-        args.config = (
-            "test_config.toml"  # Replace with the path to your test TOML config file
-        )
+        args.config = "test_config.toml"
+        args.bindAddress = None
 
         # Create a sample TOML config string for testing
         config_str = """
@@ -155,21 +155,21 @@ class TestTomlConfigurationOverride(unittest.TestCase):
         with open(args.config, "w") as f:
             f.write(config_str)
 
-        result = TomlConfigurationOverride(args)
+        args = TomlConfigurationOverride(args)
 
         # Assert that the values in args have been updated based on the TOML config
-        self.assertEqual(result.listeners, 2)
-        self.assertEqual(result.workers, 1)
-        self.assertEqual(result.verbose, "DEBUG")
-        self.assertEqual(result.bindAddress, "localhost:8080")
-        self.assertEqual(result.gpu, 0)
-        self.assertEqual(result.cpu_version, "2.0.0")
-        self.assertEqual(result.gpu_version, "2.0.0")
-        self.assertEqual(result.lm_version, "2.0.0")
-        self.assertEqual(result.lm_weight, "0.5")
-        self.assertEqual(result.word_score, "-0.1")
-        self.assertEqual(result.sil_score, "0.2")
-        self.assertEqual(result.formatter, "format-model.en-us-2.0.0.fm")
+        self.assertEqual(args.listeners, 2)
+        self.assertEqual(args.workers, 1)
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.bindAddress, "localhost:8080")
+        self.assertEqual(args.gpu, 0)
+        self.assertEqual(args.cpu_version, "2.0.0")
+        self.assertEqual(args.gpu_version, "2.0.0")
+        self.assertEqual(args.lm_version, "2.0.0")
+        self.assertEqual(args.lm_weight, "0.5")
+        self.assertEqual(args.word_score, "-0.1")
+        self.assertEqual(args.sil_score, "0.2")
+        self.assertEqual(args.formatter, "format-model.en-us-2.0.0.fm")
 
         os.remove(args.config)  # Remove the test config file after the test#
 
@@ -179,6 +179,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args = argparse.Namespace()
         args.verbose = "DEBUG"
         args.gpu = True
+        args.bindAddress = "[::]:50052"
         args.servers = 3
         args.listeners = 5
         args.workers = 4
@@ -187,25 +188,30 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.lm_weight = 0.5
         args.word_score = -0.2
         args.sil_score = 0.1
+        args.config = None
+        args.language = None
 
-        result = SystemVarsOverride(args)
+        args = SystemVarsOverride(args)
+        args = TomlConfigurationOverride(args)
 
         # Assert that the values in args have not been changed since they are already set
-        self.assertEqual(result.verbose, "DEBUG")
-        self.assertEqual(result.gpu, True)
-        self.assertEqual(result.servers, 3)
-        self.assertEqual(result.listeners, 5)
-        self.assertEqual(result.workers, 4)
-        self.assertEqual(result.decoding_type, "LOCAL")
-        self.assertEqual(result.lm_algorithm, "beam_search")
-        self.assertEqual(result.lm_weight, 0.5)
-        self.assertEqual(result.word_score, -0.2)
-        self.assertEqual(result.sil_score, 0.1)
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.gpu, True)
+        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.servers, 3)
+        self.assertEqual(args.listeners, 5)
+        self.assertEqual(args.workers, 4)
+        self.assertEqual(args.decoding_type, "LOCAL")
+        self.assertEqual(args.lm_algorithm, "beam_search")
+        self.assertEqual(args.lm_weight, 0.5)
+        self.assertEqual(args.word_score, -0.2)
+        self.assertEqual(args.sil_score, 0.1)
 
     def test_system_vars_override_with_env_vars_set(self):
         args = argparse.Namespace()
         args.verbose = None
         args.gpu = None
+        args.bindAddress = None
         args.servers = None
         args.listeners = None
         args.workers = None
@@ -214,10 +220,14 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.lm_weight = None
         args.word_score = None
         args.sil_score = None
+        args.config = None
+        args.language = None
 
         # Set environment variables for testing
         os.environ["LOG_LEVEL"] = "INFO"
         os.environ["ASR4_GPU"] = "1"
+        os.environ["ASR4_HOST"] = "[::]"
+        os.environ["ASR4_PORT"] = "50052"
         os.environ["ASR4_SERVERS"] = "2"
         os.environ["ASR4_LISTENERS"] = "3"
         os.environ["ASR4_WORKERS"] = "4"
@@ -227,23 +237,27 @@ class SystemVarsOverrideTests(unittest.TestCase):
         os.environ["ASR4_WORD_SCORE"] = "-0.5"
         os.environ["ASR4_SIL_SCORE"] = "0.3"
 
-        result = SystemVarsOverride(args)
+        args = SystemVarsOverride(args)
+        args = TomlConfigurationOverride(args)
 
         # Assert that the values in args have been overridden by the environment variables
-        self.assertEqual(result.verbose, "INFO")
-        self.assertEqual(result.gpu, True)
-        self.assertEqual(result.servers, 2)
-        self.assertEqual(result.listeners, 3)
-        self.assertEqual(result.workers, 4)
-        self.assertEqual(result.decoding_type, "GLOBAL")
-        self.assertEqual(result.lm_algorithm, "viterbi")
-        self.assertEqual(result.lm_weight, 0.7)
-        self.assertEqual(result.word_score, -0.5)
-        self.assertEqual(result.sil_score, 0.3)
+        self.assertEqual(args.verbose, "INFO")
+        self.assertEqual(args.gpu, True)
+        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.servers, 2)
+        self.assertEqual(args.listeners, 3)
+        self.assertEqual(args.workers, 4)
+        self.assertEqual(args.decoding_type, "GLOBAL")
+        self.assertEqual(args.lm_algorithm, "viterbi")
+        self.assertEqual(args.lm_weight, 0.7)
+        self.assertEqual(args.word_score, -0.5)
+        self.assertEqual(args.sil_score, 0.3)
 
         # Clean up environment variables after the test
         del os.environ["LOG_LEVEL"]
         del os.environ["ASR4_GPU"]
+        del os.environ["ASR4_HOST"]
+        del os.environ["ASR4_PORT"]
         del os.environ["ASR4_SERVERS"]
         del os.environ["ASR4_LISTENERS"]
         del os.environ["ASR4_WORKERS"]
