@@ -6,7 +6,11 @@ class FormatterFactory:
     @staticmethod
     def createFormatter(model_path: str, language: Language) -> Formatter:
         return Formatter(
-            _sanitizeLanguage(language.asFormatter()), model_path, b"", b"", dict()
+            FormatterFactory._sanitizeLanguage(language.asFormatter()),
+            model_path,
+            b"",
+            b"",
+            dict(),
         )
 
     def _sanitizeLanguage(language: str) -> str:
