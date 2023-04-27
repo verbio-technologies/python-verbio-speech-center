@@ -396,7 +396,7 @@ class OnnxRuntime(Runtime):
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
-            " ".join(output.label_sequences[0][0])
+            "".join(output.label_sequences[0][0])
             .replace("|", " ")
             .replace("<s>", "")
             .replace("</s>", "")
