@@ -2,7 +2,7 @@ import unittest
 import pytest
 import logging
 
-# import torch
+import torch
 import wave
 import google
 import numpy as np
