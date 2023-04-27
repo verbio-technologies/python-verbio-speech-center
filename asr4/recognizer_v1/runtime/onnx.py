@@ -367,13 +367,12 @@ class MatrixOperations:
             # Extract the current chunk from the input array
             chunk = audio[start_idx:end_idx]
 
-            if i==(num_chunks-1) and self.overlap >= chunk.shape[0]:
+            if i == (num_chunks - 1) and self.overlap >= chunk.shape[0]:
                 # Delete last row as it has no information
                 result = result[:-1, :]
             else:
                 # Store the chunk in the result array
                 result[i, : chunk.shape[0]] = chunk
-
 
         return result
 

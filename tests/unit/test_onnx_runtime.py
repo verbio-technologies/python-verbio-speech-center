@@ -205,7 +205,9 @@ class TestSplitIntoOverlappingChunks(unittest.TestCase):
         ).splitIntoOverlappingChunks(self.audio)
 
         # Expected output
-        expected = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 0, 0]], dtype=np.float32)
+        expected = np.array(
+            [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 0, 0]], dtype=np.float32
+        )
 
         # Assert that the result matches the expected output
         np.testing.assert_array_equal(result, expected)
@@ -259,7 +261,7 @@ class TestSplitIntoOverlappingChunks(unittest.TestCase):
             window=window, overlap=overlap
         ).splitIntoOverlappingChunks(audio)
 
-        expected = np.array([[0,1,2,3,4,0,0,0,0,0]],dtype='float32')
+        expected = np.array([[0, 1, 2, 3, 4, 0, 0, 0, 0, 0]], dtype="float32")
 
         # Assert that the result matches the expected output
         np.testing.assert_array_equal(result, expected)
