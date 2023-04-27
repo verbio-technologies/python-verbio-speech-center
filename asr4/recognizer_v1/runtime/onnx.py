@@ -259,7 +259,7 @@ class OnnxRuntime(Runtime):
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
         # Note that 800 frames are 50ms
-        return MatrixOperations(window=width, overlap=48000).splitIntoOverlappingChunks(
+        return MatrixOperations(window=width, overlap=36000).splitIntoOverlappingChunks(
             # return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
             audio
         )
