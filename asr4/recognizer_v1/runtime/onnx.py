@@ -283,15 +283,9 @@ class OnnxRuntime(Runtime):
         timesteps = []
 
         for i in range(input.shape[1]):
-            try:
-                frame_probs = self._session.run(
-                    None, {self._inputName: input[:, i, :].numpy()}
-                )
-            except:
-                import traceback
-
-                traceback.print_exc()
-                pass
+            frame_probs = self._session.run(
+                None, {self._inputName: input[:, i, :].numpy()}
+            )
             if decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
@@ -378,5 +372,5 @@ class MatrixOperations:
 
     def _setCorrectDimensions(self):
         assert (
-            self.window > 0
+            self.overlap <= self.window and self.window
         ), "Cannot split into overlapping chunks if overlap is bigger than window"
