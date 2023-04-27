@@ -422,7 +422,7 @@ class MatrixOperations:
     def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
         overlap_size = self.window - self.overlap
         num_chunks = int(np.ceil((audio.shape[0]) / overlap_size))
-        result = np.zeros((num_chunks, self.window), dtype=np.float32)
+        result = np.zeros((num_chunks, self.window), dtype=audio.dtype)
 
         # Iterate over the chunks
         for i in range(num_chunks):
