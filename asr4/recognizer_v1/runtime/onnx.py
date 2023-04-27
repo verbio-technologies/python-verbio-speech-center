@@ -262,9 +262,10 @@ class OnnxRuntime(Runtime):
         # return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
         #     audio
         # )
-        return MatrixOperations(window=width, overlap=48000).splitIntoOverlappingChunks(
-            audio
-        )
+        result = MatrixOperations(
+            window=width, overlap=48000
+        ).splitIntoOverlappingChunks(audio)
+        return result
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         self._session.logger.debug(f" - softmax")
@@ -350,7 +351,7 @@ class MatrixOperations:
     def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
         overlap_size = self.window - self.overlap
         num_chunks = int(np.ceil((audio.shape[0]) / overlap_size))
-        result = np.zeros((num_chunks, self.window), dtype=type(audio))
+        result = np.zeros((num_chunks, self.window), dtype=np.float32)
 
         # Iterate over the chunks
         for i in range(num_chunks):
