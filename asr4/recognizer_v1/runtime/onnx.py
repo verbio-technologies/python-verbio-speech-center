@@ -259,7 +259,10 @@ class OnnxRuntime(Runtime):
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
         # Note that 800 frames are 50ms
-        return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
+        # return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
+        #     audio
+        # )
+        return MatrixOperations(window=width, overlap=48000).splitIntoOverlappingChunks(
             audio
         )
 
@@ -280,9 +283,15 @@ class OnnxRuntime(Runtime):
         timesteps = []
 
         for i in range(input.shape[1]):
-            frame_probs = self._session.run(
-                None, {self._inputName: input[:, i, :].numpy()}
-            )
+            try:
+                frame_probs = self._session.run(
+                    None, {self._inputName: input[:, i, :].numpy()}
+                )
+            except:
+                import traceback
+
+                traceback.print_exc()
+                pass
             if decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
@@ -344,27 +353,31 @@ class MatrixOperations:
         self.overlap = overlap
         self._setCorrectDimensions()
 
-    def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
-        audio = self._makeIntoMatrix(audio)
-        return self._addRightPadding(audio)
+    def splitIntoOverlappingChunks(self, audio: np.ndarray):
+        overlap_size = self.window - self.overlap
+        num_chunks = int(np.ceil((audio.shape[0]) / overlap_size))
+        result = np.zeros((num_chunks, self.window), dtype=type(audio))
+
+        # Iterate over the chunks
+        for i in range(num_chunks):
+            # Calculate the start and end indices for the current chunk
+            start_idx = i * overlap_size
+            end_idx = start_idx + self.window
+
+            # Extract the current chunk from the input array
+            chunk = audio[start_idx:end_idx]
+
+            if i==(num_chunks-1) and self.overlap >= chunk.shape[0]:
+                # Delete last row as it has no information
+                result = result[:-1, :]
+            else:
+                # Store the chunk in the result array
+                result[i, : chunk.shape[0]] = chunk
+
+
+        return result
 
     def _setCorrectDimensions(self):
-        self.window = self.window - 2 * self.overlap
         assert (
             self.window > 0
-        ), "Can not split into overlapping chunks if overlap is bigger than window"
-
-    def _makeIntoMatrix(self, audio: npt.NDArray[np.float32]):
-        sizeOfTheLastFrame = (audio.shape[0]) % self.window
-        totalToBePadded = self.window - sizeOfTheLastFrame
-        if sizeOfTheLastFrame == 0:
-            totalToBePadded = 0
-        audio = np.pad(audio, (0, totalToBePadded))
-        return audio.reshape([audio.shape[0] // self.window, self.window])
-
-    def _addRightPadding(self, audio: npt.NDArray[np.float32]):
-        repetition = audio[1:, 0 : 2 * self.overlap]
-        repetition = np.vstack(
-            (repetition, np.zeros((1, repetition.shape[1]), dtype=audio.dtype))
-        )
-        return np.hstack((audio, repetition))
+        ), "Cannot split into overlapping chunks if overlap is bigger than window"
