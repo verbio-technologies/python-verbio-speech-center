@@ -236,6 +236,7 @@ class Asr4ArgParser:
         args.lm_weight = float(args.lm_weight or 0.2)
         args.word_score = float(args.word_score or -1)
         args.sil_score = float(args.sil_score or 0)
+        print("[!!] Finallly, address is",args.bindAddress)
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:

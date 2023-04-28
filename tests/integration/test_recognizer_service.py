@@ -23,6 +23,7 @@ class TestRecognizerUtils(object):
         guiPath: Optional[str] = None,
         output: Optional[str] = None,
     ) -> Popen:
+        print("[------->] ",self._host)
         cmd = [
             "python3",
             f"{self.rootdir}/bin/client.py",
@@ -228,6 +229,9 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             self._audio, self._language, self._output
         )
         status = process.wait(timeout=900)
+        print("[>]")
+        print(process.stderr.read())
+        print(process.stdout.read())
         self.checkStatus(status, process.stderr.read())
         assert os.path.exists(
             f"{self._output }/trnHypothesis.trn"
