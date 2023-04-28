@@ -131,6 +131,9 @@ class TestTomlConfigurationOverride(unittest.TestCase):
         args.language = "en-us"
         args.config = "test_config.toml"
         args.bindAddress = None
+        args.servers = None
+        args.decoding_type = None
+        args.lm_algorithm = None
 
         # Create a sample TOML config string for testing
         config_str = """
@@ -166,9 +169,9 @@ class TestTomlConfigurationOverride(unittest.TestCase):
         self.assertEqual(args.cpu_version, "2.0.0")
         self.assertEqual(args.gpu_version, "2.0.0")
         self.assertEqual(args.lm_version, "2.0.0")
-        self.assertEqual(args.lm_weight, "0.5")
-        self.assertEqual(args.word_score, "-0.1")
-        self.assertEqual(args.sil_score, "0.2")
+        self.assertEqual(args.lm_weight, 0.5)
+        self.assertEqual(args.word_score, -0.1)
+        self.assertEqual(args.sil_score, 0.2)
         self.assertEqual(args.formatter, "format-model.en-us-2.0.0.fm")
 
         os.remove(args.config)  # Remove the test config file after the test#
