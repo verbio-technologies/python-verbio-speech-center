@@ -193,6 +193,16 @@ def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
     else:
         args.bindAddress = args.bindAddress or "[::]:50051"
 
+    args.gpu = bool(args.gpu or False)
+    args.servers = int(args.servers or 1)
+    args.listeners = int(args.listeners or 1)
+    args.workers = int(args.workers or 2)
+    args.decoding_type = args.decoding_type or "GLOBAL"
+    args.lm_algorithm = args.lm_algorithm or "viterbi"
+    args.lm_weight = float(args.lm_weight or 0.2)
+    args.word_score = float(args.word_score or -1)
+    args.sil_score = float(args.sil_score or 0)
+
     return args
 
 
@@ -200,19 +210,15 @@ def SystemVarsOverride(args: argparse.Namespace) -> argparse.Namespace:
     args.verbose = args.verbose or os.environ.get(
         "LOG_LEVEL", LoggerService.getDefaultLogLevel()
     )
-    args.gpu = bool(args.gpu or os.environ.get("ASR4_GPU", False))
-    args.servers = int(args.servers or os.environ.get("ASR4_SERVERS", "1"))
-    args.listeners = int(args.listeners or os.environ.get("ASR4_LISTENERS", "1"))
-    args.workers = int(args.workers or os.environ.get("ASR4_WORKERS", "2"))
-    args.decoding_type = args.decoding_type or os.environ.get(
-        "ASR4_DECODING_TYPE", "GLOBAL"
-    )
-    args.lm_algorithm = args.lm_algorithm or os.environ.get(
-        "ASR4_LM_ALGORITHM", "viterbi"
-    )
-    args.lm_weight = float(args.lm_weight or os.environ.get("ASR4_LM_WEIGHT", "0.2"))
-    args.word_score = float(args.word_score or os.environ.get("ASR4_WORD_SCORE", "-1"))
-    args.sil_score = float(args.sil_score or os.environ.get("ASR4_SIL_SCORE", "0"))
+    args.gpu = args.gpu or os.environ.get("ASR4_GPU")
+    args.servers = args.servers or os.environ.get("ASR4_SERVERS")
+    args.listeners = args.listeners or os.environ.get("ASR4_LISTENERS")
+    args.workers = args.workers or os.environ.get("ASR4_WORKERS")
+    args.decoding_type = args.decoding_type or os.environ.get("ASR4_DECODING_TYPE")
+    args.lm_algorithm = args.lm_algorithm or os.environ.get("ASR4_LM_ALGORITHM")
+    args.lm_weight = args.lm_weight or os.environ.get("ASR4_LM_WEIGHT")
+    args.word_score = args.word_score or os.environ.get("ASR4_WORD_SCORE")
+    args.sil_score = args.sil_score or os.environ.get("ASR4_SIL_SCORE")
 
     return args
 
