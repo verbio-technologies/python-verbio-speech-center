@@ -40,11 +40,11 @@ class Asr4ArgParser:
         self.argv = argv
 
     def getArgs(self) -> argparse.Namespace:
-        args = fixNumberOfJobs(parseArguments(self.argv))
-        args = replaceUndefinedWithEnvVariables(args)
-        args = replaceUndefinedWithConfigFile(args)
-        args = replaceUndefinedWithDefaultValues(args)
-        args = checkArgsRequired(args)
+        args = Asr4ArgParser.fixNumberOfJobs(Asr4ArgParser.parseArguments(self.argv))
+        args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
+        args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
+        args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
+        args = Asr4ArgParser.checkArgsRequired(args)
         return args
 
     def parseArguments(args: list) -> argparse.Namespace:
@@ -236,7 +236,6 @@ class Asr4ArgParser:
         args.lm_weight = float(args.lm_weight or 0.2)
         args.word_score = float(args.word_score or -1)
         args.sil_score = float(args.sil_score or 0)
-        print("[!!] Finallly, address is", args.bindAddress)
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:

@@ -308,8 +308,6 @@ testing:integration-testing:gpu:
     - pip install .[client,test]
   script:
     - python3 --version
-    - echo "Hola"
-    - cat OUT
     - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
