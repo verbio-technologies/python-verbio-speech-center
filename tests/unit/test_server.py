@@ -118,9 +118,10 @@ class SetDefaultBindAddressTests(unittest.TestCase):
         # Test case 1: Test setting default bind address
         args = argparse.Namespace()
         args.bindAddress = None
-        config = {"global": {"host": "[::]", "port": 50051}}
-        setDefaultBindAddress(args, config)
-        self.assertEqual(args.bindAddress, "[::]:50051")
+        config = {"global": {"host": "[::]", "port": 50052}}
+        if not args.bindAddress:
+            setDefaultBindAddress(args, config)
+        self.assertEqual(args.bindAddress, "[::]:50052")
         self.assertNotIn("host", config["global"])
         self.assertNotIn("port", config["global"])
 
@@ -181,7 +182,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
     def test_system_vars_override_with_all_args_set(self):
         args = argparse.Namespace()
         args.verbose = "DEBUG"
-        args.gpu = True
+        args.gpu = False
         args.bindAddress = "[::]:50052"
         args.servers = 3
         args.listeners = 5
@@ -199,7 +200,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
 
         # Assert that the values in args have not been changed since they are already set
         self.assertEqual(args.verbose, "DEBUG")
-        self.assertEqual(args.gpu, True)
+        self.assertEqual(args.gpu, False)
         self.assertEqual(args.bindAddress, "[::]:50052")
         self.assertEqual(args.servers, 3)
         self.assertEqual(args.listeners, 5)
