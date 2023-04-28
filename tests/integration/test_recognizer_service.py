@@ -23,7 +23,7 @@ class TestRecognizerUtils(object):
         guiPath: Optional[str] = None,
         output: Optional[str] = None,
     ) -> Popen:
-        print("[------->] ",self._host)
+        print("[------->] ", self._host)
         cmd = [
             "python3",
             f"{self.rootdir}/bin/client.py",
