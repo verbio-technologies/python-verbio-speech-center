@@ -162,17 +162,16 @@ def _parseArguments(args: list) -> argparse.Namespace:
 
 
 def setDefaultBindAddress(args, config):
-    if not args.bindAddress:
-        if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
-            args.bindAddress = (
-                f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
-            )
-        else:
-            config["global"].setdefault("host", "[::]")
-            config["global"].setdefault("port", 50051)
-            args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
-            del config["global"]["host"]
-            del config["global"]["port"]
+    if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
+        args.bindAddress = (
+            f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
+        )
+    else:
+        config["global"].setdefault("host", "[::]")
+        config["global"].setdefault("port", 50051)
+        args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
+        del config["global"]["host"]
+        del config["global"]["port"]
 
 
 def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
@@ -182,7 +181,8 @@ def TomlConfigurationOverride(args: argparse.Namespace) -> argparse.Namespace:
     if os.path.exists(config_file):
         config = toml.load(config_file)
         config.setdefault("global", {})
-        setDefaultBindAddress(args, config)
+        if not args.bindAddress:
+            setDefaultBindAddress(args, config)
 
         for k, v in config["global"].items():
             setattr(args, k, getattr(args, k, None) or v)
