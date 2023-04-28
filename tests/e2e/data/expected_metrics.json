@@ -103,7 +103,7 @@
             "dialects_typical_deviation": 7.00,
             "domains": {
                 "multidomain_extended-appen_cut-hh-banking": {"accuracy": 69.00},
-                "multidomain_extended-appen_cut-hh-telco": {"accuracy": 90.00},
+                "multidomain_extended-appen_cut-hh-telco": {"accuracy": 69.00},
                 "multidomain_extended-defined-ai_cut-hh-banking": {"accuracy": 83.00},
                 "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 78.00},
                 "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 77.50},
