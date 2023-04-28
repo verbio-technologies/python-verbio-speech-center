@@ -10,7 +10,6 @@ from asr4.recognizer import LoggerService
 from bin.server import Asr4ArgParser
 
 
-
 class MockArguments(argparse.Namespace):
     def __init__(self):
         super().__init__()
@@ -145,7 +144,7 @@ class TestreplaceUndefinedWithConfigFile(unittest.TestCase):
         tmpfile = tempfile.NamedTemporaryFile(mode="w")
         with open(tmpfile.name, "w") as f:
             f.write(config_str)
-        
+
         args = argparse.Namespace(delete=True)
         args.language = "en-us"
         args.config = tmpfile.name
@@ -163,9 +162,9 @@ class TestreplaceUndefinedWithConfigFile(unittest.TestCase):
         self.assertEqual(args.cpu_version, "2.0.0")
         self.assertEqual(args.gpu_version, "2.0.0")
         self.assertEqual(args.lm_version, "2.0.0")
-        self.assertEqual(args.lm_weight, '0.5')
-        self.assertEqual(args.word_score, '-0.1')
-        self.assertEqual(args.sil_score, '0.2')
+        self.assertEqual(args.lm_weight, "0.5")
+        self.assertEqual(args.word_score, "-0.1")
+        self.assertEqual(args.sil_score, "0.2")
         self.assertEqual(args.formatter, "format-model.en-us-2.0.0.fm")
 
 
@@ -237,16 +236,16 @@ class SystemVarsOverrideTests(unittest.TestCase):
 
         # Assert that the values in args have been overridden by the environment variables
         self.assertEqual(args.verbose, "INFO")
-        self.assertEqual(args.gpu, '1')
+        self.assertEqual(args.gpu, "1")
         self.assertEqual(args.bindAddress, "[::]:50052")
-        self.assertEqual(args.servers, '2')
-        self.assertEqual(args.listeners, '3')
-        self.assertEqual(args.workers, '4')
+        self.assertEqual(args.servers, "2")
+        self.assertEqual(args.listeners, "3")
+        self.assertEqual(args.workers, "4")
         self.assertEqual(args.decoding_type, "GLOBAL")
         self.assertEqual(args.lm_algorithm, "viterbi")
-        self.assertEqual(args.lm_weight, '0.7')
-        self.assertEqual(args.word_score, '-0.5')
-        self.assertEqual(args.sil_score, '0.3')
+        self.assertEqual(args.lm_weight, "0.7")
+        self.assertEqual(args.word_score, "-0.5")
+        self.assertEqual(args.sil_score, "0.3")
 
         # Clean up environment variables after the test
         del os.environ["LOG_LEVEL"]

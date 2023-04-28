@@ -18,6 +18,7 @@ def main():
     serve(ServerConfiguration(args), logService)
     logService.stop()
 
+
 def serve(
     configuration,
     loggerService: LoggerService,
@@ -37,7 +38,7 @@ def serve(
 class Asr4ArgParser:
     def __init__(self, argv):
         self.argv = argv
-    
+
     def getArgs(self) -> argparse.Namespace:
         args = fixNumberOfJobs(parseArguments(self.argv))
         args = replaceUndefinedWithEnvVariables(args)
@@ -168,7 +169,6 @@ class Asr4ArgParser:
         )
         return parser.parse_args(args)
 
-
     def fixNumberOfJobs(args):
         if args.jobs is not None:
             args.servers = 1
@@ -176,7 +176,9 @@ class Asr4ArgParser:
             args.listeners = args.jobs
         return args
 
-    def replaceUndefinedWithEnvVariables(args: argparse.Namespace) -> argparse.Namespace:
+    def replaceUndefinedWithEnvVariables(
+        args: argparse.Namespace,
+    ) -> argparse.Namespace:
         args.verbose = args.verbose or os.environ.get(
             "LOG_LEVEL", LoggerService.getDefaultLogLevel()
         )
@@ -206,8 +208,12 @@ class Asr4ArgParser:
 
     def fillArgsFromTomlFile(args: argparse.Namespace, config):
         if not args.bindAddress:
-            if config["global"].setdefault("host") and config["global"].setdefault("port"):
-                args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
+            if config["global"].setdefault("host") and config["global"].setdefault(
+                "port"
+            ):
+                args.bindAddress = (
+                    f"{config['global']['host']}:{config['global']['port']}"
+                )
                 del config["global"]["host"]
                 del config["global"]["port"]
         for k, v in config["global"].items():
@@ -217,7 +223,9 @@ class Asr4ArgParser:
                 setattr(args, k, getattr(args, k, None) or v)
         return args
 
-    def replaceUndefinedWithDefaultValues(args: argparse.Namespace) -> argparse.Namespace:
+    def replaceUndefinedWithDefaultValues(
+        args: argparse.Namespace,
+    ) -> argparse.Namespace:
         args.bindAddress = args.bindAddress or "[::]:50051"
         args.gpu = bool(args.gpu or False)
         args.servers = int(args.servers or 1)
@@ -229,8 +237,6 @@ class Asr4ArgParser:
         args.word_score = float(args.word_score or -1)
         args.sil_score = float(args.sil_score or 0)
         return args
-
-
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:
         if not args.model:
@@ -274,7 +280,6 @@ class Asr4ArgParser:
 
         return args
 
-
     def setStandardLMPaths(args):
         lm_model_path = f"asr4-{args.language.lower()}-lm.bin"
         lm_lexicon_path = f"asr4-{args.language.lower()}-lm.lexicon.txt"
@@ -290,7 +295,11 @@ class Asr4ArgParser:
         )
 
     def constructLMPaths(
-        args, lm_lexicon_path, lm_model_path, lm_version_lexicon_path, lm_version_model_path
+        args,
+        lm_lexicon_path,
+        lm_model_path,
+        lm_version_lexicon_path,
+        lm_version_model_path,
     ):
         if os.path.exists(lm_model_path) and os.path.exists(lm_lexicon_path):
             args.lm_model = lm_model_path
@@ -333,13 +342,16 @@ class Asr4ArgParser:
         if os.path.exists(standard_model_path) and os.path.exists(standard_dict_path):
             args.model = standard_model_path
             args.vocabulary = standard_dict_path
-        elif args.gpu and os.path.exists(gpu_model_path) and os.path.exists(gpu_dict_path):
+        elif (
+            args.gpu
+            and os.path.exists(gpu_model_path)
+            and os.path.exists(gpu_dict_path)
+        ):
             args.model = gpu_model_path
             args.vocabulary = gpu_dict_path
         elif os.path.exists(cpu_model_path) and os.path.exists(cpu_dict_path):
             args.model = cpu_model_path
             args.vocabulary = cpu_dict_path
-    
 
 
 if __name__ == "__main__":
