@@ -18,7 +18,7 @@ sil_score = "0.31423"
 cpu_version = "1.1.0"
 gpu_version = "1.2.0"
 lm_version = "1.2.0"
-lm-weight = "0.91447"
+lm_weight = "0.91447"
 word_score = "-0.56194"
 sil_score = "0.44272"
 
