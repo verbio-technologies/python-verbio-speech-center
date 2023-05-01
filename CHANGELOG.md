@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.4.1 (2023-04-30)
+
+### Patch (2 changes)
+
+- [Fix ES formatter](csr/asr4@86d93aaf9d6ceb49548a42f5ca08a81c5856171b) ([merge request](csr/asr4!239))
+- [Update VERSION](csr/asr4@b87b003d9126cf5a822b47d663243b9919216e95) ([merge request](csr/asr4!236))
+
 ## 0.4.0 (2023-04-18)
 
 ### Minor (1 change)
