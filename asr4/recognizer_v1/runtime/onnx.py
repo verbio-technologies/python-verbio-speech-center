@@ -321,7 +321,7 @@ class OnnxRuntime(Runtime):
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
-            "".join(output.label_sequences[0][0])
+            " ".join(output.label_sequences[0][0])
             .replace("|", " ")
             .replace("<s>", "")
             .replace("</s>", "")
@@ -358,7 +358,7 @@ class MatrixOperations:
             # Extract the current chunk from the input array
             chunk = audio[start_idx:end_idx]
 
-            if i == (num_chunks - 1) and self.overlap >= chunk.shape[0]:
+            if i and i == (num_chunks - 1) and self.overlap >= chunk.shape[0]:
                 # Delete last row as it has no information
                 result = result[:-1, :]
             else:
@@ -366,6 +366,22 @@ class MatrixOperations:
                 result[i, : chunk.shape[0]] = chunk
 
         return result
+
+    # def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
+    #     overlap_size = self.window - self.overlap
+    #     num_chunks = int(np.ceil((audio.shape[0]) / overlap_size))
+    #     padded_size = overlap_size * num_chunks + self.window - overlap_size
+    #     audio_padded = np.zeros(padded_size, dtype=audio.dtype)
+    #     audio_padded[: audio.shape[0]] = audio
+    #
+    #     shape = (num_chunks, self.window)
+    #     strides = (audio_padded.strides[0] * overlap_size, audio_padded.strides[0])
+    #     result = np.lib.stride_tricks.as_strided(audio_padded, shape=shape, strides=strides)
+    #
+    #     if self.overlap >= self.window:
+    #         result = result[:-1, :]
+    #
+    #     return result
 
     def _setCorrectDimensions(self):
         assert (
