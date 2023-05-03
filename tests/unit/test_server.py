@@ -261,6 +261,38 @@ class SystemVarsOverrideTests(unittest.TestCase):
         del os.environ["ASR4_WORD_SCORE"]
         del os.environ["ASR4_SIL_SCORE"]
 
+class DefaultValuesTests(unittest.TestCase):
+    def test_system_vars_override_with_defaults(self):
+        args = argparse.Namespace()
+
+        args.bindAddress = "[::]:50052"
+        args.decoding_type = "LOCAL"
+        args.lm_algorithm = "beam_search"
+        args.lm_weight = "0.5"
+        args.servers = "3"
+        args.verbose = "DEBUG"
+        args.word_score = "-0.2"
+        args.config = None
+        args.gpu = None
+        args.language = None
+        args.listeners = None
+        args.sil_score = None
+        args.workers = None
+
+        args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
+
+        # Assert that the values in args are transformed to correct types
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.gpu, False)
+        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.servers, 3)
+        self.assertEqual(args.listeners, 1)
+        self.assertEqual(args.workers, 2)
+        self.assertEqual(args.decoding_type, "LOCAL")
+        self.assertEqual(args.lm_algorithm, "beam_search")
+        self.assertEqual(args.lm_weight, 0.5)
+        self.assertEqual(args.word_score, -0.2)
+        self.assertEqual(args.sil_score, 0.0)
 
 class TestCheckArgsRequired(unittest.TestCase):
     def setUp(self):
