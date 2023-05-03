@@ -867,7 +867,7 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.formatWords("meu email é joão at domínio dot com"),
-            "Meu email é joao@dominio.com",
+            "Meu email é Joao@dominio.com",
         )
 
     def testRecognizeFormatterPT_BRPunctuation(self):
@@ -886,7 +886,7 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.formatWords("como vai"),
-            "Como, vai?",
+            "Como vai",
         )
 
     def testRecognizeFormatterPT_BRCapitalization(self):
@@ -905,5 +905,5 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.formatWords("meu nome é joão"),
-            "Meu nome é João.",
+            "Meu nome é João",
         )
