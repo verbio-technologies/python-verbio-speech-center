@@ -19,6 +19,8 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
+from asr4.recognizer_v1.formatter import FormatterFactory
+import os
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -49,8 +51,8 @@ class MockArguments(argparse.Namespace):
         super().__init__()
         self.vocabularyLabels = ["|", "<s>", "</s>", "<pad>"]
         self.vocabulary = self.createVocabulary()
-        self.formatter = "path_to_formatter/formatter.fm"
         self.language = "es"
+        self._hostPort = os.getenv("ASR4_PORT", 50051)
         self.model = "path_to_models/model.onnx"
         self.gpu = False
         self.workers = 4
@@ -60,6 +62,7 @@ class MockArguments(argparse.Namespace):
         self.lm_weight = None
         self.word_score = None
         self.sil_score = None
+        self.formatter = None
 
     def createVocabulary(self) -> str:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
@@ -86,7 +89,7 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
 class MockOnnxSession(Session):
     def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
-        self.logger = logging.getLogger("TEST")
+        self.logger = logging.getLogger("DEBUG")
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,
@@ -675,3 +678,62 @@ class TestRecognizerService(unittest.TestCase):
                 ),
             )
             service.calculateAudioDuration(request)
+
+    def testRecognizeESFormatter(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords(
+                "mi dni es siete siete uno uno cuatro tres seis ocho zeta"
+            ),
+            "Mi dni es 77114368-Z",
+        )
+
+    def testRecognizeEN_USFormatter(self):
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("three million dot fourteen"),
+            "3,000,000.14.",
+        )
+
+    def testRecognizePT_BRFormatter(self):
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("três mil duzentos e quarenta e cinco"),
+            "3.245.",
+        )
