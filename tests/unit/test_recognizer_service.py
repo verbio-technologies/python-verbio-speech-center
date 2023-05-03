@@ -896,7 +896,7 @@ class TestRecognizerService(unittest.TestCase):
         formatter = FormatterFactory.createFormatter(
             os.path.join(
                 os.getenv("MODELS_PATH", "models"),
-                "formatter/format-model.pt-br-1.1.0.fm",
+                "formatter/format-model.pt-br-1.1.1.fm",
             ),
             Language.PT_BR,
         )
