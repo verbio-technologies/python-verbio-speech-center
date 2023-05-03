@@ -3,7 +3,7 @@ import logging
 import soxr
 import numpy as np
 import numpy.typing as npt
-from difflib import SequenceMatcher
+
 import torch
 import torch.nn.functional as F
 
@@ -259,8 +259,7 @@ class OnnxRuntime(Runtime):
     @staticmethod
     def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
         # Note that 800 frames are 50ms
-        return MatrixOperations(window=width, overlap=36000).splitIntoOverlappingChunks(
-            # return MatrixOperations(window=width, overlap=0).splitIntoOverlappingChunks(
+        return MatrixOperations(window=width, overlap=80000).splitIntoOverlappingChunks(
             audio
         )
 
@@ -279,10 +278,6 @@ class OnnxRuntime(Runtime):
         label_sequences = []
         scores = []
         timesteps = []
-        if self.lmAlgorithm != "kenlm":
-            previous_chunk = []
-        else:
-            previous_chunk = ""
 
         for i in range(input.shape[1]):
             frame_probs = self._session.run(
@@ -291,11 +286,9 @@ class OnnxRuntime(Runtime):
             if decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
-                label_sequences, scores, timesteps, current_chunk = self._decodePartial(
-                    label_sequences, scores, timesteps, frame_probs, previous_chunk
+                label_sequences, scores, timesteps = self._decodePartial(
+                    label_sequences, scores, timesteps, frame_probs
                 )
-                previous_chunk = current_chunk
-                print("previous_chunk set: ", previous_chunk)
         if decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs)
         else:
@@ -315,84 +308,16 @@ class OnnxRuntime(Runtime):
         self._session.logger.debug(" - decoding global")
         return self._decoder.decode(normalized_y)
 
-    def print_human_readable(self, list_of_chars):
-        return "".join(list_of_chars).replace("|", " ")
-
-    def convert_to_words(self, list_of_chars):
-        temp_string = "".join(list_of_chars).replace("|", " ")
-        return temp_string.split()
-
-    # @staticmethod
-    def solve_chunk_overlap_naive(self, first_chunk, second_chunk, accumulation):
-        print("accumulation state: ", accumulation)
-        first_chunk = self.convert_to_words(first_chunk)
-        second_chunk = self.convert_to_words(second_chunk)
-
-        match = SequenceMatcher(
-            None, first_chunk[::-1], second_chunk[::-1]
-        ).find_longest_match(0, len(first_chunk), 0, len(second_chunk))
-        # comparison is done on reversed sequences, we need to correct indices next
-        corrected_match_a = len(first_chunk) - (match.a + match.size)
-        corrected_match_b = len(second_chunk) - (match.b + match.size)
-
-        left_context = first_chunk[:corrected_match_a]
-        agreed = first_chunk[corrected_match_a : corrected_match_a + match.size]
-        right_context = second_chunk[corrected_match_b + match.size :]
-        print("l:", left_context)
-        print("a:", agreed)
-        print("r:", right_context)
-
-        # there's no match
-        if agreed == [] or agreed == "":
-            # because it is the first chunk
-            if accumulation == []:
-                chunk = first_chunk + second_chunk
-                print("c:", chunk)
-                print("overwrite: ", accumulation[-len(right_context) :])
-                accumulation[-len(first_chunk) :] = chunk
-                print("inserted: ", accumulation)
-            # because there's a silence o sth else
-            else:
-                # just append the second chunk
-                if len(second_chunk) >= 3:
-                    accumulation += second_chunk
-                    print("inserted after no match: ", accumulation)
-
-                # possibly noisy chunk
-                else:
-                    print("*** missing something?")
-
-        # there's a match
-        else:
-            if right_context != []:
-                if len(agreed) <= 2:
-                    accumulation += second_chunk
-                    print("short match: ", accumulation)
-
-                else:
-                    # stitching chunks together
-                    chunk = agreed + right_context
-                    substitution_point = len(first_chunk) - corrected_match_a
-                    print("c:", chunk, substitution_point)
-                    print("insert in: ", accumulation[:-substitution_point])
-
-                    accumulation[-substitution_point:] = chunk
-                    print("inserted: ", accumulation)
-
-    def _decodePartial(self, label_sequences, scores, timesteps, yi, previous_chunk):
+    def _decodePartial(self, label_sequences, scores, timesteps, yi):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
-        print("-->", decoded_part.label_sequences[0][0])
-        # if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
-        #    label_sequences += " "
-        current_chunk = decoded_part.label_sequences[0][0]
-        self.solve_chunk_overlap_naive(previous_chunk, current_chunk, label_sequences)
-        # label_sequences += decoded_part.label_sequences[0][0]
+        if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
+            label_sequences += " "
+        label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
         timesteps += [decoded_part.timesteps]
-
-        return label_sequences, scores, timesteps, current_chunk
+        return label_sequences, scores, timesteps
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (
