@@ -867,7 +867,7 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.formatWords("meu email é joão at domínio dot com"),
-            "Meu email é Joao@dominio.com",
+            "Meu email é João@domínio.com",
         )
 
     def testRecognizeFormatterPT_BRPunctuation(self):
