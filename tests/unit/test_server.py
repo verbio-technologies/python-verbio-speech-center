@@ -261,6 +261,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         del os.environ["ASR4_WORD_SCORE"]
         del os.environ["ASR4_SIL_SCORE"]
 
+
 class DefaultValuesTests(unittest.TestCase):
     def test_system_vars_override_with_defaults(self):
         args = argparse.Namespace()
@@ -293,6 +294,7 @@ class DefaultValuesTests(unittest.TestCase):
         self.assertEqual(args.lm_weight, 0.5)
         self.assertEqual(args.word_score, -0.2)
         self.assertEqual(args.sil_score, 0.0)
+
 
 class TestCheckArgsRequired(unittest.TestCase):
     def setUp(self):
