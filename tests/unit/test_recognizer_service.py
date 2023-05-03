@@ -51,8 +51,8 @@ class MockArguments(argparse.Namespace):
         super().__init__()
         self.vocabularyLabels = ["|", "<s>", "</s>", "<pad>"]
         self.vocabulary = self.createVocabulary()
+        self.formatter = "path_to_formatter/formatter.fm"
         self.language = "es"
-        self._hostPort = os.getenv("ASR4_PORT", 50051)
         self.model = "path_to_models/model.onnx"
         self.gpu = False
         self.workers = 4
@@ -62,7 +62,6 @@ class MockArguments(argparse.Namespace):
         self.lm_weight = None
         self.word_score = None
         self.sil_score = None
-        self.formatter = None
 
     def createVocabulary(self) -> str:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
@@ -89,7 +88,7 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
 class MockOnnxSession(Session):
     def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
         super().__init__(_path_or_bytes, **kwargs)
-        self.logger = logging.getLogger("DEBUG")
+        self.logger = logging.getLogger("TEST")
         self._message = {
             Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
             Language.ES: DEFAULT_SPANISH_MESSAGE,
