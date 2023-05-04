@@ -175,6 +175,13 @@ class Asr4ArgParser:
         parser.add_argument(
             "--sil_score", dest="sil_score", type=float, help="Silence weight for KenLM"
         )
+        parser.add_argument(
+            "--overlap",
+            "-o",
+            dest="overlap",
+            type=int,
+            help="Size of overlapping windows when doing partial decoding",
+        )
         return parser.parse_args(args)
 
     def fixNumberOfJobs(args):
@@ -199,6 +206,7 @@ class Asr4ArgParser:
         args.lm_weight = args.lm_weight or os.environ.get("ASR4_LM_WEIGHT")
         args.word_score = args.word_score or os.environ.get("ASR4_WORD_SCORE")
         args.sil_score = args.sil_score or os.environ.get("ASR4_SIL_SCORE")
+        args.overlap = args.overlap or os.environ.get("ASR4_OVERLAP")
         args.subwords = args.subwords or os.environ.get("ASR4_SUBWORDS")
         if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
             args.bindAddress = (
@@ -245,6 +253,7 @@ class Asr4ArgParser:
         args.lm_weight = float(args.lm_weight or 0.2)
         args.word_score = float(args.word_score or -1)
         args.sil_score = float(args.sil_score or 0)
+        args.overlap = int(args.overlap or 0)
         args.subwords = bool(args.subwords or False)
         return args
 

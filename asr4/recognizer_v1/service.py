@@ -42,6 +42,7 @@ class RecognitionServiceConfiguration:
         self.lm_weight = 0.2
         self.word_score = -1
         self.sil_score = 0
+        self.overlap = 0
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -62,6 +63,7 @@ class RecognitionServiceConfiguration:
             self.lm_weight = arguments.lm_weight
             self.word_score = arguments.word_score
             self.sil_score = arguments.sil_score
+            self.overlap = arguments.overlap
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
@@ -117,6 +119,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.lm_weight,
             configuration.word_score,
             configuration.sil_score,
+            configuration.overlap,
             configuration.subwords,
         )
         if formatter is None:
@@ -134,6 +137,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         lm_weight: Optional[float],
         word_score: Optional[float],
         sil_score: Optional[float],
+        overlap: Optional[int],
         subwords: bool = False,
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
@@ -147,6 +151,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 lm_weight,
                 word_score,
                 sil_score,
+                overlap,
                 subwords,
             )
         else:

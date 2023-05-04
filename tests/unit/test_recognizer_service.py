@@ -60,6 +60,7 @@ class MockArguments(argparse.Namespace):
         self.lm_weight = None
         self.word_score = None
         self.sil_score = None
+        self.overlap = None
         self.subwords = None
 
     def createVocabulary(self) -> str:

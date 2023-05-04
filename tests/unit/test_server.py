@@ -28,8 +28,8 @@ class MockArguments(argparse.Namespace):
         self.lm_weight = None
         self.word_score = None
         self.sil_score = None
+        self.overlap = None
         self.subwords = None
-
 
 class TestServerConfiguration(unittest.TestCase):
     def testConfiguration(self):
@@ -185,14 +185,16 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.sil_score = 0.1
         args.config = None
         args.language = None
+        args.overlap = 0
         args.subwords = False
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
+        args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
 
         # Assert that the values in args have not been changed since they are already set
         self.assertEqual(args.verbose, "DEBUG")
-        self.assertEqual(args.gpu, None)
+        self.assertEqual(args.gpu, False)
         self.assertEqual(args.bindAddress, "[::]:50052")
         self.assertEqual(args.servers, 3)
         self.assertEqual(args.listeners, 5)
@@ -202,6 +204,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.lm_weight, 0.5)
         self.assertEqual(args.word_score, -0.2)
         self.assertEqual(args.sil_score, 0.1)
+        self.assertEqual(args.overlap, 0)
         self.assertEqual(args.subwords, False)
 
     def test_system_vars_override_with_env_vars_set(self):
@@ -219,6 +222,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.sil_score = None
         args.config = None
         args.language = None
+        args.overlap = None
         args.subwords = None
 
         # Set environment variables for testing
@@ -234,6 +238,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         os.environ["ASR4_LM_WEIGHT"] = "0.7"
         os.environ["ASR4_WORD_SCORE"] = "-0.5"
         os.environ["ASR4_SIL_SCORE"] = "0.3"
+        os.environ["ASR4_OVERLAP"] = "80000"
         os.environ["ASR4_SUBWORDS"] = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
@@ -252,6 +257,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.lm_weight, "0.7")
         self.assertEqual(args.word_score, "-0.5")
         self.assertEqual(args.sil_score, "0.3")
+        self.assertEqual(args.overlap, "80000")
         self.assertEqual(args.subwords, "1")
 
         # Clean up environment variables after the test
@@ -287,6 +293,7 @@ class DefaultValuesTests(unittest.TestCase):
         args.listeners = None
         args.sil_score = None
         args.workers = None
+        args.overlap = None
         args.subwords = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
