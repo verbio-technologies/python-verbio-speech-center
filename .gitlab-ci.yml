@@ -290,6 +290,9 @@ testing:integration-testing:gpu:
     - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
+  script:
+    - python3 --version
+    - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
   after_script:
     - nvidia-smi
     - docker logs asr4-gpu-${LANGUAGE}
@@ -298,8 +301,8 @@ testing:integration-testing:gpu:
 
 .template:integration-testing:
   stage: integration-testing
-  only:
-    - tags
+  # only:
+  #   - tags
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
@@ -308,7 +311,7 @@ testing:integration-testing:gpu:
     - pip install .[client,test]
   script:
     - python3 --version
-    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
+    - pytest tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
     reports:
