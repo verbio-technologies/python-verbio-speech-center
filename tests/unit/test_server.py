@@ -31,6 +31,7 @@ class MockArguments(argparse.Namespace):
         self.overlap = None
         self.subwords = None
 
+
 class TestServerConfiguration(unittest.TestCase):
     def testConfiguration(self):
         arguments = MockArguments()
