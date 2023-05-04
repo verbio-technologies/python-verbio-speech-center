@@ -16,9 +16,9 @@ export CUDA_VISIBLE_DEVICES=1
 
 if [ -z $5 ]
 then
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 -v TRACE &
 else
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 --gpu &
+      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 --gpu -v TRACE &
 fi
 
 export TIME=30

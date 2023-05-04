@@ -1,18 +1,13 @@
 import multiprocessing
 import unittest
+import tempfile
 from unittest.mock import patch
 
 import argparse, os
 from asr4.recognizer import Server, ServerConfiguration
 from asr4.recognizer import RecognitionServiceConfiguration
 from asr4.recognizer import LoggerService
-from bin.server import (
-    setDefaultBindAddress,
-    TomlConfigurationOverride,
-    SystemVarsOverride,
-    checkArgsRequired,
-    _parseArguments,
-)
+from bin.server import Asr4ArgParser
 
 
 class MockArguments(argparse.Namespace):
@@ -63,7 +58,7 @@ class ArgumentParserTests(unittest.TestCase):
             "formatter.pth",
             "-g",
             "--host",
-            "localhost",
+            "[::]:50052",
             "-j",
             "4",
             "-s",
@@ -91,14 +86,14 @@ class ArgumentParserTests(unittest.TestCase):
             "--sil_score",
             "0.1",
         ]
-        args = _parseArguments(argv)
+        args = Asr4ArgParser.parseArguments(argv)
         self.assertIsInstance(args, argparse.Namespace)
         self.assertEqual(args.model, "model.pth")
         self.assertEqual(args.vocabulary, "dictionary.txt")
         self.assertEqual(args.language, "en-us")
         self.assertEqual(args.formatter, "formatter.pth")
         self.assertEqual(args.gpu, True)
-        self.assertEqual(args.bindAddress, "localhost")
+        self.assertEqual(args.bindAddress, "[::]:50052")
         self.assertEqual(args.jobs, 4)
         self.assertEqual(args.servers, 2)
         self.assertEqual(args.listeners, 4)
@@ -116,23 +111,18 @@ class ArgumentParserTests(unittest.TestCase):
 
 class SetDefaultBindAddressTests(unittest.TestCase):
     def test_setDefaultBindAddress(self):
-        # Test case 1: Test setting default bind address
         args = argparse.Namespace()
-        config = {"global": {"host": "[::]", "port": 50051}}
-        setDefaultBindAddress(args, config)
-        self.assertEqual(args.bindAddress, "[::]:50051")
+        args.bindAddress = None
+        args.language = ""
+        config = {"global": {"host": "[::]", "port": 50052}}
+        Asr4ArgParser.fillArgsFromTomlFile(args, config)
+        self.assertEqual(args.bindAddress, "[::]:50052")
         self.assertNotIn("host", config["global"])
         self.assertNotIn("port", config["global"])
 
 
-class TestTomlConfigurationOverride(unittest.TestCase):
+class TestreplaceUndefinedWithConfigFile(unittest.TestCase):
     def test_toml_configuration_override(self):
-        args = argparse.Namespace()
-        args.language = "en-us"
-        args.config = (
-            "test_config.toml"  # Replace with the path to your test TOML config file
-        )
-
         # Create a sample TOML config string for testing
         config_str = """
         [global]
@@ -152,34 +142,39 @@ class TestTomlConfigurationOverride(unittest.TestCase):
         sil_score = "0.2"
         formatter = "format-model.en-us-2.0.0.fm"
         """
-
-        with open(args.config, "w") as f:
+        tmpfile = tempfile.NamedTemporaryFile(mode="w")
+        with open(tmpfile.name, "w") as f:
             f.write(config_str)
 
-        result = TomlConfigurationOverride(args)
+        args = argparse.Namespace(delete=True)
+        args.language = "en-us"
+        args.config = tmpfile.name
+        args.bindAddress = None
+        args.servers = None
+        args.decoding_type = None
+        args.lm_algorithm = None
 
-        # Assert that the values in args have been updated based on the TOML config
-        self.assertEqual(result.listeners, 2)
-        self.assertEqual(result.workers, 1)
-        self.assertEqual(result.verbose, "DEBUG")
-        self.assertEqual(result.bindAddress, "localhost:8080")
-        self.assertEqual(result.gpu, 0)
-        self.assertEqual(result.cpu_version, "2.0.0")
-        self.assertEqual(result.gpu_version, "2.0.0")
-        self.assertEqual(result.lm_version, "2.0.0")
-        self.assertEqual(result.lm_weight, "0.5")
-        self.assertEqual(result.word_score, "-0.1")
-        self.assertEqual(result.sil_score, "0.2")
-        self.assertEqual(result.formatter, "format-model.en-us-2.0.0.fm")
-
-        os.remove(args.config)  # Remove the test config file after the test#
+        args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
+        self.assertEqual(args.listeners, 2)
+        self.assertEqual(args.workers, 1)
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.bindAddress, "localhost:8080")
+        self.assertEqual(args.gpu, 0)
+        self.assertEqual(args.cpu_version, "2.0.0")
+        self.assertEqual(args.gpu_version, "2.0.0")
+        self.assertEqual(args.lm_version, "2.0.0")
+        self.assertEqual(args.lm_weight, "0.5")
+        self.assertEqual(args.word_score, "-0.1")
+        self.assertEqual(args.sil_score, "0.2")
+        self.assertEqual(args.formatter, "format-model.en-us-2.0.0.fm")
 
 
 class SystemVarsOverrideTests(unittest.TestCase):
     def test_system_vars_override_with_all_args_set(self):
         args = argparse.Namespace()
         args.verbose = "DEBUG"
-        args.gpu = True
+        args.gpu = False
+        args.bindAddress = "[::]:50052"
         args.servers = 3
         args.listeners = 5
         args.workers = 4
@@ -188,25 +183,30 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.lm_weight = 0.5
         args.word_score = -0.2
         args.sil_score = 0.1
+        args.config = None
+        args.language = None
 
-        result = SystemVarsOverride(args)
+        args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
+        args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
 
         # Assert that the values in args have not been changed since they are already set
-        self.assertEqual(result.verbose, "DEBUG")
-        self.assertEqual(result.gpu, True)
-        self.assertEqual(result.servers, 3)
-        self.assertEqual(result.listeners, 5)
-        self.assertEqual(result.workers, 4)
-        self.assertEqual(result.decoding_type, "LOCAL")
-        self.assertEqual(result.lm_algorithm, "beam_search")
-        self.assertEqual(result.lm_weight, 0.5)
-        self.assertEqual(result.word_score, -0.2)
-        self.assertEqual(result.sil_score, 0.1)
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.gpu, None)
+        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.servers, 3)
+        self.assertEqual(args.listeners, 5)
+        self.assertEqual(args.workers, 4)
+        self.assertEqual(args.decoding_type, "LOCAL")
+        self.assertEqual(args.lm_algorithm, "beam_search")
+        self.assertEqual(args.lm_weight, 0.5)
+        self.assertEqual(args.word_score, -0.2)
+        self.assertEqual(args.sil_score, 0.1)
 
     def test_system_vars_override_with_env_vars_set(self):
         args = argparse.Namespace()
         args.verbose = None
         args.gpu = None
+        args.bindAddress = None
         args.servers = None
         args.listeners = None
         args.workers = None
@@ -215,10 +215,14 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.lm_weight = None
         args.word_score = None
         args.sil_score = None
+        args.config = None
+        args.language = None
 
         # Set environment variables for testing
         os.environ["LOG_LEVEL"] = "INFO"
         os.environ["ASR4_GPU"] = "1"
+        os.environ["ASR4_HOST"] = "[::]"
+        os.environ["ASR4_PORT"] = "50052"
         os.environ["ASR4_SERVERS"] = "2"
         os.environ["ASR4_LISTENERS"] = "3"
         os.environ["ASR4_WORKERS"] = "4"
@@ -228,23 +232,27 @@ class SystemVarsOverrideTests(unittest.TestCase):
         os.environ["ASR4_WORD_SCORE"] = "-0.5"
         os.environ["ASR4_SIL_SCORE"] = "0.3"
 
-        result = SystemVarsOverride(args)
+        args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
+        args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
 
         # Assert that the values in args have been overridden by the environment variables
-        self.assertEqual(result.verbose, "INFO")
-        self.assertEqual(result.gpu, True)
-        self.assertEqual(result.servers, 2)
-        self.assertEqual(result.listeners, 3)
-        self.assertEqual(result.workers, 4)
-        self.assertEqual(result.decoding_type, "GLOBAL")
-        self.assertEqual(result.lm_algorithm, "viterbi")
-        self.assertEqual(result.lm_weight, 0.7)
-        self.assertEqual(result.word_score, -0.5)
-        self.assertEqual(result.sil_score, 0.3)
+        self.assertEqual(args.verbose, "INFO")
+        self.assertEqual(args.gpu, "1")
+        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.servers, "2")
+        self.assertEqual(args.listeners, "3")
+        self.assertEqual(args.workers, "4")
+        self.assertEqual(args.decoding_type, "GLOBAL")
+        self.assertEqual(args.lm_algorithm, "viterbi")
+        self.assertEqual(args.lm_weight, "0.7")
+        self.assertEqual(args.word_score, "-0.5")
+        self.assertEqual(args.sil_score, "0.3")
 
         # Clean up environment variables after the test
         del os.environ["LOG_LEVEL"]
         del os.environ["ASR4_GPU"]
+        del os.environ["ASR4_HOST"]
+        del os.environ["ASR4_PORT"]
         del os.environ["ASR4_SERVERS"]
         del os.environ["ASR4_LISTENERS"]
         del os.environ["ASR4_WORKERS"]
@@ -253,6 +261,40 @@ class SystemVarsOverrideTests(unittest.TestCase):
         del os.environ["ASR4_LM_WEIGHT"]
         del os.environ["ASR4_WORD_SCORE"]
         del os.environ["ASR4_SIL_SCORE"]
+
+
+class DefaultValuesTests(unittest.TestCase):
+    def test_system_vars_override_with_defaults(self):
+        args = argparse.Namespace()
+
+        args.bindAddress = "[::]:50052"
+        args.decoding_type = "LOCAL"
+        args.lm_algorithm = "beam_search"
+        args.lm_weight = "0.5"
+        args.servers = "3"
+        args.verbose = "DEBUG"
+        args.word_score = "-0.2"
+        args.config = None
+        args.gpu = None
+        args.language = None
+        args.listeners = None
+        args.sil_score = None
+        args.workers = None
+
+        args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
+
+        # Assert that the values in args are transformed to correct types
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.gpu, False)
+        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.servers, 3)
+        self.assertEqual(args.listeners, 1)
+        self.assertEqual(args.workers, 2)
+        self.assertEqual(args.decoding_type, "LOCAL")
+        self.assertEqual(args.lm_algorithm, "beam_search")
+        self.assertEqual(args.lm_weight, 0.5)
+        self.assertEqual(args.word_score, -0.2)
+        self.assertEqual(args.sil_score, 0.0)
 
 
 class TestCheckArgsRequired(unittest.TestCase):
@@ -274,18 +316,17 @@ class TestCheckArgsRequired(unittest.TestCase):
         # Test when args.model is already specified, no exception should be raised
         self.args.model = "model.onnx"
         with self.assertRaises(ValueError):
-            checkArgsRequired(self.args)
-
+            Asr4ArgParser.checkArgsRequired(self.args)
         self.args.model = None
         self.args.vocabulary = "model.dict.ltr.txt"
         with self.assertRaises(ValueError):
-            checkArgsRequired(self.args)
+            Asr4ArgParser.checkArgsRequired(self.args)
 
     @patch("os.path.exists")
     def test_checkArgsRequired_with_standard_model_paths(self, mock_exists):
         # Test when standard model paths exist, args.model and args.vocabulary should be updated
         mock_exists.side_effect = [True, True, True, True]
-        result = checkArgsRequired(self.args)
+        result = Asr4ArgParser.checkArgsRequired(self.args)
         self.assertEqual(result.model, "asr4-en-us.onnx")
         self.assertEqual(result.vocabulary, "dict.ltr.txt")
 
@@ -295,7 +336,7 @@ class TestCheckArgsRequired(unittest.TestCase):
         mock_exists.side_effect = [False, True, True, True, True]
         self.args.gpu = True
         self.args.gpu_version = "1.2.0"
-        result = checkArgsRequired(self.args)
+        result = Asr4ArgParser.checkArgsRequired(self.args)
         self.assertEqual(result.model, "asr4-en-us-1.2.0.onnx")
         self.assertEqual(result.vocabulary, "asr4-en-us-1.2.0.dict.ltr.txt")
 
@@ -305,7 +346,7 @@ class TestCheckArgsRequired(unittest.TestCase):
         mock_exists.side_effect = [False, True, True, True, True]
         self.args.gpu = False
         self.args.cpu_version = "1.1.0"
-        result = checkArgsRequired(self.args)
+        result = Asr4ArgParser.checkArgsRequired(self.args)
         self.assertEqual(result.model, "asr4-en-us-1.1.0.onnx")
         self.assertEqual(result.vocabulary, "asr4-en-us-1.1.0.dict.ltr.txt")
 
@@ -314,18 +355,13 @@ class TestCheckArgsRequired(unittest.TestCase):
         self, mock_exists
     ):
         # Create a mock argparse.Namespace object
-
         self.args.lm_algorithm = "kenlm"
         self.args.lm_model = "lm_model_path"
         self.args.lexicon = "lm_lexicon_path"
-
         # Mock the os.path.exists function to return True for the specified paths
         mock_exists.side_effect = [True, True, True, True]
 
-        # Call the function being tested
-        result = checkArgsRequired(self.args)
-
-        # Assert that the function returns the expected result
+        result = Asr4ArgParser.checkArgsRequired(self.args)
         self.assertEqual(result, self.args)
 
     @patch("os.path.exists")
@@ -334,13 +370,11 @@ class TestCheckArgsRequired(unittest.TestCase):
     ):
         # Create a mock argparse.Namespace object
         self.args.lm_algorithm = "kenlm"
-
         # Mock the os.path.exists function to return False for all paths
         mock_exists.return_value = False
 
-        # Call the function being tested and assert that it raises a ValueError
         with self.assertRaises(ValueError):
-            checkArgsRequired(self.args)
+            Asr4ArgParser.checkArgsRequired(self.args)
 
 
 class TestServer(unittest.TestCase):
