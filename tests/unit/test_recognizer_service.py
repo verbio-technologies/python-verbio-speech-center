@@ -839,7 +839,7 @@ class TestRecognizerService(unittest.TestCase):
         formatter = FormatterFactory.createFormatter(
             os.path.join(
                 os.getenv("MODELS_PATH", "models"),
-                "formatter/format-model.pt-br-1.1.0.fm",
+                "formatter/format-model.pt-br-1.1.1.fm",
             ),
             Language.PT_BR,
         )
@@ -858,7 +858,7 @@ class TestRecognizerService(unittest.TestCase):
         formatter = FormatterFactory.createFormatter(
             os.path.join(
                 os.getenv("MODELS_PATH", "models"),
-                "formatter/format-model.pt-br-1.1.0.fm",
+                "formatter/format-model.pt-br-1.1.1.fm",
             ),
             Language.PT_BR,
         )
@@ -867,7 +867,7 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.formatWords("meu email é joão at domínio dot com"),
-            "Meu email é joao@dominio.com",
+            "Meu email é João@domínio.com",
         )
 
     def testRecognizeFormatterPT_BRPunctuation(self):
@@ -877,7 +877,7 @@ class TestRecognizerService(unittest.TestCase):
         formatter = FormatterFactory.createFormatter(
             os.path.join(
                 os.getenv("MODELS_PATH", "models"),
-                "formatter/format-model.pt-br-1.1.0.fm",
+                "formatter/format-model.pt-br-1.1.1.fm",
             ),
             Language.PT_BR,
         )
@@ -885,8 +885,8 @@ class TestRecognizerService(unittest.TestCase):
             MockRecognitionServiceConfiguration(arguments), formatter=formatter
         )
         self.assertEqual(
-            service.formatWords("como vai"),
-            "Como, vai?",
+            service.formatWords("como vai que eu possa ajudar"),
+            "Como vai que eu possa ajudar?",
         )
 
     def testRecognizeFormatterPT_BRCapitalization(self):
@@ -896,7 +896,7 @@ class TestRecognizerService(unittest.TestCase):
         formatter = FormatterFactory.createFormatter(
             os.path.join(
                 os.getenv("MODELS_PATH", "models"),
-                "formatter/format-model.pt-br-1.1.0.fm",
+                "formatter/format-model.pt-br-1.1.1.fm",
             ),
             Language.PT_BR,
         )
