@@ -76,6 +76,14 @@ class Asr4ArgParser:
             help="Path to the formatter model file.",
         )
         parser.add_argument(
+            "-W",
+            "--subwords",
+            dest="subwords",
+            default=False,
+            action="store_true",
+            help="The final words have to be constructed from word-pieces",
+        )
+        parser.add_argument(
             "-g",
             "--gpu",
             dest="gpu",
@@ -199,6 +207,7 @@ class Asr4ArgParser:
         args.word_score = args.word_score or os.environ.get("ASR4_WORD_SCORE")
         args.sil_score = args.sil_score or os.environ.get("ASR4_SIL_SCORE")
         args.overlap = args.overlap or os.environ.get("ASR4_OVERLAP")
+        args.subwords = args.subwords or os.environ.get("ASR4_SUBWORDS")
         if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
             args.bindAddress = (
                 f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
@@ -245,6 +254,7 @@ class Asr4ArgParser:
         args.word_score = float(args.word_score or -1)
         args.sil_score = float(args.sil_score or 0)
         args.overlap = int(args.overlap or 0)
+        args.subwords = bool(args.subwords or False)
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:

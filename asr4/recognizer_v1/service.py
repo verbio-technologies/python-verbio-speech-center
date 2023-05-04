@@ -49,6 +49,7 @@ class RecognitionServiceConfiguration:
         if arguments is not None:
             self.vocabulary = arguments.vocabulary
             self.formatterModelPath = arguments.formatter
+            self.subwords = arguments.subwords
             self.language = self._validateLanguage(arguments.language)
             self.model = arguments.model
             self.lexicon = arguments.lexicon
@@ -119,6 +120,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.word_score,
             configuration.sil_score,
             configuration.overlap,
+            configuration.subwords,
         )
         if formatter is None:
             self.logger.warning(
@@ -136,6 +138,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         word_score: Optional[float],
         sil_score: Optional[float],
         overlap: Optional[int],
+        subwords: bool = False,
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
@@ -149,6 +152,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 word_score,
                 sil_score,
                 overlap,
+                subwords,
             )
         else:
             return OnnxRuntime(session)

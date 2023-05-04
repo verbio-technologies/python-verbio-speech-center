@@ -186,6 +186,7 @@ class OnnxRuntime(Runtime):
         word_score: Optional[float] = -1,
         sil_score: Optional[float] = 0.0,
         overlap: Optional[int] = 0,
+        subwords: bool = False,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
@@ -193,7 +194,14 @@ class OnnxRuntime(Runtime):
         self._inputName = self._session.get_inputs_names()[0]
         self.overlap = overlap
         self._initializeDecoder(
-            vocabulary, lmFile, lexicon, lmAlgorithm, lm_weight, word_score, sil_score
+            vocabulary,
+            lmFile,
+            lexicon,
+            lmAlgorithm,
+            lm_weight,
+            word_score,
+            sil_score,
+            subwords,
         )
 
     def _initializeDecoder(
@@ -205,6 +213,7 @@ class OnnxRuntime(Runtime):
         lm_weight: Optional[float],
         word_score: Optional[float],
         sil_score: Optional[float],
+        subwords: bool = False,
     ) -> None:
         self.lmAlgorithm = lmAlgorithm
         if lmAlgorithm == "viterbi":
@@ -224,7 +233,7 @@ class OnnxRuntime(Runtime):
             from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
 
             self._decoder = W2lKenLMDecoder(
-                vocabulary, lmFile, lexicon, lm_weight, word_score, sil_score
+                vocabulary, lmFile, lexicon, lm_weight, word_score, sil_score, subwords
             )
         else:
             raise ValueError(

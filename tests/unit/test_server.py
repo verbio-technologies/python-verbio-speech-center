@@ -29,6 +29,7 @@ class MockArguments(argparse.Namespace):
         self.word_score = None
         self.sil_score = None
         self.overlap = None
+        self.subwords = None
 
 
 class TestServerConfiguration(unittest.TestCase):
@@ -186,6 +187,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.config = None
         args.language = None
         args.overlap = 0
+        args.subwords = False
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
@@ -204,6 +206,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.word_score, -0.2)
         self.assertEqual(args.sil_score, 0.1)
         self.assertEqual(args.overlap, 0)
+        self.assertEqual(args.subwords, False)
 
     def test_system_vars_override_with_env_vars_set(self):
         args = argparse.Namespace()
@@ -221,6 +224,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.config = None
         args.language = None
         args.overlap = None
+        args.subwords = None
 
         # Set environment variables for testing
         os.environ["LOG_LEVEL"] = "INFO"
@@ -236,6 +240,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         os.environ["ASR4_WORD_SCORE"] = "-0.5"
         os.environ["ASR4_SIL_SCORE"] = "0.3"
         os.environ["ASR4_OVERLAP"] = "80000"
+        os.environ["ASR4_SUBWORDS"] = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
@@ -253,6 +258,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.word_score, "-0.5")
         self.assertEqual(args.sil_score, "0.3")
         self.assertEqual(args.overlap, "80000")
+        self.assertEqual(args.subwords, "1")
 
         # Clean up environment variables after the test
         del os.environ["LOG_LEVEL"]
@@ -267,6 +273,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         del os.environ["ASR4_LM_WEIGHT"]
         del os.environ["ASR4_WORD_SCORE"]
         del os.environ["ASR4_SIL_SCORE"]
+        del os.environ["ASR4_SUBWORDS"]
 
 
 class DefaultValuesTests(unittest.TestCase):
@@ -287,6 +294,7 @@ class DefaultValuesTests(unittest.TestCase):
         args.sil_score = None
         args.workers = None
         args.overlap = None
+        args.subwords = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
 
@@ -302,6 +310,7 @@ class DefaultValuesTests(unittest.TestCase):
         self.assertEqual(args.lm_weight, 0.5)
         self.assertEqual(args.word_score, -0.2)
         self.assertEqual(args.sil_score, 0.0)
+        self.assertEqual(args.subwords, True)
 
 
 class TestCheckArgsRequired(unittest.TestCase):

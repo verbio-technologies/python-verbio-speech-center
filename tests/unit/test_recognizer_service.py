@@ -61,6 +61,7 @@ class MockArguments(argparse.Namespace):
         self.word_score = None
         self.sil_score = None
         self.overlap = None
+        self.subwords = None
 
     def createVocabulary(self) -> str:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
