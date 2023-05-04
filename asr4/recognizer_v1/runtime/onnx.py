@@ -185,11 +185,13 @@ class OnnxRuntime(Runtime):
         lm_weight: Optional[float] = 0.2,
         word_score: Optional[float] = -1,
         sil_score: Optional[float] = 0.0,
+        overlap: Optional[int] = 0,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
         self._session = session
         self._inputName = self._session.get_inputs_names()[0]
+        self.overlap = overlap
         self._initializeDecoder(
             vocabulary, lmFile, lexicon, lmAlgorithm, lm_weight, word_score, sil_score
         )
@@ -248,7 +250,7 @@ class OnnxRuntime(Runtime):
         if self._session.isModelShapeStatic():
             self._session.logger.debug(" - split chunks")
             x = self._convertToFixedSizeMatrix(
-                x, self._session._session._inputs_meta[0].shape[1]
+                x, self._session._session._inputs_meta[0].shape[1], self.overlap
             )
         x = torch.from_numpy(x.copy())
         x = torch.unsqueeze(x, 0)
@@ -257,11 +259,13 @@ class OnnxRuntime(Runtime):
         return x
 
     @staticmethod
-    def _convertToFixedSizeMatrix(audio: npt.NDArray[np.float32], width: int):
+    def _convertToFixedSizeMatrix(
+        audio: npt.NDArray[np.float32], width: int, overlap: int
+    ):
         # Note that 800 frames are 50ms
-        return MatrixOperations(window=width, overlap=80000).splitIntoOverlappingChunks(
-            audio
-        )
+        return MatrixOperations(
+            window=width, overlap=overlap
+        ).splitIntoOverlappingChunks(audio)
 
     def _runOnnxruntimeSession(self, input: torch.Tensor) -> _DecodeResult:
         self._session.logger.debug(f" - softmax")
@@ -366,22 +370,6 @@ class MatrixOperations:
                 result[i, : chunk.shape[0]] = chunk
 
         return result
-
-    # def splitIntoOverlappingChunks(self, audio: npt.NDArray[np.float32]):
-    #     overlap_size = self.window - self.overlap
-    #     num_chunks = int(np.ceil((audio.shape[0]) / overlap_size))
-    #     padded_size = overlap_size * num_chunks + self.window - overlap_size
-    #     audio_padded = np.zeros(padded_size, dtype=audio.dtype)
-    #     audio_padded[: audio.shape[0]] = audio
-    #
-    #     shape = (num_chunks, self.window)
-    #     strides = (audio_padded.strides[0] * overlap_size, audio_padded.strides[0])
-    #     result = np.lib.stride_tricks.as_strided(audio_padded, shape=shape, strides=strides)
-    #
-    #     if self.overlap >= self.window:
-    #         result = result[:-1, :]
-    #
-    #     return result
 
     def _setCorrectDimensions(self):
         assert (
