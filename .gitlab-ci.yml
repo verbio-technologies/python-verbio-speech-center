@@ -278,9 +278,6 @@ image:release:gpu:
 
 testing:integration-testing:cpu:
   extends: .template:integration-testing
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   services:
     - name: ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
       alias: asr4-server
@@ -298,9 +295,6 @@ testing:integration-testing:gpu:
     - merge_requests
     - master
     - web
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
   before_script:
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
