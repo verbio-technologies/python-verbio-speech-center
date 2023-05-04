@@ -243,7 +243,6 @@ class SystemVarsOverrideTests(unittest.TestCase):
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
-        args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
 
         # Assert that the values in args have been overridden by the environment variables
         self.assertEqual(args.verbose, "INFO")
