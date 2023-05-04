@@ -279,8 +279,8 @@ testing:integration-testing:cpu:
 
 testing:integration-testing:gpu:
   extends: .template:integration-testing
-  tags:
-    - gpu
+  # tags:
+  #   - gpu
   before_script:
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
