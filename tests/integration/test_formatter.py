@@ -8,6 +8,10 @@ from typing import Optional
 
 
 class TestFormatterUtils(object):
+    def readReference(self, referencePath: str) -> str:
+        with open(referencePath) as f:
+            return " ".join(f.read().splitlines())
+
     def _runRecognition(
         self,
         language: str,
@@ -82,6 +86,9 @@ class TestFormatterUtils(object):
     def launchRecognitionWithNoFormatting(self, audioPath: str, language: str) -> Popen:
         return self._runNoFormatRecognition(language, audioPath=audioPath)
 
+    def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
+        return self._runRecognition(language, guiPath=guiPath)
+
     @staticmethod
     def checkStatus(status: int, stderr: str) -> None:
         try:
@@ -102,33 +109,31 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
         self.datadir = f"{pytestconfig.rootdir}/tests/integration/data"
 
     def setUp(self) -> None:
+        self._language = os.getenv("LANGUAGE", "en-us")
         self._hostName = os.getenv("ASR4_HOSTNAME", "0.0.0.0")
         self._hostPort = os.getenv("ASR4_PORT", 50051)
         self._host = f"{self._hostName}:{self._hostPort}"
+        self._audio = f"{os.path.join(self.datadir, self._language)}-fmt.wav"
+        referencePathNoFmt = f"{os.path.join(self.datadir, self._language)}-no-fmt.txt"
+        referencePathFmt = f"{os.path.join(self.datadir, self._language)}-fmt.txt"
+        self._referenceNoFmt = self.readReference(referencePathNoFmt)
+        self._referenceFmt = self.readReference(referencePathFmt)
         self._output = self.datadir + "/output"
 
-    def testRecognizeRequestNoFormattedEN_US(self):
-        process = self.launchRecognitionWithNoFormatting(
-            os.path.join(self.datadir, "en-us-fmt.wav"), "en-us"
-        )
+    def _recognizeAudio(self, audio, language):
+        process = self.launchRecognitionProcess(audio, language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis = (
+        return (
             match.group(match.lastindex)
             if match is not None and match.lastindex is not None
             else ""
-        )
-        self.assertEqual(
-            hypothesis,
-            "what is the cost of flight cee o one six three one from nashville to chicago",
         )
 
-    def testRecognizeRequestFormattedEN_US(self):
-        process = self.launchRecognitionProcess(
-            os.path.join(self.datadir, "en-us-fmt.wav"), "en-us"
-        )
+    def testRecognizeRequestFormatted(self):
+        process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
@@ -138,15 +143,10 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
-        self.assertEqual(
-            hypothesis,
-            "What is the cost of flight? Cee O 1 6 3 1 from Nashville to Chicago,",
-        )
+        self.assertEqual(hypothesis, self._referenceFmt)
 
-    def testRecognizeRequestNoFormattedES(self):
-        process = self.launchRecognitionWithNoFormatting(
-            os.path.join(self.datadir, "es-fmt.wav"), "es"
-        )
+    def testRecognizeRequestNoFormatted(self):
+        process = self.launchRecognitionProcess(self._audio, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
@@ -156,22 +156,4 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
-        self.assertEqual(
-            hypothesis,
-            "erre cuatrocientos setenta y cinco doscientos senchenta y cuatro tres e",
-        )
-
-    def testRecognizeRequestFormattedES(self):
-        process = self.launchRecognitionProcess(
-            os.path.join(self.datadir, "es-fmt.wav"), "es"
-        )
-        status = process.wait(timeout=900)
-        self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis = (
-            match.group(match.lastindex)
-            if match is not None and match.lastindex is not None
-            else ""
-        )
-        self.assertEqual(hypothesis, "R. 2730762-H")
+        self.assertEqual(hypothesis, self._referenceNoFmt)
