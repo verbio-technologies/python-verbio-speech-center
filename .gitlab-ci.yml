@@ -274,9 +274,7 @@ image:release:gpu:
       - docker push "${IMAGE_NAME}"
     
 
-
-
-testing:integration-testing:cpu:
+testing:formatting-testing:cpu:
   extends: .template:integration-testing
   services:
     - name: ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
@@ -287,6 +285,15 @@ testing:integration-testing:cpu:
   script:
     - python3 --version
     - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
+
+testing:integration-testing:cpu:
+  extends: .template:integration-testing
+  services:
+    - name: ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      command: ["env", "/bin/bash", "-c", "/init.sh"]
+  variables:
+    ASR4_HOSTNAME: asr4-server
 
 testing:integration-testing:gpu:
   extends: .template:integration-testing
@@ -304,9 +311,6 @@ testing:integration-testing:gpu:
     - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
-  script:
-    - python3 --version
-    - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
   after_script:
     - nvidia-smi
     - docker logs asr4-gpu-${LANGUAGE}
