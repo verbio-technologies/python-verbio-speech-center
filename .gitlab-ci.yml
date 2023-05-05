@@ -289,6 +289,7 @@ testing:formatting-testing:gpu:
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
     - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - sleep 30
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
@@ -319,6 +320,7 @@ testing:integration-testing:gpu:
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
     - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - sleep 30
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
