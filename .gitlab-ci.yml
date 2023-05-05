@@ -278,6 +278,27 @@ testing:formatting-testing:cpu:
     - python3 --version
     - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
 
+testing:formatting-testing:gpu:
+  extends: .template:integration-testing
+  tags:
+    - gpu
+  before_script:
+    # Install docker to run ASR4 server docker
+    - !reference [.install-docker, before_script]
+    # Launch ASR4 server on GPU
+    - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
+    - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    # Install the remaining testing dependencies
+    - !reference [.template:integration-testing, before_script]
+  after_script:
+    - nvidia-smi
+    - docker logs asr4-gpu-${LANGUAGE}
+    - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
+  script:
+    - python3 --version
+    - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
+
 testing:integration-testing:cpu:
   extends: .template:integration-testing
   services:
