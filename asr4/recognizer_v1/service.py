@@ -281,7 +281,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def eventHandle(self, request: RecognizeRequest) -> str:
         transcription = self._runRecognition(request)
         if request.config.parameters.enable_formatting:
-            return self._formatWords(transcription)
+            return self.formatWords(transcription)
         else:
             words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
             return " ".join(words)
@@ -296,7 +296,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 f"Invalid language '{language}'. Only '{self._language}' is supported."
             )
 
-    def _formatWords(self, transcription: str) -> str:
+    def formatWords(self, transcription: str) -> str:
         words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
         if self._formatter and words:
             self.logger.debug(f"Pre-formatter text: {words}")

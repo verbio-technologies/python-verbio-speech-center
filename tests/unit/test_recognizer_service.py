@@ -19,6 +19,8 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
+from asr4.recognizer_v1.formatter import FormatterFactory
+import os
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -677,3 +679,233 @@ class TestRecognizerService(unittest.TestCase):
                 ),
             )
             service.calculateAudioDuration(request)
+
+    def testRecognizeFormatterESNumbers(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords(
+                "mi dni es siete siete uno uno cuatro tres seis ocho zeta"
+            ),
+            "Mi dni es 77114368-Z",
+        )
+
+    def testRecognizeFormatterESEmails(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("mi email es test arroba verbio punto com"),
+            "Mi email es Test@verbio.com",
+        )
+
+    def testRecognizeFormatterESPunctuation(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("en qué puedo ayudarle"),
+            "¿En qué puedo ayudarle?",
+        )
+
+    def testRecognizeFormatterESCapitalization(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("mi nombre es maría"),
+            "Mi nombre es María...",
+        )
+
+    def testRecognizeFormatterEN_USNumbers(self):
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("three million dot fourteen"),
+            "3,000,000.14.",
+        )
+
+    def testRecognizeFormatterEN_USEmails(self):
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("my email address john at gmail dot com"),
+            "My email address John@gmail.com.",
+        )
+
+    def testRecognizeFormatterEN_USPunctuation(self):
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("how are you"),
+            "How are you?",
+        )
+
+    def testRecognizeFormatterEN_USCapitalization(self):
+        arguments = MockArguments()
+        arguments.language = Language.EN_US
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("my name is john"),
+            "My name is John.",
+        )
+
+    def testRecognizeFormatterPT_BRNumbers(self):
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("três mil duzentos e quarenta e cinco"),
+            "3.245.",
+        )
+
+    def testRecognizeFormatterPT_BREmails(self):
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("meu email é joão at domínio dot com"),
+            "Meu email é João@domínio.com",
+        )
+
+    def testRecognizeFormatterPT_BRPunctuation(self):
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("como vai que eu possa ajudar"),
+            "Como vai que eu possa ajudar?",
+        )
+
+    def testRecognizeFormatterPT_BRCapitalization(self):
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        service = RecognizerService(
+            MockRecognitionServiceConfiguration(arguments), formatter=formatter
+        )
+        self.assertEqual(
+            service.formatWords("meu nome é joão"),
+            "Meu nome é João",
+        )

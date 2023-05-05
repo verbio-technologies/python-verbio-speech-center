@@ -266,7 +266,39 @@ image:release:gpu:
       - docker push "${IMAGE_NAME}"
     
 
+testing:formatting-testing:cpu:
+  extends: .template:integration-testing
+  services:
+    - name: ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+      alias: asr4-server
+      command: ["env", "/bin/bash", "-c", "/init.sh"]
+  variables:
+    ASR4_HOSTNAME: asr4-server
+  script:
+    - python3 --version
+    - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
 
+testing:formatting-testing:gpu:
+  extends: .template:integration-testing
+  tags:
+    - gpu
+  before_script:
+    # Install docker to run ASR4 server docker
+    - !reference [.install-docker, before_script]
+    # Launch ASR4 server on GPU
+    - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
+    - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
+    - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - sleep 30
+    # Install the remaining testing dependencies
+    - !reference [.template:integration-testing, before_script]
+  after_script:
+    - nvidia-smi
+    - docker logs asr4-gpu-${LANGUAGE}
+    - docker kill asr4-gpu-${LANGUAGE} && docker rm asr4-gpu-${LANGUAGE}
+  script:
+    - python3 --version
+    - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
 
 testing:integration-testing:cpu:
   extends: .template:integration-testing
@@ -288,6 +320,7 @@ testing:integration-testing:gpu:
     - export JOB_DOCKER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build")
     - docker kill asr4-gpu-${LANGUAGE} || true && docker rm asr4-gpu-${LANGUAGE} || true
     - docker run --name asr4-gpu-${LANGUAGE} -d --gpus=all --network="container:$JOB_DOCKER_ID" -e LOG_LEVEL=DEBUG ${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}
+    - sleep 30
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
   after_script:
@@ -308,7 +341,7 @@ testing:integration-testing:gpu:
     - pip install .[client,test]
   script:
     - python3 --version
-    - pytest tests/integration --junit-xml=report.xml --verbose --capture=no
+    - pytest tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
     reports:
