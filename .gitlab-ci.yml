@@ -171,11 +171,8 @@ integration-testing:gpu:
 build:python:
   stage: package
   only:
-  only:
     - tags
     - merge_requests
-    - master
-    - web
   before_script:
     - echo JOB_ID=$CI_JOB_ID >> settings.env
     - echo "DOCKER_IMAGE_VERSION = ${DOCKER_IMAGE_VERSION}" >> settings.env
@@ -202,10 +199,7 @@ image:build:cpu:
     DEVICE: "cpu"
   extends: .template_docker_build
   only:
-    - tags
     - merge_requests
-    - master
-    - web
 
 image:build:gpu:
   variables:
@@ -214,10 +208,8 @@ image:build:gpu:
     DOCKERFILE: "Dockerfile.debian-gpu"
   extends: .template_docker_build
   only:
-    - tags
     - merge_requests
-    - master
-    - web
+
 image:release:cpu:
   variables:
     IMAGE_NAME: "${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
@@ -297,11 +289,8 @@ testing:integration-testing:cpu:
 
 testing:integration-testing:gpu:
   extends: .template:integration-testing
-  only:
-    - tags
-    - merge_requests
-    - master
-    - web
+  tags:
+    - gpu
   before_script:
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
@@ -322,8 +311,8 @@ testing:integration-testing:gpu:
   only:
     - tags
     - merge_requests
-    - master
     - web
+    - master
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
