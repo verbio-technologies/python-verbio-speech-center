@@ -133,7 +133,7 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
         )
 
     def testRecognizeRequestFormatted(self):
-        process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
+        process = self.launchRecognitionProcess(self._audio, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
@@ -146,7 +146,7 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
         self.assertEqual(hypothesis, self._referenceFmt)
 
     def testRecognizeRequestNoFormatted(self):
-        process = self.launchRecognitionProcess(self._audio, self._language)
+        process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
