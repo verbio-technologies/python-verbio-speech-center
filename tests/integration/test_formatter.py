@@ -86,9 +86,6 @@ class TestFormatterUtils(object):
     def launchRecognitionWithNoFormatting(self, audioPath: str, language: str) -> Popen:
         return self._runNoFormatRecognition(language, audioPath=audioPath)
 
-    def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
-        return self._runRecognition(language, guiPath=guiPath)
-
     @staticmethod
     def checkStatus(status: int, stderr: str) -> None:
         try:
@@ -118,19 +115,6 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
         referencePathFmt = f"{os.path.join(self.datadir, self._language)}-fmt.txt"
         self._referenceNoFmt = self.readReference(referencePathNoFmt)
         self._referenceFmt = self.readReference(referencePathFmt)
-        self._output = self.datadir + "/output"
-
-    def _recognizeAudio(self, audio, language):
-        process = self.launchRecognitionProcess(audio, language)
-        status = process.wait(timeout=900)
-        self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        return (
-            match.group(match.lastindex)
-            if match is not None and match.lastindex is not None
-            else ""
-        )
 
     def testRecognizeRequestFormatted(self):
         process = self.launchRecognitionProcess(self._audio, self._language)
@@ -147,6 +131,7 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
 
     def testRecognizeRequestNoFormatted(self):
         process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
+
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
