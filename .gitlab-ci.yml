@@ -331,9 +331,6 @@ testing:integration-testing:gpu:
   stage: integration-testing
   only:
     - tags
-    - merge_requests
-    - web
-    - master
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
