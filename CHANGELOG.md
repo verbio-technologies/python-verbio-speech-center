@@ -6,6 +6,16 @@
 
 ### Removed :no_entry:
 
+## 0.4.2 (2023-05-08)
+
+### Patch (5 changes)
+
+- [Increased patch version](csr/asr4@ba904e52f9eaa1dbab83314eaf9dab4543cfa96b) ([merge request](csr/asr4!249))
+- [Updated pt_BR accuracy references after weights adjust](csr/asr4@7125fa56987fd6e7fd93075ec38a90b618b60f27) ([merge request](csr/asr4!248))
+- [Adding unit an integration tests for ASR4 formatting](csr/asr4@d4694a79cdc3006aafddcb4c774fd81ee7a817d6) ([merge request](csr/asr4!246))
+- [Now we can process subwords](csr/asr4@33862df5fcf749932540271b43c30c4163bc5e74) ([merge request](csr/asr4!225))
+- [Refactor server flags](csr/asr4@7ed91c879c02e6ac56f9bb09417298c0bf49c1ba) ([merge request](csr/asr4!243))
+
 ## 0.4.1 (2023-04-30)
 
 ### Patch (2 changes)
