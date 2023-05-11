@@ -10,6 +10,7 @@ from threading import Timer
 from typing import Iterator, Iterable
 import argparse
 import logging
+import math
 import wave
 import grpc
 from speechcenterauth import SpeechCenterCredentials
@@ -174,6 +175,20 @@ class SpeechCenterStreamingASRClient:
         return True
     
     @staticmethod
+    def divide_audio(audio: bytes, chunk_size: int = 20000):
+        audio_length = len(audio)
+        chunk_count = math.ceil(audio_length / chunk_size)
+        logging.debug("Dividing audio of length " + str(audio_length) + " into " + str(chunk_count) + " of size " + str(chunk_size) + "...")
+        if chunk_count > 1:
+            for i in range(chunk_count-1):
+                start = i*chunk_size
+                end = min((i+1)*chunk_size, audio_length)
+                logging.debug("Audio chunk #" + str(i) + " sliced as " + str(start) + ":" + str(end))
+                yield audio[start:end]
+        else:
+            yield audio
+    
+    @staticmethod
     def __generate_inferences(
         wav_audio: bytes,
         asr_version: str,
@@ -195,7 +210,7 @@ class SpeechCenterStreamingASRClient:
             selected_asr_version = asr_versions[asr_version]
         else:
             raise Exception("ASR version must be declared in order to perform the recognition")
-
+        
         messages = [
             ("config", 
                 recognition_streaming_request_pb2.RecognitionStreamingRequest(
@@ -208,9 +223,16 @@ class SpeechCenterStreamingASRClient:
                         ), 
                         resource=var_resource,
                         label=[label],
-                        version=selected_asr_version))),
-            ("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=wav_audio)),
+                        version=selected_asr_version
+                    )
+                )
+            ),
         ]
+
+        for chunk in SpeechCenterStreamingASRClient.divide_audio(wav_audio):
+            logging.debug("Appending chunk as message: " + repr(chunk)[0:20] + "...")
+            messages.append(("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=chunk)))
+
         for message_type, message in messages:
             logging.info("Sending streaming message " + message_type)
             yield message
