@@ -176,13 +176,13 @@ class SpeechCenterStreamingASRClient:
     
     @staticmethod
     def divide_audio(audio: bytes, chunk_size: int = 20000):
-        audioLength = len(audio)
-        nChunks = math.ceil(audioLength / chunk_size)
-        logging.debug("Dividing audio of length " + str(audioLength) + " into " + str(nChunks) + " of size " + str(chunk_size) + "...")
-        if nChunks > 1:
-            for i in range(nChunks-1):
+        audio_length = len(audio)
+        chunk_count = math.ceil(audio_length / chunk_size)
+        logging.debug("Dividing audio of length " + str(audio_length) + " into " + str(chunk_count) + " of size " + str(chunk_size) + "...")
+        if chunk_count > 1:
+            for i in range(chunk_count-1):
                 start = i*chunk_size
-                end = min((i+1)*chunk_size, audioLength)
+                end = min((i+1)*chunk_size, audio_length)
                 logging.debug("Audio chunk #" + str(i) + " sliced as " + str(start) + ":" + str(end))
                 yield audio[start:end]
         else:
