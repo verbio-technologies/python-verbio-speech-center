@@ -14,7 +14,11 @@ for filename in $PROTO_PATH_FILES; do
   PROTO_DIR=$(dirname "${PROTO_PATH}")
   PROTO_FILE=$(basename "${filename}")
   echo "Generating new proto file: $filename PROTO_DIR=${PROTO_DIR} PROTO_FILE=${PROTO_FILE}"
+  if [[ ! -e ${PROTO_PATH_GENERATED} ]]; then
+    mkdir ${PROTO_PATH_GENERATED}
+  elif [[ ! -d ${PROTO_PATH_GENERATED} ]]; then
+    echo "${PROTO_PATH_GENERATED} already exists but is not a directory"
+    exit
+  fi
   ${PYTHON_EXEC} -m grpc_tools.protoc -I"${PROTO_PATH}" --python_out=${PROTO_PATH_GENERATED} --grpc_python_out=${PROTO_PATH_GENERATED} "${PROTO_FILE}"
 done
-
-
