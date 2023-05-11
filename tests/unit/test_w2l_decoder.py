@@ -48,7 +48,7 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             "z",
         ]
 
-    def testGetTimesteps(self):
+    def testGetWordsFrames(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
             self.vocabulary,
             str(self.datapath.joinpath("en-us_lm.bin")),
@@ -57,8 +57,40 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             -1,
             0,
         )
-        token_idxs = [7, 8, 9, 10]
-        self.assertEqual(decoder._getTimesteps([token_idxs]), [0])
+        token_idxs = [
+            4,
+            6,
+            6,
+            0,
+            14,
+            0,
+            5,
+            4,
+            0,
+            11,
+            0,
+            9,
+            4,
+        ]
+        self.assertEqual(
+            decoder._getWordsFrames(token_idxs),
+            [
+                [1, 4, 6],
+                [9, 11],
+            ],
+        )
+
+    def testGetTimeInterval(self):
+        decoder = w2l_decoder.W2lKenLMDecoder(
+            self.vocabulary,
+            str(self.datapath.joinpath("en-us_lm.bin")),
+            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
+            0.2,
+            -1,
+            0,
+        )
+        frames = [5, 6, 11, 13, 17]
+        self.assertEqual(decoder._getTimeInterval(frames), (0.1, 0.34))
 
     def testDecode(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
@@ -73,4 +105,6 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             len(decoder.decode(torch.tensor([[[0, 0, 0]]])).label_sequences), 1
         )
         self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).scores), 1)
-        self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).timesteps), 1)
+        self.assertEqual(
+            len(decoder.decode(torch.tensor([[[0, 0, 0]]])).wordTimestamps), 1
+        )

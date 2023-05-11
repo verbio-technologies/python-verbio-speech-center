@@ -290,7 +290,7 @@ class OnnxRuntime(Runtime):
         total_probs = []
         label_sequences = []
         scores = []
-        timesteps = []
+        wordTimestamps = []
 
         for i in range(input.shape[1]):
             frame_probs = self._session.run(
@@ -299,8 +299,8 @@ class OnnxRuntime(Runtime):
             if decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
-                label_sequences, scores, timesteps = self._decodePartial(
-                    label_sequences, scores, timesteps, frame_probs
+                label_sequences, scores, wordTimestamps = self._decodePartial(
+                    label_sequences, scores, wordTimestamps, frame_probs
                 )
         if decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs)
@@ -308,7 +308,7 @@ class OnnxRuntime(Runtime):
             return _DecodeResult(
                 label_sequences=[[label_sequences]],
                 scores=[scores],
-                timesteps=timesteps,
+                wordTimestamps=wordTimestamps,
             )
 
     def _decodeTotal(self, y):
@@ -321,7 +321,7 @@ class OnnxRuntime(Runtime):
         self._session.logger.debug(" - decoding global")
         return self._decoder.decode(normalized_y)
 
-    def _decodePartial(self, label_sequences, scores, timesteps, yi):
+    def _decodePartial(self, label_sequences, scores, wordTimestamps, yi):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
@@ -329,8 +329,8 @@ class OnnxRuntime(Runtime):
             label_sequences += " "
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
-        timesteps += [decoded_part.timesteps]
-        return label_sequences, scores, timesteps
+        wordTimestamps += [decoded_part.wordTimestamps]
+        return label_sequences, scores, wordTimestamps
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
         sequence = (

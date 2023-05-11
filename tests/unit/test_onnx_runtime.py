@@ -158,7 +158,7 @@ class TestOnnxRuntime(unittest.TestCase):
                 [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
             ],
             scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
-            timesteps=[[[]]],
+            wordTimestamps=[[[]]],
         )
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "viterbi")
         onnxResult = runtime._postprocess(results)
