@@ -129,21 +129,10 @@ dmypy.json
 .pyre/
 
 # Proto files
-proto/generated/recognition_pb2_grpc.py               
-proto/generated/recognition_pb2.py               
-proto/generated/recognition_streaming_pb2.py               
-proto/generated/recognition_streaming_response_pb2_grpc.py
-proto/generated/verbio_speech_center_recognizer_pb2.py
-proto/generated/recognition_streaming_request_pb2_grpc.py
-proto/generated/recognition_streaming_response_pb2.py
-proto/generated/verbio_speech_center_synthesizer_pb2_grpc.py
-proto/generated/recognition_streaming_pb2_grpc.py
-proto/generated/recognition_streaming_request_pb2.py
-proto/generated/verbio_speech_center_recognizer_pb2_grpc.py
-proto/generated/verbio_speech_center_synthesizer_pb2.py
+proto/generated/*
 
 # token resource
 resources
 .idea
-.token
-.wav
+*.token
+*.wav

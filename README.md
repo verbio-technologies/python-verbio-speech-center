@@ -41,8 +41,8 @@ In scritps repository there is a `generate_grpc_code.sh` script that will genera
 ```console
 .>$ cd scripts/
 ./scripts>$ ./generate_grpc_code.sh
-
 ```
+
 It will generate all needed grpc files on the project root directory `proto/generated` like:
 
 ```console
@@ -63,7 +63,7 @@ Our Recognizer will allow you to easily convert an audio resource into its assoc
 **Example**
 
 ```console
-python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
+python3 speechcenter/cli-client.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
 ```
 
 This code will generate the following terminal output on success:
@@ -86,13 +86,11 @@ This code will generate the following terminal output on success:
 	"duration": "7.000000"
 [2023-04-04 12:31:32,111][INFO]:Stream inactivity detected, closing stream...
 [2023-04-04 12:31:32,112][INFO]:Recognition finished
-
-
 ```
 
 You can also run:
 ```console
-python3 recognizer_stream.py --help
+python3 speechcenter/cli-client.py --help
 ```
   
 to list all the available options.
@@ -104,9 +102,8 @@ You must also specify a token file, where the token will be stored and updated i
 
 **Example**
 ```console
-python3 recognizer_stream.py --client-id="your-client-id" --client-secret="your-client-secret"
+python3 speechcenter/cli-client.py --client-id="your-client-id" --client-secret="your-client-secret"
  --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
-
 ```
 
 **WARNING**

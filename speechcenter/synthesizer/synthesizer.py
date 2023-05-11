@@ -9,8 +9,7 @@ import logging
 import argparse
 
 import grpc
-import verbio_speech_center_synthesizer_pb2
-import verbio_speech_center_synthesizer_pb2_grpc
+from proto.generated import verbio_speech_center_synthesizer_pb2, verbio_speech_center_synthesizer_pb2_grpc
 
 
 class Options:

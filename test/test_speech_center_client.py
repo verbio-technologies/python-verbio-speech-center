@@ -1,12 +1,9 @@
 # Used to make sure python find proto files
-import sys
-sys.path.insert(1, '../cli-client')
-
 import unittest
 import wave
 
-from recognizer import Options as RecognizerOptions, Credentials as RecognizerCredentials, Resources
-from synthesizer import Options as SynthesizerOptions, Credentials as SynthesizerCredentials, Audio
+from speechcenter.recognizer.recognizer import Options as RecognizerOptions, Credentials as RecognizerCredentials, Resources
+from speechcenter.synthesizer.synthesizer import Options as SynthesizerOptions, Credentials as SynthesizerCredentials, Audio
 
 
 class TestRecognizerOptions(unittest.TestCase):
