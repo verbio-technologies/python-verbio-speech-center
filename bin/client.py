@@ -49,7 +49,7 @@ _ENCODING = "utf-8"
 
 def _repr(responses: List[RecognizeRequest]) -> List[str]:
     return [
-        f'<RecognizeRequest first alternative: "{r.alternatives}">'
+        f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
         for r in responses
         if len(r.alternatives) > 0
     ]
@@ -182,7 +182,7 @@ def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
     recognizeResponse = RecognizeResponse.FromString(response)
     if len(recognizeResponse.alternatives) > 0:
-        return f"{recognizeResponse.alternatives[0]} ({filename})"
+        return f"{recognizeResponse.alternatives[0].transcript} ({filename})"
     else:
         return f" ({filename})"
 
