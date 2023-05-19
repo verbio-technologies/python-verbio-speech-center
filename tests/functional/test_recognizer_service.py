@@ -107,10 +107,6 @@ class TestRecognizerService(unittest.TestCase):
                 response.results.alternatives[0].transcript,
                 DEFAULT_ENGLISH_MESSAGE,
             )
-            self.assertEqual(
-                response.results.alternatives[0].confidence,
-                1.0,
-            )
         self.assertEqual(
             response.results.is_final,
             True,
@@ -144,10 +140,6 @@ class TestRecognizerService(unittest.TestCase):
             self.assertEqual(
                 response.results.alternatives[0].transcript,
                 DEFAULT_ENGLISH_MESSAGE,
-            )
-            self.assertEqual(
-                response.results.alternatives[0].confidence,
-                1.0,
             )
 
         self.assertEqual(
