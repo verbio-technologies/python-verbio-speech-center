@@ -348,7 +348,6 @@ class OnnxRuntime(Runtime):
         else:
             score = output.scores[0][0]
             timesteps = output.timesteps
-        print(score)
         return OnnxRuntimeResult(
             sequence=sequence, score=score, wordTimestamps=timesteps
         )

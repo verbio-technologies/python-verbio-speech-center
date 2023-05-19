@@ -22,7 +22,9 @@ LEXICON = Dict[str, List[List[str]]]
 class _DecodeResult:
     label_sequences: List[List[List[str]]]
     scores: List[List[float]] = field(default_factory=lambda: [[0]])
-    timesteps: List[List[List[tuple[float]]]] = field(default_factory=lambda: [[[(0,0)]]])
+    timesteps: List[List[List[tuple[float]]]] = field(
+        default_factory=lambda: [[[(0, 0)]]]
+    )
 
 
 class W2lKenLMDecoder:

@@ -32,7 +32,9 @@ from google.protobuf.reflection import GeneratedProtocolMessageType
 class TranscriptionResult:
     transcription: str
     score: float
-    wordTimestamps: List[List[List[tuple[float]]]] = field(default_factory=lambda: [[[(0,0)]]])
+    wordTimestamps: List[List[List[tuple[float]]]] = field(
+        default_factory=lambda: [[[(0, 0)]]]
+    )
 
 
 class RecognitionServiceConfiguration:
