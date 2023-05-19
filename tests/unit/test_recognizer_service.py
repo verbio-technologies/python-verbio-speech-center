@@ -506,48 +506,49 @@ class TestRecognizerService(unittest.TestCase):
             DEFAULT_ENGLISH_MESSAGE,
         )
 
-    # def testRecognizeRequestHandleEs(self):
-    #     arguments = MockArguments()
-    #     arguments.language = Language.ES
-    #     arguments.vocabulary = None
-    #     service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
-    #     request = RecognizeRequest(
-    #         config=RecognitionConfig(
-    #             parameters=RecognitionParameters(
-    #                 language="es",
-    #                 sample_rate_hz=8000,
-    #                 audio_encoding="PCM",
-    #                 enable_formatting=False,
-    #             ),
-    #             resource=RecognitionResource(topic="GENERIC"),
-    #         ),
-    #         audio=b"0000",
-    #     )
-    #     self.assertEqual(
-    #         service.eventHandle(request).transcription,
-    #         DEFAULT_CORRECT_SPANISH_MESSAGE,
-    #     )
+    def testRecognizeRequestHandleEs(self):
+        arguments = MockArguments()
+        arguments.language = Language.ES
+        arguments.vocabulary = None
+        service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="es",
+                    sample_rate_hz=8000,
+                    audio_encoding="PCM",
+                    enable_formatting=False,
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+            audio=b"0000",
+        )
+        self.assertEqual(
+            service.eventHandle(request).transcription,
+            DEFAULT_CORRECT_SPANISH_MESSAGE,
+        )
 
-    # def testRecognizeRequestHandlePtBr(self):
-    #     arguments = MockArguments()
-    #     arguments.language = Language.PT_BR
-    #     arguments.vocabulary = None
-    #     service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
-    #     request = RecognizeRequest(
-    #         config=RecognitionConfig(
-    #             parameters=RecognitionParameters(
-    #                 language="pt-BR",
-    #                 sample_rate_hz=8000,
-    #                 audio_encoding="PCM",
-    #                 enable_formatting=False,
-    #             ),
-    #             resource=RecognitionResource(topic="GENERIC"),
-    #         ),
-    #         audio=b"0000",
-    #     )
-    #     self.assertEqual(
-    #         service.eventHandle(request).transcription, DEFAULT_CORRECT_PORTUGUESE_MESSAGE
-    #     )
+    def testRecognizeRequestHandlePtBr(self):
+        arguments = MockArguments()
+        arguments.language = Language.PT_BR
+        arguments.vocabulary = None
+        service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language="pt-BR",
+                    sample_rate_hz=8000,
+                    audio_encoding="PCM",
+                    enable_formatting=False,
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+            audio=b"0000",
+        )
+        self.assertEqual(
+            service.eventHandle(request).transcription,
+            DEFAULT_CORRECT_PORTUGUESE_MESSAGE,
+        )
 
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())
