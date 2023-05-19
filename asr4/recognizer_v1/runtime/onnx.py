@@ -35,6 +35,7 @@ class DecodingType(Enum):
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
+    wordTimestamps: List[List[List[tuple[float]]]]
 
 
 class Session(abc.ABC):
@@ -343,11 +344,13 @@ class OnnxRuntime(Runtime):
         )
         if self.lmAlgorithm == "viterbi":
             score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+            timesteps = [[[(0, 0)] * len(output.label_sequences[0][0])]]
         else:
             score = output.scores[0][0]
+            timesteps = output.timesteps
+        print(score)
         return OnnxRuntimeResult(
-            sequence=sequence,
-            score=score,
+            sequence=sequence, score=score, wordTimestamps=timesteps
         )
 
 

@@ -22,7 +22,7 @@ LEXICON = Dict[str, List[List[str]]]
 class _DecodeResult:
     label_sequences: List[List[List[str]]]
     scores: List[List[float]] = field(default_factory=lambda: [[0]])
-    wordTimestamps: List[List[List[int]]] = field(default_factory=lambda: [[[]]])
+    timesteps: List[List[List[tuple[float]]]] = field(default_factory=lambda: [[[(0,0)]]])
 
 
 class W2lKenLMDecoder:
@@ -108,15 +108,15 @@ class W2lKenLMDecoder:
     def decode(self, emissions: torch.Tensor):
         B = emissions.shape[0]
         emissions = emissions.numpy()
-        allWords, allScores, allWordTimestamps = [], [], []
+        allWords, allScores, allTimesteps = [], [], []
         for b in range(B):
             hypothesis = self._decodeLexicon(emissions, b)
-            words, scores, wordTimestamps = self._postProcessHypothesis(hypothesis)
+            words, scores, timesteps = self._postProcessHypothesis(hypothesis)
             allWords.append(words)
             allScores.append(scores)
-            allWordTimestamps.append(wordTimestamps)
+            allTimesteps.append(timesteps)
         return _DecodeResult(
-            label_sequences=allWords, scores=allScores, wordTimestamps=allWordTimestamps
+            label_sequences=allWords, scores=allScores, timesteps=allTimesteps
         )
 
     def _decodeLexicon(
@@ -134,7 +134,7 @@ class W2lKenLMDecoder:
     def _postProcessHypothesis(
         self, hypotesis: List[DecodeResult]
     ) -> Tuple[List[List[str]], List[float], List[List[int]]]:
-        words, scores, wordTimestamps = [], [], []
+        words, scores, timesteps = [], [], []
         for result in hypotesis:
             if not getattr(self, "_subwords", False):
                 words.append(
@@ -155,8 +155,8 @@ class W2lKenLMDecoder:
                     )
                 )
             scores.append(result.score)
-            wordTimestamps.append(self._getWordTimestamps(result.tokens))
-        return (words, scores, wordTimestamps)
+            timesteps.append(self._getWordTimestamps(result.tokens))
+        return (words, scores, timesteps)
 
     def _getWordTimestamps(self, tokenIdxs: List[int]) -> List[Tuple[int, int]]:
         frames = self._getWordsFrames(tokenIdxs=tokenIdxs)
@@ -167,7 +167,7 @@ class W2lKenLMDecoder:
         return timeIntervals
 
     def _getWordsFrames(self, tokenIdxs: List[int]) -> List[List[int]]:
-        wordTimestamps = []
+        timesteps = []
         wordFrames = []
         wordFound = 0
         for i, tokenIdx in enumerate(tokenIdxs):
@@ -177,10 +177,10 @@ class W2lKenLMDecoder:
                 wordFound = 1
                 wordFrames.append(i)
             elif tokenIdx == self.silence and wordFound:
-                wordTimestamps.append(wordFrames)
+                timesteps.append(wordFrames)
                 wordFound = 0
                 wordFrames = []
-        return wordTimestamps
+        return timesteps
 
     def _getTimeInterval(self, frames: List[int]) -> Tuple[int, int]:
         return (

@@ -3,6 +3,7 @@ import grpc
 import logging
 import argparse
 from datetime import timedelta
+from dataclasses import dataclass, field
 
 from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
 
@@ -25,6 +26,13 @@ from .types import AudioEncoding
 
 from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
+
+
+@dataclass
+class TranscriptionResult:
+    transcription: str
+    score: float
+    wordTimestamps: List[List[List[tuple[float]]]] = field(default_factory=lambda: [[[(0,0)]]])
 
 
 class RecognitionServiceConfiguration:
@@ -185,8 +193,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
         )
         response = self.eventHandle(request)
+        response = self.eventSink(response, duration, duration)
         self.logger.info(f"Recognition result: '{response}'")
-        return self.eventSink(response, duration, duration)
+        return response
 
     async def StreamingRecognize(
         self,
@@ -220,8 +229,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
         totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
         response = self.eventHandle(innerRecognizeRequest)
-        self.logger.info(f"Recognition result: '{response}'")
         innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
+        self.logger.info(f"Recognition result: '{innerRecognizeResponse}'")
         yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
@@ -278,19 +287,29 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def eventHandle(self, request: RecognizeRequest) -> str:
-        transcription = self._runRecognition(request)
+    def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
+        result = self._runRecognition(request)
         if request.config.parameters.enable_formatting:
-            return self.formatWords(transcription)
+            transcription = self.formatWords(result.transcription)
         else:
-            words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
-            return " ".join(words)
+            words = list(filter(lambda x: len(x) > 0, result.transcription.split(" ")))
+            transcription = " ".join(words)
+        return TranscriptionResult(
+            transcription=transcription,
+            score=result.score,
+            wordTimestamps=result.wordTimestamps,
+        )
 
-    def _runRecognition(self, request: RecognizeRequest) -> str:
+    def _runRecognition(self, request: RecognizeRequest) -> TranscriptionResult:
         language = Language.parse(request.config.parameters.language)
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
-            return self._runtime.run(request.audio, sample_rate_hz).sequence
+            result = self._runtime.run(request.audio, sample_rate_hz)
+            return TranscriptionResult(
+                transcription=result.sequence,
+                score=result.score,
+                wordTimestamps=result.wordTimestamps[0][0],
+            )
         else:
             raise ValueError(
                 f"Invalid language '{language}'. Only '{self._language}' is supported."
@@ -310,21 +329,30 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def eventSink(
         self,
-        response: str,
+        response: TranscriptionResult,
         duration: Duration = Duration(seconds=0, nanos=0),
         endTime: Duration = Duration(seconds=0, nanos=0),
     ) -> RecognizeResponse:
-        words = map(
-            lambda token: WordInfo(
-                start_time=Duration(seconds=0, nanos=0),
-                end_time=Duration(seconds=0, nanos=0),
-                word=token,
-                confidence=1.0,
-            ),
-            response.split(" "),
-        )
+        tokens = response.transcription.split(" ")
+        words: List[WordInfo] = []
+        tokenPos = 0
+        for token in tokens:
+            start_time = Duration()
+            start_time.FromTimedelta(
+                td=timedelta(seconds=response.wordTimestamps[tokenPos][0])
+            )
+            end_time = Duration()
+            end_time.FromTimedelta(
+                td=timedelta(seconds=response.wordTimestamps[tokenPos][1])
+            )
+            words.append(
+                WordInfo(
+                    start_time=start_time, end_time=end_time, word=token, confidence=1.0
+                )
+            )
+            tokenPos += 1
         alternative = RecognitionAlternative(
-            transcript=response, confidence=1.0, words=words
+            transcript=response.transcription, confidence=response.score, words=words
         )
         return RecognizeResponse(
             alternatives=[alternative],

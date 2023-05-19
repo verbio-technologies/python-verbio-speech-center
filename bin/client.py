@@ -49,7 +49,7 @@ _ENCODING = "utf-8"
 
 def _repr(responses: List[RecognizeRequest]) -> List[str]:
     return [
-        f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
+        f'<RecognizeRequest first alternative: "{r.alternatives}">'
         for r in responses
         if len(r.alternatives) > 0
     ]
@@ -173,7 +173,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
     trnHypothesis.append("")
-    _LOGGER.debug("[-] TRN Hypothesis: {trnHypothesis}")
+    _LOGGER.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
 
     return responses, trnHypothesis
 
@@ -182,7 +182,7 @@ def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
     recognizeResponse = RecognizeResponse.FromString(response)
     if len(recognizeResponse.alternatives) > 0:
-        return f"{recognizeResponse.alternatives[0].transcript} ({filename})"
+        return f"{recognizeResponse.alternatives[0]} ({filename})"
     else:
         return f" ({filename})"
 
