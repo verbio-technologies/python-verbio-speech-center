@@ -121,7 +121,6 @@ class TestOnnxRuntime(unittest.TestCase):
     def testRandomInput(self):
         runtime = OnnxRuntime(MockOnnxSession(""))
         result = runtime.run(b"0000", 8000)
-        print(result)
         vocabulary = set(runtime.DEFAULT_VOCABULARY[5:] + [" ", "<", ">"])  # letters
         self.assertEqual(set(result.sequence) - vocabulary, set())
         self.assertTrue(1.0 >= result.score >= 0.0)
