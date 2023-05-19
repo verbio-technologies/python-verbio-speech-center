@@ -106,5 +106,5 @@ class TestW2lKenLMDecoder(unittest.TestCase):
         )
         self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).scores), 1)
         self.assertEqual(
-            len(decoder.decode(torch.tensor([[[0, 0, 0]]])).wordTimestamps), 1
+            len(decoder.decode(torch.tensor([[[0, 0, 0]]])).timesteps), 1
         )
