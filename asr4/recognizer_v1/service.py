@@ -335,24 +335,25 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         duration: Duration = Duration(seconds=0, nanos=0),
         endTime: Duration = Duration(seconds=0, nanos=0),
     ) -> RecognizeResponse:
-        tokens = response.transcription.split(" ")
-        words: List[WordInfo] = []
-        tokenPos = 0
-        for token in tokens:
-            start_time = Duration()
-            start_time.FromTimedelta(
-                td=timedelta(seconds=response.wordTimestamps[tokenPos][0])
+        def getWord(i: int, token: str) -> WordInfo:
+            word = WordInfo(
+                start_time=Duration(),
+                end_time=Duration(),
+                word=token,
+                confidence=1.0,
             )
-            end_time = Duration()
-            end_time.FromTimedelta(
-                td=timedelta(seconds=response.wordTimestamps[tokenPos][1])
+            word.start_time.FromTimedelta(
+                td=timedelta(seconds=response.wordTimestamps[i][0])
             )
-            words.append(
-                WordInfo(
-                    start_time=start_time, end_time=end_time, word=token, confidence=1.0
-                )
+            word.end_time.FromTimedelta(
+                td=timedelta(seconds=response.wordTimestamps[i][1])
             )
-            tokenPos += 1
+            return word
+
+        words = [
+            getWord(i, token)
+            for i, token in enumerate(response.transcription.split(" "))
+        ]
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
