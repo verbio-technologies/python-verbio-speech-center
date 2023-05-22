@@ -35,7 +35,7 @@ class DecodingType(Enum):
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
-    wordTimestamps: List[List[List[tuple[float]]]]
+    wordTimestamps: List[tuple[float]]
 
 
 class Session(abc.ABC):
@@ -347,7 +347,7 @@ class OnnxRuntime(Runtime):
             timesteps = [[[(0, 0)] * len(output.label_sequences[0][0])]]
         else:
             score = output.scores[0][0]
-            timesteps = output.timesteps
+            timesteps = output.timesteps[0][0]
         return OnnxRuntimeResult(
             sequence=sequence, score=score, wordTimestamps=timesteps
         )
