@@ -340,7 +340,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 word=token,
                 confidence=1.0,
             )
-            print(response.wordTimestamps)
             word.start_time.FromTimedelta(
                 td=timedelta(seconds=response.wordTimestamps[i][0])
             )
@@ -351,7 +350,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
         words = [
             getWord(i, token)
-            for i, token in enumerate(response.transcription.split(" "))
+            for i, token in enumerate(response.transcription.strip().split(" "))
         ]
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words

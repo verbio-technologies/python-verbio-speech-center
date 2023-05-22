@@ -344,7 +344,7 @@ class OnnxRuntime(Runtime):
         )
         if self.lmAlgorithm == "viterbi":
             score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
-            timesteps = [(0, 0)] * len(output.label_sequences[0])
+            timesteps = [(0, 0)] * len(sequence.split(" "))
         else:
             score = output.scores[0][0]
             timesteps = output.timesteps[0][0]
