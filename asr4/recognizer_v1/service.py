@@ -308,7 +308,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return TranscriptionResult(
                 transcription=result.sequence,
                 score=result.score,
-                wordTimestamps=result.wordTimestamps[0][0],
+                wordTimestamps=result.wordTimestamps,
             )
         else:
             raise ValueError(
@@ -340,6 +340,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 word=token,
                 confidence=1.0,
             )
+            print(response.wordTimestamps)
             word.start_time.FromTimedelta(
                 td=timedelta(seconds=response.wordTimestamps[i][0])
             )
