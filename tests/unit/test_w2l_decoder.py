@@ -92,6 +92,18 @@ class TestW2lKenLMDecoder(unittest.TestCase):
         frames = [5, 6, 11, 13, 17]
         self.assertEqual(decoder._getTimeInterval(frames), (0.1, 0.34))
 
+    def testNoFrames(self):
+        decoder = w2l_decoder.W2lKenLMDecoder(
+            self.vocabulary,
+            str(self.datapath.joinpath("en-us_lm.bin")),
+            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
+            0.2,
+            -1,
+            0,
+        )
+        frames = []
+        self.assertEqual(decoder._getTimeInterval(frames), (0.0, 0.0))
+
     def testDecode(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
             self.vocabulary,
