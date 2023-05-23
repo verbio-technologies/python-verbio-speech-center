@@ -110,12 +110,14 @@ class TestOnnxRuntime(unittest.TestCase):
 
     def testEmptyInput(self):
         with self.assertRaises(ValueError):
-            runtime = OnnxRuntime(MockOnnxSession(""), "", "", "viterbi")
+            runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+            runtime.lmAlgorithm = "viterbi"
             runtime.run(b"", 8000)
 
     def testEmptyInputKenLM(self):
         with self.assertRaises(ValueError):
-            runtime = OnnxRuntime(MockOnnxSession(""), "", "", "kenlm")
+            runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+            runtime.lmAlgorithm = "kenlm"
             runtime.run(b"", 8000)
 
     def testRandomInput(self):
@@ -152,15 +154,32 @@ class TestOnnxRuntime(unittest.TestCase):
         audio = np.frombuffer(audio, dtype=np.int16)
         return (audio.tobytes(), sample_rate_hz)
 
-    def testPostProcess(self):
+    def testPostProcessViterbi(self):
         results = _DecodeResult(
             label_sequences=[
                 [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
             ],
             scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
-            wordTimestamps=[[[]]],
+            timesteps=[[[]]],
         )
-        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "viterbi")
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "viterbi"
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
+        self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
+
+    def testPostProcessKenLM(self):
+        results = _DecodeResult(
+            label_sequences=[
+                [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
+            ],
+            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            timesteps=[[[(0.2, 1.4)]]],
+        )
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
+        onnxResult = runtime._postprocess(results)
+        self.assertEqual(onnxResult.sequence, "hello<unk>")
+        self.assertEqual(onnxResult.score, 0.0)
+        self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
