@@ -183,3 +183,16 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
+
+    def testPostProcessNoFrames(self):
+        results = _DecodeResult(
+            label_sequences=[[["<s>", "<s>", "<s>", "|", "<s>", "<s>", "<s>", "<s>"]]],
+            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            timesteps=[[[]]],
+        )
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
+        onnxResult = runtime._postprocess(results)
+        self.assertEqual(onnxResult.sequence, "")
+        self.assertEqual(onnxResult.score, 0.0)
+        self.assertEqual(onnxResult.wordTimestamps, [])

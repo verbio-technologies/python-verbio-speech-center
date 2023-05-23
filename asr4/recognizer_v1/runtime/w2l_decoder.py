@@ -184,7 +184,7 @@ class W2lKenLMDecoder:
                 wordFrames = []
         return timesteps
 
-    def _getTimeInterval(self, frames: List[int]) -> Tuple[int, int]:
+    def _getTimeInterval(self, frames: List[int]) -> Tuple[float, float]:
         return (
             self._getFrameTime(frames[0]),
             self._getFrameTime(frames[len(frames) - 1]),
