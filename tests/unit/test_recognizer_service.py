@@ -583,6 +583,26 @@ class TestRecognizerService(unittest.TestCase):
         }
         self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
 
+    def testRecognizeRequestSinkNoFrames(self):
+        service = RecognizerService(MockRecognitionServiceConfiguration())
+        response = TranscriptionResult(
+            transcription="",
+            score=1.0,
+            wordTimestamps=[],
+        )
+        result = {
+            "alternatives": [
+                {
+                    "transcript": "",
+                    "confidence": 1.0,
+                    "words": [],
+                }
+            ],
+            "duration": {},
+            "end_time": {"seconds": 0, "nanos": 0},
+        }
+        self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
+
     def testRecognizeFormatter(self):
         arguments = MockArguments()
         arguments.language = Language.ES
