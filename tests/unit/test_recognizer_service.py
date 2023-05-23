@@ -553,20 +553,28 @@ class TestRecognizerService(unittest.TestCase):
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())
         response = TranscriptionResult(
-            transcription="test", score=1.0, wordTimestamps=[(1.0, 1.5)]
+            transcription="hello world",
+            score=1.0,
+            wordTimestamps=[(1.0, 1.5), (1.8, 2.6)],
         )
         result = {
             "alternatives": [
                 {
-                    "transcript": "test",
+                    "transcript": "hello world",
                     "confidence": 1.0,
                     "words": [
                         {
                             "start_time": {"seconds": 1},
                             "end_time": {"seconds": 1, "nanos": 500000000},
-                            "word": "test",
+                            "word": "hello",
                             "confidence": 1.0,
-                        }
+                        },
+                        {
+                            "start_time": {"seconds": 1, "nanos": 800000000},
+                            "end_time": {"seconds": 2, "nanos": 600000000},
+                            "word": "world",
+                            "confidence": 1.0,
+                        },
                     ],
                 }
             ],
