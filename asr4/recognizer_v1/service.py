@@ -353,7 +353,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 getWord(i, token)
                 for i, token in enumerate(response.transcription.strip().split(" "))
             ]
-            if response.transcription != ""
+            if len(response.wordTimestamps) > 0
             else []
         )
 

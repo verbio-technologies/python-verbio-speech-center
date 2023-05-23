@@ -185,13 +185,10 @@ class W2lKenLMDecoder:
         return timesteps
 
     def _getTimeInterval(self, frames: List[int]) -> Tuple[float, float]:
-        if len(frames) > 0:
-            return (
-                self._getFrameTime(frames[0]),
-                self._getFrameTime(frames[len(frames) - 1]),
-            )
-        else:
-            return (0.0, 0.0)
+        return (
+            self._getFrameTime(frames[0]),
+            self._getFrameTime(frames[len(frames) - 1]),
+        )
 
     def _getFrameTime(self, frame: int) -> float:
         # Each frame takes 0.02 sec
