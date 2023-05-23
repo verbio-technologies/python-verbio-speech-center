@@ -173,7 +173,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
     trnHypothesis.append("")
-    _LOGGER.debug("[-] TRN Hypothesis: {trnHypothesis}")
+    _LOGGER.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
 
     return responses, trnHypothesis
 

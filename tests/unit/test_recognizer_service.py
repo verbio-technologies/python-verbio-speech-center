@@ -19,6 +19,7 @@ from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import StreamingRecognitionResult
 from asr4.recognizer import Session, OnnxRuntime
 from asr4.types.language import Language
+from asr4.recognizer_v1.service import TranscriptionResult
 from asr4.recognizer_v1.formatter import FormatterFactory
 import os
 
@@ -501,7 +502,7 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         self.assertEqual(
-            service.eventHandle(request),
+            service.eventHandle(request).transcription,
             DEFAULT_ENGLISH_MESSAGE,
         )
 
@@ -523,7 +524,7 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         self.assertEqual(
-            service.eventHandle(request),
+            service.eventHandle(request).transcription,
             DEFAULT_CORRECT_SPANISH_MESSAGE,
         )
 
@@ -545,35 +546,36 @@ class TestRecognizerService(unittest.TestCase):
             audio=b"0000",
         )
         self.assertEqual(
-            service.eventHandle(request), DEFAULT_CORRECT_PORTUGUESE_MESSAGE
+            service.eventHandle(request).transcription,
+            DEFAULT_CORRECT_PORTUGUESE_MESSAGE,
         )
 
     def testRecognizeRequestSink(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())
-        response = "".join(random.choices(string.ascii_letters + string.digits, k=16))
-
-        def _getWordInfo(word: str) -> dict:
-            return {
-                "start_time": {
-                    "seconds": 0,
-                    "nanos": 0,
-                },
-                "end_time": {
-                    "seconds": 0,
-                    "nanos": 0,
-                },
-                "word": word,
-                "confidence": 1.0,
-            }
-
+        response = TranscriptionResult(
+            transcription="hello world",
+            score=1.0,
+            wordTimestamps=[(1.0, 1.5), (1.8, 2.6)],
+        )
         result = {
             "alternatives": [
                 {
-                    "transcript": response,
+                    "transcript": "hello world",
                     "confidence": 1.0,
-                    "words": list(
-                        map(lambda word: _getWordInfo(word), response.split(" "))
-                    ),
+                    "words": [
+                        {
+                            "start_time": {"seconds": 1},
+                            "end_time": {"seconds": 1, "nanos": 500000000},
+                            "word": "hello",
+                            "confidence": 1.0,
+                        },
+                        {
+                            "start_time": {"seconds": 1, "nanos": 800000000},
+                            "end_time": {"seconds": 2, "nanos": 600000000},
+                            "word": "world",
+                            "confidence": 1.0,
+                        },
+                    ],
                 }
             ],
             "duration": {},
@@ -601,13 +603,13 @@ class TestRecognizerService(unittest.TestCase):
 
         request.config.parameters.enable_formatting = True
         self.assertEqual(
-            service.eventHandle(request),
+            service.eventHandle(request).transcription,
             FORMATTED_SPANISH_MESSAGE,
         )
 
         request.config.parameters.enable_formatting = False
         self.assertEqual(
-            service.eventHandle(request),
+            service.eventHandle(request).transcription,
             DEFAULT_CORRECT_SPANISH_MESSAGE,
         )
 
@@ -616,10 +618,18 @@ class TestRecognizerService(unittest.TestCase):
         transcription = "".join(
             random.choices(string.ascii_letters + string.digits, k=16)
         )
-        response = service.eventSink(transcription)
+        response = service.eventSink(
+            TranscriptionResult(
+                transcription=transcription, score=1.0, wordTimestamps=[(1.0, 1.5)]
+            )
+        )
         self.assertEqual(len(response.alternatives), 1)
         self.assertEqual(response.alternatives[0].transcript, transcription)
         self.assertEqual(response.alternatives[0].confidence, 1.0)
+        self.assertEqual(len(response.alternatives[0].words), 1)
+        self.assertEqual(response.alternatives[0].words[0].start_time.seconds, 1)
+        self.assertEqual(response.alternatives[0].words[0].end_time.seconds, 1)
+        self.assertEqual(response.alternatives[0].words[0].end_time.nanos, 500000000)
 
     def testStreamingResponseParameters(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())
@@ -627,7 +637,10 @@ class TestRecognizerService(unittest.TestCase):
             random.choices(string.ascii_letters + string.digits, k=16)
         )
         innerRecognizeResponse = service.eventSink(
-            transcription, Duration(seconds=1, nanos=0)
+            TranscriptionResult(
+                transcription=transcription, score=1.0, wordTimestamps=[(1.0, 1.5)]
+            ),
+            Duration(seconds=1, nanos=0),
         )
         streamingResponse = StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
