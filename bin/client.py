@@ -18,7 +18,7 @@ from typing import List
 from asr4.types.language import Language
 from asr4.recognizer import RecognizerStub
 from asr4.recognizer import StreamingRecognizeRequest
-from asr4.recognizer import RecognizeResponse
+from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
@@ -49,13 +49,13 @@ _ENCODING = "utf-8"
 
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
     return [
-        f'<StreamingRecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
+        f'<StreamingRecognizeRequest first alternative: "{r.results.alternatives[0].transcript}">'
         for r in responses
-        if len(r.alternatives) > 0
+        if len(r.results.alternatives) > 0
     ]
 
 
-def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
+def _process(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
     responses, trnHypothesis = _inferenceProcess(args)
     trnReferences = []
     if args.metrics:
@@ -80,7 +80,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
 
     _LOGGER.debug("[+] Generating Responses from %d candidates" % len(responses))
-    return list(map(RecognizeResponse.FromString, responses))
+    return list(map(StreamingRecognizeResponse.FromString, responses))
 
 
 def _getMetrics(
@@ -141,7 +141,7 @@ def _getTrnReferences(gui: str) -> List[str]:
     return trn
 
 
-def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
+def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
     audios = []
     responses = []
     trnHypothesis = []
@@ -186,9 +186,9 @@ def _chunk_audio(audio: bytes, chunk_size: int = 2000):
 
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
-    recognizeResponse = RecognizeResponse.FromString(response)
-    if len(recognizeResponse.alternatives) > 0:
-        return f"{recognizeResponse.alternatives[0].transcript} ({filename})"
+    recognizeResponse = StreamingRecognizeResponse.FromString(response)
+    if len(recognizeResponse.results.alternatives) > 0:
+        return f"{recognizeResponse.results.alternatives[0].transcript} ({filename})"
     else:
         return f" ({filename})"
 
@@ -267,7 +267,6 @@ def _runWorkerQuery(
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
-
     return list(response)[0].SerializeToString()
 
 
