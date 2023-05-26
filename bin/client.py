@@ -9,6 +9,7 @@ import re
 import os
 import sys
 import time
+import math
 
 from subprocess import Popen, PIPE
 from examples import run_evaluator
@@ -172,11 +173,16 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
+
     trnHypothesis.append("")
     _LOGGER.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
 
     return responses, trnHypothesis
 
+
+def _divide_audio(audio: bytes, chunk_size: int = 2000):
+    for i in range(0, len(audio), chunk_size):
+        yield audio[i:i + chunk_size]
 
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
@@ -224,7 +230,8 @@ def _runWorkerQuery(
     useFormat: bool,
     queryID: int,
 ) -> bytes:
-    request = RecognizeRequest(
+    
+    request = [RecognizeRequest(
         config=RecognitionConfig(
             parameters=RecognitionParameters(
                 language=language.value,
@@ -232,19 +239,25 @@ def _runWorkerQuery(
                 enable_formatting=useFormat,
             ),
             resource=RecognitionResource(topic="GENERIC"),
-        ),
-        audio=audio,
-    )
+        )
+    )]
+
+    for chunk in _divide_audio(audio):
+        request.append(RecognizeRequest(audio=chunk))
+
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
-        return _workerStubSingleton.Recognize(
-            request, metadata=(("accept-language", language.value),), timeout=900
-        ).SerializeToString()
+        response = _workerStubSingleton.StreamingRecognize(
+            iter(request), metadata=(("accept-language", language.value),), timeout=900
+        )
+
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
+
+    return list(response)[0].SerializeToString()
 
 
 def _parseArguments() -> argparse.Namespace:
@@ -338,3 +351,4 @@ if __name__ == "__main__":
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
     _LOGGER.debug(f"Returned responses: {_repr(responses)}")
+
