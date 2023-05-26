@@ -182,7 +182,8 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
 
 def _divide_audio(audio: bytes, chunk_size: int = 2000):
     for i in range(0, len(audio), chunk_size):
-        yield audio[i:i + chunk_size]
+        yield audio[i : i + chunk_size]
+
 
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
@@ -230,17 +231,19 @@ def _runWorkerQuery(
     useFormat: bool,
     queryID: int,
 ) -> bytes:
-    
-    request = [RecognizeRequest(
-        config=RecognitionConfig(
-            parameters=RecognitionParameters(
-                language=language.value,
-                sample_rate_hz=sample_rate_hz,
-                enable_formatting=useFormat,
-            ),
-            resource=RecognitionResource(topic="GENERIC"),
+
+    request = [
+        RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language=language.value,
+                    sample_rate_hz=sample_rate_hz,
+                    enable_formatting=useFormat,
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            )
         )
-    )]
+    ]
 
     for chunk in _divide_audio(audio):
         request.append(RecognizeRequest(audio=chunk))
@@ -351,4 +354,3 @@ if __name__ == "__main__":
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
     _LOGGER.debug(f"Returned responses: {_repr(responses)}")
-
