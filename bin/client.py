@@ -9,7 +9,6 @@ import re
 import os
 import sys
 import time
-import math
 
 from subprocess import Popen, PIPE
 from examples import run_evaluator
@@ -180,7 +179,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
     return responses, trnHypothesis
 
 
-def _divide_audio(audio: bytes, chunk_size: int = 2000):
+def _chunk_audio(audio: bytes, chunk_size: int = 2000):
     for i in range(0, len(audio), chunk_size):
         yield audio[i : i + chunk_size]
 
@@ -223,14 +222,12 @@ def _shutdownWorker():
     if _workerChannelSingleton is not None:
         _workerStubSingleton.stop()
 
-
-def _runWorkerQuery(
+def _createStreamingRequest(
     audio: bytes,
     sample_rate_hz: int,
     language: Language,
     useFormat: bool,
-    queryID: int,
-) -> bytes:
+) -> List[StreamingRecognizeRequest]:
 
     request = [
         StreamingRecognizeRequest(
@@ -245,9 +242,20 @@ def _runWorkerQuery(
         )
     ]
 
-    for chunk in _divide_audio(audio):
+    for chunk in _chunk_audio(audio):
         request.append(StreamingRecognizeRequest(audio=chunk))
 
+    return request
+
+def _runWorkerQuery(
+    audio: bytes,
+    sample_rate_hz: int,
+    language: Language,
+    useFormat: bool,
+    queryID: int,
+) -> bytes:
+
+    request = _createStreamingRequest(audio, sample_rate_hz, language, useFormat)
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
