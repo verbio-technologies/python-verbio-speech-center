@@ -18,7 +18,7 @@ from typing import List
 
 from asr4.types.language import Language
 from asr4.recognizer import RecognizerStub
-from asr4.recognizer import RecognizeRequest
+from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognizeResponse
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
@@ -48,9 +48,9 @@ _workerStubSingleton = None
 _ENCODING = "utf-8"
 
 
-def _repr(responses: List[RecognizeRequest]) -> List[str]:
+def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
     return [
-        f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
+        f'<StreamingRecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
         for r in responses
         if len(r.alternatives) > 0
     ]
@@ -233,7 +233,7 @@ def _runWorkerQuery(
 ) -> bytes:
 
     request = [
-        RecognizeRequest(
+        StreamingRecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
                     language=language.value,
@@ -246,7 +246,7 @@ def _runWorkerQuery(
     ]
 
     for chunk in _divide_audio(audio):
-        request.append(RecognizeRequest(audio=chunk))
+        request.append(StreamingRecognizeRequest(audio=chunk))
 
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
