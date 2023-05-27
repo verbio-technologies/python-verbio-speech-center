@@ -260,14 +260,14 @@ def _runWorkerQuery(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
-        response = _workerStubSingleton.StreamingRecognize(
+        response = list(_workerStubSingleton.StreamingRecognize(
             iter(request), metadata=(("accept-language", language.value),), timeout=900
-        )
+        ))
 
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
-    return list(response)[0].SerializeToString()
+    return response[0].SerializeToString()
 
 
 def _parseArguments() -> argparse.Namespace:
