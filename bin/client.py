@@ -179,9 +179,16 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
     return responses, trnHypothesis
 
 
-def _chunk_audio(audio: bytes, chunk_size: int = 2000):
-    for i in range(0, len(audio), chunk_size):
-        yield audio[i : i + chunk_size]
+def _chunk_audio(audio: bytes, chunk_size: int = 20000):
+    if audio:
+        if chunk_size == 0:
+            _LOGGER.info("Audio chunk size for gRPC channel set to 0. Uploading all the audio at once")
+            yield audio
+        else:
+            for i in range(0, len(audio), chunk_size):
+                yield audio[i : i + chunk_size]
+    else:
+        raise ValueError("Empty audio content.")
 
 
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
