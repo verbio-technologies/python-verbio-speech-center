@@ -64,7 +64,7 @@ unit-testing:
     - master
     - web
   before_script:
-    - pip install .[server,cpu,test]
+    - pip install .[client,server,cpu,test]
   script:
     - python3 --version
     - pytest tests/unit --junit-xml=report.xml --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose

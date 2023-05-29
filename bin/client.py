@@ -17,8 +17,8 @@ from typing import List
 
 from asr4.types.language import Language
 from asr4.recognizer import RecognizerStub
-from asr4.recognizer import RecognizeRequest
-from asr4.recognizer import RecognizeResponse
+from asr4.recognizer import StreamingRecognizeRequest
+from asr4.recognizer import StreamingRecognizeResponse
 from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
@@ -47,15 +47,15 @@ _workerStubSingleton = None
 _ENCODING = "utf-8"
 
 
-def _repr(responses: List[RecognizeRequest]) -> List[str]:
+def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
     return [
-        f'<RecognizeRequest first alternative: "{r.alternatives[0].transcript}">'
+        f'<StreamingRecognizeRequest first alternative: "{r.results.alternatives[0].transcript}">'
         for r in responses
-        if len(r.alternatives) > 0
+        if len(r.results.alternatives) > 0
     ]
 
 
-def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
+def _process(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
     responses, trnHypothesis = _inferenceProcess(args)
     trnReferences = []
     if args.metrics:
@@ -80,7 +80,7 @@ def _process(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
 
     _LOGGER.debug("[+] Generating Responses from %d candidates" % len(responses))
-    return list(map(RecognizeResponse.FromString, responses))
+    return list(map(StreamingRecognizeResponse.FromString, responses))
 
 
 def _getMetrics(
@@ -141,7 +141,7 @@ def _getTrnReferences(gui: str) -> List[str]:
     return trn
 
 
-def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
+def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
     audios = []
     responses = []
     trnHypothesis = []
@@ -172,17 +172,32 @@ def _inferenceProcess(args: argparse.Namespace) -> List[RecognizeResponse]:
         )
         responses.append(response)
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
+
     trnHypothesis.append("")
     _LOGGER.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
 
     return responses, trnHypothesis
 
 
+def _chunk_audio(audio: bytes, chunk_size: int = 20000):
+    if audio:
+        if chunk_size == 0:
+            _LOGGER.info(
+                "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
+            )
+            yield audio
+        else:
+            for i in range(0, len(audio), chunk_size):
+                yield audio[i : i + chunk_size]
+    else:
+        raise ValueError("Empty audio content.")
+
+
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
-    recognizeResponse = RecognizeResponse.FromString(response)
-    if len(recognizeResponse.alternatives) > 0:
-        return f"{recognizeResponse.alternatives[0].transcript} ({filename})"
+    recognizeResponse = StreamingRecognizeResponse.FromString(response)
+    if len(recognizeResponse.results.alternatives) > 0:
+        return f"{recognizeResponse.results.alternatives[0].transcript} ({filename})"
     else:
         return f" ({filename})"
 
@@ -217,6 +232,32 @@ def _shutdownWorker():
         _workerStubSingleton.stop()
 
 
+def _createStreamingRequests(
+    audio: bytes,
+    sample_rate_hz: int,
+    language: Language,
+    useFormat: bool,
+) -> List[StreamingRecognizeRequest]:
+
+    request = [
+        StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language=language.value,
+                    sample_rate_hz=sample_rate_hz,
+                    enable_formatting=useFormat,
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            )
+        )
+    ]
+
+    for chunk in _chunk_audio(audio):
+        request.append(StreamingRecognizeRequest(audio=chunk))
+
+    return request
+
+
 def _runWorkerQuery(
     audio: bytes,
     sample_rate_hz: int,
@@ -224,27 +265,24 @@ def _runWorkerQuery(
     useFormat: bool,
     queryID: int,
 ) -> bytes:
-    request = RecognizeRequest(
-        config=RecognitionConfig(
-            parameters=RecognitionParameters(
-                language=language.value,
-                sample_rate_hz=sample_rate_hz,
-                enable_formatting=useFormat,
-            ),
-            resource=RecognitionResource(topic="GENERIC"),
-        ),
-        audio=audio,
-    )
+
+    request = _createStreamingRequests(audio, sample_rate_hz, language, useFormat)
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
-        return _workerStubSingleton.Recognize(
-            request, metadata=(("accept-language", language.value),), timeout=900
-        ).SerializeToString()
+        response = list(
+            _workerStubSingleton.StreamingRecognize(
+                iter(request),
+                metadata=(("accept-language", language.value),),
+                timeout=900,
+            )
+        )
+
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
+    return response[0].SerializeToString()
 
 
 def _parseArguments() -> argparse.Namespace:
