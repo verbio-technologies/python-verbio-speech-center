@@ -232,7 +232,7 @@ def _shutdownWorker():
         _workerStubSingleton.stop()
 
 
-def _createStreamingRequest(
+def _createStreamingRequests(
     audio: bytes,
     sample_rate_hz: int,
     language: Language,
