@@ -266,7 +266,7 @@ def _runWorkerQuery(
     queryID: int,
 ) -> bytes:
 
-    request = _createStreamingRequest(audio, sample_rate_hz, language, useFormat)
+    request = _createStreamingRequests(audio, sample_rate_hz, language, useFormat)
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
