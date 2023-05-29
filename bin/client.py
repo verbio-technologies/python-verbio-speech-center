@@ -182,7 +182,9 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
 def _chunk_audio(audio: bytes, chunk_size: int = 20000):
     if audio:
         if chunk_size == 0:
-            _LOGGER.info("Audio chunk size for gRPC channel set to 0. Uploading all the audio at once")
+            _LOGGER.info(
+                "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
+            )
             yield audio
         else:
             for i in range(0, len(audio), chunk_size):
@@ -269,9 +271,13 @@ def _runWorkerQuery(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
-        response = list(_workerStubSingleton.StreamingRecognize(
-            iter(request), metadata=(("accept-language", language.value),), timeout=900
-        ))
+        response = list(
+            _workerStubSingleton.StreamingRecognize(
+                iter(request),
+                metadata=(("accept-language", language.value),),
+                timeout=900,
+            )
+        )
 
     except Exception as e:
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
