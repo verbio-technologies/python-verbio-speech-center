@@ -2,7 +2,7 @@ import unittest
 from bin import client
 
 
-class TestRecognizerService(unittest.TestCase):
+class TestStreamingClient(unittest.TestCase):
     def testAudioChunking(self):
         audio_bytes = [i for i in range(10)]
         chunk_iterator = client._chunk_audio(audio_bytes, 3)
