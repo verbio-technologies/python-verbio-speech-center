@@ -309,7 +309,7 @@ class OnnxRuntime(Runtime):
             return _DecodeResult(
                 label_sequences=[[label_sequences]],
                 scores=[scores],
-                wordTimestamps=wordTimestamps,
+                timesteps=wordTimestamps,
             )
 
     def _decodeTotal(self, y):
@@ -330,7 +330,7 @@ class OnnxRuntime(Runtime):
             label_sequences += " "
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
-        wordTimestamps += [decoded_part.wordTimestamps]
+        wordTimestamps += decoded_part.timesteps
         return label_sequences, scores, wordTimestamps
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
