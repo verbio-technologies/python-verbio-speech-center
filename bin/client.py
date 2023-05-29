@@ -229,6 +229,7 @@ def _shutdownWorker():
     if _workerChannelSingleton is not None:
         _workerStubSingleton.stop()
 
+
 def _createStreamingRequest(
     audio: bytes,
     sample_rate_hz: int,
@@ -253,6 +254,7 @@ def _createStreamingRequest(
         request.append(StreamingRecognizeRequest(audio=chunk))
 
     return request
+
 
 def _runWorkerQuery(
     audio: bytes,
