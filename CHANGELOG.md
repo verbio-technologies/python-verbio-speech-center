@@ -6,6 +6,14 @@
 
 ### Removed :no_entry:
 
+## 0.5.1 (2023-05-29)
+
+### Patch (3 changes)
+
+- [Update version files](csr/asr4@64f9bca3723a24fb0680cf0a3c05ebb9ac7f0134) ([merge request](csr/asr4!257))
+- [Feature/make streaming client](csr/asr4@338e5e1ffd3f372d40efe06f722441c9bb32a94c) ([merge request](csr/asr4!255))
+- [wordTimestamps ->  timesteps](csr/asr4@385c5861969d3b72c704a83a61f4d63924be5826) ([merge request](csr/asr4!256))
+
 ## 0.4.2 (2023-05-08)
 
 ### Patch (5 changes)
