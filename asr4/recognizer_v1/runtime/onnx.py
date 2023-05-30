@@ -348,10 +348,11 @@ class OnnxRuntime(Runtime):
             timesteps = [(0, 0)] * len(sequence.split(" "))
         else:
             score = output.scores[0][0]
-            if self.decoding_type == "LOCAL":
-                timesteps = output.timesteps[0][0]
-            else:
+            if self.decoding_type == DecodingType.LOCAL:
+                print("Saco estos timestamps LOCAL")
                 timesteps = output.timesteps
+            else:
+                timesteps = output.timesteps[0][0]
         return OnnxRuntimeResult(
             sequence=sequence, score=score, wordTimestamps=timesteps
         )
