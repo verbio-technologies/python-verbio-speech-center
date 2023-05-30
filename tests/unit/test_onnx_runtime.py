@@ -154,7 +154,7 @@ class TestOnnxRuntime(unittest.TestCase):
         audio = np.frombuffer(audio, dtype=np.int16)
         return (audio.tobytes(), sample_rate_hz)
 
-    def testPostProcessViterbigGlobal(self):
+    def testPostProcessViterbiGlobal(self):
         results = _DecodeResult(
             label_sequences=[
                 [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
