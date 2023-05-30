@@ -217,6 +217,9 @@ class OnnxRuntime(Runtime):
         subwords: bool = False,
     ) -> None:
         self.lmAlgorithm = lmAlgorithm
+        self.decoding_type = getattr(
+            self._session, "decoding_type", DecodingType.GLOBAL
+        )
         if lmAlgorithm == "viterbi":
             self._session.logger.debug(f" Using Viterbi algorithm for decoding")
             import simple_ctc
@@ -286,8 +289,6 @@ class OnnxRuntime(Runtime):
             return self._batchDecode(input)
 
     def _batchDecode(self, input):
-        decoding_type = getattr(self._session, "decoding_type", DecodingType.GLOBAL)
-
         total_probs = []
         label_sequences = []
         scores = []
@@ -297,13 +298,13 @@ class OnnxRuntime(Runtime):
             frame_probs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
             )
-            if decoding_type == DecodingType.GLOBAL:
+            if self.decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
                 label_sequences, scores, wordTimestamps = self._decodePartial(
                     label_sequences, scores, wordTimestamps, frame_probs
                 )
-        if decoding_type == DecodingType.GLOBAL:
+        if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs)
         else:
             return _DecodeResult(
@@ -330,7 +331,7 @@ class OnnxRuntime(Runtime):
             label_sequences += " "
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
-        wordTimestamps += decoded_part.timesteps
+        wordTimestamps += decoded_part.timesteps[0][0]
         return label_sequences, scores, wordTimestamps
 
     def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
@@ -347,7 +348,10 @@ class OnnxRuntime(Runtime):
             timesteps = [(0, 0)] * len(sequence.split(" "))
         else:
             score = output.scores[0][0]
-            timesteps = output.timesteps[0][0]
+            if self.decoding_type == DecodingType.LOCAL:
+                timesteps = output.timesteps
+            else:
+                timesteps = output.timesteps[0][0]
         return OnnxRuntimeResult(
             sequence=sequence, score=score, wordTimestamps=timesteps
         )

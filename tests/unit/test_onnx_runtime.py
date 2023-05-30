@@ -9,7 +9,7 @@ import numpy as np
 from random import randint
 from typing import Any, Tuple, Dict, List, Optional, Union
 
-from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession
+from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession, DecodingType
 from asr4.recognizer_v1.runtime.onnx import _DecodeResult
 from asr4.recognizer_v1.loggerService import LoggerService
 from asr4.recognizer import Language
@@ -154,7 +154,7 @@ class TestOnnxRuntime(unittest.TestCase):
         audio = np.frombuffer(audio, dtype=np.int16)
         return (audio.tobytes(), sample_rate_hz)
 
-    def testPostProcessViterbi(self):
+    def testPostProcessViterbiGlobal(self):
         results = _DecodeResult(
             label_sequences=[
                 [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
@@ -164,12 +164,29 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "viterbi"
+        runtime.decoding_type = DecodingType.GLOBAL
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
 
-    def testPostProcessKenLM(self):
+    def testPostProcessViterbiLocal(self):
+        results = _DecodeResult(
+            label_sequences=[
+                [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
+            ],
+            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            timesteps=[[[]]],
+        )
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "viterbi"
+        runtime.decoding_type = DecodingType.LOCAL
+        onnxResult = runtime._postprocess(results)
+        self.assertEqual(onnxResult.sequence, "hello<unk>")
+        self.assertEqual(onnxResult.score, 0.0)
+        self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
+
+    def testPostProcessKenLMGlobal(self):
         results = _DecodeResult(
             label_sequences=[
                 [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
@@ -179,12 +196,29 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
+        runtime.decoding_type = DecodingType.GLOBAL
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
 
-    def testPostProcessNoFrames(self):
+    def testPostProcessKenLMLocal(self):
+        results = _DecodeResult(
+            label_sequences=[
+                [["<s>", "h", "e", "l", "l", "o", "<unk>", "<pad>", "</s>"]]
+            ],
+            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            timesteps=[(0.2, 1.4)],
+        )
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
+        runtime.decoding_type = DecodingType.LOCAL
+        onnxResult = runtime._postprocess(results)
+        self.assertEqual(onnxResult.sequence, "hello<unk>")
+        self.assertEqual(onnxResult.score, 0.0)
+        self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
+
+    def testPostProcessNoFramesGlobal(self):
         results = _DecodeResult(
             label_sequences=[[["<s>", "<s>", "<s>", "|", "<s>", "<s>", "<s>", "<s>"]]],
             scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
@@ -192,6 +226,21 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
+        runtime.decoding_type = DecodingType.GLOBAL
+        onnxResult = runtime._postprocess(results)
+        self.assertEqual(onnxResult.sequence, "")
+        self.assertEqual(onnxResult.score, 0.0)
+        self.assertEqual(onnxResult.wordTimestamps, [])
+
+    def testPostProcessNoFramesLocal(self):
+        results = _DecodeResult(
+            label_sequences=[[["<s>", "<s>", "<s>", "|", "<s>", "<s>", "<s>", "<s>"]]],
+            scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            timesteps=[],
+        )
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
+        runtime.decoding_type = DecodingType.LOCAL
         onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "")
         self.assertEqual(onnxResult.score, 0.0)
