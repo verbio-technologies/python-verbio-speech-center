@@ -349,7 +349,6 @@ class OnnxRuntime(Runtime):
         else:
             score = output.scores[0][0]
             if self.decoding_type == DecodingType.LOCAL:
-                print("Saco estos timestamps LOCAL")
                 timesteps = output.timesteps
             else:
                 timesteps = output.timesteps[0][0]
