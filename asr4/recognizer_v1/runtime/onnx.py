@@ -180,6 +180,7 @@ class OnnxRuntime(Runtime):
         self,
         session: Session,
         vocabulary: List[str] = DEFAULT_VOCABULARY,
+        formatter=None,
         lmFile: Optional[str] = None,
         lexicon: Optional[str] = None,
         lmAlgorithm: str = "viterbi",
@@ -196,6 +197,7 @@ class OnnxRuntime(Runtime):
         self.overlap = overlap
         self._initializeDecoder(
             vocabulary,
+            formatter,
             lmFile,
             lexicon,
             lmAlgorithm,
@@ -208,6 +210,7 @@ class OnnxRuntime(Runtime):
     def _initializeDecoder(
         self,
         vocabulary: List[str],
+        formatter,
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: str,
@@ -216,6 +219,7 @@ class OnnxRuntime(Runtime):
         sil_score: Optional[float],
         subwords: bool = False,
     ) -> None:
+        self.formatter = formatter
         self.lmAlgorithm = lmAlgorithm
         self.decoding_type = getattr(
             self._session, "decoding_type", DecodingType.GLOBAL
@@ -244,13 +248,15 @@ class OnnxRuntime(Runtime):
                 f"Language Model algorithm should be either 'viterbi' or 'kenlm' but '{lmAlgorithm}' was found."
             )
 
-    def run(self, input: bytes, sample_rate_hz: int) -> OnnxRuntimeResult:
+    def run(
+        self, input: bytes, sample_rate_hz: int, enable_formatting
+    ) -> OnnxRuntimeResult:
         if not input:
             raise ValueError("Input audio cannot be empty!")
         x = self._preprocess(input, sample_rate_hz)
         y = self._runOnnxruntimeSession(x)
         self._session.logger.debug(" - postprocess")
-        return self._postprocess(y)
+        return self._postprocess(y, enable_formatting)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -334,7 +340,9 @@ class OnnxRuntime(Runtime):
         wordTimestamps += decoded_part.timesteps[0][0]
         return label_sequences, scores, wordTimestamps
 
-    def _postprocess(self, output: _DecodeResult) -> OnnxRuntimeResult:
+    def _postprocess(
+        self, output: _DecodeResult, enable_formatting: bool
+    ) -> OnnxRuntimeResult:
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
@@ -352,9 +360,32 @@ class OnnxRuntime(Runtime):
                 timesteps = output.timesteps
             else:
                 timesteps = output.timesteps[0][0]
+        if enable_formatting:
+            self._session.logger.debug(" - formatting")
+            transcription = self.formatWords(sequence)
+        else:
+            words = list(filter(lambda x: len(x) > 0, sequence.split(" ")))
+            transcription = " ".join(words)
         return OnnxRuntimeResult(
-            sequence=sequence, score=score, wordTimestamps=timesteps
+            sequence=transcription, score=score, wordTimestamps=timesteps
         )
+
+    def formatWords(self, transcription: str) -> str:
+        words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
+        if self.formatter and words:
+            self._session.logger.debug(f"Pre-formatter text: {words}")
+            try:
+                self._session.logger.debug("Formatting")
+                self._session.logger.debug(self.formatter)
+                return " ".join(self.formatter.classify(words))
+            except Exception as e:
+                self._session.logger.error(
+                    f"Error formatting sentence '{transcription}'"
+                )
+                self._session.logger.error(e)
+                return " ".join(words)
+        else:
+            return " ".join(words)
 
 
 class MatrixOperations:

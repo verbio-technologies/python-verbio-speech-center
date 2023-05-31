@@ -614,13 +614,14 @@ class TestRecognizerService(unittest.TestCase):
         request = RecognizeRequest(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
-                    language="es", sample_rate_hz=8000, audio_encoding="PCM"
+                    language="es",
+                    sample_rate_hz=8000,
+                    audio_encoding="PCM",
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
             ),
             audio=b"0000",
         )
-
         request.config.parameters.enable_formatting = True
         self.assertEqual(
             service.eventHandle(request).transcription,

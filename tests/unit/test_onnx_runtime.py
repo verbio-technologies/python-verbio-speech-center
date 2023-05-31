@@ -112,17 +112,17 @@ class TestOnnxRuntime(unittest.TestCase):
         with self.assertRaises(ValueError):
             runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
             runtime.lmAlgorithm = "viterbi"
-            runtime.run(b"", 8000)
+            runtime.run(b"", 8000, enable_formatting=False)
 
     def testEmptyInputKenLM(self):
         with self.assertRaises(ValueError):
             runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
             runtime.lmAlgorithm = "kenlm"
-            runtime.run(b"", 8000)
+            runtime.run(b"", 8000, enable_formatting=False)
 
     def testRandomInput(self):
         runtime = OnnxRuntime(MockOnnxSession(""))
-        result = runtime.run(b"0000", 8000)
+        result = runtime.run(b"0000", 8000, enable_formatting=False)
         vocabulary = set(runtime.DEFAULT_VOCABULARY[5:] + [" ", "<", ">"])  # letters
         self.assertEqual(set(result.sequence) - vocabulary, set())
         self.assertTrue(1.0 >= result.score >= 0.0)
@@ -165,7 +165,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "viterbi"
         runtime.decoding_type = DecodingType.GLOBAL
-        onnxResult = runtime._postprocess(results)
+        onnxResult = runtime._postprocess(results, enable_formatting=False)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
@@ -181,7 +181,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "viterbi"
         runtime.decoding_type = DecodingType.LOCAL
-        onnxResult = runtime._postprocess(results)
+        onnxResult = runtime._postprocess(results, enable_formatting=False)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
@@ -197,7 +197,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.GLOBAL
-        onnxResult = runtime._postprocess(results)
+        onnxResult = runtime._postprocess(results, enable_formatting=False)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
@@ -213,7 +213,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.LOCAL
-        onnxResult = runtime._postprocess(results)
+        onnxResult = runtime._postprocess(results, enable_formatting=False)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
@@ -227,7 +227,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.GLOBAL
-        onnxResult = runtime._postprocess(results)
+        onnxResult = runtime._postprocess(results, enable_formatting=False)
         self.assertEqual(onnxResult.sequence, "")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [])
@@ -241,7 +241,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.LOCAL
-        onnxResult = runtime._postprocess(results)
+        onnxResult = runtime._postprocess(results, enable_formatting=False)
         self.assertEqual(onnxResult.sequence, "")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [])
