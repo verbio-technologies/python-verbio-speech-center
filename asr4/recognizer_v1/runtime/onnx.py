@@ -375,8 +375,6 @@ class OnnxRuntime(Runtime):
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
-                self._session.logger.debug("Formatting")
-                self._session.logger.debug(self.formatter)
                 return " ".join(self.formatter.classify(words))
             except Exception as e:
                 self._session.logger.error(
