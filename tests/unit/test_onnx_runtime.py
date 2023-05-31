@@ -10,7 +10,7 @@ from random import randint
 from typing import Any, Tuple, Dict, List, Optional, Union
 
 from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession, DecodingType
-from asr4.recognizer_v1.runtime.onnx import _DecodeResult
+from asr4.recognizer_v1.runtime.onnx import _DecodeResult, OnnxRuntimeResult
 from asr4.recognizer_v1.loggerService import LoggerService
 from asr4.recognizer import Language
 from asr4.recognizer_v1.formatter import FormatterFactory
@@ -183,7 +183,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "viterbi"
         runtime.decoding_type = DecodingType.GLOBAL
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
+        onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
@@ -199,7 +199,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "viterbi"
         runtime.decoding_type = DecodingType.LOCAL
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
+        onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0, 0)])
@@ -215,7 +215,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.GLOBAL
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
+        onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
@@ -231,7 +231,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.LOCAL
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
+        onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "hello<unk>")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [(0.2, 1.4)])
@@ -245,7 +245,7 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.GLOBAL
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
+        onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [])
@@ -259,31 +259,24 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.lmAlgorithm = "kenlm"
         runtime.decoding_type = DecodingType.LOCAL
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
+        onnxResult = runtime._postprocess(results)
         self.assertEqual(onnxResult.sequence, "")
         self.assertEqual(onnxResult.score, 0.0)
         self.assertEqual(onnxResult.wordTimestamps, [])
 
     def testFormatter(self):
-        sequence = [x for x in DEFAULT_SPANISH_MESSAGE.replace(" ", "|")]
+        sequence = DEFAULT_SPANISH_MESSAGE.split(" ")
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-        results = _DecodeResult(
-            label_sequences=[[sequence]],
-            scores=[[(0.0)] * len(sequence)],
-            timesteps=[],
-        )
         runtime.formatter = MockFormatter(FORMATTED_SPANISH_MESSAGE)
-
-        onnxResult = runtime._postprocess(results, enable_formatting=True)
+        results = OnnxRuntimeResult(
+            sequence=" ".join(sequence),
+            score=[[(0.0)] * len(sequence)],
+            wordTimestamps=[],
+        )
+        onnxResult = runtime._performFormatting(results)
         self.assertEqual(
             onnxResult.sequence,
             FORMATTED_SPANISH_MESSAGE,
-        )
-
-        onnxResult = runtime._postprocess(results, enable_formatting=False)
-        self.assertEqual(
-            onnxResult.sequence,
-            DEFAULT_SPANISH_MESSAGE,
         )
 
     def testRecognizeFormatterESNumbers(self):

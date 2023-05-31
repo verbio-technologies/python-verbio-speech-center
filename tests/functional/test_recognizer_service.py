@@ -22,8 +22,8 @@ from tests.unit.test_recognizer_service import (
     MockOnnxSession,
     MockArguments,
     MockRecognitionServiceConfiguration,
-    MockFormatter,
 )
+from tests.unit.test_onnx_runtime import MockFormatter
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 

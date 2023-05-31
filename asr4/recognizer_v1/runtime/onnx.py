@@ -21,7 +21,7 @@ from onnxruntime.quantization.quant_utils import (
 
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
-
+from pyformatter import PyFormatter as Formatter
 from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
@@ -180,7 +180,7 @@ class OnnxRuntime(Runtime):
         self,
         session: Session,
         vocabulary: List[str] = DEFAULT_VOCABULARY,
-        formatter=None,
+        formatter: Formatter = None,
         lmFile: Optional[str] = None,
         lexicon: Optional[str] = None,
         lmAlgorithm: str = "viterbi",
@@ -210,7 +210,7 @@ class OnnxRuntime(Runtime):
     def _initializeDecoder(
         self,
         vocabulary: List[str],
-        formatter,
+        formatter: Formatter,
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: str,
@@ -253,10 +253,14 @@ class OnnxRuntime(Runtime):
     ) -> OnnxRuntimeResult:
         if not input:
             raise ValueError("Input audio cannot be empty!")
-        x = self._preprocess(input, sample_rate_hz)
-        y = self._runOnnxruntimeSession(x)
-        self._session.logger.debug(" - postprocess")
-        return self._postprocess(y, enable_formatting)
+        preprocessed_input = self._preprocess(input, sample_rate_hz)
+        decoding_output = self._runOnnxruntimeSession(preprocessed_input)
+        postprocessed_output = self._postprocess(decoding_output)
+        if enable_formatting:
+            formatted_output = self._performFormatting(postprocessed_output)
+            return formatted_output
+        else:
+            return postprocessed_output
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -341,8 +345,10 @@ class OnnxRuntime(Runtime):
         return label_sequences, scores, wordTimestamps
 
     def _postprocess(
-        self, output: _DecodeResult, enable_formatting: bool
+        self,
+        output: _DecodeResult,
     ) -> OnnxRuntimeResult:
+        self._session.logger.debug(" - postprocess")
         sequence = (
             "".join(output.label_sequences[0][0])
             .replace("|", " ")
@@ -351,6 +357,7 @@ class OnnxRuntime(Runtime):
             .replace("<pad>", "")
             .strip()
         )
+        words = list(filter(lambda x: len(x) > 0, sequence.split(" ")))
         if self.lmAlgorithm == "viterbi":
             score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
             timesteps = [(0, 0)] * len(sequence.split(" "))
@@ -360,17 +367,19 @@ class OnnxRuntime(Runtime):
                 timesteps = output.timesteps
             else:
                 timesteps = output.timesteps[0][0]
-        if enable_formatting:
-            self._session.logger.debug(" - formatting")
-            transcription = self.formatWords(sequence)
-        else:
-            words = list(filter(lambda x: len(x) > 0, sequence.split(" ")))
-            transcription = " ".join(words)
         return OnnxRuntimeResult(
-            sequence=transcription, score=score, wordTimestamps=timesteps
+            sequence=" ".join(words), score=score, wordTimestamps=timesteps
+        )
+
+    def _performFormatting(self, result: OnnxRuntimeResult) -> OnnxRuntimeResult:
+        return OnnxRuntimeResult(
+            sequence=self.formatWords(result.sequence),
+            score=result.score,
+            wordTimestamps=result.wordTimestamps,  # TODO Implement the wordtimestamps construction from the formatting operations and the original word timestamps
         )
 
     def formatWords(self, transcription: str) -> str:
+        self._session.logger.debug(" - formatting")
         words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
@@ -381,9 +390,7 @@ class OnnxRuntime(Runtime):
                     f"Error formatting sentence '{transcription}'"
                 )
                 self._session.logger.error(e)
-                return " ".join(words)
-        else:
-            return " ".join(words)
+        return " ".join(words)
 
 
 class MatrixOperations:

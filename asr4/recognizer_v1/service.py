@@ -27,6 +27,8 @@ from .types import AudioEncoding
 from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
+from pyformatter import PyFormatter as Formatter
+
 
 @dataclass
 class TranscriptionResult:
@@ -113,7 +115,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def __init__(
         self,
         configuration: RecognitionServiceConfiguration,
-        formatter=None,
+        formatter: Formatter = None,
     ) -> None:
         self.logger = logging.getLogger("ASR4")
         self._language = configuration.language
@@ -139,7 +141,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def _createRuntime(
         session: Session,
         vocabularyPath: Optional[str],
-        formatter,
+        formatter: Formatter,
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: Optional[str],
@@ -290,14 +292,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             raise ValueError(f"Empty value for audio")
 
     def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
-        result = self._runRecognition(request)
-        return TranscriptionResult(
-            transcription=result.transcription,
-            score=result.score,
-            wordTimestamps=result.wordTimestamps,
-        )
-
-    def _runRecognition(self, request: RecognizeRequest) -> TranscriptionResult:
         language = Language.parse(request.config.parameters.language)
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
