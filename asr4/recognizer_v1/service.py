@@ -27,6 +27,8 @@ from .types import AudioEncoding
 from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
+from pyformatter import PyFormatter as Formatter
+
 
 @dataclass
 class TranscriptionResult:
@@ -113,14 +115,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def __init__(
         self,
         configuration: RecognitionServiceConfiguration,
-        formatter=None,
+        formatter: Formatter = None,
     ) -> None:
         self.logger = logging.getLogger("ASR4")
         self._language = configuration.language
-        self._formatter = formatter
         self._runtime = self._createRuntime(
             configuration.createOnnxSession(),
             configuration.vocabulary,
+            formatter,
             configuration.lmFile,
             configuration.lexicon,
             configuration.lmAlgorithm,
@@ -139,6 +141,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     def _createRuntime(
         session: Session,
         vocabularyPath: Optional[str],
+        formatter: Formatter,
         lmFile: Optional[str],
         lexicon: Optional[str],
         lmAlgorithm: Optional[str],
@@ -153,6 +156,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return OnnxRuntime(
                 session,
                 vocabulary,
+                formatter,
                 lmFile,
                 lexicon,
                 lmAlgorithm,
@@ -288,23 +292,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             raise ValueError(f"Empty value for audio")
 
     def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
-        result = self._runRecognition(request)
-        if request.config.parameters.enable_formatting:
-            transcription = self.formatWords(result.transcription)
-        else:
-            words = list(filter(lambda x: len(x) > 0, result.transcription.split(" ")))
-            transcription = " ".join(words)
-        return TranscriptionResult(
-            transcription=transcription,
-            score=result.score,
-            wordTimestamps=result.wordTimestamps,
-        )
-
-    def _runRecognition(self, request: RecognizeRequest) -> TranscriptionResult:
         language = Language.parse(request.config.parameters.language)
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
-            result = self._runtime.run(request.audio, sample_rate_hz)
+            result = self._runtime.run(
+                request.audio,
+                sample_rate_hz,
+                request.config.parameters.enable_formatting,
+            )
             return TranscriptionResult(
                 transcription=result.sequence,
                 score=result.score,
@@ -314,18 +309,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             raise ValueError(
                 f"Invalid language '{language}'. Only '{self._language}' is supported."
             )
-
-    def formatWords(self, transcription: str) -> str:
-        words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
-        if self._formatter and words:
-            self.logger.debug(f"Pre-formatter text: {words}")
-            try:
-                return " ".join(self._formatter.classify(words))
-            except:
-                self.logger.error(f"Error formatting sentence '{transcription}'")
-                return " ".join(words)
-        else:
-            return " ".join(words)
 
     def eventSink(
         self,
