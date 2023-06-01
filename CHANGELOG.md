@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.5.2 (2023-05-31)
+
+### Patch (2 changes)
+
+- [Update files to 0.5.2](csr/asr4@91a09446859d6fc4cf993c4daeb7b8f8d54c8342) ([merge request](csr/asr4!259))
+- [Adding tests for local decoding and fix accumulated timestamps when partial decoding](csr/asr4@6f3c1e25a072f3f6ff13bd6f2479b29a0bf7bacf) ([merge request](csr/asr4!258))
+
 ## 0.5.1 (2023-05-29)
 
 ### Patch (3 changes)
