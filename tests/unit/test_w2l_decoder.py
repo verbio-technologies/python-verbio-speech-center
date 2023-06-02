@@ -111,7 +111,7 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             0,
             4,
         ]
-        self.assertEqual(decoder._getWordTimestamps(token_idxs), [])
+        self.assertEqual(decoder._getWordTimestamps(token_idxs), ([], []))
 
     def testNoWords(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
@@ -132,7 +132,7 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             0,
             0,
         ]
-        self.assertEqual(decoder._getWordTimestamps(token_idxs), [])
+        self.assertEqual(decoder._getWordTimestamps(token_idxs), ([], []))
 
     def testDecode(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
