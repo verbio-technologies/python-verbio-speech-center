@@ -3,7 +3,6 @@ import logging
 import soxr
 import numpy as np
 import numpy.typing as npt
-from array import array
 
 import torch
 import torch.nn.functional as F
@@ -12,7 +11,6 @@ import onnx
 import onnxruntime
 import onnxruntime.quantization
 from enum import Enum
-import re
 
 from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
 from onnxruntime.quantization.quant_utils import (
@@ -337,7 +335,7 @@ class OnnxRuntime(Runtime):
                         scores,
                         wordFrames,
                         wordTimestamps,
-                    ) = self._decodePartial(
+                    ) = self._decodePartialAccumulated(
                         label_sequences, scores, wordFrames, wordTimestamps, frame_probs
                     )
                 else:
@@ -364,6 +362,20 @@ class OnnxRuntime(Runtime):
                                 [acummulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
                             )
                         ]
+        while len(acummulated_probs[0][0]) > 0:
+            y = np.concatenate(acummulated_probs, axis=1)
+            (
+                partial_decoding,
+                bufferIndex,
+                eos_pos,
+                chunks_count,
+            ) = self._performLocalDecodingWithFormatting(y, eos_pos, chunks_count)
+            self._session.logger.info(partial_decoding.sequence)
+            if len(bufferIndex) > 0:
+                acummulated_probs = np.concatenate(acummulated_probs, axis=1)
+                acummulated_probs = [
+                    np.array([acummulated_probs[0][bufferIndex[0] : bufferIndex[1]]])
+                ]
 
         if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
@@ -397,7 +409,9 @@ class OnnxRuntime(Runtime):
         else:
             return postprocessed_output
 
-    def _decodePartial(self, label_sequences, scores, wordFrames, wordTimestamps, yi):
+    def _decodePartialAccumulated(
+        self, label_sequences, scores, wordFrames, wordTimestamps, yi
+    ):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
@@ -409,7 +423,7 @@ class OnnxRuntime(Runtime):
         wordTimestamps += decoded_part.timesteps[0][0]
         return label_sequences, scores, wordFrames, wordTimestamps
 
-    def _decodePartialFormatting(self, yi):
+    def _decodePartialLocalFormatting(self, yi):
         normalized_y = F.softmax(torch.from_numpy(yi), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
@@ -426,7 +440,7 @@ class OnnxRuntime(Runtime):
             scores,
             wordFrames,
             wordTimestamps,
-        ) = self._decodePartialFormatting(yi)
+        ) = self._decodePartialLocalFormatting(yi)
         postprocessed_output = self._postprocess(
             _DecodeResult(
                 label_sequences=[[label_sequences]],
