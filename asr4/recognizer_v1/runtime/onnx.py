@@ -3,6 +3,7 @@ import logging
 import soxr
 import numpy as np
 import numpy.typing as npt
+from array import array
 
 import torch
 import torch.nn.functional as F
@@ -27,6 +28,8 @@ from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
+LOCAL_FORMATTING_LOOKAHEAD = 1
+
 
 class DecodingType(Enum):
     GLOBAL = 1
@@ -36,6 +39,7 @@ class DecodingType(Enum):
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
+    wordFrames: List[tuple[int]]
     wordTimestamps: List[tuple[float]]
 
 
@@ -250,12 +254,18 @@ class OnnxRuntime(Runtime):
             )
 
     def run(
-        self, input: bytes, sample_rate_hz: int, enable_formatting
+        self,
+        input: bytes,
+        sample_rate_hz: int,
+        enable_formatting: bool,
+        local_formatting: bool,
     ) -> OnnxRuntimeResult:
         if not input:
             raise ValueError("Input audio cannot be empty!")
         preprocessed_input = self._preprocess(input, sample_rate_hz)
-        return self._runOnnxruntimeSession(preprocessed_input, enable_formatting)
+        return self._runOnnxruntimeSession(
+            preprocessed_input, enable_formatting, local_formatting
+        )
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -286,7 +296,7 @@ class OnnxRuntime(Runtime):
         ).splitIntoOverlappingChunks(audio)
 
     def _runOnnxruntimeSession(
-        self, input: torch.Tensor, enable_formatting: bool
+        self, input: torch.Tensor, enable_formatting: bool, local_formatting: bool
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(f" - softmax")
         if len(input.shape) == 2:
@@ -295,15 +305,25 @@ class OnnxRuntime(Runtime):
                 enable_formatting,
             )
         else:
-            return self._batchDecode(input, enable_formatting)
+            return self._batchDecode(
+                input,
+                enable_formatting,
+                local_formatting,
+            )
 
-    def _batchDecode(self, input, enable_formatting: bool) -> OnnxRuntimeResult:
+    def _batchDecode(
+        self, input, enable_formatting: bool, local_formatting: bool
+    ) -> OnnxRuntimeResult:
         total_probs = []
         label_sequences = []
         scores = []
+        wordFrames = []
         wordTimestamps = []
-        chunksBuffer = []
-        previous_chunk = []
+        partial_decoding = OnnxRuntimeResult(
+            sequence="", score=0.0, wordFrames=[], wordTimestamps=[]
+        )
+        eos_pos = -1
+        chunks_count = 0
         for i in range(input.shape[1]):
             frame_probs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
@@ -311,21 +331,56 @@ class OnnxRuntime(Runtime):
             if self.decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
-                if not enable_formatting:
-                    raise ValueError("Formatting is mandatory for partial decoding.")
-                previous_chunk += frame_probs
-                sequence, score, wordTimestamps, chunksBuffer = self._decodePartial(
-                    label_sequences, scores, wordTimestamps, chunksBuffer
-                )
-                previous_chunk = frame_probs[chunksBuffer[0]:chunksBuffer[1]]
+                if not local_formatting:
+                    (
+                        label_sequences,
+                        scores,
+                        wordFrames,
+                        wordTimestamps,
+                    ) = self._decodePartial(
+                        label_sequences, scores, wordFrames, wordTimestamps, frame_probs
+                    )
+                else:
+                    if i > 0:
+                        acummulated_probs += frame_probs
+                        y = np.concatenate(acummulated_probs, axis=1)
+                    else:
+                        acummulated_probs = frame_probs
+                        y = frame_probs[0]
+                    (
+                        partial_decoding,
+                        bufferIndex,
+                        eos_pos,
+                        chunks_count,
+                    ) = self._performLocalDecodingWithFormatting(
+                        y, eos_pos, chunks_count
+                    )
+                    self._session.logger.info(partial_decoding.sequence)
+
+                    if len(bufferIndex) > 0:
+                        acummulated_probs = np.concatenate(acummulated_probs, axis=1)
+                        acummulated_probs = [
+                            np.array(
+                                [acummulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
+                            )
+                        ]
+
         if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
         else:
-            return OnnxRuntimeResult(
-                sequence=[[sequence]],
-                score=[score],
-                wordTimestamps=wordTimestamps,
+            decoding_output = _DecodeResult(
+                label_sequences=[[label_sequences]],
+                scores=[scores],
+                timesteps=wordTimestamps,
             )
+            if not local_formatting:
+                postprocessed_output = self._postprocess(decoding_output)
+                if enable_formatting:
+                    return self._performFormatting(postprocessed_output)
+                else:
+                    return postprocessed_output
+            else:
+                return partial_decoding
 
     def _decodeTotal(self, y, enable_formatting) -> OnnxRuntimeResult:
         y = np.concatenate(y, axis=1)
@@ -342,49 +397,130 @@ class OnnxRuntime(Runtime):
         else:
             return postprocessed_output
 
-    def _decodePartial(self, sequence, score, wordTimestamps, chunksBuffer):
-        y = np.concatenate(chunksBuffer, axis=1)
-        normalized_y = F.softmax(torch.from_numpy(chunksBuffer[0]), dim=2)
+    def _decodePartial(self, label_sequences, scores, wordFrames, wordTimestamps, yi):
+        normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
-        postprocessed_part = self._postprocess(decoded_part)
-        formatted_result = self._performFormatting(postprocessed_part)
-        bufferIndex, partialResult = self._findEOS(formatted_result)
-        if len(partialResult.sequence) > 0 and self.lmAlgorithm == "kenlm":
-            sequence += " "
-        sequence += partialResult.sequence
-        score += [partialResult.score]
-        wordTimestamps += partialResult.wordTimestamps
-        return sequence, score, wordTimestamps, bufferIndex
+        if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
+            label_sequences += " "
+        label_sequences += decoded_part.label_sequences[0][0]
+        scores += [decoded_part.scores[0][0]]
+        wordFrames += decoded_part.wordsFrames[0][0]
+        wordTimestamps += decoded_part.timesteps[0][0]
+        return label_sequences, scores, wordFrames, wordTimestamps
+
+    def _decodePartialFormatting(self, yi):
+        normalized_y = F.softmax(torch.from_numpy(yi), dim=2)
+        self._session.logger.debug(" - decoding partial")
+        decoded_part = self._decoder.decode(normalized_y)
+        label_sequences = decoded_part.label_sequences[0][0]
+        scores = [decoded_part.scores[0][0]]
+        wordFrames = decoded_part.wordsFrames[0][0]
+        wordTimestamps = decoded_part.timesteps[0][0]
+        return label_sequences, scores, wordFrames, wordTimestamps
+
+    def _performLocalDecodingWithFormatting(self, yi, eos_pos, chunks_count):
+        saveInBuffer = []
+        (
+            label_sequences,
+            scores,
+            wordFrames,
+            wordTimestamps,
+        ) = self._decodePartialFormatting(yi)
+        postprocessed_output = self._postprocess(
+            _DecodeResult(
+                label_sequences=[[label_sequences]],
+                scores=[scores],
+                wordsFrames=wordFrames,
+                timesteps=wordTimestamps,
+            )
+        )
+        formatted_output = self._performFormatting(postprocessed_output)
+        formatted_output_until_eos, new_eos_pos = self._findEOS(formatted_output)
+        self._session.logger.debug(formatted_output.sequence)
+        lookahead = 1
+        if new_eos_pos != -1:  # EOS found
+            if (
+                new_eos_pos != formatted_output.wordFrames[-1][-1]
+            ):  # EOS not in last position of the sequence. Give the result.
+                saveInBuffer = [
+                    formatted_output_until_eos.wordFrames[-1][-1] + 1,
+                    formatted_output.wordFrames[-1][-1],
+                ]
+                chunks_count = 0
+                return (
+                    OnnxRuntimeResult(
+                        sequence=formatted_output_until_eos.sequence,
+                        score=formatted_output_until_eos.score,
+                        wordFrames=formatted_output_until_eos.wordFrames,
+                        wordTimestamps=formatted_output_until_eos.wordTimestamps,
+                    ),
+                    saveInBuffer,
+                    new_eos_pos,
+                    chunks_count,
+                )
+            elif (
+                chunks_count < lookahead + 1
+            ):  # EOS in last position of the sequence. Decode with the next chunk.
+                chunks_count += 1
+                return (
+                    OnnxRuntimeResult(
+                        sequence="", score=0.0, wordFrames=[], wordTimestamps=[]
+                    ),
+                    [],
+                    new_eos_pos,
+                    chunks_count,
+                )
+            else:
+                chunks_count = 0
+                return (
+                    OnnxRuntimeResult(
+                        sequence=formatted_output.sequence,
+                        score=formatted_output.score,
+                        wordFrames=formatted_output.wordFrames,
+                        wordTimestamps=formatted_output.wordTimestamps,
+                    ),
+                    saveInBuffer,
+                    eos_pos,
+                    chunks_count,
+                )
+        else:
+            chunks_count = 0
+            return (
+                OnnxRuntimeResult(
+                    sequence=formatted_output.sequence,
+                    score=formatted_output.score,
+                    wordFrames=formatted_output.wordFrames,
+                    wordTimestamps=formatted_output.wordTimestamps,
+                ),
+                saveInBuffer,
+                eos_pos,
+                chunks_count,
+            )
 
     def _findEOS(self, formatted_result):
         formatted_tokens = formatted_result.sequence.split(" ")
         selectedTokens = []
+        selectedWordFrames = []
         selectedTimestamps = []
         EOS = [".", "?"]
-        eos_found = False
-        sequence_pos = 0
-        bufferIndex = (0, 0)
         for pos, token in enumerate(formatted_tokens):
             selectedTokens.append(token)
+            selectedWordFrames.append(formatted_result.wordFrames[pos])
             selectedTimestamps.append(formatted_result.wordTimestamps[pos])
-            sequence_pos += len(token)
             if token[-1] in EOS:
-                eos_found = True
                 partialResult = OnnxRuntimeResult(
                     sequence=" ".join(selectedTokens),
                     score=formatted_result.score,
+                    wordFrames=selectedWordFrames,
                     wordTimestamps=selectedTimestamps,
                 )
-                bufferIndex = (sequence_pos, len(formatted_result.sequence) - 1)
-                return bufferIndex, partialResult
-        if not eos_found:
-            bufferIndex = (0, len(formatted_result.sequence) - 1)
-            return bufferIndex, OnnxRuntimeResult(
-                sequence="",
-                score=0.0,
-                wordTimestamps=[],
-            )
+                eos_pos = selectedWordFrames[pos][-1]
+                return partialResult, eos_pos
+        return (
+            OnnxRuntimeResult(sequence="", score=0.0, wordFrames=[], wordTimestamps=[]),
+            -1,
+        )
 
     def _postprocess(
         self,
@@ -402,21 +538,28 @@ class OnnxRuntime(Runtime):
         words = list(filter(lambda x: len(x) > 0, sequence.split(" ")))
         if self.lmAlgorithm == "viterbi":
             score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
+            wordFrames = [(0, 0)] * len(sequence.split(" "))
             timesteps = [(0, 0)] * len(sequence.split(" "))
         else:
             score = output.scores[0][0]
             if self.decoding_type == DecodingType.LOCAL:
+                wordFrames = output.wordsFrames
                 timesteps = output.timesteps
             else:
+                wordFrames = output.wordsFrames[0][0]
                 timesteps = output.timesteps[0][0]
         return OnnxRuntimeResult(
-            sequence=" ".join(words), score=score, wordTimestamps=timesteps
+            sequence=" ".join(words),
+            score=score,
+            wordFrames=wordFrames,
+            wordTimestamps=timesteps,
         )
 
     def _performFormatting(self, result: OnnxRuntimeResult) -> OnnxRuntimeResult:
         return OnnxRuntimeResult(
             sequence=self.formatWords(result.sequence),
             score=result.score,
+            wordFrames=result.wordFrames,
             wordTimestamps=result.wordTimestamps,  # TODO Implement the wordtimestamps construction from the formatting operations and the original word timestamps
         )
 

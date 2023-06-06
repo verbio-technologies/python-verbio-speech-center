@@ -452,10 +452,13 @@ class TestOnnxRuntime(unittest.TestCase):
     def testFindEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         formatted_result = OnnxRuntimeResult(
-            sequence="Hola. Qué", score=1.0, wordTimestamps=[(0.4, 1.0), (1.5, 1.9)]
+            sequence="Hola. Qué",
+            score=1.0,
+            wordFrames=[(2, 5), (7, 9)],
+            wordTimestamps=[(0.4, 1.0), (1.4, 1.8)],
         )
-        bufferIndex, partialResult = runtime._findEOS(formatted_result)
-        self.assertEqual(bufferIndex, (5, 8))
+        partialResult, bufferIndex = runtime._findEOS(formatted_result)
+        self.assertEqual(bufferIndex, 5)
         self.assertEqual(partialResult.sequence, "Hola.")
         self.assertEqual(partialResult.score, 1.0)
         self.assertEqual(partialResult.wordTimestamps, [(0.4, 1.0)])
@@ -463,10 +466,13 @@ class TestOnnxRuntime(unittest.TestCase):
     def testNotFindEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         formatted_result = OnnxRuntimeResult(
-            sequence="Hola qué", score=1.0, wordTimestamps=[(0.4, 1.0), (1.5, 1.9)]
+            sequence="Hola qué",
+            score=1.0,
+            wordFrames=[(2, 5), (7, 9)],
+            wordTimestamps=[(0.4, 1.0), (1.5, 1.9)],
         )
-        bufferIndex, partialResult = runtime._findEOS(formatted_result)
-        self.assertEqual(bufferIndex, (0, 7))
+        partialResult, bufferIndex = runtime._findEOS(formatted_result)
+        self.assertEqual(bufferIndex, -1)
         self.assertEqual(partialResult.sequence, "")
-        self.assertEqual(partialResult.score, 1.0)
+        self.assertEqual(partialResult.score, 0.0)
         self.assertEqual(partialResult.wordTimestamps, [])

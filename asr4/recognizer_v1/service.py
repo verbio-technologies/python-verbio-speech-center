@@ -299,6 +299,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 request.audio,
                 sample_rate_hz,
                 request.config.parameters.enable_formatting,
+                local_formatting=True,
             )
             return TranscriptionResult(
                 transcription=result.sequence,
