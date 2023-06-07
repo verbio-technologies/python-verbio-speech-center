@@ -325,59 +325,49 @@ class OnnxRuntime(Runtime):
             )
             if self.decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
-            else:
-                if not self.local_formatting:
-                    (
-                        label_sequences,
-                        scores,
-                        wordFrames,
-                        wordTimestamps,
-                    ) = self._decodePartialAccumulated(
-                        label_sequences, scores, wordFrames, wordTimestamps, frame_probs
-                    )
-                else:
-                    if i > 0:
-                        accumulated_probs += frame_probs
-                        y = np.concatenate(accumulated_probs, axis=1)
-                    else:
-                        accumulated_probs = frame_probs
-                        y = frame_probs[0]
-                    (
-                        partial_decoding,
-                        bufferIndex,
-                        chunks_count,
-                    ) = self._performLocalDecodingWithFormatting(y, chunks_count)
-                    self._session.logger.info(partial_decoding)
-                    # yield partial_decoding
 
-                    if len(bufferIndex) > 0:
-                        accumulated_probs = np.concatenate(accumulated_probs, axis=1)
-                        accumulated_probs = [
-                            np.array(
-                                [accumulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
-                            )
-                        ]
-        self._runAccumulatedLastChunk(
-            accumulated_probs,
-            chunks_count,
-        )
+            elif self.decoding_type == DecodingType.LOCAL and not self.local_formatting:
+                (
+                    label_sequences,
+                    scores,
+                    wordFrames,
+                    wordTimestamps,
+                ) = self._decodePartialAccumulated(
+                    label_sequences, scores, wordFrames, wordTimestamps, frame_probs
+                )
+            elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
+                if i > 0:
+                    accumulated_probs += frame_probs
+                    y = np.concatenate(accumulated_probs, axis=1)
+                else:
+                    accumulated_probs = frame_probs
+                    y = frame_probs[0]
+                (
+                    partial_decoding,
+                    bufferIndex,
+                    chunks_count,
+                ) = self._performLocalDecodingWithLocalFormatting(y, chunks_count)
+                self._session.logger.info(partial_decoding.sequence)
+                # yield partial_decoding
+
+                if len(bufferIndex) > 0:
+                    accumulated_probs = np.concatenate(accumulated_probs, axis=1)
+                    accumulated_probs = [
+                        np.array(
+                            [accumulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
+                        )
+                    ]
 
         if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
+
+        elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
+            self._runAccumulatedLastChunk(accumulated_probs, chunks_count)
+            return partial_decoding  # This is returning only the last partial result. We have to implement how to return each partial.
         else:
-            decoding_output = _DecodeResult(
-                label_sequences=[[label_sequences]],
-                scores=[scores],
-                timesteps=wordTimestamps,
+            return self._performLocalDecodingWithGlobalFormatting(
+                label_sequences, scores, wordFrames, wordTimestamps, enable_formatting
             )
-            if not self.local_formatting:
-                postprocessed_output = self._postprocess(decoding_output)
-                if enable_formatting:
-                    return self._performFormatting(postprocessed_output)
-                else:
-                    return postprocessed_output
-            else:
-                return partial_decoding
 
     def _decodeTotal(self, y, enable_formatting) -> OnnxRuntimeResult:
         y = np.concatenate(y, axis=1)
@@ -408,7 +398,7 @@ class OnnxRuntime(Runtime):
         wordTimestamps += decoded_part.timesteps[0][0]
         return label_sequences, scores, wordFrames, wordTimestamps
 
-    def _decodePartialLocalFormatting(self, yi):
+    def _decodePartial(self, yi):
         normalized_y = F.softmax(torch.from_numpy(yi), dim=2)
         self._session.logger.debug(" - decoding partial with local formatting")
         decoded_part = self._decoder.decode(normalized_y)
@@ -419,9 +409,24 @@ class OnnxRuntime(Runtime):
             timesteps=decoded_part.timesteps[0][0],
         )
 
-    def _performLocalDecodingWithFormatting(self, yi, chunks_count):
+    def _performLocalDecodingWithGlobalFormatting(
+        self, label_sequences, scores, wordFrames, wordTimestamps, enable_formatting
+    ):
+        decoding_output = _DecodeResult(
+            label_sequences=[[label_sequences]],
+            scores=[scores],
+            wordsFrames=wordFrames,
+            timesteps=wordTimestamps,
+        )
+        postprocessed_output = self._postprocess(decoding_output)
+        if enable_formatting:
+            return self._performFormatting(postprocessed_output)
+        else:
+            return postprocessed_output
+
+    def _performLocalDecodingWithLocalFormatting(self, yi, chunks_count):
         saveInBuffer = []
-        decoder_result = self._decodePartialLocalFormatting(yi)
+        decoder_result = self._decodePartial(yi)
         postprocessed_output = self._postprocess(decoder_result)
         sequence = ""
         score = 0.0

@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 import pytest
 import logging
 
@@ -527,3 +528,101 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertEqual(partialResult.sequence, "")
         self.assertEqual(partialResult.score, 1.0)
         self.assertEqual(partialResult.wordTimestamps, [])
+
+    def testPerformLocalDecodingWithLocalFormattingMoreThanOneEOS(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        sequence = "good afternoon thank you for calling bank of america how can i help you today"
+        result = _DecodeResult(
+            label_sequences=[[sequence]],
+            scores=[[1.0]],
+            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
+            timesteps=[(0, 0)] * len(sequence.split(" ")),
+        )
+        runtime._decodePartial = MagicMock(return_value=result)
+        runtime.formatter = MockFormatter(
+            "Good afternoon. Thank you for calling back of America. How can I help you today?"
+        )
+        (
+            result,
+            _saveInBuffer,
+            _chunksCount,
+        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+        self.assertEqual(
+            result.sequence, "Good afternoon. Thank you for calling back of America."
+        )
+
+    def testPerformLocalDecodingWithLocalFormattingOneEOS(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        sequence = "good afternoon thank you for calling bank of america"
+        result = _DecodeResult(
+            label_sequences=[[sequence]],
+            scores=[[1.0]],
+            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
+            timesteps=[(0, 0)] * len(sequence.split(" ")),
+        )
+        runtime._decodePartial = MagicMock(return_value=result)
+        runtime.formatter = MockFormatter(
+            "Good afternoon. Thank you for calling back of America."
+        )
+        (
+            result,
+            _saveInBuffer,
+            _chunksCount,
+        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+        self.assertEqual(result.sequence, "Good afternoon.")
+
+    def testPerformLocalDecodingWithLocalFormattingOneEOS(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        sequence = "good afternoon thank you for calling bank of america"
+        result = _DecodeResult(
+            label_sequences=[[sequence]],
+            scores=[[1.0]],
+            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
+            timesteps=[(0, 0)] * len(sequence.split(" ")),
+        )
+        runtime._decodePartial = MagicMock(return_value=result)
+        runtime.formatter = MockFormatter(
+            "Good afternoon. Thank you for calling back of America."
+        )
+        (
+            result,
+            _saveInBuffer,
+            _chunksCount,
+        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+        self.assertEqual(result.sequence, "Good afternoon.")
+
+    def testPerformLocalDecodingWithLocalFormattingEOSAtEnd(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        sequence = "good afternoon thank you for calling bank of america"
+        result = _DecodeResult(
+            label_sequences=[[sequence]],
+            scores=[[1.0]],
+            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
+            timesteps=[(0, 0)] * len(sequence.split(" ")),
+        )
+        runtime._decodePartial = MagicMock(return_value=result)
+        runtime.formatter = MockFormatter("How can I help you.")
+        (
+            result,
+            _saveInBuffer,
+            _chunksCount,
+        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+        self.assertEqual(result.sequence, "")
+
+    def testPerformLocalDecodingWithLocalFormattingNoEOS(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        sequence = "good afternoon thank you for calling bank of america"
+        result = _DecodeResult(
+            label_sequences=[[sequence]],
+            scores=[[1.0]],
+            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
+            timesteps=[(0, 0)] * len(sequence.split(" ")),
+        )
+        runtime._decodePartial = MagicMock(return_value=result)
+        runtime.formatter = MockFormatter("can I help you")
+        (
+            result,
+            _saveInBuffer,
+            _chunksCount,
+        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+        self.assertEqual(result.sequence, "")
