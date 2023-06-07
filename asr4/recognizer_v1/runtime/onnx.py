@@ -192,6 +192,7 @@ class OnnxRuntime(Runtime):
         sil_score: Optional[float] = 0.0,
         overlap: Optional[int] = 0,
         subwords: bool = False,
+        local_formatting: bool = False,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
@@ -208,6 +209,7 @@ class OnnxRuntime(Runtime):
             word_score,
             sil_score,
             subwords,
+            local_formatting,
         )
 
     def _initializeDecoder(
@@ -221,8 +223,10 @@ class OnnxRuntime(Runtime):
         word_score: Optional[float],
         sil_score: Optional[float],
         subwords: bool = False,
+        local_formatting: bool = False,
     ) -> None:
         self.formatter = formatter
+        self.local_formatting = local_formatting
         self.lmAlgorithm = lmAlgorithm
         self.decoding_type = getattr(
             self._session, "decoding_type", DecodingType.GLOBAL
@@ -256,13 +260,13 @@ class OnnxRuntime(Runtime):
         input: bytes,
         sample_rate_hz: int,
         enable_formatting: bool,
-        local_formatting: bool,
     ) -> OnnxRuntimeResult:
         if not input:
             raise ValueError("Input audio cannot be empty!")
         preprocessed_input = self._preprocess(input, sample_rate_hz)
         return self._runOnnxruntimeSession(
-            preprocessed_input, enable_formatting, local_formatting
+            preprocessed_input,
+            enable_formatting,
         )
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
@@ -294,7 +298,7 @@ class OnnxRuntime(Runtime):
         ).splitIntoOverlappingChunks(audio)
 
     def _runOnnxruntimeSession(
-        self, input: torch.Tensor, enable_formatting: bool, local_formatting: bool
+        self, input: torch.Tensor, enable_formatting: bool
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(f" - softmax")
         if len(input.shape) == 2:
@@ -306,12 +310,9 @@ class OnnxRuntime(Runtime):
             return self._batchDecode(
                 input,
                 enable_formatting,
-                local_formatting,
             )
 
-    def _batchDecode(
-        self, input, enable_formatting: bool, local_formatting: bool
-    ) -> OnnxRuntimeResult:
+    def _batchDecode(self, input, enable_formatting: bool) -> OnnxRuntimeResult:
         total_probs = []
         label_sequences = []
         scores = []
@@ -326,7 +327,7 @@ class OnnxRuntime(Runtime):
             if self.decoding_type == DecodingType.GLOBAL:
                 total_probs += frame_probs
             else:
-                if not local_formatting:
+                if not self.local_formatting:
                     (
                         label_sequences,
                         scores,
@@ -373,7 +374,7 @@ class OnnxRuntime(Runtime):
                 scores=[scores],
                 timesteps=wordTimestamps,
             )
-            if not local_formatting:
+            if not self.local_formatting:
                 postprocessed_output = self._postprocess(decoding_output)
                 if enable_formatting:
                     return self._performFormatting(postprocessed_output)
@@ -399,7 +400,7 @@ class OnnxRuntime(Runtime):
         self, label_sequences, scores, wordFrames, wordTimestamps, yi
     ):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
-        self._session.logger.debug(" - decoding partial")
+        self._session.logger.debug(" - decoding partial with global formatting")
         decoded_part = self._decoder.decode(normalized_y)
         if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
             label_sequences += " "
@@ -411,7 +412,7 @@ class OnnxRuntime(Runtime):
 
     def _decodePartialLocalFormatting(self, yi):
         normalized_y = F.softmax(torch.from_numpy(yi), dim=2)
-        self._session.logger.debug(" - decoding partial")
+        self._session.logger.debug(" - decoding partial with local formatting")
         decoded_part = self._decoder.decode(normalized_y)
         label_sequences = decoded_part.label_sequences[0][0]
         scores = [decoded_part.scores[0][0]]

@@ -182,6 +182,12 @@ class Asr4ArgParser:
             type=int,
             help="Size of overlapping windows when doing partial decoding",
         )
+        parser.add_argument(
+            "-local-formatting",
+            dest="local_formatting",
+            action="store_true",
+            help="Perform local formatting when partial decoding",
+        )
         return parser.parse_args(args)
 
     def fixNumberOfJobs(args):
@@ -208,6 +214,9 @@ class Asr4ArgParser:
         args.sil_score = args.sil_score or os.environ.get("ASR4_SIL_SCORE")
         args.overlap = args.overlap or os.environ.get("ASR4_OVERLAP")
         args.subwords = args.subwords or os.environ.get("ASR4_SUBWORDS")
+        args.local_formatting = args.local_formatting or os.environ.get(
+            "ASR4_LOCAL_FORMATTING"
+        )
         if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
             args.bindAddress = (
                 f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
@@ -255,6 +264,7 @@ class Asr4ArgParser:
         args.sil_score = float(args.sil_score or 0)
         args.overlap = int(args.overlap or 0)
         args.subwords = bool(args.subwords or False)
+        args.local_formatting = bool(args.local_formatting or False)
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:
