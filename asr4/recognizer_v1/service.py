@@ -317,7 +317,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         duration: Duration = Duration(seconds=0, nanos=0),
         endTime: Duration = Duration(seconds=0, nanos=0),
     ) -> RecognizeResponse:
-        print(response)
 
         def getWord(i: int, token: str) -> WordInfo:
             word = WordInfo(
