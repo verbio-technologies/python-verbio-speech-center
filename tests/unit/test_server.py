@@ -30,6 +30,7 @@ class MockArguments(argparse.Namespace):
         self.sil_score = None
         self.overlap = None
         self.subwords = None
+        self.local_formatting = False
 
 
 class TestServerConfiguration(unittest.TestCase):
@@ -86,6 +87,7 @@ class ArgumentParserTests(unittest.TestCase):
             "0.2",
             "--sil_score",
             "0.1",
+            "-local-formatting",
         ]
         args = Asr4ArgParser.parseArguments(argv)
         self.assertIsInstance(args, argparse.Namespace)
@@ -108,6 +110,7 @@ class ArgumentParserTests(unittest.TestCase):
         self.assertEqual(args.lm_weight, 0.5)
         self.assertEqual(args.word_score, 0.2)
         self.assertEqual(args.sil_score, 0.1)
+        self.assertEqual(args.local_formatting, True)
 
 
 class SetDefaultBindAddressTests(unittest.TestCase):
@@ -188,6 +191,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.language = None
         args.overlap = 0
         args.subwords = False
+        args.local_formatting = False
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
@@ -207,6 +211,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.sil_score, 0.1)
         self.assertEqual(args.overlap, 0)
         self.assertEqual(args.subwords, False)
+        self.assertEqual(args.local_formatting, False)
 
     def test_system_vars_override_with_env_vars_set(self):
         args = argparse.Namespace()
@@ -225,6 +230,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.language = None
         args.overlap = None
         args.subwords = None
+        args.local_formatting = None
 
         # Set environment variables for testing
         os.environ["LOG_LEVEL"] = "INFO"
@@ -241,6 +247,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         os.environ["ASR4_SIL_SCORE"] = "0.3"
         os.environ["ASR4_OVERLAP"] = "80000"
         os.environ["ASR4_SUBWORDS"] = "1"
+        os.environ["ASR4_LOCAL_FORMATTING"] = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
@@ -259,6 +266,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.sil_score, "0.3")
         self.assertEqual(args.overlap, "80000")
         self.assertEqual(args.subwords, "1")
+        self.assertEqual(args.local_formatting, "1")
 
         # Clean up environment variables after the test
         del os.environ["LOG_LEVEL"]
@@ -274,6 +282,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         del os.environ["ASR4_WORD_SCORE"]
         del os.environ["ASR4_SIL_SCORE"]
         del os.environ["ASR4_SUBWORDS"]
+        del os.environ["ASR4_LOCAL_FORMATTING"]
 
 
 class DefaultValuesTests(unittest.TestCase):
@@ -295,6 +304,7 @@ class DefaultValuesTests(unittest.TestCase):
         args.workers = None
         args.overlap = None
         args.subwords = "1"
+        args.local_formatting = None
 
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
 
@@ -327,6 +337,7 @@ class TestCheckArgsRequired(unittest.TestCase):
         self.args.gpu_version = "1.2.0"
         self.args.cpu_version = "1.1.0"
         self.args.lm_version = "1.3.0"
+        self.args.local_formatting = False
 
     def test_checkArgsRequired_with_model_specified(self):
         # Test when args.model is already specified, no exception should be raised
