@@ -272,6 +272,7 @@ class TestOnnxRuntime(unittest.TestCase):
         results = OnnxRuntimeResult(
             sequence=" ".join(sequence),
             score=[[(0.0)] * len(sequence)],
+            wordFrames=[],
             wordTimestamps=[],
         )
         onnxResult = runtime._performFormatting(results)
