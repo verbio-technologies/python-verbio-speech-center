@@ -254,6 +254,7 @@ class TestOnnxRuntime(unittest.TestCase):
         results = _DecodeResult(
             label_sequences=[[["<s>", "<s>", "<s>", "|", "<s>", "<s>", "<s>", "<s>"]]],
             scores=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            wordsFrames=[],
             timesteps=[],
         )
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
