@@ -307,6 +307,11 @@ class Asr4ArgParser:
                 lm_version_model_path,
             )
 
+        if args.local_formatting and not args.formatter:
+            raise ValueError(
+                "Local formatting was specified but no formatter model was given"
+            )
+
         return args
 
     def setStandardLMPaths(args):
