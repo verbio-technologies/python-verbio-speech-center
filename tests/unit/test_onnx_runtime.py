@@ -130,17 +130,19 @@ class TestOnnxRuntime(unittest.TestCase):
         with self.assertRaises(ValueError):
             runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
             runtime.lmAlgorithm = "viterbi"
-            runtime.run(b"", 8000, enable_formatting=False)
+            runtime.run(b"", 8000, enable_formatting=False, local_formatting=False)
 
     def testEmptyInputKenLM(self):
         with self.assertRaises(ValueError):
             runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
             runtime.lmAlgorithm = "kenlm"
-            runtime.run(b"", 8000, enable_formatting=False)
+            runtime.run(b"", 8000, enable_formatting=False, local_formatting=False)
 
     def testRandomInput(self):
         runtime = OnnxRuntime(MockOnnxSession(""))
-        result = runtime.run(b"0000", 8000, enable_formatting=False)
+        result = runtime.run(
+            b"0000", 8000, enable_formatting=False, local_formatting=False
+        )
         vocabulary = set(runtime.DEFAULT_VOCABULARY[5:] + [" ", "<", ">"])  # letters
         self.assertEqual(set(result.sequence) - vocabulary, set())
         self.assertTrue(1.0 >= result.score >= 0.0)

@@ -317,9 +317,6 @@ class OnnxRuntime(Runtime):
         scores = []
         wordFrames = []
         wordTimestamps = []
-        partial_decoding = OnnxRuntimeResult(
-            sequence="", score=0.0, wordFrames=[], wordTimestamps=[]
-        )
         eos_pos = -1
         chunks_count = 0
         for i in range(input.shape[1]):
@@ -340,10 +337,10 @@ class OnnxRuntime(Runtime):
                     )
                 else:
                     if i > 0:
-                        acummulated_probs += frame_probs
-                        y = np.concatenate(acummulated_probs, axis=1)
+                        accumulated_probs += frame_probs
+                        y = np.concatenate(accumulated_probs, axis=1)
                     else:
-                        acummulated_probs = frame_probs
+                        accumulated_probs = frame_probs
                         y = frame_probs[0]
                     (
                         partial_decoding,
@@ -356,26 +353,17 @@ class OnnxRuntime(Runtime):
                     self._session.logger.info(partial_decoding.sequence)
 
                     if len(bufferIndex) > 0:
-                        acummulated_probs = np.concatenate(acummulated_probs, axis=1)
-                        acummulated_probs = [
+                        accumulated_probs = np.concatenate(accumulated_probs, axis=1)
+                        accumulated_probs = [
                             np.array(
-                                [acummulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
+                                [accumulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
                             )
                         ]
-        while len(acummulated_probs[0][0]) > 0:
-            y = np.concatenate(acummulated_probs, axis=1)
-            (
-                partial_decoding,
-                bufferIndex,
-                eos_pos,
-                chunks_count,
-            ) = self._performLocalDecodingWithFormatting(y, eos_pos, chunks_count)
-            self._session.logger.info(partial_decoding.sequence)
-            if len(bufferIndex) > 0:
-                acummulated_probs = np.concatenate(acummulated_probs, axis=1)
-                acummulated_probs = [
-                    np.array([acummulated_probs[0][bufferIndex[0] : bufferIndex[1]]])
-                ]
+        self._runAccumulatedLastChunk(
+            accumulated_probs,
+            eos_pos,
+            chunks_count,
+        )
 
         if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
@@ -391,8 +379,6 @@ class OnnxRuntime(Runtime):
                     return self._performFormatting(postprocessed_output)
                 else:
                     return postprocessed_output
-            else:
-                return partial_decoding
 
     def _decodeTotal(self, y, enable_formatting) -> OnnxRuntimeResult:
         y = np.concatenate(y, axis=1)
@@ -449,8 +435,20 @@ class OnnxRuntime(Runtime):
                 timesteps=wordTimestamps,
             )
         )
+        if not postprocessed_output.sequence:
+            chunks_count += 1
+            return (
+                OnnxRuntimeResult(
+                    sequence="", score=0.0, wordFrames=[], wordTimestamps=[]
+                ),
+                [],
+                -1,
+                chunks_count,
+            )
         formatted_output = self._performFormatting(postprocessed_output)
+        self._session.logger.info(formatted_output.sequence)
         formatted_output_until_eos, new_eos_pos = self._findEOS(formatted_output)
+
         self._session.logger.debug(formatted_output.sequence)
         lookahead = 1
         if new_eos_pos != -1:  # EOS found
@@ -535,6 +533,27 @@ class OnnxRuntime(Runtime):
             OnnxRuntimeResult(sequence="", score=0.0, wordFrames=[], wordTimestamps=[]),
             -1,
         )
+
+    def _runAccumulatedLastChunk(
+        self,
+        accumulated_probs,
+        eos_pos,
+        chunks_count,
+    ):
+        while len(accumulated_probs[0][0]) > 0:
+            y = np.concatenate(accumulated_probs, axis=1)
+            (
+                partial_decoding,
+                bufferIndex,
+                eos_pos,
+                chunks_count,
+            ) = self._performLocalDecodingWithFormatting(y, eos_pos, chunks_count)
+            if len(bufferIndex) > 0:
+                self._session.logger.info(partial_decoding.sequence)
+                accumulated_probs = np.concatenate(accumulated_probs, axis=1)
+                accumulated_probs = [
+                    np.array([accumulated_probs[0][bufferIndex[0] : bufferIndex[1]]])
+                ]
 
     def _postprocess(
         self,
