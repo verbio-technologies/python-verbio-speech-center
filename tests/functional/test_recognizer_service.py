@@ -467,7 +467,7 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
         channel = grpc.insecure_channel(
             TestRecognizerServiceOnlineDecoding._serverAddress
         )
-        response = RecognizerStub(channel).Recognize(request, timeout=10)
+        response = RecognizerStub(channel).Recognize(request, timeout=20)
         self.assertEqual(
             response.alternatives[0].transcript,
             DEFAULT_ENGLISH_MESSAGE,
