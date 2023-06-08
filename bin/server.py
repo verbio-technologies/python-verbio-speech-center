@@ -307,9 +307,11 @@ class Asr4ArgParser:
                 lm_version_model_path,
             )
 
-        if args.local_formatting and not args.formatter:
+        if args.local_formatting and (
+            not args.formatter or args.lm_algorithm != "kenlm"
+        ):
             raise ValueError(
-                "Local formatting was specified but no formatter model was given"
+                "Local formatting was specified but no formatter model was given or lm algorithm is not kenlm"
             )
 
         return args
