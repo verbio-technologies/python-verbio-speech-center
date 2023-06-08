@@ -39,6 +39,7 @@ async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
     configuration = MockRecognitionServiceConfiguration(MockArguments())
     configuration.language = Language.EN_US
     configuration.vocabulary = None
+    configuration.local_formatting = True
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
     await server.start()
@@ -406,6 +407,71 @@ class TestRecognizerService(unittest.TestCase):
                 response.results.end_time.seconds,
                 int(seconds),
             )
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._worker.kill()
+
+
+def runServerPartialDecoding(serverAddress: str, event: multiprocessing.Event):
+    asyncio.run(runServerAsync(serverAddress, event))
+
+
+async def runServerAsyncPartialDecoding(
+    serverAddress: str, event: multiprocessing.Event
+):
+    server = grpc.aio.server(
+        futures.ThreadPoolExecutor(max_workers=1),
+    )
+    configuration = MockRecognitionServiceConfiguration(MockArguments())
+    configuration.language = Language.EN_US
+    configuration.vocabulary = None
+    configuration.formatterModelPath = "path_to_formatter/formatter.fm"
+    configuration.decodingType = "LOCAL"
+    configuration.local_formatting = "True"
+    add_RecognizerServicer_to_server(RecognizerService(configuration), server)
+    server.add_insecure_port(serverAddress)
+    await server.start()
+    event.set()
+    await server.wait_for_termination()
+
+
+@pytest.mark.usefixtures("datadir")
+class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def rootdir(self, pytestconfig):
+        self.rootdir = str(pytestconfig.rootdir)
+
+    @pytest.fixture(autouse=True)
+    def datadir(self, pytestconfig):
+        self.datadir = f"{pytestconfig.rootdir}/tests/functional/data"
+
+    @classmethod
+    def setUpClass(cls):
+        event = multiprocessing.Event()
+        cls._serverAddress = "localhost:50060"
+        cls._worker = multiprocessing.Process(
+            target=runServerPartialDecoding, args=(cls._serverAddress, event)
+        )
+        cls._worker.start()
+        event.wait(timeout=180)
+
+    def testRecognizeRequest8kHz(self):
+        request = RecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
+                resource=RecognitionResource(topic="GENERIC"),
+            ),
+            audio=b"0000",
+        )
+        channel = grpc.insecure_channel(
+            TestRecognizerServiceOnlineDecoding._serverAddress
+        )
+        response = RecognizerStub(channel).Recognize(request, timeout=10)
+        self.assertEqual(
+            response.alternatives[0].transcript,
+            DEFAULT_ENGLISH_MESSAGE,
+        )
 
     @classmethod
     def tearDownClass(cls):
