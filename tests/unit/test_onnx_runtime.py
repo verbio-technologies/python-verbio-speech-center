@@ -295,175 +295,175 @@ class TestOnnxRuntime(unittest.TestCase):
             FORMATTED_SPANISH_MESSAGE,
         )
 
-    # def testRecognizeFormatterESNumbers(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.es-es-1.1.0.fm",
-    #         ),
-    #         Language.ES,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords(
-    #             "mi dni es siete siete uno uno cuatro tres seis ocho zeta"
-    #         ),
-    #         "Mi dni es 77114368-Z",
-    #     )
+    def testRecognizeFormatterESNumbers(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        self.assertEqual(
+            runtime.formatWords(
+                "mi dni es siete siete uno uno cuatro tres seis ocho zeta"
+            ),
+            "Mi dni es 77114368-Z",
+        )
 
-    # def testRecognizeFormatterESEmails(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.es-es-1.1.0.fm",
-    #         ),
-    #         Language.ES,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("mi email es test arroba verbio punto com"),
-    #         "Mi email es Test@verbio.com",
-    #     )
+    def testRecognizeFormatterESEmails(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        self.assertEqual(
+            runtime.formatWords("mi email es test arroba verbio punto com"),
+            "Mi email es Test@verbio.com",
+        )
 
-    # def testRecognizeFormatterESPunctuation(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.es-es-1.1.0.fm",
-    #         ),
-    #         Language.ES,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("en qué puedo ayudarle"),
-    #         "¿En qué puedo ayudarle?",
-    #     )
+    def testRecognizeFormatterESPunctuation(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        self.assertEqual(
+            runtime.formatWords("en qué puedo ayudarle"),
+            "¿En qué puedo ayudarle?",
+        )
 
-    # def testRecognizeFormatterESCapitalization(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.es-es-1.1.0.fm",
-    #         ),
-    #         Language.ES,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("mi nombre es maría"),
-    #         "Mi nombre es María...",
-    #     )
+    def testRecognizeFormatterESCapitalization(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.es-es-1.1.0.fm",
+            ),
+            Language.ES,
+        )
+        self.assertEqual(
+            runtime.formatWords("mi nombre es maría"),
+            "Mi nombre es María...",
+        )
 
-    # def testRecognizeFormatterEN_USNumbers(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.en-us-1.0.1.fm",
-    #         ),
-    #         Language.EN_US,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("three million dot fourteen"),
-    #         "3,000,000.14.",
-    #     )
+    def testRecognizeFormatterEN_USNumbers(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        self.assertEqual(
+            runtime.formatWords("three million dot fourteen"),
+            "3,000,000.14.",
+        )
 
-    # def testRecognizeFormatterEN_USEmails(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.en-us-1.0.1.fm",
-    #         ),
-    #         Language.EN_US,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("my email address john at gmail dot com"),
-    #         "My email address John@gmail.com.",
-    #     )
+    def testRecognizeFormatterEN_USEmails(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        self.assertEqual(
+            runtime.formatWords("my email address john at gmail dot com"),
+            "My email address John@gmail.com.",
+        )
 
-    # def testRecognizeFormatterEN_USPunctuation(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.en-us-1.0.1.fm",
-    #         ),
-    #         Language.EN_US,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("how are you"),
-    #         "How are you?",
-    #     )
+    def testRecognizeFormatterEN_USPunctuation(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        self.assertEqual(
+            runtime.formatWords("how are you"),
+            "How are you?",
+        )
 
-    # def testRecognizeFormatterEN_USCapitalization(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.en-us-1.0.1.fm",
-    #         ),
-    #         Language.EN_US,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("my name is john"),
-    #         "My name is John.",
-    #     )
+    def testRecognizeFormatterEN_USCapitalization(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
+        )
+        self.assertEqual(
+            runtime.formatWords("my name is john"),
+            "My name is John.",
+        )
 
-    # def testRecognizeFormatterPT_BRNumbers(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.pt-br-1.1.1.fm",
-    #         ),
-    #         Language.PT_BR,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("três mil duzentos e quarenta e cinco"),
-    #         "3.245.",
-    #     )
+    def testRecognizeFormatterPT_BRNumbers(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        self.assertEqual(
+            runtime.formatWords("três mil duzentos e quarenta e cinco"),
+            "3.245.",
+        )
 
-    # def testRecognizeFormatterPT_BREmails(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.pt-br-1.1.1.fm",
-    #         ),
-    #         Language.PT_BR,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("meu email é joão at domínio dot com"),
-    #         "Meu email é João@domínio.com",
-    #     )
+    def testRecognizeFormatterPT_BREmails(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        self.assertEqual(
+            runtime.formatWords("meu email é joão at domínio dot com"),
+            "Meu email é João@domínio.com",
+        )
 
-    # def testRecognizeFormatterPT_BRPunctuation(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.pt-br-1.1.1.fm",
-    #         ),
-    #         Language.PT_BR,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("como vai que eu possa ajudar"),
-    #         "Como vai que eu possa ajudar?",
-    #     )
+    def testRecognizeFormatterPT_BRPunctuation(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        self.assertEqual(
+            runtime.formatWords("como vai que eu possa ajudar"),
+            "Como vai que eu possa ajudar?",
+        )
 
-    # def testRecognizeFormatterPT_BRCapitalization(self):
-    #     runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-    #     runtime.formatter = FormatterFactory.createFormatter(
-    #         os.path.join(
-    #             os.getenv("MODELS_PATH", "models"),
-    #             "formatter/format-model.pt-br-1.1.1.fm",
-    #         ),
-    #         Language.PT_BR,
-    #     )
-    #     self.assertEqual(
-    #         runtime.formatWords("meu nome é joão"),
-    #         "Meu nome é João",
-    #     )
+    def testRecognizeFormatterPT_BRCapitalization(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.formatter = FormatterFactory.createFormatter(
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.pt-br-1.1.1.fm",
+            ),
+            Language.PT_BR,
+        )
+        self.assertEqual(
+            runtime.formatWords("meu nome é joão"),
+            "Meu nome é João",
+        )
 
     def testFindOneEOSNotFinal(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
@@ -610,17 +610,28 @@ class TestOnnxRuntime(unittest.TestCase):
         result = _DecodeResult(
             label_sequences=[[sequence]],
             scores=[[1.0]],
-            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
+            wordsFrames=[
+                [89, 90, 92, 93],
+                [97, 99, 102, 103, 105, 107, 109, 112, 113],
+                [120, 121, 122, 124, 125],
+                [128, 129, 130],
+                [133, 135, 136],
+                [142, 145, 146, 151, 153, 154, 156],
+                [160, 162, 164, 166],
+                [171, 172],
+                [176, 180, 182, 185, 187, 191, 193],
+            ],
             timesteps=[(0, 0)] * len(sequence.split(" ")),
         )
         runtime._decodePartial = MagicMock(return_value=result)
         runtime.formatter = MockFormatter("How can I help you.")
         (
             result,
-            _saveInBuffer,
+            saveInBuffer,
             _chunksCount,
         ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
         self.assertEqual(result.sequence, "")
+        self.assertEqual(saveInBuffer, [89, 193])
 
     def testPerformLocalDecodingWithLocalFormattingNoEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
