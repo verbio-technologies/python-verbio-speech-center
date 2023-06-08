@@ -30,7 +30,7 @@ class MockFormatter:
         self._correct_sentence = correct_sentence.split(" ")
 
     def classify(self, sentence: List[str]) -> List[str]:
-        return self._correct_sentence
+        return (self._correct_sentence, [])
 
 
 class MockOnnxSession(Session):
