@@ -319,6 +319,7 @@ class OnnxRuntime(Runtime):
         wordFrames = []
         wordTimestamps = []
         chunks_count = 0
+
         for i in range(input.shape[1]):
             frame_probs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
@@ -348,7 +349,6 @@ class OnnxRuntime(Runtime):
                     chunks_count,
                 ) = self._performLocalDecodingWithLocalFormatting(y, chunks_count)
                 self._session.logger.info(partial_decoding.sequence)
-                # yield partial_decoding
 
                 if len(bufferIndex) > 0:
                     accumulated_probs = np.concatenate(accumulated_probs, axis=1)
@@ -437,6 +437,7 @@ class OnnxRuntime(Runtime):
             chunks_count += 1
         else:
             formatted_output = self._performFormatting(postprocessed_output)
+            self._session.logger.info(formatted_output.sequence)
             formatted_output_until_eos, eos_pos = self._findEOS(formatted_output)
             if eos_pos != -1:
                 saveInBuffer = [
@@ -509,9 +510,9 @@ class OnnxRuntime(Runtime):
                 partial_decoding,
                 bufferIndex,
                 chunks_count,
-            ) = self._performLocalDecodingWithFormatting(y, chunks_count)
+            ) = self._performLocalDecodingWithLocalFormatting(y, chunks_count)
+            self._session.logger.info(partial_decoding.sequence)
             if len(bufferIndex) > 0:
-                yield partial_decoding
                 accumulated_probs = np.concatenate(accumulated_probs, axis=1)
                 accumulated_probs = [
                     np.array([accumulated_probs[0][bufferIndex[0] : bufferIndex[1]]])
