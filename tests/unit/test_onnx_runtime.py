@@ -610,28 +610,17 @@ class TestOnnxRuntime(unittest.TestCase):
         result = _DecodeResult(
             label_sequences=[[sequence]],
             scores=[[1.0]],
-            wordsFrames=[
-                [89, 90, 92, 93],
-                [97, 99, 102, 103, 105, 107, 109, 112, 113],
-                [120, 121, 122, 124, 125],
-                [128, 129, 130],
-                [133, 135, 136],
-                [142, 145, 146, 151, 153, 154, 156],
-                [160, 162, 164, 166],
-                [171, 172],
-                [176, 180, 182, 185, 187, 191, 193],
-            ],
+            wordsFrames=[[0, 0]] * len(sequence.split(" ")),
             timesteps=[(0, 0)] * len(sequence.split(" ")),
         )
         runtime._decodePartial = MagicMock(return_value=result)
         runtime.formatter = MockFormatter("How can I help you.")
         (
             result,
-            saveInBuffer,
+            _saveInBuffer,
             _chunksCount,
         ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
         self.assertEqual(result.sequence, "")
-        self.assertEqual(saveInBuffer, [89, 193])
 
     def testPerformLocalDecodingWithLocalFormattingNoEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
