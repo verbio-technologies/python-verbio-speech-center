@@ -385,7 +385,7 @@ class OnnxRuntime(Runtime):
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
                 (words, ops) = self.formatter.classify(words)
-                print("[>] Operations:",ops)
+                print("[>] Operations:", ops)
                 return " ".join(words)
             except Exception as e:
                 self._session.logger.error(
