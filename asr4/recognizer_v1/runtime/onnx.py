@@ -384,7 +384,9 @@ class OnnxRuntime(Runtime):
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
-                return " ".join(self.formatter.classify(words))
+                (words, ops) = self.formatter.classify(words)
+                print("[>] Operations:",ops)
+                return " ".join(words)
             except Exception as e:
                 self._session.logger.error(
                     f"Error formatting sentence '{transcription}'"
