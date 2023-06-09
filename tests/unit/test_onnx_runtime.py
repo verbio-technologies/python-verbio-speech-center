@@ -470,14 +470,14 @@ class TestOnnxRuntime(unittest.TestCase):
         formatted_result = OnnxRuntimeResult(
             sequence="Hola. Qué",
             score=1.0,
-            wordFrames=[(2, 5), (7, 9)],
+            wordFrames=[[2, 5], [7, 9]],
             wordTimestamps=[(0.4, 1.0), (1.4, 1.8)],
         )
         partialResult, bufferIndex = runtime._findEOS(formatted_result)
         self.assertEqual(bufferIndex, 5)
         self.assertEqual(partialResult.sequence, "Hola.")
         self.assertEqual(partialResult.score, 1.0)
-        self.assertEqual(partialResult.wordFrames, [(2, 5)])
+        self.assertEqual(partialResult.wordFrames, [[2, 5]])
         self.assertEqual(partialResult.wordTimestamps, [(0.4, 1.0)])
 
     def testFindOneEOSNotFinalWithFinalEOS(self):
@@ -485,29 +485,31 @@ class TestOnnxRuntime(unittest.TestCase):
         formatted_result = OnnxRuntimeResult(
             sequence="Hola. ¿Qué tal estás?",
             score=1.0,
-            wordFrames=[(2, 5), (7, 9), (11, 13), (15, 18)],
+            wordFrames=[[2, 5], [7, 9], [11, 13], [15, 18]],
             wordTimestamps=[(0.4, 1.0), (1.4, 1.8), (2.2, 2.6), (3, 3.6)],
         )
+        runtime.lmAlgorithm = "kenlm"
         partialResult, bufferIndex = runtime._findEOS(formatted_result)
         self.assertEqual(bufferIndex, 5)
         self.assertEqual(partialResult.sequence, "Hola.")
         self.assertEqual(partialResult.score, 1.0)
-        self.assertEqual(partialResult.wordFrames, [(2, 5)])
+        self.assertEqual(partialResult.wordFrames, [[2, 5]])
         self.assertEqual(partialResult.wordTimestamps, [(0.4, 1.0)])
 
     def testFindMoreThanOneEOSNotFinalWithFinalEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
         formatted_result = OnnxRuntimeResult(
             sequence="Hola. ¿Qué tal estás? Me alegro de",
             score=1.0,
             wordFrames=[
-                (2, 5),
-                (7, 9),
-                (11, 13),
-                (15, 18),
-                (21, 23),
-                (25, 29),
-                (31, 33),
+                [2, 5],
+                [7, 9],
+                [11, 13],
+                [15, 18],
+                [21, 23],
+                [25, 29],
+                [31, 33],
             ],
             wordTimestamps=[
                 (0.4, 1.0),
@@ -523,17 +525,18 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertEqual(bufferIndex, 18)
         self.assertEqual(partialResult.sequence, "Hola. ¿Qué tal estás?")
         self.assertEqual(partialResult.score, 1.0)
-        self.assertEqual(partialResult.wordFrames, [(2, 5), (7, 9), (11, 13), (15, 18)])
+        self.assertEqual(partialResult.wordFrames, [[2, 5], [7, 9], [11, 13], [15, 18]])
         self.assertEqual(
             partialResult.wordTimestamps, [(0.4, 1.0), (1.4, 1.8), (2.2, 2.6), (3, 3.6)]
         )
 
     def testNotFindEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
         formatted_result = OnnxRuntimeResult(
             sequence="Hola qué",
             score=1.0,
-            wordFrames=[(2, 5), (7, 9)],
+            wordFrames=[[2, 5], [7, 9]],
             wordTimestamps=[(0.4, 1.0), (1.5, 1.9)],
         )
         partialResult, bufferIndex = runtime._findEOS(formatted_result)
@@ -548,21 +551,67 @@ class TestOnnxRuntime(unittest.TestCase):
         result = _DecodeResult(
             label_sequences=[[sequence]],
             scores=[[1.0]],
-            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
-            timesteps=[(0, 0)] * len(sequence.split(" ")),
+            wordsFrames=[
+                [
+                    [
+                        [1, 2],
+                        [3, 4],
+                        [5, 6],
+                        [7, 8],
+                        [9, 10],
+                        [11, 12],
+                        [13, 14],
+                        [15, 16],
+                        [17, 18],
+                        [19, 20],
+                        [21, 22],
+                        [22, 23],
+                        [24, 25],
+                        [26, 27],
+                        [28, 29],
+                        [30, 31],
+                        [32, 33],
+                    ]
+                ]
+            ],
+            timesteps=[
+                [
+                    [
+                        [0.2, 0.4],
+                        [0.6, 0.8],
+                        [1, 1.2],
+                        [1.4, 1.6],
+                        [1.8, 2],
+                        [2.2, 2.4],
+                        [2.6, 2.8],
+                        [3, 3.2],
+                        [3.4, 3.6],
+                        [3.8, 4],
+                        [4.2, 4.4],
+                        [4.6, 4.8],
+                        [5, 5.2],
+                        [5.4, 5.6],
+                        [5.8, 6],
+                        [6.2, 6.4],
+                        [6.6, 6.8],
+                    ]
+                ]
+            ],
         )
         runtime._decodePartial = MagicMock(return_value=result)
         runtime.formatter = MockFormatter(
             "Good afternoon. Thank you for calling back of America. How can I help you today?"
         )
+        runtime.lmAlgorithm = "kenlm"
         (
             result,
-            _saveInBuffer,
+            saveInBuffer,
             _chunksCount,
         ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
         self.assertEqual(
             result.sequence, "Good afternoon. Thank you for calling back of America."
         )
+        self.assertEqual(saveInBuffer, [19, 33])
 
     def testPerformLocalDecodingWithLocalFormattingOneEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
@@ -570,75 +619,93 @@ class TestOnnxRuntime(unittest.TestCase):
         result = _DecodeResult(
             label_sequences=[[sequence]],
             scores=[[1.0]],
-            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
-            timesteps=[(0, 0)] * len(sequence.split(" ")),
+            wordsFrames=[
+                [
+                    [
+                        [1, 2],
+                        [3, 4],
+                        [5, 6],
+                        [7, 8],
+                        [9, 10],
+                        [11, 12],
+                        [13, 14],
+                        [15, 16],
+                        [17, 18],
+                        [19, 20],
+                        [21, 22],
+                    ]
+                ]
+            ],
+            timesteps=[
+                [
+                    [
+                        [0.2, 0.4],
+                        [0.6, 0.8],
+                        [1, 1.2],
+                        [1.4, 1.6],
+                        [1.8, 2],
+                        [2.2, 2.4],
+                        [2.6, 2.8],
+                        [3, 3.2],
+                        [3.4, 3.6],
+                        [3.8, 4],
+                        [4.2, 4.4],
+                    ]
+                ]
+            ],
         )
         runtime._decodePartial = MagicMock(return_value=result)
         runtime.formatter = MockFormatter(
             "Good afternoon. Thank you for calling back of America."
         )
+        runtime.lmAlgorithm = "kenlm"
         (
             result,
-            _saveInBuffer,
+            saveInBuffer,
             _chunksCount,
         ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
         self.assertEqual(result.sequence, "Good afternoon.")
-
-    def testPerformLocalDecodingWithLocalFormattingOneEOS(self):
-        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-        sequence = "good afternoon thank you for calling bank of america"
-        result = _DecodeResult(
-            label_sequences=[[sequence]],
-            scores=[[1.0]],
-            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
-            timesteps=[(0, 0)] * len(sequence.split(" ")),
-        )
-        runtime._decodePartial = MagicMock(return_value=result)
-        runtime.formatter = MockFormatter(
-            "Good afternoon. Thank you for calling back of America."
-        )
-        (
-            result,
-            _saveInBuffer,
-            _chunksCount,
-        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
-        self.assertEqual(result.sequence, "Good afternoon.")
+        self.assertEqual(saveInBuffer, [5, 22])
 
     def testPerformLocalDecodingWithLocalFormattingEOSAtEnd(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-        sequence = "good afternoon thank you for calling bank of america"
+        sequence = "how can i help you"
         result = _DecodeResult(
             label_sequences=[[sequence]],
             scores=[[1.0]],
-            wordsFrames=[[0, 0]] * len(sequence.split(" ")),
-            timesteps=[(0, 0)] * len(sequence.split(" ")),
+            wordsFrames=[[[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]]],
+            timesteps=[[[[0.2, 0.4], [0.6, 0.8], [1, 1.2], [1.4, 1.6]]]],
         )
         runtime._decodePartial = MagicMock(return_value=result)
         runtime.formatter = MockFormatter("How can I help you.")
+        runtime.lmAlgorithm = "kenlm"
         (
             result,
-            _saveInBuffer,
+            saveInBuffer,
             _chunksCount,
         ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
         self.assertEqual(result.sequence, "")
+        self.assertEqual(saveInBuffer, [1, 10])
 
     def testPerformLocalDecodingWithLocalFormattingNoEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
-        sequence = "good afternoon thank you for calling bank of america"
+        sequence = "can i help you"
         result = _DecodeResult(
             label_sequences=[[sequence]],
             scores=[[1.0]],
-            wordsFrames=[(0, 0)] * len(sequence.split(" ")),
-            timesteps=[(0, 0)] * len(sequence.split(" ")),
+            wordsFrames=[[[[1, 2], [3, 4], [5, 6], [7, 8]]]],
+            timesteps=[[[[0.2, 0.4], [0.6, 0.8], [1, 1.2], [1.4, 1.6]]]],
         )
         runtime._decodePartial = MagicMock(return_value=result)
         runtime.formatter = MockFormatter("can I help you")
+        runtime.lmAlgorithm = "kenlm"
         (
             result,
-            _saveInBuffer,
+            saveInBuffer,
             _chunksCount,
         ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
         self.assertEqual(result.sequence, "")
+        self.assertEqual(saveInBuffer, [1, 8])
 
     def testDecodeGlobalFormatting(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
