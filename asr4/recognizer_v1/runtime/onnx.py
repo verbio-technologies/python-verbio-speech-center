@@ -319,6 +319,7 @@ class OnnxRuntime(Runtime):
         wordFrames = []
         wordTimestamps = []
         chunks_count = 0
+        partialDecodingTotal = []
 
         for i in range(input.shape[1]):
             frame_probs = self._session.run(
@@ -348,7 +349,8 @@ class OnnxRuntime(Runtime):
                     bufferIndex,
                     chunks_count,
                 ) = self._performLocalDecodingWithLocalFormatting(y, chunks_count)
-                self._session.logger.info(partial_decoding.sequence)
+                partialDecodingTotal.append(partial_decoding)
+                self._session.logger.info(partial_decoding)
                 # yield(partial_decoding)
                 if len(bufferIndex) > 0:
                     accumulated_probs = np.concatenate(accumulated_probs, axis=1)
@@ -363,8 +365,10 @@ class OnnxRuntime(Runtime):
 
         elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
             accumulated_probs += frame_probs
-            self._runAccumulatedLastChunk(accumulated_probs)
-            return partial_decoding  # This is returning only the last partial result. We have to implement how to return each partial.
+            partial_decoding = self._runAccumulatedLastChunk(accumulated_probs)
+            partialDecodingTotal.append(partial_decoding)
+            result = self._formatPartialDecodingTotal(partialDecodingTotal)
+            return result
         else:
             return self._performLocalDecodingWithGlobalFormatting(
                 label_sequences, scores, wordFrames, wordTimestamps, enable_formatting
@@ -399,6 +403,26 @@ class OnnxRuntime(Runtime):
         wordTimestamps += decoded_part.timesteps[0][0]
         return label_sequences, scores, wordFrames, wordTimestamps
 
+    def _formatPartialDecodingTotal(
+        self, decodingPartialList: List[OnnxRuntimeResult]
+    ) -> OnnxRuntimeResult:
+        sequences = []
+        score = []
+        wordFrames = []
+        wordTimestamps = []
+        for decodingPartial in decodingPartialList:
+            if decodingPartial.sequence != "":
+                sequences.append(decodingPartial.sequence)
+                score.append(decodingPartial.score)
+                wordFrames += decodingPartial.wordFrames
+                wordTimestamps += decodingPartial.wordTimestamps
+        return OnnxRuntimeResult(
+            sequence=" ".join(sequences),
+            score=float(sum(score) / len(decodingPartialList)),
+            wordFrames=wordFrames,
+            wordTimestamps=wordTimestamps,
+        )
+
     def _decodePartial(self, yi):
         normalized_y = F.softmax(torch.from_numpy(yi), dim=2)
         self._session.logger.debug(" - decoding partial with local formatting")
@@ -431,7 +455,7 @@ class OnnxRuntime(Runtime):
         postprocessed_output = self._postprocess(decoder_result)
         sequence = ""
         score = 0.0
-        wordFrames = ([],)
+        wordFrames = []
         wordTimestamps = []
         chunks_count = 0
         if not postprocessed_output.sequence:
@@ -516,6 +540,7 @@ class OnnxRuntime(Runtime):
         )
         self._session.logger.info(partial_decoding.sequence)
         # yield(partial_decoding)
+        return partial_decoding
 
     def _postprocess(
         self,

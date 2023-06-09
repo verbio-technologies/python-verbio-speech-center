@@ -10,7 +10,13 @@ import numpy as np
 from random import randint
 from typing import Any, Tuple, Dict, List, Optional, Union
 
-from asr4.recognizer_v1.runtime import Session, OnnxRuntime, OnnxSession, DecodingType
+from asr4.recognizer_v1.runtime import (
+    Session,
+    OnnxRuntime,
+    OnnxSession,
+    DecodingType,
+    OnnxRuntimeResult,
+)
 from asr4.recognizer_v1.runtime.onnx import _DecodeResult, OnnxRuntimeResult
 from asr4.recognizer_v1.loggerService import LoggerService
 from asr4.recognizer import Language
@@ -771,3 +777,25 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertEqual(result.score, scores[0])
         self.assertEqual(result.wordFrames, wordFrames[0][0])
         self.assertEqual(result.wordTimestamps, wordTimestamps[0][0])
+
+    def testFormatPartialDecodingTotal(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        partialResultsList = [
+            OnnxRuntimeResult(
+                sequence="Hola.",
+                score=1.0,
+                wordFrames=[[1, 3]],
+                wordTimestamps=[(0.2, 0.6)],
+            ),
+            OnnxRuntimeResult(
+                sequence="¿Qué tal?",
+                score=3.0,
+                wordFrames=[[5, 6], [8, 10]],
+                wordTimestamps=[(1, 1.2), (1.6, 2)],
+            ),
+        ]
+        result = runtime._formatPartialDecodingTotal(partialResultsList)
+        self.assertEqual(result.sequence, "Hola. ¿Qué tal?")
+        self.assertEqual(result.score, 2.0)
+        self.assertEqual(result.wordFrames, [[1, 3], [5, 6], [8, 10]])
+        self.assertEqual(result.wordTimestamps, [(0.2, 0.6), (1, 1.2), (1.6, 2)])
