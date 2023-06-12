@@ -449,7 +449,7 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         event = multiprocessing.Event()
-        cls._serverAddress = "localhost:50060"
+        cls._serverAddress = "localhost:50061"
         cls._worker = multiprocessing.Process(
             target=runServerPartialDecoding, args=(cls._serverAddress, event)
         )
