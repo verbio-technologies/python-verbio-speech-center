@@ -37,7 +37,7 @@ class DecodingType(Enum):
 class OnnxRuntimeResult(NamedTuple):
     sequence: str
     score: float
-    wordFrames: List[tuple[int]]
+    wordFrames: List[List[int]]
     wordTimestamps: List[tuple[float]]
 
 
@@ -320,6 +320,7 @@ class OnnxRuntime(Runtime):
         wordTimestamps = []
         chunks_count = 0
         partialDecodingTotal = []
+        totalChunkLength = 0
 
         for i in range(input.shape[1]):
             frame_probs = self._session.run(
@@ -335,8 +336,14 @@ class OnnxRuntime(Runtime):
                     wordFrames,
                     wordTimestamps,
                 ) = self._decodePartialAccumulated(
-                    label_sequences, scores, wordFrames, wordTimestamps, frame_probs
+                    label_sequences,
+                    scores,
+                    wordFrames,
+                    wordTimestamps,
+                    frame_probs,
+                    totalChunkLength,
                 )
+                chunkLength = frame_probs[0].shape[1]
             elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
                 if i > 0:
                     accumulated_probs += frame_probs
@@ -344,34 +351,42 @@ class OnnxRuntime(Runtime):
                 else:
                     accumulated_probs = frame_probs
                     y = frame_probs[0]
+
                 (
                     partial_decoding,
-                    bufferIndex,
+                    saveInBufferFrom,
                     chunks_count,
-                ) = self._performLocalDecodingWithLocalFormatting(y, chunks_count)
+                    chunkLength,
+                ) = self._performLocalDecodingWithLocalFormatting(
+                    y, chunks_count, totalChunkLength
+                )
                 partialDecodingTotal.append(partial_decoding)
                 self._session.logger.info(partial_decoding)
                 # yield(partial_decoding)
-                if len(bufferIndex) > 0:
+                if saveInBufferFrom > -1:
                     accumulated_probs = np.concatenate(accumulated_probs, axis=1)
                     accumulated_probs = [
-                        np.array(
-                            [accumulated_probs[0][bufferIndex[0] : bufferIndex[1]]]
-                        )
+                        np.array([accumulated_probs[0][saveInBufferFrom:]])
                     ]
+                else:
+                    accumulated_probs = []
+            totalChunkLength += chunkLength
 
         if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
 
         elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
-            accumulated_probs += frame_probs
-            partial_decoding = self._runAccumulatedLastChunk(accumulated_probs)
-            partialDecodingTotal.append(partial_decoding)
-            result = self._formatPartialDecodingTotal(partialDecodingTotal)
-            return result
+            partialDecodingTotal.append(
+                self._runAccumulatedLastChunk(accumulated_probs, totalChunkLength)
+            )
+            return self._formatPartialDecodingTotal(partialDecodingTotal)
         else:
             return self._performLocalDecodingWithGlobalFormatting(
-                label_sequences, scores, wordFrames, wordTimestamps, enable_formatting
+                label_sequences,
+                scores,
+                wordFrames,
+                wordTimestamps,
+                enable_formatting,
             )
 
     def _decodeTotal(self, y, enable_formatting) -> OnnxRuntimeResult:
@@ -390,7 +405,7 @@ class OnnxRuntime(Runtime):
             return postprocessed_output
 
     def _decodePartialAccumulated(
-        self, label_sequences, scores, wordFrames, wordTimestamps, yi
+        self, label_sequences, scores, wordFrames, wordTimestamps, yi, chunkLength
     ):
         normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
         self._session.logger.debug(" - decoding partial with global formatting")
@@ -399,9 +414,31 @@ class OnnxRuntime(Runtime):
             label_sequences += " "
         label_sequences += decoded_part.label_sequences[0][0]
         scores += [decoded_part.scores[0][0]]
-        wordFrames += decoded_part.wordsFrames[0][0]
-        wordTimestamps += decoded_part.timesteps[0][0]
+        wordFrames += self._sumOffsetToFrames(
+            decoded_part.wordsFrames[0][0], chunkLength
+        )
+        wordTimestamps += self._sumOffsetToTimestamps(
+            decoded_part.timesteps[0][0], chunkLength
+        )
         return label_sequences, scores, wordFrames, wordTimestamps
+
+    def _sumOffsetToFrames(
+        self, wordFrames: List[List[int]], chunkLength: int
+    ) -> List[List[int]]:
+        newFrames = []
+        for list in wordFrames:
+            newFrames.append([frame + chunkLength for frame in list])
+        return newFrames
+
+    def _sumOffsetToTimestamps(
+        self, wordTimestamps: List[tuple[float]], chunkLength: int
+    ) -> List[tuple[float]]:
+        newTimestamps = []
+        for list in wordTimestamps:
+            newTimestamps.append(
+                tuple([round(timestamp + chunkLength * 0.02, 2) for timestamp in list])
+            )
+        return newTimestamps
 
     def _formatPartialDecodingTotal(
         self, decodingPartialList: List[OnnxRuntimeResult]
@@ -435,7 +472,12 @@ class OnnxRuntime(Runtime):
         )
 
     def _performLocalDecodingWithGlobalFormatting(
-        self, label_sequences, scores, wordFrames, wordTimestamps, enable_formatting
+        self,
+        label_sequences,
+        scores,
+        wordFrames,
+        wordTimestamps,
+        enable_formatting,
     ):
         decoding_output = _DecodeResult(
             label_sequences=[[label_sequences]],
@@ -449,8 +491,10 @@ class OnnxRuntime(Runtime):
         else:
             return postprocessed_output
 
-    def _performLocalDecodingWithLocalFormatting(self, yi, chunks_count):
-        saveInBuffer = []
+    def _performLocalDecodingWithLocalFormatting(
+        self, yi, chunks_count, totalChunkLength
+    ):
+        saveInBufferFrom = -1
         decoder_result = self._decodePartial(yi)
         postprocessed_output = self._postprocess(decoder_result)
         sequence = ""
@@ -458,16 +502,14 @@ class OnnxRuntime(Runtime):
         wordFrames = []
         wordTimestamps = []
         chunks_count = 0
+        chunkLength = 0
         if not postprocessed_output.sequence:
             chunks_count += 1
         else:
             formatted_output = self._performFormatting(postprocessed_output)
             formatted_output_until_eos, eos_pos = self._findEOS(formatted_output)
             if eos_pos != -1:
-                saveInBuffer = [
-                    formatted_output_until_eos.wordFrames[-1][-1] + 1,
-                    formatted_output.wordFrames[-1][-1],
-                ]
+                saveInBufferFrom = formatted_output_until_eos.wordFrames[-1][-1] + 1
                 chunks_count = 0
                 sequence = formatted_output_until_eos.sequence
                 score = formatted_output_until_eos.score
@@ -475,27 +517,26 @@ class OnnxRuntime(Runtime):
                 wordTimestamps = formatted_output_until_eos.wordTimestamps
             elif chunks_count < LOCAL_FORMATTING_LOOKAHEAD + 1:
                 chunks_count += 1
-                saveInBuffer = [
-                    formatted_output.wordFrames[0][0],
-                    formatted_output.wordFrames[-1][-1],
-                ]
+                saveInBufferFrom = 0
             else:
                 chunks_count = 0
-                saveInBuffer = []
+                saveInBufferFrom = -1
                 sequence = formatted_output.sequence
                 score = formatted_output.score
                 wordFrames = formatted_output.wordFrames
                 wordTimestamps = formatted_output.wordTimestamps
-        return (
-            OnnxRuntimeResult(
-                sequence=sequence,
-                score=score,
-                wordFrames=wordFrames,
-                wordTimestamps=wordTimestamps,
+        result = OnnxRuntimeResult(
+            sequence=sequence,
+            score=score,
+            wordFrames=self._sumOffsetToFrames(wordFrames, totalChunkLength),
+            wordTimestamps=self._sumOffsetToTimestamps(
+                wordTimestamps, totalChunkLength
             ),
-            saveInBuffer,
-            chunks_count,
         )
+        if len(wordFrames) > 0:
+            chunkLength = wordFrames[-1][-1] + 1
+
+        return result, saveInBufferFrom, chunks_count, chunkLength
 
     def _findEOS(self, formatted_result):
         formatted_tokens = formatted_result.sequence.split(" ")
@@ -527,18 +568,27 @@ class OnnxRuntime(Runtime):
             eos_pos,
         )
 
-    def _runAccumulatedLastChunk(self, accumulated_probs):
+    def _runAccumulatedLastChunk(self, accumulated_probs, chunkLength):
         y = np.concatenate(accumulated_probs, axis=1)
         decoder_result = self._decodePartial(y)
+        sequence = ""
+        score = 0.0
+        wordFrames = []
+        wordTimestamps = []
         postprocessed_output = self._postprocess(decoder_result)
-        formatted_output = self._performFormatting(postprocessed_output)
+        if postprocessed_output.sequence:
+            formatted_output = self._performFormatting(postprocessed_output)
+            sequence = formatted_output.sequence
+            score = formatted_output.score
+            wordFrames = formatted_output.wordFrames
+            wordTimestamps = formatted_output.wordTimestamps
         partial_decoding = OnnxRuntimeResult(
-            sequence=formatted_output.sequence,
-            score=formatted_output.score,
-            wordFrames=formatted_output.wordFrames,
-            wordTimestamps=formatted_output.wordTimestamps,
+            sequence=sequence,
+            score=score,
+            wordFrames=self._sumOffsetToFrames(wordFrames, chunkLength),
+            wordTimestamps=self._sumOffsetToTimestamps(wordTimestamps, chunkLength),
         )
-        self._session.logger.info(partial_decoding.sequence)
+        self._session.logger.info(partial_decoding)
         # yield(partial_decoding)
         return partial_decoding
 

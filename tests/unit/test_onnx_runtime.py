@@ -611,13 +611,18 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime.lmAlgorithm = "kenlm"
         (
             result,
-            saveInBuffer,
-            _chunksCount,
-        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+            saveInBufferFrom,
+            chunks_count,
+            chunkLength,
+        ) = runtime._performLocalDecodingWithLocalFormatting(
+            [], chunks_count=0, totalChunkLength=0
+        )
         self.assertEqual(
             result.sequence, "Good afternoon. Thank you for calling back of America."
         )
-        self.assertEqual(saveInBuffer, [19, 33])
+        self.assertEqual(saveInBufferFrom, 19)
+        self.assertEqual(chunks_count, 0)
+        self.assertEqual(chunkLength, 19)
 
     def testPerformLocalDecodingWithLocalFormattingOneEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
@@ -667,11 +672,16 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime.lmAlgorithm = "kenlm"
         (
             result,
-            saveInBuffer,
-            _chunksCount,
-        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+            saveInBufferFrom,
+            chunks_count,
+            chunkLength,
+        ) = runtime._performLocalDecodingWithLocalFormatting(
+            [], chunks_count=0, totalChunkLength=0
+        )
         self.assertEqual(result.sequence, "Good afternoon.")
-        self.assertEqual(saveInBuffer, [5, 22])
+        self.assertEqual(saveInBufferFrom, 5)
+        self.assertEqual(chunks_count, 0)
+        self.assertEqual(chunkLength, 5)
 
     def testPerformLocalDecodingWithLocalFormattingEOSAtEnd(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
@@ -687,11 +697,16 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime.lmAlgorithm = "kenlm"
         (
             result,
-            saveInBuffer,
-            _chunksCount,
-        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+            saveInBufferFrom,
+            chunks_count,
+            chunkLength,
+        ) = runtime._performLocalDecodingWithLocalFormatting(
+            [], chunks_count=0, totalChunkLength=0
+        )
         self.assertEqual(result.sequence, "")
-        self.assertEqual(saveInBuffer, [1, 10])
+        self.assertEqual(saveInBufferFrom, 0)
+        self.assertEqual(chunks_count, 1)
+        self.assertEqual(chunkLength, 0)
 
     def testPerformLocalDecodingWithLocalFormattingNoEOS(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
@@ -707,11 +722,16 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime.lmAlgorithm = "kenlm"
         (
             result,
-            saveInBuffer,
-            _chunksCount,
-        ) = runtime._performLocalDecodingWithLocalFormatting([], 0)
+            saveInBufferFrom,
+            chunks_count,
+            chunkLength,
+        ) = runtime._performLocalDecodingWithLocalFormatting(
+            [], chunks_count=0, totalChunkLength=0
+        )
         self.assertEqual(result.sequence, "")
-        self.assertEqual(saveInBuffer, [1, 8])
+        self.assertEqual(saveInBufferFrom, 0)
+        self.assertEqual(chunks_count, 1)
+        self.assertEqual(chunkLength, 0)
 
     def testDecodeGlobalFormatting(self):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
@@ -799,3 +819,18 @@ class TestOnnxRuntime(unittest.TestCase):
         self.assertEqual(result.score, 2.0)
         self.assertEqual(result.wordFrames, [[1, 3], [5, 6], [8, 10]])
         self.assertEqual(result.wordTimestamps, [(0.2, 0.6), (1, 1.2), (1.6, 2)])
+
+    def testSumOffsetToFrames(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        wordFrames = [[1, 3], [5, 6], [8, 10]]
+        self.assertEqual(
+            runtime._sumOffsetToFrames(wordFrames, 2), [[3, 5], [7, 8], [10, 12]]
+        )
+
+    def testSumOffsetToTimestamps(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        wordFrames = [(0.2, 0.6), (1, 1.2), (1.6, 2)]
+        self.assertEqual(
+            runtime._sumOffsetToTimestamps(wordFrames, 2),
+            [(0.24, 0.64), (1.04, 1.24), (1.64, 2.04)],
+        )
