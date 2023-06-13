@@ -1,4 +1,6 @@
 import os
+import threading
+
 import grpc
 import math
 import wave
@@ -17,6 +19,7 @@ from asr4.recognizer import RecognitionConfig
 from asr4.recognizer import RecognitionParameters
 from asr4.recognizer import RecognitionResource
 from asr4.recognizer import add_RecognizerServicer_to_server
+from asr4.recognizer import LoggerService
 
 from tests.unit.test_recognizer_service import (
     MockOnnxSession,
@@ -28,23 +31,27 @@ from tests.unit.test_onnx_runtime import MockFormatter
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
 
-def runServer(serverAddress: str, event: multiprocessing.Event):
-    asyncio.run(runServerAsync(serverAddress, event))
+def runServer(loop):
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
 
 
-async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
-    server = grpc.aio.server(
-        futures.ThreadPoolExecutor(max_workers=1),
-    )
+async def runServerAsync(
+    server: grpc.aio.Server, serverAddress: str, event: multiprocessing.Event
+):
     configuration = MockRecognitionServiceConfiguration(MockArguments())
     configuration.language = Language.EN_US
     configuration.vocabulary = None
     configuration.local_formatting = True
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
+    print("HERE1")
     await server.start()
+    print("HERE2")
     event.set()
+    print("HERE3")
     await server.wait_for_termination()
+    print("HERE4")
 
 
 @pytest.mark.usefixtures("datadir")
@@ -59,13 +66,24 @@ class TestRecognizerService(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        event = multiprocessing.Event()
+        loop = asyncio.new_event_loop()
+        loggerService = LoggerService("TRACE")
+        logsQueue = loggerService.getQueue()
+        logsQueue.configureGlobalLogger()
+        logger = logsQueue.getLogger()
+        cls._event = threading.Event()
+        cls._shutdown_event = threading.Event()
         cls._serverAddress = "localhost:50060"
-        cls._worker = multiprocessing.Process(
-            target=runServer, args=(cls._serverAddress, event)
+        cls._server: grpc.aio.Server = grpc.aio.server(
+            futures.ThreadPoolExecutor(max_workers=1),
         )
+        cls._worker = threading.Thread(target=runServer, args=(loop,))
         cls._worker.start()
-        event.wait(timeout=180)
+        cls.task = asyncio.run_coroutine_threadsafe(
+            runServerAsync(cls._server, cls._serverAddress, cls._event), loop
+        )
+        cls._event.wait(timeout=180)
+        print("SERVER IS UP")
 
     def testRecognizeRequestEnUs(self):
         request = RecognizeRequest(
@@ -410,7 +428,7 @@ class TestRecognizerService(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls._worker.kill()
+        cls._server.stop()
 
 
 def runServerPartialDecoding(serverAddress: str, event: multiprocessing.Event):
@@ -451,13 +469,13 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        event = multiprocessing.Event()
+        cls._event = multiprocessing.Event()
         cls._serverAddress = "localhost:50060"
         cls._worker = multiprocessing.Process(
-            target=runServerPartialDecoding, args=(cls._serverAddress, event)
+            target=runServerPartialDecoding, args=(cls._serverAddress, cls._event)
         )
         cls._worker.start()
-        event.wait(timeout=240)
+        cls._event.wait(timeout=240)
 
     def testRecognizeRequest8kHz(self):
         request = RecognizeRequest(
@@ -478,4 +496,4 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls._worker.kill()
+        pass
