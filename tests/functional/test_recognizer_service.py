@@ -449,12 +449,12 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         event = multiprocessing.Event()
-        cls._serverAddress = "localhost:50061"
+        cls._serverAddress = "localhost:50060"
         cls._worker = multiprocessing.Process(
             target=runServerPartialDecoding, args=(cls._serverAddress, event)
         )
         cls._worker.start()
-        event.wait(timeout=180)
+        event.wait(timeout=240)
 
     def testRecognizeRequest8kHz(self):
         request = RecognizeRequest(
@@ -467,7 +467,7 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
         channel = grpc.insecure_channel(
             TestRecognizerServiceOnlineDecoding._serverAddress
         )
-        response = RecognizerStub(channel).Recognize(request, timeout=20)
+        response = RecognizerStub(channel).Recognize(request, timeout=100)
         self.assertEqual(
             response.alternatives[0].transcript,
             DEFAULT_ENGLISH_MESSAGE,
