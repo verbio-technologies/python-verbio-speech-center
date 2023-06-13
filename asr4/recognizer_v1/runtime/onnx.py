@@ -24,6 +24,7 @@ from asr4.recognizer_v1.runtime.base import Runtime
 from pyformatter import PyFormatter as Formatter
 from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
 
+
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
 
@@ -346,9 +347,9 @@ class OnnxRuntime(Runtime):
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(" - postprocess")
         (words, timesteps) = self._getTimeSteps(output)
-        (words, timesteps) = self._performFormatting(words, timesteps, output.score, enable_formatting)
+        (words, timesteps) = self._performFormatting(words, timesteps, output.scores, enable_formatting)
         return OnnxRuntimeResult(
-            sequence=" ".join(words), score=score, wordTimestamps=timesteps
+            sequence=" ".join(words), score=output.scores, wordTimestamps=timesteps
         )
 
     def _getTimeSteps(self, output: _DecodeResult):
@@ -375,23 +376,23 @@ class OnnxRuntime(Runtime):
 
     def _performFormatting(self, words, timesteps, scores, enable_formatting) -> OnnxRuntimeResult:
         if enable_formatting:
-            (words, timesteps) = self.formatWords(words, timesteps)
-        return OnnxRuntimeResult(
-            sequence=words,
-            score=scores,
-            wordTimestamps=timesteps,
-        )
+            return self.formatWords(words, timesteps)
+        else:
+            return (words, timesteps)
 
-    def formatWords(self, words: List[str], timestamps) -> str:
+    def formatWords(self, words: List[str], timesteps) -> str:
         self._session.logger.debug(" - formatting")
+        print("[>]",words)
+        print("[»]",timesteps)
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
                 (words, ops) = self.formatter.classify(words)
+                fixTimextamps(words, ops)
                 return " ".join(words)
             except Exception as e:
                 self._session.logger.error(
-                    f"Error formatting sentence '{transcription}'"
+                    f"Error formatting sentence '{words}'"
                 )
                 self._session.logger.error(e)
         return " ".join(words)

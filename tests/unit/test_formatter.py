@@ -6,6 +6,7 @@ from asr4.recognizer_v1.formatter import *
 from asr4.recognizer_v1.runtime.onnx import OnnxRuntimeResult
 from asr4.types.language import Language
 
+
 class TestFormatter(unittest.TestCase):
     def testFormatter(self):
         w = ["my", "email", "is", "l", "formiga", "at", "v", "r", "bio", "dot", "com"]
@@ -20,9 +21,8 @@ class TestFormatter(unittest.TestCase):
 class TestTimestampManagement(unittest.TestCase):
     def testFormat(self):
         text = OnnxRuntimeResult(sequence="something", score=1.0, wordTimestamps= [])
-        ops = json.loads("{'operations': [{'Change': [9, '.']}, {'Merge': [{'start': 6, 'end': 10}, 'vrbio.com']}, {'Change': [5, '@']}, {'Merge': [{'start': 3, 'end': 4}, 'lformiga']}, {'Merge': [{'start': 3, 'end': 5}, 'lformiga@vrbio.com']}, {'Change': [0, 'My']}, {'Change': [3, 'Lformiga@vrbio.com']}], 'original_len': 11}")
+        ops = json.loads("{\"operations\": [{\"Change\": [9, \".\"]}, {\"Merge\": [{\"start\": 6, \"end\": 10}, \"vrbio.com\"]}, {\"Change\": [5, \"@\"]}, {\"Merge\": [{\"start\": 3, \"end\": 4}, \"lformiga\"]}, {\"Merge\": [{\"start\": 3, \"end\": 5}, \"lformiga@vrbio.com\"]}, {\"Change\": [0, \"My\"]}, {\"Change\": [3, \"Lformiga@vrbio.com\"]}], \"original_len\": 11}")
         x = fixTimestamps(text, ops)
-
 
 
 

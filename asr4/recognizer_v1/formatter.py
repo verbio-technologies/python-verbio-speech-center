@@ -21,5 +21,5 @@ class FormatterFactory:
 
 
 
-def fixTimestamps(text: str, operations): #: Rewritting):
+def fixTimestamps(text: str, operations):
     print(operations)

@@ -361,7 +361,7 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("my email address john at gmail dot com"),
+            runtime.formatWords("my email address john at gmail dot com", None),
             "My email address John@gmail.com.",
         )
 
