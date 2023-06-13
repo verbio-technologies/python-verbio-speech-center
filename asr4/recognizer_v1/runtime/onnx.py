@@ -255,12 +255,7 @@ class OnnxRuntime(Runtime):
             raise ValueError("Input audio cannot be empty!")
         preprocessed_input = self._preprocess(input, sample_rate_hz)
         decoding_output = self._runOnnxruntimeSession(preprocessed_input)
-        postprocessed_output = self._postprocess(decoding_output)
-        if enable_formatting:
-            formatted_output = self._performFormatting(postprocessed_output)
-            return formatted_output
-        else:
-            return postprocessed_output
+        return self._postprocess(decoding_output, enable_formatting)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -347,40 +342,48 @@ class OnnxRuntime(Runtime):
     def _postprocess(
         self,
         output: _DecodeResult,
+        enable_formatting: bool,
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(" - postprocess")
-        sequence = (
-            "".join(output.label_sequences[0][0])
-            .replace("|", " ")
-            .replace("<s>", "")
-            .replace("</s>", "")
-            .replace("<pad>", "")
-            .strip()
+        (words, timesteps) = self._getTimeSteps(output)
+        (words, timesteps) = self._performFormatting(words, timesteps, output.score, enable_formatting)
+        return OnnxRuntimeResult(
+            sequence=" ".join(words), score=score, wordTimestamps=timesteps
         )
-        words = list(filter(lambda x: len(x) > 0, sequence.split(" ")))
+
+    def _getTimeSteps(self, output: _DecodeResult):
+        text = self._cleanASRoutput(output.label_sequences[0][0])
+        words = list(filter(lambda x: len(x) > 0, text.split(" ")))
         if self.lmAlgorithm == "viterbi":
             score = 1 / np.exp(output.scores[0][0]) if output.scores[0][0] else 0.0
-            timesteps = [(0, 0)] * len(sequence.split(" "))
+            timesteps = [(0, 0)] * len(words)
         else:
             score = output.scores[0][0]
             if self.decoding_type == DecodingType.LOCAL:
                 timesteps = output.timesteps
             else:
                 timesteps = output.timesteps[0][0]
+        return words, timesteps
+
+    def _cleanASRoutput(self, sequence):
+        return( "".join(sequence)
+                .replace("|", " ")
+                .replace("<s>", "")
+                .replace("</s>", "")
+                .replace("<pad>", "")
+                .strip())
+
+    def _performFormatting(self, words, timesteps, scores, enable_formatting) -> OnnxRuntimeResult:
+        if enable_formatting:
+            (words, timesteps) = self.formatWords(words, timesteps)
         return OnnxRuntimeResult(
-            sequence=" ".join(words), score=score, wordTimestamps=timesteps
+            sequence=words,
+            score=scores,
+            wordTimestamps=timesteps,
         )
 
-    def _performFormatting(self, result: OnnxRuntimeResult) -> OnnxRuntimeResult:
-        return OnnxRuntimeResult(
-            sequence=self.formatWords(result.sequence),
-            score=result.score,
-            wordTimestamps=result.wordTimestamps,  # TODO Implement the wordtimestamps construction from the formatting operations and the original word timestamps
-        )
-
-    def formatWords(self, transcription: str) -> str:
+    def formatWords(self, words: List[str], timestamps) -> str:
         self._session.logger.debug(" - formatting")
-        words = list(filter(lambda x: len(x) > 0, transcription.split(" ")))
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
