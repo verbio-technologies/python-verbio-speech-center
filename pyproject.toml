@@ -62,12 +62,12 @@ server = [
     "scipy >= 1.10.0",
     "flashlight-text >= 0.0.2",
     "grpcio-health-checking >= 1.47.0",
-    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/c484208ec7f694ff3b740cb8e7d57d0cb94b2a48ff1e243ae59f65a84e1fc263/pyformatter-1.4.0-cp311-cp311-linux_x86_64.whl ; python_version=='3.11' and platform_system=='Linux'",
-    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/01d90d785e45548b6b0079da1251980bd14f0fbbf364c9448b41af5260016ff1/pyformatter-1.4.0-cp310-cp310-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
-    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/c4638e6d372917b6fa78d9170c4390c9023f37fe67a002d7b1b80bcdb8c8a415/pyformatter-1.4.0-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/cb4c670066875e6bc73c01e97ecb84a5fcea00db4e7640ac812990541286d887/pyformatter-1.4.0-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
-    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/9ac45723ca3b0ccb39dc48ff03c34e4c8582ac49d1c842a6de7d1d08ee827573/pyformatter-1.4.0-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/5ad57ee118b9f85ef360237d1a3f3b7e35aec2fd8f1604051f01a59036b9ff32/pyformatter-1.4.0-cp36-cp36m-linux_x86_64.whl ; python_version=='3.6' and platform_system=='Linux'", ]
+    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/c1ee3a199cda22183119db8e149b5d440205c48a65479f0404c709599865fb3c/pyformatter-1.4.2-cp311-cp311-linux_x86_64.whl ; python_version=='3.11' and platform_system=='Linux'",
+    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/2b8875da0a15eb16cbb4e4a13d7f851bdbb511925b47f11d32ef81d7465c516f/pyformatter-1.4.2-cp310-cp310-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
+    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/b005e0475cd0f9a260c700a7bf71bb5aa98fb15570c1f6dbc3182c4f914a3c11/pyformatter-1.4.2-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/f8a64b917b1a402b040f3be30882846199a506a997f3cc3d8c8596ea08b2d045/pyformatter-1.4.2-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
+    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/63bf93af3515279c3da1fea4cd75c13b865b32ce276cfd45e3f55bc3681911be/pyformatter-1.4.2-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
+    "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/685d7d6bf4409904adc786799cbe7c69efd92612af49810e879ef4c0229a693a/pyformatter-1.4.2-cp36-cp36m-linux_x86_64.whl ; python_version=='3.6' and platform_system=='Linux'", ]
 cpu = [
     "torch @ https://__token__:glpat-T_XsetcZptjqx11YLAyG@gitlab.lan.verbio.com/api/v4/projects/1440/packages/pypi/files/31d6945e955259efdfc64d85645329b7252fa5d5756bec2613d2a4b47389f4fc/torch-1.12.0a0+git8c5c07c-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
@@ -91,7 +91,7 @@ gpu = [
     "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/8e401aff0afb20599bbaec6c958b5ae44c5535e14835328fea1d36a657ce3898/torch-1.12.0a0+git8c5c07c-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
     "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/b24b22852724d0e984a584126826f1f7af6e88a0bf197000e054941b82c9af26/torch-1.12.0a0+git8c5c07c-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
-    "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
+    "torch @ https://download.pytorch.org/whl/torch-1.12.1-cp310-cp310-manylinux2014_aarch64.whl ; python_version=='3.10' and platform_system=='Linux'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp37-cp37m-win_amd64.whl ; python_version=='3.7' and platform_system=='Windows'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-win_amd64.whl ; python_version=='3.8' and platform_system=='Windows'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp39-cp39-win_amd64.whl ; python_version=='3.9' and platform_system=='Windows'",
