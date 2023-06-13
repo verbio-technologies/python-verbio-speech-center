@@ -428,6 +428,9 @@ async def runServerAsyncPartialDecoding(
     configuration.vocabulary = None
     configuration.formatterModelPath = "path_to_formatter/formatter.fm"
     configuration.decodingType = "LOCAL"
+    configuration.lmAlgorithm = "kenlm"
+    configuration.lmFile = "path_to_lm/lm.bin"
+    configuration.lexicon = "path_to_lm/lm.lexicon.txt"
     configuration.local_formatting = "True"
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
