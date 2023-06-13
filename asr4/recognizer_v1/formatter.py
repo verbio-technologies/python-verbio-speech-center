@@ -1,4 +1,6 @@
+from typing import Any, List
 from pyformatter import PyFormatter as Formatter
+# from pyformatter import PyRewritting as Rewritting
 from asr4.types.language import Language
 
 
@@ -17,3 +19,8 @@ class FormatterFactory:
         if len(language) == 2:
             return language + "-" + language
         return language
+
+
+
+def fixTimestamps(text: str, operations): #: Rewritting):
+    print(operations)
