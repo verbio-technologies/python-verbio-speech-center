@@ -545,18 +545,20 @@ class OnnxRuntime(Runtime):
         selectedTimestamps = []
         EOS = [".", "?", "!"]
         eos_found = False
-        eos_pos = -1
+        eos_frame_position = -1
 
         for pos, token in enumerate(formatted_tokens):
             if token[-1] in EOS and pos != len(formatted_tokens) - 1:
                 eos_found = True
-                eos_token = pos
-                eos_pos = formatted_result.wordFrames[pos][-1]
+                token_index_with_eos = pos
+                eos_frame_position = formatted_result.wordFrames[pos][-1]
 
         if eos_found:
-            selectedTokens = formatted_tokens[: eos_token + 1]
-            selectedWordFrames = formatted_result.wordFrames[: eos_token + 1]
-            selectedTimestamps = formatted_result.wordTimestamps[: eos_token + 1]
+            selectedTokens = formatted_tokens[: token_index_with_eos + 1]
+            selectedWordFrames = formatted_result.wordFrames[: token_index_with_eos + 1]
+            selectedTimestamps = formatted_result.wordTimestamps[
+                : token_index_with_eos + 1
+            ]
 
         return (
             OnnxRuntimeResult(
@@ -565,7 +567,7 @@ class OnnxRuntime(Runtime):
                 wordFrames=selectedWordFrames,
                 wordTimestamps=selectedTimestamps,
             ),
-            eos_pos,
+            eos_frame_position,
         )
 
     def _runAccumulatedLastChunk(self, accumulated_probs, chunkLength):
