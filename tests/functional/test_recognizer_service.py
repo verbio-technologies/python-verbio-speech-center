@@ -414,7 +414,7 @@ class TestRecognizerService(unittest.TestCase):
 
 
 def runServerPartialDecoding(serverAddress: str, event: multiprocessing.Event):
-    asyncio.run(runServerAsync(serverAddress, event))
+    asyncio.run(runServerAsyncPartialDecoding(serverAddress, event))
 
 
 async def runServerAsyncPartialDecoding(
