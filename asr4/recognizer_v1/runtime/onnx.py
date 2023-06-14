@@ -336,21 +336,21 @@ class OnnxRuntime(Runtime):
 
             elif self.decoding_type == DecodingType.LOCAL and not self.local_formatting:
                 chunk += 1
-                    if chunk % self.maximumChunksForDeconding == 0:
-                        total_probs += frame_probs
-                        (
-                            label_sequences,
-                            scores,
-                            wordFrames,
-                            wordTimestamps,
-                        ) = self._decodePartialAccumulated(
-                            label_sequences,
-                            scores,
-                            wordFrames,
-                            wordTimestamps,
-                            total_probs,
-                            totalChunkLength,
-                        )
+                if chunk % self.maximumChunksForDeconding == 0:
+                    total_probs += frame_probs
+                    (
+                        label_sequences,
+                        scores,
+                        wordFrames,
+                        wordTimestamps,
+                    ) = self._decodePartialAccumulated(
+                        label_sequences,
+                        scores,
+                        wordFrames,
+                        wordTimestamps,
+                        total_probs,
+                        totalChunkLength,
+                    )
                 totalChunkLength += frame_probs[0].shape[1]
             elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
                 if i > 0:
