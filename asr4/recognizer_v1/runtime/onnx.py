@@ -347,7 +347,7 @@ class OnnxRuntime(Runtime):
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(" - postprocess")
         (words, timesteps) = self._getTimeSteps(output)
-        (words, timesteps) = self._performFormatting(words, timesteps, output.scores, enable_formatting)
+        (words, timesteps) = self._performFormatting(words, timesteps, enable_formatting)
         return OnnxRuntimeResult(
             sequence=" ".join(words), score=output.scores, wordTimestamps=timesteps
         )
@@ -374,7 +374,7 @@ class OnnxRuntime(Runtime):
                 .replace("<pad>", "")
                 .strip())
 
-    def _performFormatting(self, words, timesteps, scores, enable_formatting) -> OnnxRuntimeResult:
+    def _performFormatting(self, words, timesteps, enable_formatting) -> (List[str], List[Any]):
         if enable_formatting:
             return self.formatWords(words, timesteps)
         else:
@@ -388,14 +388,13 @@ class OnnxRuntime(Runtime):
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
                 (words, ops) = self.formatter.classify(words)
-                fixTimextamps(words, ops)
-                return " ".join(words)
+                (timesteps, frames) = TimeFixer(ops["operations"], timesteps, []).invoke()
             except Exception as e:
                 self._session.logger.error(
                     f"Error formatting sentence '{words}'"
                 )
                 self._session.logger.error(e)
-        return " ".join(words)
+        return (" ".join(words), timesteps)
 
 
 class MatrixOperations:
