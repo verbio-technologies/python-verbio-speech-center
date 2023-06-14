@@ -45,7 +45,7 @@ class TimeFixer:
         opType, arg = self.getType(operation)
         if opType == "merge":
             self.mergeIntervalOfWords(arg["start"], arg["end"])
-        elif opType == "pass":
+        else:
             pass
             
     def getType(self, operation: Dict):
