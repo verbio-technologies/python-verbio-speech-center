@@ -346,11 +346,11 @@ class OnnxRuntime(Runtime):
                 totalChunkLength += frame_probs[0].shape[1]
             elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
                 if i > 0:
-                    y = np.concatenate((accumulated_probs, frame_probs), axis=1)
+                    accumulated_probs += frame_probs
+                    y = np.concatenate(accumulated_probs, axis=1)
                 else:
                     accumulated_probs = frame_probs
                     y = frame_probs[0]
-
                 (
                     partial_decoding,
                     saveInBufferFrom,
