@@ -31,14 +31,14 @@ class TimeFixer:
         self.logger = logging.getLogger("ASR4")
 
     def invoke(self):
-        self.logger.debug(f"Fixing timestamps for {len(self.timestamps)} in {len(self.operations)} operations")
-        if len(self.frames)==len(self.timestamps):
-            for op in self.operations:
-                self.runOperation(op)
-        else:
+        self.logger.debug(f"Fixing timestamps")
+        if self.frames and self.timestamps and len(self.frames)!=len(self.timestamps):
             self.logger.warning(
                 f"Uneven timestamp data: {len(self.timestamps)} timestamps for {len(self.frames)} frames"
             )
+        else:
+            for op in self.operations:
+                self.runOperation(op)
         return (self.timestamps, self.frames)
 
     def runOperation(self, operation: Dict[str, Any]):
@@ -59,11 +59,15 @@ class TimeFixer:
             return ("pass", None)
         
     def mergeIntervalOfWords(self, begin, end):
-        if end >= len(self.timestamps) or begin >= len(self.timestamps) or begin<0:
-            return
-        newBegin = self.timestamps[begin][0]
-        newEnd = self.timestamps[end][1]
-        self.timestamps[begin:end+1] = [(newBegin,newEnd)]
-        self.frames[begin:end+1] = [reduce(lambda a, b: a + b, self.frames[begin:end+1])]
+        if self.timestamps:
+            if end >= len(self.timestamps) or begin >= len(self.timestamps) or begin<0:
+                return
+            newBegin = self.timestamps[begin][0]
+            newEnd = self.timestamps[end][1]
+            self.timestamps[begin:end+1] = [(newBegin,newEnd)]
+        if self.frames:
+            if end >= len(self.frames) or begin >= len(self.frames) or begin<0:
+                return
+            self.frames[begin:end+1] = [reduce(lambda a, b: a + b, self.frames[begin:end+1])]
 
         

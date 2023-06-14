@@ -1,8 +1,8 @@
-import abc
-import logging
-import soxr
+import abc, json, logging, soxr
+from enum import Enum
 import numpy as np
 import numpy.typing as npt
+from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import torch
 import torch.nn.functional as F
@@ -10,7 +10,6 @@ import torch.nn.functional as F
 import onnx
 import onnxruntime
 import onnxruntime.quantization
-from enum import Enum
 
 from onnxruntime.capi.onnxruntime_pybind11_state import SessionOptions
 from onnxruntime.quantization.quant_utils import (
@@ -19,11 +18,10 @@ from onnxruntime.quantization.quant_utils import (
     model_has_infer_metadata,
 )
 
-from typing import Any, Dict, List, NamedTuple, Optional, Union
 from asr4.recognizer_v1.runtime.base import Runtime
-from pyformatter import PyFormatter as Formatter
 from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
-
+from asr4.recognizer_v1.formatter import TimeFixer
+from pyformatter import PyFormatter as Formatter
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
 
@@ -380,21 +378,20 @@ class OnnxRuntime(Runtime):
         else:
             return (words, timesteps)
 
-    def formatWords(self, words: List[str], timesteps) -> str:
+    def formatWords(self, words: str, timesteps: List[List[float]]=None, frames: List[List[int]]=None) -> str:
         self._session.logger.debug(" - formatting")
-        print("[>]",words)
-        print("[»]",timesteps)
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
-                (words, ops) = self.formatter.classify(words)
-                (timesteps, frames) = TimeFixer(ops["operations"], timesteps, []).invoke()
+                (words, ops) = self.formatter.classify(words.split(" "))
+                ops = json.loads(ops.to_json())
+                (timesteps, frames) = TimeFixer(ops["operations"], timesteps, frames).invoke()
             except Exception as e:
                 self._session.logger.error(
                     f"Error formatting sentence '{words}'"
                 )
                 self._session.logger.error(e)
-        return (" ".join(words), timesteps)
+        return (" ".join(words), timesteps, frames)
 
 
 class MatrixOperations:
