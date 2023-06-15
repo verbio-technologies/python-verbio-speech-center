@@ -370,7 +370,9 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("my email address john at gmail dot com".split(" "), None),
+            runtime.formatWords(
+                "my email address john at gmail dot com".split(" "), None
+            ),
             ("My email address John@gmail.com.".split(" "), None, None),
         )
 
@@ -384,7 +386,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("how are you".split(" ")), ("How are you?".split(" "), None, None)
+            runtime.formatWords("how are you".split(" ")),
+            ("How are you?".split(" "), None, None),
         )
 
     def testRecognizeFormatterEN_USCapitalization(self):
@@ -398,7 +401,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("my name is john".split(" ")),
-            ("My name is John.".split(" "), None, None)
+            ("My name is John.".split(" "), None, None),
         )
 
     def testRecognizeFormatterPT_BRNumbers(self):
@@ -453,5 +456,6 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.PT_BR,
         )
         self.assertEqual(
-            runtime.formatWords("meu nome é joão".split(" ")), ("Meu nome é João", None, None)
+            runtime.formatWords("meu nome é joão".split(" ")),
+            ("Meu nome é João", None, None),
         )
