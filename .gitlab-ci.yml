@@ -106,6 +106,7 @@ functional-testing:cpu:
     - pip install .[server,cpu,test]
   script:
     - pytest tests/functional --junit-xml=report.xml --verbose
+    - pytest tests/functional_partial --junit-xml=report.xml --verbose
 
 functional-testing:e2e:
   stage: test

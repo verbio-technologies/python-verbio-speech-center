@@ -304,8 +304,8 @@ class OnnxRuntime(Runtime):
     def _runOnnxruntimeSession(
         self, input: torch.Tensor, enable_formatting: bool
     ) -> OnnxRuntimeResult:
-        self._session.logger.debug(f" - softmax")
         if len(input.shape) == 2:
+            self._session.logger.debug(f" - softmax")
             return self._decodeTotal(
                 self._session.run(None, {self._inputName: input.numpy()}),
                 enable_formatting,
@@ -322,12 +322,13 @@ class OnnxRuntime(Runtime):
         scores = []
         wordFrames = []
         wordTimestamps = []
-        chunks_count = 0
+        iterationOverSameChunk = 0
         partialDecodingTotal = []
         totalChunkLength = 0
         chunk = 0
 
         for i in range(input.shape[1]):
+            self._session.logger.debug(f" - softmax")
             frame_probs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
             )
@@ -366,10 +367,10 @@ class OnnxRuntime(Runtime):
                 (
                     partial_decoding,
                     saveInBufferFrom,
-                    chunks_count,
+                    iterationOverSameChunk,
                     chunkLength,
                 ) = self._performLocalDecodingWithLocalFormatting(
-                    y, chunks_count, totalChunkLength
+                    y, iterationOverSameChunk, totalChunkLength
                 )
                 partialDecodingTotal.append(partial_decoding)
                 self._session.logger.info(partial_decoding)
@@ -508,7 +509,7 @@ class OnnxRuntime(Runtime):
             return postprocessed_output
 
     def _performLocalDecodingWithLocalFormatting(
-        self, yi, chunks_count, totalChunkLength
+        self, yi, iterationOverSameChunk, totalChunkLength
     ):
         saveInBufferFrom = -1
         decoder_result = self._decodePartial(yi)
@@ -517,25 +518,25 @@ class OnnxRuntime(Runtime):
         score = 0.0
         wordFrames = []
         wordTimestamps = []
-        chunks_count = 0
+        iterationOverSameChunk = 0
         chunkLength = 0
         if not postprocessed_output.sequence:
-            chunks_count += 1
+            iterationOverSameChunk += 1
         else:
             formatted_output = self._performFormatting(postprocessed_output)
             formatted_output_until_eos, eos_pos = self._findEOS(formatted_output)
             if eos_pos != -1:
                 saveInBufferFrom = formatted_output_until_eos.wordFrames[-1][-1] + 1
-                chunks_count = 0
+                iterationOverSameChunk = 0
                 sequence = formatted_output_until_eos.sequence
                 score = formatted_output_until_eos.score
                 wordFrames = formatted_output_until_eos.wordFrames
                 wordTimestamps = formatted_output_until_eos.wordTimestamps
-            elif chunks_count < LOCAL_FORMATTING_LOOKAHEAD + 1:
-                chunks_count += 1
+            elif iterationOverSameChunk < LOCAL_FORMATTING_LOOKAHEAD + 1:
+                iterationOverSameChunk += 1
                 saveInBufferFrom = 0
             else:
-                chunks_count = 0
+                iterationOverSameChunk = 0
                 saveInBufferFrom = -1
                 sequence = formatted_output.sequence
                 score = formatted_output.score
@@ -552,7 +553,7 @@ class OnnxRuntime(Runtime):
         if len(wordFrames) > 0:
             chunkLength = wordFrames[-1][-1] + 1
 
-        return result, saveInBufferFrom, chunks_count, chunkLength
+        return result, saveInBufferFrom, iterationOverSameChunk, chunkLength
 
     def _findEOS(self, formatted_result):
         formatted_tokens = formatted_result.sequence.split(" ")
@@ -657,7 +658,8 @@ class OnnxRuntime(Runtime):
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
-                return " ".join(self.formatter.classify(words))
+                (words, ops) = self.formatter.classify(words)
+                return " ".join(words)
             except Exception as e:
                 self._session.logger.error(
                     f"Error formatting sentence '{transcription}'"

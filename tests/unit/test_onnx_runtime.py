@@ -37,7 +37,7 @@ class MockFormatter:
         self._correct_sentence = correct_sentence.split(" ")
 
     def classify(self, sentence: List[str]) -> List[str]:
-        return self._correct_sentence
+        return (self._correct_sentence, [])
 
 
 class MockDecoder:
@@ -612,16 +612,16 @@ class TestOnnxRuntime(unittest.TestCase):
         (
             result,
             saveInBufferFrom,
-            chunks_count,
+            iterationOverSameChunk,
             chunkLength,
         ) = runtime._performLocalDecodingWithLocalFormatting(
-            [], chunks_count=0, totalChunkLength=0
+            [], iterationOverSameChunk=0, totalChunkLength=0
         )
         self.assertEqual(
             result.sequence, "Good afternoon. Thank you for calling back of America."
         )
         self.assertEqual(saveInBufferFrom, 19)
-        self.assertEqual(chunks_count, 0)
+        self.assertEqual(iterationOverSameChunk, 0)
         self.assertEqual(chunkLength, 19)
 
     def testPerformLocalDecodingWithLocalFormattingOneEOS(self):
@@ -673,14 +673,14 @@ class TestOnnxRuntime(unittest.TestCase):
         (
             result,
             saveInBufferFrom,
-            chunks_count,
+            iterationOverSameChunk,
             chunkLength,
         ) = runtime._performLocalDecodingWithLocalFormatting(
-            [], chunks_count=0, totalChunkLength=0
+            [], iterationOverSameChunk=0, totalChunkLength=0
         )
         self.assertEqual(result.sequence, "Good afternoon.")
         self.assertEqual(saveInBufferFrom, 5)
-        self.assertEqual(chunks_count, 0)
+        self.assertEqual(iterationOverSameChunk, 0)
         self.assertEqual(chunkLength, 5)
 
     def testPerformLocalDecodingWithLocalFormattingEOSAtEnd(self):
@@ -698,14 +698,14 @@ class TestOnnxRuntime(unittest.TestCase):
         (
             result,
             saveInBufferFrom,
-            chunks_count,
+            iterationOverSameChunk,
             chunkLength,
         ) = runtime._performLocalDecodingWithLocalFormatting(
-            [], chunks_count=0, totalChunkLength=0
+            [], iterationOverSameChunk=0, totalChunkLength=0
         )
         self.assertEqual(result.sequence, "")
         self.assertEqual(saveInBufferFrom, 0)
-        self.assertEqual(chunks_count, 1)
+        self.assertEqual(iterationOverSameChunk, 1)
         self.assertEqual(chunkLength, 0)
 
     def testPerformLocalDecodingWithLocalFormattingNoEOS(self):
@@ -723,14 +723,14 @@ class TestOnnxRuntime(unittest.TestCase):
         (
             result,
             saveInBufferFrom,
-            chunks_count,
+            iterationOverSameChunk,
             chunkLength,
         ) = runtime._performLocalDecodingWithLocalFormatting(
-            [], chunks_count=0, totalChunkLength=0
+            [], iterationOverSameChunk=0, totalChunkLength=0
         )
         self.assertEqual(result.sequence, "")
         self.assertEqual(saveInBufferFrom, 0)
-        self.assertEqual(chunks_count, 1)
+        self.assertEqual(iterationOverSameChunk, 1)
         self.assertEqual(chunkLength, 0)
 
     def testDecodeGlobalFormatting(self):
