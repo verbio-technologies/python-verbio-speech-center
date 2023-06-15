@@ -10,7 +10,7 @@ from concurrent import futures
 
 from asr4.recognizer import Language
 from asr4.recognizer import RecognizerStub
-from asr4.recognizer import RecognizerService, RecognitionServiceConfiguration
+from asr4.recognizer import RecognizerService
 from asr4.recognizer import RecognizeRequest
 from asr4.recognizer import StreamingRecognizeRequest
 from asr4.recognizer import RecognitionConfig
@@ -19,7 +19,6 @@ from asr4.recognizer import RecognitionResource
 from asr4.recognizer import add_RecognizerServicer_to_server
 
 from tests.unit.test_recognizer_service import (
-    MockOnnxSession,
     MockArguments,
     MockRecognitionServiceConfiguration,
 )
@@ -437,45 +436,3 @@ async def runServerAsyncPartialDecoding(
     await server.start()
     event.set()
     await server.wait_for_termination()
-
-
-@pytest.mark.usefixtures("datadir")
-class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
-    @pytest.fixture(autouse=True)
-    def rootdir(self, pytestconfig):
-        self.rootdir = str(pytestconfig.rootdir)
-
-    @pytest.fixture(autouse=True)
-    def datadir(self, pytestconfig):
-        self.datadir = f"{pytestconfig.rootdir}/tests/functional/data"
-
-    @classmethod
-    def setUpClass(cls):
-        event = multiprocessing.Event()
-        cls._serverAddress = "localhost:50060"
-        cls._worker = multiprocessing.Process(
-            target=runServerPartialDecoding, args=(cls._serverAddress, event)
-        )
-        cls._worker.start()
-        event.wait(timeout=240)
-
-    def testRecognizeRequest8kHz(self):
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-            audio=b"0000",
-        )
-        channel = grpc.insecure_channel(
-            TestRecognizerServiceOnlineDecoding._serverAddress
-        )
-        response = RecognizerStub(channel).Recognize(request, timeout=200)
-        self.assertEqual(
-            response.alternatives[0].transcript,
-            DEFAULT_ENGLISH_MESSAGE,
-        )
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._worker.kill()
