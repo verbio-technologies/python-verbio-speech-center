@@ -378,7 +378,7 @@ class OnnxRuntime(Runtime):
         )
 
     def _performFormatting(
-        self, words: str, timesteps, enable_formatting
+        self, words: List[str], timesteps, enable_formatting
     ) -> (List[str], List[Any], List[List[int]]):
         if enable_formatting:
             return self.formatWords(words, timesteps)
@@ -387,15 +387,15 @@ class OnnxRuntime(Runtime):
 
     def formatWords(
         self,
-        words: str,
+        words: List[str],
         timesteps: List[List[float]] = None,
         frames: List[List[int]] = None,
     ) -> (List[str], List[Any], List[List[int]]):
-        self._session.logger.debug(" - formatting")
+        self._session.logger.debug(f" - formatting text")
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
-                (words, ops) = self.formatter.classify(words.split(" "))
+                (words, ops) = self.formatter.classify(words)
                 ops = json.loads(ops.to_json())
                 (timesteps, frames) = TimeFixer(
                     ops["operations"], timesteps, frames
@@ -403,7 +403,7 @@ class OnnxRuntime(Runtime):
             except Exception as e:
                 self._session.logger.error(f"Error formatting sentence '{words}'")
                 self._session.logger.error(e)
-        return (" ".join(words), timesteps, frames)
+        return (words, timesteps, frames)
 
 
 class MatrixOperations:
