@@ -22,7 +22,6 @@ from tests.unit.test_recognizer_service import (
     MockArguments,
     MockRecognitionServiceConfiguration,
 )
-from tests.unit.test_onnx_runtime import MockFormatter
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
@@ -38,7 +37,6 @@ async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
     configuration = MockRecognitionServiceConfiguration(MockArguments())
     configuration.language = Language.EN_US
     configuration.vocabulary = None
-    configuration.local_formatting = True
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
     await server.start()
@@ -410,29 +408,3 @@ class TestRecognizerService(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls._worker.kill()
-
-
-def runServerPartialDecoding(serverAddress: str, event: multiprocessing.Event):
-    asyncio.run(runServerAsyncPartialDecoding(serverAddress, event))
-
-
-async def runServerAsyncPartialDecoding(
-    serverAddress: str, event: multiprocessing.Event
-):
-    server = grpc.aio.server(
-        futures.ThreadPoolExecutor(max_workers=1),
-    )
-    configuration = MockRecognitionServiceConfiguration(MockArguments())
-    configuration.language = Language.EN_US
-    configuration.vocabulary = None
-    configuration.formatterModelPath = "path_to_formatter/formatter.fm"
-    configuration.decodingType = "LOCAL"
-    configuration.lmAlgorithm = "kenlm"
-    configuration.lmFile = "path_to_lm/lm.bin"
-    configuration.lexicon = "path_to_lm/lm.lexicon.txt"
-    configuration.local_formatting = "True"
-    add_RecognizerServicer_to_server(RecognizerService(configuration), server)
-    server.add_insecure_port(serverAddress)
-    await server.start()
-    event.set()
-    await server.wait_for_termination()

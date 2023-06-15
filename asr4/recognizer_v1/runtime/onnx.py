@@ -318,7 +318,7 @@ class OnnxRuntime(Runtime):
         scores = []
         wordFrames = []
         wordTimestamps = []
-        chunks_count = 0
+        iterationOverSameChunk = 0
         partialDecodingTotal = []
         totalChunkLength = 0
 
@@ -343,7 +343,7 @@ class OnnxRuntime(Runtime):
                     frame_probs,
                     totalChunkLength,
                 )
-                chunkLength = frame_probs[0].shape[1]
+                totalChunkLength += frame_probs[0].shape[1]
             elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
                 if i > 0:
                     accumulated_probs += frame_probs
@@ -351,14 +351,13 @@ class OnnxRuntime(Runtime):
                 else:
                     accumulated_probs = frame_probs
                     y = frame_probs[0]
-
                 (
                     partial_decoding,
                     saveInBufferFrom,
-                    chunks_count,
+                    iterationOverSameChunk,
                     chunkLength,
                 ) = self._performLocalDecodingWithLocalFormatting(
-                    y, chunks_count, totalChunkLength
+                    y, iterationOverSameChunk, totalChunkLength
                 )
                 partialDecodingTotal.append(partial_decoding)
                 self._session.logger.info(partial_decoding)
@@ -370,7 +369,7 @@ class OnnxRuntime(Runtime):
                     ]
                 else:
                     accumulated_probs = []
-            totalChunkLength += chunkLength
+                totalChunkLength += chunkLength
 
         if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
@@ -492,7 +491,7 @@ class OnnxRuntime(Runtime):
             return postprocessed_output
 
     def _performLocalDecodingWithLocalFormatting(
-        self, yi, chunks_count, totalChunkLength
+        self, yi, iterationOverSameChunk, totalChunkLength
     ):
         saveInBufferFrom = -1
         decoder_result = self._decodePartial(yi)
@@ -501,25 +500,25 @@ class OnnxRuntime(Runtime):
         score = 0.0
         wordFrames = []
         wordTimestamps = []
-        chunks_count = 0
+        iterationOverSameChunk = 0
         chunkLength = 0
         if not postprocessed_output.sequence:
-            chunks_count += 1
+            iterationOverSameChunk += 1
         else:
             formatted_output = self._performFormatting(postprocessed_output)
             formatted_output_until_eos, eos_pos = self._findEOS(formatted_output)
             if eos_pos != -1:
                 saveInBufferFrom = formatted_output_until_eos.wordFrames[-1][-1] + 1
-                chunks_count = 0
+                iterationOverSameChunk = 0
                 sequence = formatted_output_until_eos.sequence
                 score = formatted_output_until_eos.score
                 wordFrames = formatted_output_until_eos.wordFrames
                 wordTimestamps = formatted_output_until_eos.wordTimestamps
-            elif chunks_count < LOCAL_FORMATTING_LOOKAHEAD + 1:
-                chunks_count += 1
+            elif iterationOverSameChunk < LOCAL_FORMATTING_LOOKAHEAD + 1:
+                iterationOverSameChunk += 1
                 saveInBufferFrom = 0
             else:
-                chunks_count = 0
+                iterationOverSameChunk = 0
                 saveInBufferFrom = -1
                 sequence = formatted_output.sequence
                 score = formatted_output.score
@@ -536,7 +535,7 @@ class OnnxRuntime(Runtime):
         if len(wordFrames) > 0:
             chunkLength = wordFrames[-1][-1] + 1
 
-        return result, saveInBufferFrom, chunks_count, chunkLength
+        return result, saveInBufferFrom, iterationOverSameChunk, chunkLength
 
     def _findEOS(self, formatted_result):
         formatted_tokens = formatted_result.sequence.split(" ")
@@ -545,18 +544,20 @@ class OnnxRuntime(Runtime):
         selectedTimestamps = []
         EOS = [".", "?", "!"]
         eos_found = False
-        eos_pos = -1
+        eos_frame_position = -1
 
         for pos, token in enumerate(formatted_tokens):
             if token[-1] in EOS and pos != len(formatted_tokens) - 1:
                 eos_found = True
-                eos_token = pos
-                eos_pos = formatted_result.wordFrames[pos][-1]
+                token_index_with_eos = pos
+                eos_frame_position = formatted_result.wordFrames[pos][-1]
 
         if eos_found:
-            selectedTokens = formatted_tokens[: eos_token + 1]
-            selectedWordFrames = formatted_result.wordFrames[: eos_token + 1]
-            selectedTimestamps = formatted_result.wordTimestamps[: eos_token + 1]
+            selectedTokens = formatted_tokens[: token_index_with_eos + 1]
+            selectedWordFrames = formatted_result.wordFrames[: token_index_with_eos + 1]
+            selectedTimestamps = formatted_result.wordTimestamps[
+                : token_index_with_eos + 1
+            ]
 
         return (
             OnnxRuntimeResult(
@@ -565,7 +566,7 @@ class OnnxRuntime(Runtime):
                 wordFrames=selectedWordFrames,
                 wordTimestamps=selectedTimestamps,
             ),
-            eos_pos,
+            eos_frame_position,
         )
 
     def _runAccumulatedLastChunk(self, accumulated_probs, chunkLength):
