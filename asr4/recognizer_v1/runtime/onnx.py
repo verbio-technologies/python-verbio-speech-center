@@ -300,8 +300,8 @@ class OnnxRuntime(Runtime):
     def _runOnnxruntimeSession(
         self, input: torch.Tensor, enable_formatting: bool
     ) -> OnnxRuntimeResult:
-        self._session.logger.debug(f" - softmax")
         if len(input.shape) == 2:
+            self._session.logger.debug(f" - softmax")
             return self._decodeTotal(
                 self._session.run(None, {self._inputName: input.numpy()}),
                 enable_formatting,
@@ -323,6 +323,7 @@ class OnnxRuntime(Runtime):
         totalChunkLength = 0
 
         for i in range(input.shape[1]):
+            self._session.logger.debug(f" - softmax")
             frame_probs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
             )
