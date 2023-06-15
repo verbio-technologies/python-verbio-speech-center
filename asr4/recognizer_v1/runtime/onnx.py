@@ -345,7 +345,7 @@ class OnnxRuntime(Runtime):
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(" - postprocess")
         (words, timesteps, score) = self._getTimeSteps(output)
-        print("[TIMESTEPS]", timesteps)
+        self._session.logger.debug("[TIMESTEPS] {timesteps}")
         (words, timesteps, frames) = self._performFormatting(
             words, timesteps, enable_formatting
         )
