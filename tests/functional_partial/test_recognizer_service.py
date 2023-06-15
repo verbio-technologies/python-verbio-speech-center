@@ -1,4 +1,3 @@
-
 import grpc
 import pytest
 import asyncio
@@ -21,6 +20,7 @@ from tests.unit.test_recognizer_service import (
 )
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
+
 
 def runServerPartialDecoding(serverAddress: str, event: multiprocessing.Event):
     asyncio.run(runServerAsyncPartialDecoding(serverAddress, event))
@@ -46,6 +46,7 @@ async def runServerAsyncPartialDecoding(
     await server.start()
     event.set()
     await server.wait_for_termination()
+
 
 @pytest.mark.usefixtures("datadir")
 class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
