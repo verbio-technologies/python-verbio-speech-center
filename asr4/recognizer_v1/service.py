@@ -332,12 +332,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             return word
 
         if len(response.wordTimestamps) > 0:
-            words = (
-                [
-                    getWord(i, token)
-                    for i, token in enumerate(response.transcription.strip().split(" "))
-                ]
-            )
+            words = [
+                getWord(i, token)
+                for i, token in enumerate(response.transcription.strip().split(" "))
+            ]
         else:
             words = []
 
