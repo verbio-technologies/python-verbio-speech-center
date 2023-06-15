@@ -344,10 +344,10 @@ class OnnxRuntime(Runtime):
         enable_formatting: bool,
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(" - postprocess")
-        (words, timesteps) = self._getTimeSteps(output)
-        (words, timesteps) = self._performFormatting(words, timesteps, enable_formatting)
+        (words, timesteps, score) = self._getTimeSteps(output)
+        (words, timesteps, frames) = self._performFormatting(words, timesteps, enable_formatting)
         return OnnxRuntimeResult(
-            sequence=" ".join(words), score=output.scores, wordTimestamps=timesteps
+            sequence=" ".join(words), score=score, wordTimestamps=timesteps
         )
 
     def _getTimeSteps(self, output: _DecodeResult):
@@ -362,7 +362,7 @@ class OnnxRuntime(Runtime):
                 timesteps = output.timesteps
             else:
                 timesteps = output.timesteps[0][0]
-        return words, timesteps
+        return words, timesteps, score
 
     def _cleanASRoutput(self, sequence):
         return( "".join(sequence)
@@ -372,13 +372,13 @@ class OnnxRuntime(Runtime):
                 .replace("<pad>", "")
                 .strip())
 
-    def _performFormatting(self, words, timesteps, enable_formatting) -> (List[str], List[Any]):
+    def _performFormatting(self, words: str, timesteps, enable_formatting) -> (List[str], List[Any], List[List[int]]):
         if enable_formatting:
             return self.formatWords(words, timesteps)
         else:
-            return (words, timesteps)
+            return (words, timesteps, [])
 
-    def formatWords(self, words: str, timesteps: List[List[float]]=None, frames: List[List[int]]=None) -> str:
+    def formatWords(self, words: str, timesteps: List[List[float]]=None, frames: List[List[int]]=None) -> (List[str], List[Any], List[List[int]]):
         self._session.logger.debug(" - formatting")
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
