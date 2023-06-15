@@ -269,10 +269,10 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.formatter = MockFormatter(FORMATTED_SPANISH_MESSAGE)
         (words, times, frames) = runtime._performFormatting(
-            " ".join(sequence), [[(0.0)] * len(sequence)], True
+            sequence, [[(0.0)] * len(sequence)], True
         )
         self.assertEqual(
-            words,
+            " ".join(words),
             FORMATTED_SPANISH_MESSAGE,
         )
 
@@ -287,7 +287,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords(
-                "mi dni es siete siete uno uno cuatro tres seis ocho zeta"
+                "mi dni es siete siete uno uno cuatro tres seis ocho zeta".split(" ")
             ),
             ("Mi dni es 77114368-Z", None, None),
         )
@@ -302,17 +302,17 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.ES,
         )
         self.assertEqual(
-            runtime.formatWords("mi email es test arroba verbio punto com"),
-            ("Mi email es Test@verbio.com", None, None),
+            runtime.formatWords("mi email es test arroba verbio punto com".split(" ")),
+            ("Mi email es Test@verbio.com".split(" "), None, None),
         )
         self.assertEqual(
             runtime.formatWords(
-                "mi email es test arroba verbio punto com",
+                "mi email es test arroba verbio punto com".split(" "),
                 [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8)],
                 [[0], [1], [2], [3], [4], [5], [6], [7]],
             ),
             (
-                "Mi email es Test@verbio.com",
+                "Mi email es Test@verbio.com".split(" "),
                 [(0, 1), (1, 2), (2, 3), (3, 8)],
                 [[0], [1], [2], [3, 4, 5, 6, 7]],
             ),
@@ -328,8 +328,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.ES,
         )
         self.assertEqual(
-            runtime.formatWords("en qué puedo ayudarle"),
-            ("¿En qué puedo ayudarle?", None, None),
+            runtime.formatWords("en qué puedo ayudarle".split(" ")),
+            ("¿En qué puedo ayudarle?".split(" "), None, None),
         )
 
     def testRecognizeFormatterESCapitalization(self):
@@ -342,8 +342,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.ES,
         )
         self.assertEqual(
-            runtime.formatWords("mi nombre es maría"),
-            ("Mi nombre es María...", None, None),
+            runtime.formatWords("mi nombre es maría".split(" ")),
+            ("Mi nombre es María...".split(" "), None, None),
         )
 
     def testRecognizeFormatterEN_USNumbers(self):
@@ -356,8 +356,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("three million dot fourteen"),
-            ("3,000,000.14.", None, None),
+            runtime.formatWords("three million dot fourteen".split(" ")),
+            (["3,000,000.14."], None, None),
         )
 
     def testRecognizeFormatterEN_USEmails(self):
@@ -370,8 +370,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("my email address john at gmail dot com", None),
-            ("My email address John@gmail.com.", None, None),
+            runtime.formatWords("my email address john at gmail dot com".split(" "), None),
+            ("My email address John@gmail.com.".split(" "), None, None),
         )
 
     def testRecognizeFormatterEN_USPunctuation(self):
@@ -384,7 +384,7 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("how are you"), ("How are you?", None, None)
+            runtime.formatWords("how are you".split(" ")), ("How are you?".split(" "), None, None)
         )
 
     def testRecognizeFormatterEN_USCapitalization(self):
@@ -397,7 +397,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("my name is john"), ("My name is John.", None, None)
+            runtime.formatWords("my name is john".split(" ")),
+            ("My name is John.".split(" "), None, None)
         )
 
     def testRecognizeFormatterPT_BRNumbers(self):
@@ -410,8 +411,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.PT_BR,
         )
         self.assertEqual(
-            runtime.formatWords("três mil duzentos e quarenta e cinco"),
-            ("3.245.", None, None),
+            runtime.formatWords("três mil duzentos e quarenta e cinco".split(" ")),
+            (["3.245."], None, None),
         )
 
     def testRecognizeFormatterPT_BREmails(self):
@@ -424,8 +425,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.PT_BR,
         )
         self.assertEqual(
-            runtime.formatWords("meu email é joão at domínio dot com"),
-            ("Meu email é João@domínio.com", None, None),
+            runtime.formatWords("meu email é joão at domínio dot com".split(" ")),
+            ("Meu email é João@domínio.com".split(" "), None, None),
         )
 
     def testRecognizeFormatterPT_BRPunctuation(self):
@@ -438,8 +439,8 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.PT_BR,
         )
         self.assertEqual(
-            runtime.formatWords("como vai que eu possa ajudar"),
-            ("Como vai que eu possa ajudar?", None, None),
+            runtime.formatWords("como vai que eu possa ajudar".split(" ")),
+            ("Como vai que eu possa ajudar?".split(" "), None, None),
         )
 
     def testRecognizeFormatterPT_BRCapitalization(self):
@@ -452,5 +453,5 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.PT_BR,
         )
         self.assertEqual(
-            runtime.formatWords("meu nome é joão"), ("Meu nome é João", None, None)
+            runtime.formatWords("meu nome é joão".split(" ")), ("Meu nome é João", None, None)
         )
