@@ -66,7 +66,7 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
             target=runServerPartialDecoding, args=(cls._serverAddress, event)
         )
         cls._worker.start()
-        event.wait(timeout=240)
+        event.wait(timeout=180)
 
     def testRecognizeStreamingRequestOneAudioEnUs(self):
         def _streamingRecognize():
