@@ -263,9 +263,7 @@ class OnnxRuntime(Runtime):
         if not input:
             raise ValueError("Input audio cannot be empty!")
         preprocessed_input = self._preprocess(input, sample_rate_hz)
-        decoding_output = self._runOnnxruntimeSession(preprocessed_input, enable_formatting)
-        #return self._postprocess(decoding_output, enable_formatting)
-        return decoding_output
+        return self._runOnnxruntimeSession(preprocessed_input, enable_formatting)
 
     def _preprocess(self, input: bytes, sample_rate_hz: int) -> torch.Tensor:
         self._session.logger.debug(f" - preprocess audio of length {len(input)}")
@@ -592,7 +590,10 @@ class OnnxRuntime(Runtime):
             words, enable_formatting, timesteps, frames
         )
         return OnnxRuntimeResult(
-            sequence=" ".join(words), score=score, wordTimestamps=timesteps, wordFrames=frames
+            sequence=" ".join(words),
+            score=score,
+            wordTimestamps=timesteps,
+            wordFrames=frames,
         )
 
     def _getTimeSteps(self, output: _DecodeResult):
@@ -623,7 +624,11 @@ class OnnxRuntime(Runtime):
         )
 
     def _performFormatting(
-        self, words: List[str], enable_formatting: bool, timesteps: Optional[List[List[float]]]=None, wordFrames: Optional[List[List[int]]]=None
+        self,
+        words: List[str],
+        enable_formatting: bool,
+        timesteps: Optional[List[List[float]]] = None,
+        wordFrames: Optional[List[List[int]]] = None,
     ) -> (List[str], List[Any], List[List[int]]):
         if enable_formatting:
             return self.formatWords(words, timesteps, wordFrames)
