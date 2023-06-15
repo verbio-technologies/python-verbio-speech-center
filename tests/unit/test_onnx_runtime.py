@@ -290,7 +290,9 @@ class TestOnnxRuntime(unittest.TestCase):
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.formatter = MockFormatter(FORMATTED_SPANISH_MESSAGE)
         (words, times, frames) = runtime._performFormatting(
-            sequence, enable_formatting=True, timesteps=[[(0.0)] * len(sequence)],
+            sequence,
+            enable_formatting=True,
+            timesteps=[[(0.0)] * len(sequence)],
         )
         self.assertEqual(
             " ".join(words),
