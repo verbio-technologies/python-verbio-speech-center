@@ -53,6 +53,7 @@ class RecognitionServiceConfiguration:
         self.word_score = -1
         self.sil_score = 0
         self.overlap = 0
+        self.local_formatting = False
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -74,6 +75,7 @@ class RecognitionServiceConfiguration:
             self.word_score = arguments.word_score
             self.sil_score = arguments.sil_score
             self.overlap = arguments.overlap
+            self.local_formatting = arguments.local_formatting
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
@@ -131,6 +133,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.sil_score,
             configuration.overlap,
             configuration.subwords,
+            configuration.local_formatting,
         )
         if formatter is None:
             self.logger.warning(
@@ -150,6 +153,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         sil_score: Optional[float],
         overlap: Optional[int],
         subwords: bool = False,
+        local_formatting: bool = False,
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
@@ -165,6 +169,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 sil_score,
                 overlap,
                 subwords,
+                local_formatting,
             )
         else:
             return OnnxRuntime(session)
