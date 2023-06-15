@@ -289,7 +289,7 @@ class TestOnnxRuntime(unittest.TestCase):
             runtime.formatWords(
                 "mi dni es siete siete uno uno cuatro tres seis ocho zeta".split(" ")
             ),
-            ("Mi dni es 77114368-Z", None, None),
+            ("Mi dni es 77114368-Z".split(" "), None, None),
         )
 
     def testRecognizeFormatterESEmails(self):
@@ -457,5 +457,5 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("meu nome é joão".split(" ")),
-            ("Meu nome é João", None, None),
+            ("Meu nome é João".split(" "), None, None),
         )
