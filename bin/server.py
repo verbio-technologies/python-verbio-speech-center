@@ -188,6 +188,12 @@ class Asr4ArgParser:
             action="store_true",
             help="Perform local formatting when partial decoding",
         )
+        parser.add_argument(
+            "--maximumChunksForDeconding",
+            type=int,
+            dest="maximumChunksForDeconding",
+            help="The number of chunks of audio until perform local decoding.",
+        )
         return parser.parse_args(args)
 
     def fixNumberOfJobs(args):
