@@ -11,7 +11,11 @@ class TestFormatter(unittest.TestCase):
     def testFormatter(self):
         w = ["my", "email", "is", "l", "formiga", "at", "v", "r", "bio", "dot", "com"]
         f = FormatterFactory.createFormatter(
-            "formatter/format-model.en-us-1.0.1.fm", Language.EN_US
+            os.path.join(
+                os.getenv("MODELS_PATH", "models"),
+                "formatter/format-model.en-us-1.0.1.fm",
+            ),
+            Language.EN_US,
         )
         (w, ops) = f.classify(w)
         ops = json.loads(ops.to_json()).get("operations", [])
