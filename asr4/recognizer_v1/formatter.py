@@ -5,6 +5,7 @@ from pyformatter import PyFormatter as Formatter
 from asr4.types.language import Language
 import logging
 
+
 class FormatterFactory:
     @staticmethod
     def createFormatter(model_path: str, language: Language) -> Formatter:
@@ -22,9 +23,13 @@ class FormatterFactory:
         return language
 
 
-
 class TimeFixer:
-    def __init__(self, operations: List[Dict[str,Any]], timestamps: List[Any], frames: List[List[int]]):
+    def __init__(
+        self,
+        operations: List[Dict[str, Any]],
+        timestamps: List[Any],
+        frames: List[List[int]],
+    ):
         self.operations = operations
         self.timestamps = timestamps
         self.frames = frames
@@ -32,7 +37,7 @@ class TimeFixer:
 
     def invoke(self):
         self.logger.debug(f"Fixing timestamps")
-        if self.frames and self.timestamps and len(self.frames)!=len(self.timestamps):
+        if self.frames and self.timestamps and len(self.frames) != len(self.timestamps):
             self.logger.warning(
                 f"Uneven timestamp data: {len(self.timestamps)} timestamps for {len(self.frames)} frames"
             )
@@ -47,7 +52,7 @@ class TimeFixer:
             self.mergeIntervalOfWords(arg["start"], arg["end"])
         else:
             pass
-            
+
     def getType(self, operation: Dict):
         if "Merge" in operation:
             return ("merge", operation["Merge"][0])
@@ -57,17 +62,21 @@ class TimeFixer:
             return ("pass", None)
         elif "InsertBefore" in operation:
             return ("pass", None)
-        
+
     def mergeIntervalOfWords(self, begin, end):
         if self.timestamps:
-            if end >= len(self.timestamps) or begin >= len(self.timestamps) or begin<0:
+            if (
+                end >= len(self.timestamps)
+                or begin >= len(self.timestamps)
+                or begin < 0
+            ):
                 return
             newBegin = self.timestamps[begin][0]
             newEnd = self.timestamps[end][1]
-            self.timestamps[begin:end+1] = [(newBegin,newEnd)]
+            self.timestamps[begin : end + 1] = [(newBegin, newEnd)]
         if self.frames:
-            if end >= len(self.frames) or begin >= len(self.frames) or begin<0:
+            if end >= len(self.frames) or begin >= len(self.frames) or begin < 0:
                 return
-            self.frames[begin:end+1] = [reduce(lambda a, b: a + b, self.frames[begin:end+1])]
-
-        
+            self.frames[begin : end + 1] = [
+                reduce(lambda a, b: a + b, self.frames[begin : end + 1])
+            ]

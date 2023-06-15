@@ -268,7 +268,9 @@ class TestOnnxRuntime(unittest.TestCase):
         sequence = DEFAULT_SPANISH_MESSAGE.split(" ")
         runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
         runtime.formatter = MockFormatter(FORMATTED_SPANISH_MESSAGE)
-        (words, times, frames) = runtime._performFormatting(" ".join(sequence), [[(0.0)] * len(sequence)], True)
+        (words, times, frames) = runtime._performFormatting(
+            " ".join(sequence), [[(0.0)] * len(sequence)], True
+        )
         self.assertEqual(
             words,
             FORMATTED_SPANISH_MESSAGE,
@@ -287,7 +289,7 @@ class TestOnnxRuntime(unittest.TestCase):
             runtime.formatWords(
                 "mi dni es siete siete uno uno cuatro tres seis ocho zeta"
             ),
-            ("Mi dni es 77114368-Z", None, None)
+            ("Mi dni es 77114368-Z", None, None),
         )
 
     def testRecognizeFormatterESEmails(self):
@@ -301,17 +303,19 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("mi email es test arroba verbio punto com"),
-            ("Mi email es Test@verbio.com", None, None)
+            ("Mi email es Test@verbio.com", None, None),
         )
         self.assertEqual(
-            runtime.formatWords("mi email es test arroba verbio punto com",
-                                [(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)],
-                                [[0],[1],[2],[3],[4],[5],[6],[7]]
+            runtime.formatWords(
+                "mi email es test arroba verbio punto com",
+                [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8)],
+                [[0], [1], [2], [3], [4], [5], [6], [7]],
             ),
-            ("Mi email es Test@verbio.com",
-             [(0,1),(1,2),(2,3),(3,8)],
-             [[0],[1],[2],[3,4,5,6,7]]
-            )
+            (
+                "Mi email es Test@verbio.com",
+                [(0, 1), (1, 2), (2, 3), (3, 8)],
+                [[0], [1], [2], [3, 4, 5, 6, 7]],
+            ),
         )
 
     def testRecognizeFormatterESPunctuation(self):
@@ -325,7 +329,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("en qué puedo ayudarle"),
-            ("¿En qué puedo ayudarle?", None, None)
+            ("¿En qué puedo ayudarle?", None, None),
         )
 
     def testRecognizeFormatterESCapitalization(self):
@@ -339,7 +343,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("mi nombre es maría"),
-            ("Mi nombre es María...", None, None)
+            ("Mi nombre es María...", None, None),
         )
 
     def testRecognizeFormatterEN_USNumbers(self):
@@ -353,7 +357,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("three million dot fourteen"),
-            ("3,000,000.14.", None, None)
+            ("3,000,000.14.", None, None),
         )
 
     def testRecognizeFormatterEN_USEmails(self):
@@ -367,7 +371,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("my email address john at gmail dot com", None),
-            ("My email address John@gmail.com.", None, None)
+            ("My email address John@gmail.com.", None, None),
         )
 
     def testRecognizeFormatterEN_USPunctuation(self):
@@ -380,8 +384,7 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("how are you"),
-            ("How are you?", None, None)
+            runtime.formatWords("how are you"), ("How are you?", None, None)
         )
 
     def testRecognizeFormatterEN_USCapitalization(self):
@@ -394,8 +397,7 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.EN_US,
         )
         self.assertEqual(
-            runtime.formatWords("my name is john"),
-            ("My name is John.", None, None)
+            runtime.formatWords("my name is john"), ("My name is John.", None, None)
         )
 
     def testRecognizeFormatterPT_BRNumbers(self):
@@ -409,7 +411,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("três mil duzentos e quarenta e cinco"),
-            ("3.245.", None, None)
+            ("3.245.", None, None),
         )
 
     def testRecognizeFormatterPT_BREmails(self):
@@ -423,7 +425,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("meu email é joão at domínio dot com"),
-            ("Meu email é João@domínio.com", None, None)
+            ("Meu email é João@domínio.com", None, None),
         )
 
     def testRecognizeFormatterPT_BRPunctuation(self):
@@ -437,7 +439,7 @@ class TestOnnxRuntime(unittest.TestCase):
         )
         self.assertEqual(
             runtime.formatWords("como vai que eu possa ajudar"),
-            ("Como vai que eu possa ajudar?", None, None)
+            ("Como vai que eu possa ajudar?", None, None),
         )
 
     def testRecognizeFormatterPT_BRCapitalization(self):
@@ -450,6 +452,5 @@ class TestOnnxRuntime(unittest.TestCase):
             Language.PT_BR,
         )
         self.assertEqual(
-            runtime.formatWords("meu nome é joão"),
-            ("Meu nome é João", None, None)
+            runtime.formatWords("meu nome é joão"), ("Meu nome é João", None, None)
         )

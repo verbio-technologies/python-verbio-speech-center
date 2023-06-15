@@ -345,7 +345,9 @@ class OnnxRuntime(Runtime):
     ) -> OnnxRuntimeResult:
         self._session.logger.debug(" - postprocess")
         (words, timesteps, score) = self._getTimeSteps(output)
-        (words, timesteps, frames) = self._performFormatting(words, timesteps, enable_formatting)
+        (words, timesteps, frames) = self._performFormatting(
+            words, timesteps, enable_formatting
+        )
         return OnnxRuntimeResult(
             sequence=" ".join(words), score=score, wordTimestamps=timesteps
         )
@@ -365,31 +367,40 @@ class OnnxRuntime(Runtime):
         return words, timesteps, score
 
     def _cleanASRoutput(self, sequence):
-        return( "".join(sequence)
-                .replace("|", " ")
-                .replace("<s>", "")
-                .replace("</s>", "")
-                .replace("<pad>", "")
-                .strip())
+        return (
+            "".join(sequence)
+            .replace("|", " ")
+            .replace("<s>", "")
+            .replace("</s>", "")
+            .replace("<pad>", "")
+            .strip()
+        )
 
-    def _performFormatting(self, words: str, timesteps, enable_formatting) -> (List[str], List[Any], List[List[int]]):
+    def _performFormatting(
+        self, words: str, timesteps, enable_formatting
+    ) -> (List[str], List[Any], List[List[int]]):
         if enable_formatting:
             return self.formatWords(words, timesteps)
         else:
             return (words, timesteps, [])
 
-    def formatWords(self, words: str, timesteps: List[List[float]]=None, frames: List[List[int]]=None) -> (List[str], List[Any], List[List[int]]):
+    def formatWords(
+        self,
+        words: str,
+        timesteps: List[List[float]] = None,
+        frames: List[List[int]] = None,
+    ) -> (List[str], List[Any], List[List[int]]):
         self._session.logger.debug(" - formatting")
         if self.formatter and words:
             self._session.logger.debug(f"Pre-formatter text: {words}")
             try:
                 (words, ops) = self.formatter.classify(words.split(" "))
                 ops = json.loads(ops.to_json())
-                (timesteps, frames) = TimeFixer(ops["operations"], timesteps, frames).invoke()
+                (timesteps, frames) = TimeFixer(
+                    ops["operations"], timesteps, frames
+                ).invoke()
             except Exception as e:
-                self._session.logger.error(
-                    f"Error formatting sentence '{words}'"
-                )
+                self._session.logger.error(f"Error formatting sentence '{words}'")
                 self._session.logger.error(e)
         return (" ".join(words), timesteps, frames)
 
