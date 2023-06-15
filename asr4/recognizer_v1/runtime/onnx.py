@@ -337,7 +337,10 @@ class OnnxRuntime(Runtime):
             elif self.decoding_type == DecodingType.LOCAL and not self.local_formatting:
                 chunk += 1
                 total_probs += frame_probs
-                if chunk % self.maximumChunksForDeconding == 0 or i == input.shape[1]-1:
+                if (
+                    chunk % self.maximumChunksForDeconding == 0
+                    or i == input.shape[1] - 1
+                ):
                     (
                         label_sequences,
                         scores,
@@ -352,7 +355,7 @@ class OnnxRuntime(Runtime):
                         totalChunkLength,
                     )
                     total_probs = []
-                    totalChunkLength = frame_probs[0].shape[1]*chunk
+                    totalChunkLength = frame_probs[0].shape[1] * chunk
             elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
                 if i > 0:
                     accumulated_probs += frame_probs
