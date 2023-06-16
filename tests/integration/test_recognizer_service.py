@@ -281,9 +281,13 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         output = process.stdout.read()
         data = self.__findJsonDataInOutput(output)
         if data:
-            lastTimestamp = self.__checkTimestampsAreCoherent(data["results"]["alternatives"][0]["words"])
+            lastTimestamp = self.__checkTimestampsAreCoherent(
+                data["results"]["alternatives"][0]["words"]
+            )
             if self.__asrIsIssuingTimestamps(lastTimestamp):
-                self.assertGreater(lastTimestamp, 0.75*float(data["results"]["duration"][:-1]))
+                self.assertGreater(
+                    lastTimestamp, 0.75 * float(data["results"]["duration"][:-1])
+                )
 
     def __asrIsIssuingTimestamps(self, timestamp: float) -> bool:
         return timestamp != 0
@@ -294,7 +298,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         if i != -1:
             return json.loads(text[1 + len(signal) + i :])
         return None
-                
+
     def __checkTimestampsAreCoherent(self, words) -> float:
         previousEnd = -1.0
         for word in words:
