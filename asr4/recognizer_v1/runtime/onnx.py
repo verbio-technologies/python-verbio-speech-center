@@ -383,10 +383,7 @@ class OnnxRuntime(Runtime):
                     accumulated_probs = []
                 totalChunkLength += chunkLength
 
-        if (
-            self.decoding_type == DecodingType.GLOBAL
-            or self.maxChunksForDeconding > input.shape[1]
-        ):
+        if self.decoding_type == DecodingType.GLOBAL:
             return self._decodeTotal(total_probs, enable_formatting)
 
         elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
