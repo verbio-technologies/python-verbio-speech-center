@@ -271,6 +271,7 @@ class Asr4ArgParser:
         args.overlap = int(args.overlap or 0)
         args.subwords = bool(args.subwords or False)
         args.local_formatting = bool(args.local_formatting or False)
+        args.maxChunksForDeconding = int(args.maxChunksForDeconding or 1)
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:
