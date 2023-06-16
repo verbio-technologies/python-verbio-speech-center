@@ -336,14 +336,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             )
             return word
 
-        words = (
-            [
+        if len(response.wordTimestamps) > 0:
+            words = [
                 getWord(i, token)
                 for i, token in enumerate(response.transcription.strip().split(" "))
             ]
-            if len(response.wordTimestamps) > 0
-            else []
-        )
+        else:
+            words = []
 
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
