@@ -286,7 +286,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             )
             if self.__asrIsIssuingTimestamps(lastTimestamp):
                 self.assertGreater(
-                    lastTimestamp, 0.75 * float(data["results"]["duration"][:-1])
+                    lastTimestamp, 0.75 * parseSeconds(data["results"]["duration"])
                 )
 
     def __asrIsIssuingTimestamps(self, timestamp: float) -> bool:
@@ -304,9 +304,13 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         for word in words:
             self.assertNotEqual("", word["startTime"])
             self.assertNotEqual("", word["endTime"])
-            start = float(word["startTime"][:-1])
-            end = float(word["endTime"][:-1])
+            start = parseSeconds(word["startTime"])
+            end = parseSeconds(word["endTime"])
             self.assertTrue(end >= start)
             self.assertTrue(start >= previousEnd)
             previousEnd = end
         return previousEnd
+
+
+def parseSeconds(text: str) -> float:
+    return float(text[:-1])
