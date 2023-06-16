@@ -31,7 +31,7 @@ class MockArguments(argparse.Namespace):
         self.overlap = None
         self.subwords = None
         self.local_formatting = False
-        self.maximumChunksForDeconding = 1
+        self.maxChunksForDeconding = 1
 
 
 class TestServerConfiguration(unittest.TestCase):

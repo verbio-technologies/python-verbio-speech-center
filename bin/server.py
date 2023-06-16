@@ -189,9 +189,9 @@ class Asr4ArgParser:
             help="Perform local formatting when partial decoding",
         )
         parser.add_argument(
-            "--maximumChunksForDeconding",
+            "--maxChunksForDeconding",
             type=int,
-            dest="maximumChunksForDeconding",
+            dest="maxChunksForDeconding",
             help="The number of chunks of audio until perform local decoding.",
         )
         return parser.parse_args(args)

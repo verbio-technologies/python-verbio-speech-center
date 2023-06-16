@@ -193,7 +193,7 @@ class OnnxRuntime(Runtime):
         overlap: Optional[int] = 0,
         subwords: bool = False,
         local_formatting: bool = False,
-        maximumChunksForDeconding: int = 1,
+        maxChunksForDeconding: int = 1,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
@@ -211,7 +211,7 @@ class OnnxRuntime(Runtime):
             sil_score,
             subwords,
             local_formatting,
-            maximumChunksForDeconding,
+            maxChunksForDeconding,
         )
 
     def _initializeDecoder(
@@ -226,11 +226,11 @@ class OnnxRuntime(Runtime):
         sil_score: Optional[float],
         subwords: bool = False,
         local_formatting: bool = False,
-        maximumChunksForDeconding: int = 1,
+        maxChunksForDeconding: int = 1,
     ) -> None:
         self.formatter = formatter
         self.local_formatting = local_formatting
-        self.maximumChunksForDeconding = maximumChunksForDeconding
+        self.maxChunksForDeconding = maxChunksForDeconding
         self.lmAlgorithm = lmAlgorithm
         self.decoding_type = getattr(
             self._session, "decoding_type", DecodingType.GLOBAL
@@ -339,7 +339,7 @@ class OnnxRuntime(Runtime):
                 chunk += 1
                 total_probs += frame_probs
                 if (
-                    chunk % self.maximumChunksForDeconding == 0
+                    chunk % self.maxChunksForDeconding == 0
                     or i == input.shape[1] - 1
                 ):
                     (
