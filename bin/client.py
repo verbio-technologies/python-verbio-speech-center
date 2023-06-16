@@ -2,14 +2,11 @@ import grpc
 import wave
 import atexit
 import logging
-import argparse
+import argparse, re, os, sys, time
 import multiprocessing
 import numpy as np
-import re
-import os
-import sys
-import time
 
+from google.protobuf.json_format import MessageToJson
 from subprocess import Popen, PIPE
 from examples import run_evaluator
 
@@ -333,6 +330,12 @@ def _parseArguments() -> argparse.Namespace:
         help="Number of parallel workers; if not specified, defaults to CPU count.",
     )
     parser.add_argument(
+        "--json",
+        action='store_true',
+        default=False,
+        help="Write full GRCP json output.",
+    )
+    parser.add_argument(
         "-m",
         "--metrics",
         action="store_true",
@@ -374,3 +377,7 @@ if __name__ == "__main__":
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
     _LOGGER.debug(f"Returned responses: {_repr(responses)}")
+    if args.json:
+        print("Messages:")
+        for r in responses:
+            print(MessageToJson(r))

@@ -1,6 +1,4 @@
-import os
-import re
-import sys
+import json, os, re, sys
 import jiwer
 import pytest
 import unittest
@@ -28,6 +26,7 @@ class TestRecognizerUtils(object):
             f"{self.rootdir}/bin/client.py",
             "-v",
             "TRACE",
+            "--json",
             "--format",
             "--language",
             language,
@@ -155,6 +154,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self._reference = self.readReference(referencePath)
         self._output = self.datadir + "/output"
 
+        
     def testRecognizeRequest(self):
         hypothesis = self._recognizeAudio(self._audio, self._language)
         self.assertGreater(len(hypothesis), 1)
@@ -273,3 +273,24 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
     def ensureLowerCase(self, text):
         match = re.search("[A-Z]", text)
         self.assertEqual(match, None)
+
+    def testRecognizeTimestampsExist(self):
+        process = self.launchRecognitionProcess(self._audio, self._language)
+        status = process.wait(timeout=900)
+        self.checkStatus(status, process.stderr.read())
+        output = process.stdout.read()
+        i = output.find("Messages:")
+        if i!=-1:
+            data = json.loads(output[10+i:])
+            self.checkTimestampsAreCoherent(data["results"]["alternatives"][0]["words"])
+
+    def checkTimestampsAreCoherent(self, words):
+        previousEnd = -1.0
+        for w in words:
+            self.assertNotEqual("", w["startTime"])
+            self.assertNotEqual("", w["endTime"])
+            start = float(w["startTime"][:-1])
+            end = float(w["endTime"][:-1])
+            self.assertTrue(end>=start)
+            self.assertTrue(start>=previousEnd)
+            previousEnd = end
