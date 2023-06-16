@@ -333,7 +333,7 @@ def _parseArguments() -> argparse.Namespace:
         "--json",
         action="store_true",
         default=False,
-        help="Write full GRCP json output.",
+        help="Write full ASR4 answer that comes from gRPC messages in json format.",
     )
     parser.add_argument(
         "-m",

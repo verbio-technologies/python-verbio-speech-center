@@ -6,6 +6,7 @@ from shutil import rmtree
 from subprocess import Popen, PIPE
 from typing import Optional
 from asr4.recognizer import Language
+from typing import Optional
 
 
 class TestRecognizerUtils(object):
@@ -278,18 +279,30 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
-        i = output.find("Messages:")
-        if i != -1:
-            data = json.loads(output[10 + i :])
-            self.checkTimestampsAreCoherent(data["results"]["alternatives"][0]["words"])
+        data = self.__findJsonDataInOutput(output)
+        if data:
+            lastTimestamp = self.__checkTimestampsAreCoherent(data["results"]["alternatives"][0]["words"])
+            if self.__asrIsIssuingTimestamps(lastTimestamp):
+                self.assertGreater(lastTimestamp, 0.75*float(data["results"]["duration"][:-1]))
 
-    def checkTimestampsAreCoherent(self, words):
+    def __asrIsIssuingTimestamps(self, timestamp: float) -> bool:
+        return timestamp != 0
+
+    def __findJsonDataInOutput(self, text) -> Optional[str]:
+        signal = "Messages:"
+        i = text.find(signal)
+        if i != -1:
+            return json.loads(text[1 + len(signal) + i :])
+        return None
+                
+    def __checkTimestampsAreCoherent(self, words) -> float:
         previousEnd = -1.0
-        for w in words:
-            self.assertNotEqual("", w["startTime"])
-            self.assertNotEqual("", w["endTime"])
-            start = float(w["startTime"][:-1])
-            end = float(w["endTime"][:-1])
+        for word in words:
+            self.assertNotEqual("", word["startTime"])
+            self.assertNotEqual("", word["endTime"])
+            start = float(word["startTime"][:-1])
+            end = float(word["endTime"][:-1])
             self.assertTrue(end >= start)
             self.assertTrue(start >= previousEnd)
             previousEnd = end
+        return previousEnd
