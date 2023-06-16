@@ -154,7 +154,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self._reference = self.readReference(referencePath)
         self._output = self.datadir + "/output"
 
-        
     def testRecognizeRequest(self):
         hypothesis = self._recognizeAudio(self._audio, self._language)
         self.assertGreater(len(hypothesis), 1)
@@ -280,8 +279,8 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         i = output.find("Messages:")
-        if i!=-1:
-            data = json.loads(output[10+i:])
+        if i != -1:
+            data = json.loads(output[10 + i :])
             self.checkTimestampsAreCoherent(data["results"]["alternatives"][0]["words"])
 
     def checkTimestampsAreCoherent(self, words):
@@ -291,6 +290,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             self.assertNotEqual("", w["endTime"])
             start = float(w["startTime"][:-1])
             end = float(w["endTime"][:-1])
-            self.assertTrue(end>=start)
-            self.assertTrue(start>=previousEnd)
+            self.assertTrue(end >= start)
+            self.assertTrue(start >= previousEnd)
             previousEnd = end

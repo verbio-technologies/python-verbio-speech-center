@@ -331,7 +331,7 @@ def _parseArguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--json",
-        action='store_true',
+        action="store_true",
         default=False,
         help="Write full GRCP json output.",
     )
