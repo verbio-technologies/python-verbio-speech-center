@@ -834,3 +834,21 @@ class TestOnnxRuntime(unittest.TestCase):
             runtime._sumOffsetToTimestamps(wordFrames, 2),
             [(0.24, 0.64), (1.04, 1.24), (1.64, 2.04)],
         )
+
+    def testBatchDecodeGLOBAL(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime._decoding_type = DecodingType.GLOBAL
+        result = OnnxRuntimeResult(
+            sequence="How can I help you?",
+            score=[[1.0]],
+            wordFrames=[[[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]]],
+            wordTimestamps=[[[[0.2, 0.4], [0.6, 0.8], [1, 1.2], [1.4, 1.6]]]],
+        )
+        runtime._decodeTotal = MagicMock(return_value=result)
+        input = [
+            [[[11.257219, -27.25789, -27.70079]]],
+            [[[11.257219, -27.25789, -27.70079]]],
+        ]
+        self.assertEqual(
+            runtime._batchDecode(input.numpy(), enable_formatting=True), result
+        )
