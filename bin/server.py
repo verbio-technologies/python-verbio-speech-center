@@ -223,6 +223,9 @@ class Asr4ArgParser:
         args.local_formatting = args.local_formatting or os.environ.get(
             "ASR4_LOCAL_FORMATTING"
         )
+        args.maxChunksForDeconding = args.maxChunksForDeconding or os.environ.get(
+            "ASR4_MAX_CHUNKS_FOR_ENCODING"
+        )
         if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
             args.bindAddress = (
                 f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
