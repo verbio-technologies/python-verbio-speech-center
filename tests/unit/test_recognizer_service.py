@@ -57,7 +57,7 @@ class MockArguments(argparse.Namespace):
         self.overlap = None
         self.subwords = None
         self.local_formatting = False
-        self.maxChunksForDeconding = 1
+        self.maxChunksForDecoding = 1
 
     def createVocabulary(self) -> str:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
