@@ -311,5 +311,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             previousEnd = end
         return previousEnd
 
+
 def parseSeconds(text: str) -> float:
     return float(text[:-1])
