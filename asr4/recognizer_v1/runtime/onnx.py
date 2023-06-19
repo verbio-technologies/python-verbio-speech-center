@@ -193,7 +193,7 @@ class OnnxRuntime(Runtime):
         overlap: Optional[int] = 0,
         subwords: bool = False,
         local_formatting: bool = False,
-        maxChunksForDeconding: int = 1,
+        maxChunksForDecoding: int = 1,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
@@ -211,7 +211,7 @@ class OnnxRuntime(Runtime):
             sil_score,
             subwords,
             local_formatting,
-            maxChunksForDeconding,
+            maxChunksForDecoding,
         )
 
     def _initializeDecoder(
@@ -226,11 +226,11 @@ class OnnxRuntime(Runtime):
         sil_score: Optional[float],
         subwords: bool = False,
         local_formatting: bool = False,
-        maxChunksForDeconding: int = 1,
+        maxChunksForDecoding: int = 1,
     ) -> None:
         self.formatter = formatter
         self.local_formatting = local_formatting
-        self.maxChunksForDeconding = maxChunksForDeconding
+        self.maxChunksForDecoding = maxChunksForDecoding
         self.lmAlgorithm = lmAlgorithm
         self.decoding_type = getattr(
             self._session, "decoding_type", DecodingType.GLOBAL
@@ -311,7 +311,7 @@ class OnnxRuntime(Runtime):
                 enable_formatting,
             )
         else:
-            if self.maxChunksForDeconding > input.shape[1]:
+            if self.maxChunksForDecoding > input.shape[1]:
                 self.decoding_type = DecodingType.GLOBAL
             return self._batchDecode(
                 input,
@@ -340,7 +340,7 @@ class OnnxRuntime(Runtime):
             elif self.decoding_type == DecodingType.LOCAL and not self.local_formatting:
                 chunk += 1
                 total_probs += frame_probs
-                if chunk % self.maxChunksForDeconding == 0 or i == input.shape[1] - 1:
+                if chunk % self.maxChunksForDecoding == 0 or i == input.shape[1] - 1:
                     (
                         label_sequences,
                         scores,
