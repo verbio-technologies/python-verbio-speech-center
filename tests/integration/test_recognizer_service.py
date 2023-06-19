@@ -296,7 +296,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         header = "Messages:"
         i = text.find(header)
         if i != -1:
-            return json.loads(text[1 + len(signal) + i :])
+            return json.loads(text[1 + len(header) + i :])
         return None
 
     def __checkTimestampsAreCoherent(self, words) -> float:
