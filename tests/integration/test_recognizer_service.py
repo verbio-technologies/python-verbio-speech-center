@@ -1,6 +1,4 @@
-import os
-import re
-import sys
+import json, os, re, sys
 import jiwer
 import pytest
 import unittest
@@ -8,6 +6,7 @@ from shutil import rmtree
 from subprocess import Popen, PIPE
 from typing import Optional
 from asr4.recognizer import Language
+from typing import Optional
 
 
 class TestRecognizerUtils(object):
@@ -28,6 +27,7 @@ class TestRecognizerUtils(object):
             f"{self.rootdir}/bin/client.py",
             "-v",
             "TRACE",
+            "--json",
             "--format",
             "--language",
             language,
@@ -273,3 +273,44 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
     def ensureLowerCase(self, text):
         match = re.search("[A-Z]", text)
         self.assertEqual(match, None)
+
+    def testRecognizeTimestampsExist(self):
+        process = self.launchRecognitionProcess(self._audio, self._language)
+        status = process.wait(timeout=900)
+        self.checkStatus(status, process.stderr.read())
+        output = process.stdout.read()
+        message = self.__thereAreMessagesInOutputJsonData(output)
+        if message:
+            lastTimestamp = self.__checkTimestampsAreCoherent(
+                message["results"]["alternatives"][0]["words"]
+            )
+            if self.__asrIsIssuingTimestamps(lastTimestamp):
+                self.assertGreater(
+                    lastTimestamp, 0.75 * parseSeconds(message["results"]["duration"])
+                )
+
+    def __asrIsIssuingTimestamps(self, timestamp: float) -> bool:
+        return timestamp != 0
+
+    def __thereAreMessagesInOutputJsonData(self, text) -> Optional[str]:
+        header = "Messages:"
+        i = text.find(header)
+        if i != -1:
+            return json.loads(text[1 + len(header) + i :])
+        return None
+
+    def __checkTimestampsAreCoherent(self, words) -> float:
+        previousEnd = -1.0
+        for word in words:
+            self.assertNotEqual("", word["startTime"])
+            self.assertNotEqual("", word["endTime"])
+            start = parseSeconds(word["startTime"])
+            end = parseSeconds(word["endTime"])
+            self.assertTrue(end >= start)
+            self.assertTrue(start >= previousEnd)
+            previousEnd = end
+        return previousEnd
+
+
+def parseSeconds(text: str) -> float:
+    return float(text[:-1])
