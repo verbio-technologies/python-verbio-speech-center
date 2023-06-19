@@ -31,7 +31,7 @@ class MockArguments(argparse.Namespace):
         self.overlap = None
         self.subwords = None
         self.local_formatting = False
-        self.maxChunksForDeconding = 1
+        self.maxChunksForDecoding = 1
 
 
 class TestServerConfiguration(unittest.TestCase):
@@ -89,7 +89,7 @@ class ArgumentParserTests(unittest.TestCase):
             "--sil_score",
             "0.1",
             "-local-formatting",
-            "--maxChunksForDeconding",
+            "--maxChunksForDecoding",
             "1",
         ]
         args = Asr4ArgParser.parseArguments(argv)
@@ -114,7 +114,7 @@ class ArgumentParserTests(unittest.TestCase):
         self.assertEqual(args.word_score, 0.2)
         self.assertEqual(args.sil_score, 0.1)
         self.assertEqual(args.local_formatting, True)
-        self.assertEqual(args.maxChunksForDeconding, 1)
+        self.assertEqual(args.maxChunksForDecoding, 1)
 
 
 class SetDefaultBindAddressTests(unittest.TestCase):
@@ -196,7 +196,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.overlap = 0
         args.subwords = False
         args.local_formatting = False
-        args.maxChunksForDeconding = 1
+        args.maxChunksForDecoding = 1
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
@@ -217,7 +217,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.overlap, 0)
         self.assertEqual(args.subwords, False)
         self.assertEqual(args.local_formatting, False)
-        self.assertEqual(args.maxChunksForDeconding, 1)
+        self.assertEqual(args.maxChunksForDecoding, 1)
 
     def test_system_vars_override_with_env_vars_set(self):
         args = argparse.Namespace()
@@ -237,7 +237,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args.overlap = None
         args.subwords = None
         args.local_formatting = None
-        args.maxChunksForDeconding = 1
+        args.maxChunksForDecoding = 1
 
         # Set environment variables for testing
         os.environ["LOG_LEVEL"] = "INFO"
@@ -255,7 +255,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         os.environ["ASR4_OVERLAP"] = "80000"
         os.environ["ASR4_SUBWORDS"] = "1"
         os.environ["ASR4_LOCAL_FORMATTING"] = "1"
-        os.environ["ASR4_MAX_CHUNKS_FOR_ENCODING"] = "1"
+        os.environ["ASR4_MAX_CHUNKS_FOR_DECODING"] = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
@@ -313,7 +313,7 @@ class DefaultValuesTests(unittest.TestCase):
         args.overlap = None
         args.subwords = "1"
         args.local_formatting = None
-        args.maxChunksForDeconding = "1"
+        args.maxChunksForDecoding = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
 
@@ -331,7 +331,7 @@ class DefaultValuesTests(unittest.TestCase):
         self.assertEqual(args.sil_score, 0.0)
         self.assertEqual(args.subwords, True)
         self.assertEqual(args.local_formatting, False)
-        self.assertEqual(args.maxChunksForDeconding, 1)
+        self.assertEqual(args.maxChunksForDecoding, 1)
 
 
 class TestCheckArgsRequired(unittest.TestCase):
@@ -349,7 +349,7 @@ class TestCheckArgsRequired(unittest.TestCase):
         self.args.cpu_version = "1.1.0"
         self.args.lm_version = "1.3.0"
         self.args.local_formatting = False
-        self.args.maxChunksForDeconding = 1
+        self.args.maxChunksForDecoding = 1
 
     def test_checkArgsRequired_with_model_specified(self):
         # Test when args.model is already specified, no exception should be raised

@@ -54,7 +54,7 @@ class RecognitionServiceConfiguration:
         self.sil_score = 0
         self.overlap = 0
         self.local_formatting = False
-        self.maxChunksForDeconding = 1
+        self.maxChunksForDecoding = 1
         self.__setArguments(arguments)
 
     def __setArguments(self, arguments: argparse.Namespace):
@@ -77,7 +77,7 @@ class RecognitionServiceConfiguration:
             self.sil_score = arguments.sil_score
             self.overlap = arguments.overlap
             self.local_formatting = arguments.local_formatting
-            self.maxChunksForDeconding = arguments.maxChunksForDeconding
+            self.maxChunksForDecoding = arguments.maxChunksForDecoding
 
     def createOnnxSession(self) -> OnnxSession:
         return OnnxSession(
@@ -136,7 +136,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             configuration.overlap,
             configuration.subwords,
             configuration.local_formatting,
-            configuration.maxChunksForDeconding,
+            configuration.maxChunksForDecoding,
         )
         if formatter is None:
             self.logger.warning(
@@ -157,7 +157,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         overlap: Optional[int],
         subwords: bool = False,
         local_formatting: bool = False,
-        maxChunksForDeconding: int = 1,
+        maxChunksForDecoding: int = 1,
     ) -> OnnxRuntime:
         if vocabularyPath is not None:
             vocabulary = RecognizerService._readVocabulary(vocabularyPath)
@@ -174,7 +174,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 overlap,
                 subwords,
                 local_formatting,
-                maxChunksForDeconding,
+                maxChunksForDecoding,
             )
         else:
             return OnnxRuntime(session)
