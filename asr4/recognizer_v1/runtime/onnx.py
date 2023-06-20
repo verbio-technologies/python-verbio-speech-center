@@ -370,7 +370,7 @@ class OnnxRuntime(Runtime):
             chunk += 1
             totalProbs += frameProbs
             if chunk % self.maxChunksForDecoding == 0 or i == input.shape[1] - 1:
-                (partialResult) = self._decodePartial(
+                partialResult = self._decodePartial(
                     np.concatenate(totalProbs, axis=1),
                 )
                 if len(labelSequences) > 0 and self.lmAlgorithm == "kenlm":

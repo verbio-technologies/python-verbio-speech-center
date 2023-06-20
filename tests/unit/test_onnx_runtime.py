@@ -9,6 +9,7 @@ import google
 import numpy as np
 from random import randint
 from typing import Any, Tuple, Dict, List, Optional, Union
+import torch.nn.functional as F
 
 from asr4.recognizer_v1.runtime import (
     Session,
@@ -790,7 +791,7 @@ class TestOnnxRuntime(unittest.TestCase):
         scores = [1.0] * len(label_sequences)
         wordFrames = [[[[0, 10], [15, 25]]]]
         wordTimestamps = [[[[0, 2], [3, 5]]]]
-        result = runtime._performLocalDecodingWithGlobalFormatting(
+        result = runtime._postProcessPartialDecoding(
             label_sequences, scores, wordFrames, wordTimestamps, enable_formatting=True
         )
         self.assertEqual(result.sequence, "Good afternoon.")
@@ -834,3 +835,93 @@ class TestOnnxRuntime(unittest.TestCase):
             runtime._sumOffsetToTimestamps(wordFrames, 2),
             [(0.24, 0.64), (1.04, 1.24), (1.64, 2.04)],
         )
+
+    def testBatchDecodeGlobal(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.decoding_type = DecodingType.GLOBAL
+        runtime.lmAlgorithm = "kenlm"
+        result = OnnxRuntimeResult(
+            sequence="yes yes yes yes yes",
+            score=[[1.0]],
+            wordFrames=[[[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]]],
+            wordTimestamps=[[[[0.2, 0.4], [0.6, 0.8], [1, 1.2], [1.4, 1.6]]]],
+        )
+        runtime._decodeTotal = MagicMock(return_value=result)
+        x = np.array(
+            [[1, 2, 3, 4], [3, 4, 5, 6], [5, 6, 7, 8], [7, 8, 9, 10]], dtype=np.float32
+        )
+        x = torch.from_numpy(x.copy())
+        x = torch.unsqueeze(x, 0)
+        with torch.no_grad():
+            x = F.layer_norm(x, x.shape)
+        self.assertEqual(runtime._batchDecodeGlobal(x, enable_formatting=False), result)
+
+    def testBatchDecodePartialLocalFormatting(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.local_formatting = True
+        result = (
+            OnnxRuntimeResult(
+                sequence="Hola.",
+                score=1.0,
+                wordFrames=[[1, 3]],
+                wordTimestamps=[(0.2, 0.6)],
+            ),
+        )
+        runtime._batchDecodePartialWithLocalFormatting = MagicMock(return_value=result)
+        self.assertEqual(
+            runtime._batchDecodePartial([], enable_formatting=True), result
+        )
+
+    def testBatchDecodePartialGlobalFormatting(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.local_formatting = False
+        result = (
+            OnnxRuntimeResult(
+                sequence="Hola.",
+                score=1.0,
+                wordFrames=[[1, 3]],
+                wordTimestamps=[(0.2, 0.6)],
+            ),
+        )
+        runtime._batchDecodePartialAccumulated = MagicMock(return_value=result)
+        self.assertEqual(
+            runtime._batchDecodePartial([], enable_formatting=True), result
+        )
+
+    def testGetPartialResults(self):
+        runtime = OnnxRuntime(MockOnnxSession(""), "", "", "")
+        runtime.lmAlgorithm = "kenlm"
+        runtime.maxChunksForDecoding = 1
+        partialResult = _DecodeResult(
+            label_sequences=[[["y", "e", "s"]]],
+            scores=[[1.0]],
+            wordsFrames=[[1, 3]],
+            timesteps=[(0.2, 0.6)],
+        )
+        runtime._decodePartial = MagicMock(return_value=partialResult)
+        x = np.array(
+            [[1, 2, 3, 4], [3, 4, 5, 6], [5, 6, 7, 8], [7, 8, 9, 10]], dtype=np.float32
+        )
+        x = torch.from_numpy(x.copy())
+        x = torch.unsqueeze(x, 0)
+        with torch.no_grad():
+            x = F.layer_norm(x, x.shape)
+        (
+            labelSequences,
+            _score,
+            _wordFrames,
+            _wordTimestamps,
+        ) = runtime._getPartialResults(x)
+        self.assertEqual(
+            labelSequences,
+            ["y", "e", "s", " ", "y", "e", "s", " ", "y", "e", "s", " ", "y", "e", "s"],
+        )
+
+        runtime.maxChunksForDecoding = 2
+        (
+            labelSequences,
+            _score,
+            _wordFrames,
+            _wordTimestamps,
+        ) = runtime._getPartialResults(x)
+        self.assertEqual(labelSequences, ["y", "e", "s", " ", "y", "e", "s"])
