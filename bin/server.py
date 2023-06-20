@@ -188,6 +188,12 @@ class Asr4ArgParser:
             action="store_true",
             help="Perform local formatting when partial decoding",
         )
+        parser.add_argument(
+            "--maxChunksForDecoding",
+            type=int,
+            dest="maxChunksForDecoding",
+            help="The number of chunks of audio until perform local decoding.",
+        )
         return parser.parse_args(args)
 
     def fixNumberOfJobs(args):
@@ -216,6 +222,9 @@ class Asr4ArgParser:
         args.subwords = args.subwords or os.environ.get("ASR4_SUBWORDS")
         args.local_formatting = args.local_formatting or os.environ.get(
             "ASR4_LOCAL_FORMATTING"
+        )
+        args.maxChunksForDecoding = args.maxChunksForDecoding or os.environ.get(
+            "ASR4_MAX_CHUNKS_FOR_DECODING"
         )
         if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
             args.bindAddress = (
@@ -265,6 +274,7 @@ class Asr4ArgParser:
         args.overlap = int(args.overlap or 0)
         args.subwords = bool(args.subwords or False)
         args.local_formatting = bool(args.local_formatting or False)
+        args.maxChunksForDecoding = int(args.maxChunksForDecoding or 1)
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:

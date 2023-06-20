@@ -192,6 +192,7 @@ class OnnxRuntime(Runtime):
         overlap: Optional[int] = 0,
         subwords: bool = False,
         local_formatting: bool = False,
+        maxChunksForDecoding: int = 1,
     ) -> None:
         if not session.get_inputs_names():
             raise ValueError("Recognition Model inputs list cannot be empty!")
@@ -209,6 +210,7 @@ class OnnxRuntime(Runtime):
             sil_score,
             subwords,
             local_formatting,
+            maxChunksForDecoding,
         )
 
     def _initializeDecoder(
@@ -223,9 +225,11 @@ class OnnxRuntime(Runtime):
         sil_score: Optional[float],
         subwords: bool = False,
         local_formatting: bool = False,
+        maxChunksForDecoding: int = 1,
     ) -> None:
         self.formatter = formatter
         self.local_formatting = local_formatting
+        self.maxChunksForDecoding = maxChunksForDecoding
         self.lmAlgorithm = lmAlgorithm
         self.decoding_type = getattr(
             self._session, "decoding_type", DecodingType.GLOBAL
@@ -303,6 +307,8 @@ class OnnxRuntime(Runtime):
                 enable_formatting,
             )
         else:
+            if self.maxChunksForDecoding > input.shape[1]:
+                self.decoding_type = DecodingType.GLOBAL
             return self._batchDecode(
                 input,
                 enable_formatting,
@@ -317,6 +323,7 @@ class OnnxRuntime(Runtime):
         iterationOverSameChunk = 0
         partialDecodingTotal = []
         totalChunkLength = 0
+        chunk = 0
 
         for i in range(input.shape[1]):
             self._session.logger.debug(f" - softmax")
@@ -327,20 +334,24 @@ class OnnxRuntime(Runtime):
                 total_probs += frame_probs
 
             elif self.decoding_type == DecodingType.LOCAL and not self.local_formatting:
-                (
-                    label_sequences,
-                    scores,
-                    wordFrames,
-                    wordTimestamps,
-                ) = self._decodePartialAccumulated(
-                    label_sequences,
-                    scores,
-                    wordFrames,
-                    wordTimestamps,
-                    frame_probs,
-                    totalChunkLength,
-                )
-                totalChunkLength += frame_probs[0].shape[1]
+                chunk += 1
+                total_probs += frame_probs
+                if chunk % self.maxChunksForDecoding == 0 or i == input.shape[1] - 1:
+                    (
+                        label_sequences,
+                        scores,
+                        wordFrames,
+                        wordTimestamps,
+                    ) = self._decodePartialAccumulated(
+                        label_sequences,
+                        scores,
+                        wordFrames,
+                        wordTimestamps,
+                        total_probs,
+                        totalChunkLength,
+                    )
+                    total_probs = []
+                    totalChunkLength = frame_probs[0].shape[1] * chunk
             elif self.decoding_type == DecodingType.LOCAL and self.local_formatting:
                 if i > 0:
                     accumulated_probs += frame_probs
@@ -397,9 +408,14 @@ class OnnxRuntime(Runtime):
         return self._postprocess(decoding_output, enable_formatting)
 
     def _decodePartialAccumulated(
-        self, label_sequences, scores, wordFrames, wordTimestamps, yi, chunkLength
+        self, label_sequences, scores, wordFrames, wordTimestamps, y, chunkLength
     ):
-        normalized_y = F.softmax(torch.from_numpy(yi[0]), dim=2)
+        y = np.concatenate(y, axis=1)
+        normalized_y = (
+            F.softmax(torch.from_numpy(y), dim=2)
+            if self.lmAlgorithm == "viterbi"
+            else torch.from_numpy(y)
+        )
         self._session.logger.debug(" - decoding partial with global formatting")
         decoded_part = self._decoder.decode(normalized_y)
         if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
