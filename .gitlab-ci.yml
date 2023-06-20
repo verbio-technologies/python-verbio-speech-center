@@ -263,6 +263,7 @@ image:release:gpu:
     extends:
       - .template_docker_build
     script:
+      - !reference [.template_docker_build, script]
       - docker push "${IMAGE_NAME}"
     
 
