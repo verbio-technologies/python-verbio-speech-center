@@ -370,18 +370,18 @@ class OnnxRuntime(Runtime):
             chunk += 1
             totalProbs += frameProbs
             if chunk % self.maxChunksForDecoding == 0 or i == input.shape[1] - 1:
-                (
-                    labelSequences,
-                    scores,
-                    wordFrames,
-                    wordTimestamps,
-                ) = self._accumulatePartialDecoding(
-                    labelSequences,
-                    scores,
-                    wordFrames,
-                    wordTimestamps,
-                    totalProbs,
-                    totalChunkLength,
+                (partialResult) = self._decodePartial(
+                    np.concatenate(totalProbs, axis=1),
+                )
+                if len(labelSequences) > 0 and self.lmAlgorithm == "kenlm":
+                    labelSequences += " "
+                labelSequences += partialResult.label_sequences[0][0]
+                scores += [partialResult.scores[0][0]]
+                wordFrames += self._sumOffsetToFrames(
+                    partialResult.wordsFrames, totalChunkLength
+                )
+                wordTimestamps += self._sumOffsetToTimestamps(
+                    partialResult.timesteps, totalChunkLength
                 )
                 totalProbs = []
                 totalChunkLength = frameProbs[0].shape[1] * chunk
@@ -439,10 +439,7 @@ class OnnxRuntime(Runtime):
         else:
             return postprocessed_output
 
-    def _accumulatePartialDecoding(
-        self, labelSequences, scores, wordFrames, wordTimestamps, y, chunkLength
-    ):
-        y = np.concatenate(y, axis=1)
+    def _accumulatePartialDecoding(self, y, chunkLength):
         normalized_y = (
             F.softmax(torch.from_numpy(y), dim=2)
             if self.lmAlgorithm == "viterbi"
@@ -450,14 +447,10 @@ class OnnxRuntime(Runtime):
         )
         self._session.logger.debug(" - decoding partial with global formatting")
         decodedPart = self._decoder.decode(normalized_y)
-        if len(labelSequences) > 0 and self.lmAlgorithm == "kenlm":
-            labelSequences += " "
-        labelSequences += decodedPart.label_sequences[0][0]
-        scores += [decodedPart.scores[0][0]]
-        wordFrames += self._sumOffsetToFrames(
-            decodedPart.wordsFrames[0][0], chunkLength
-        )
-        wordTimestamps += self._sumOffsetToTimestamps(
+        labelSequences = decodedPart.label_sequences[0][0]
+        scores = [decodedPart.scores[0][0]]
+        wordFrames = self._sumOffsetToFrames(decodedPart.wordsFrames[0][0], chunkLength)
+        wordTimestamps = self._sumOffsetToTimestamps(
             decodedPart.timesteps[0][0], chunkLength
         )
         return labelSequences, scores, wordFrames, wordTimestamps
@@ -502,7 +495,7 @@ class OnnxRuntime(Runtime):
 
     def _decodePartial(self, yi):
         normalized_y = F.softmax(torch.from_numpy(yi), dim=2)
-        self._session.logger.debug(" - decoding partial with local formatting")
+        self._session.logger.debug(" - decoding partial")
         decoded_part = self._decoder.decode(normalized_y)
         return _DecodeResult(
             label_sequences=[[decoded_part.label_sequences[0][0]]],
@@ -534,6 +527,7 @@ class OnnxRuntime(Runtime):
     def _performLocalDecodingWithLocalFormatting(
         self, yi, iterationOverSameChunk, totalChunkLength
     ):
+        self._session.logger.debug(" - local formatting")
         saveInBufferFrom = -1
         decoder_result = self._decodePartial(yi)
         postprocessed_output = self._postprocess(decoder_result)
