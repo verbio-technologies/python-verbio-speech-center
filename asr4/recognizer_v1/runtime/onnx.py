@@ -343,11 +343,11 @@ class OnnxRuntime(Runtime):
     def _batchDecodePartialAccumulated(
         self, input, enable_formatting: bool
     ) -> OnnxRuntimeResult:
-        label_sequences, scores, wordFrames, wordTimestamps = self._getPartialResults(
+        labelSequences, scores, wordFrames, wordTimestamps = self._getPartialResults(
             input
         )
         return self._postProcessPartialDecoding(
-            label_sequences,
+            labelSequences,
             scores,
             wordFrames,
             wordTimestamps,
@@ -355,8 +355,8 @@ class OnnxRuntime(Runtime):
         )
 
     def _getPartialResults(self, input):
-        total_probs = []
-        label_sequences = []
+        totalProbs = []
+        labelSequences = []
         scores = []
         wordFrames = []
         wordTimestamps = []
@@ -364,28 +364,28 @@ class OnnxRuntime(Runtime):
         chunk = 0
         for i in range(input.shape[1]):
             self._session.logger.debug(f" - softmax")
-            frame_probs = self._session.run(
+            frameProbs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
             )
             chunk += 1
-            total_probs += frame_probs
+            totalProbs += frameProbs
             if chunk % self.maxChunksForDecoding == 0 or i == input.shape[1] - 1:
                 (
-                    label_sequences,
+                    labelSequences,
                     scores,
                     wordFrames,
                     wordTimestamps,
                 ) = self._accumulatePartialDecoding(
-                    label_sequences,
+                    labelSequences,
                     scores,
                     wordFrames,
                     wordTimestamps,
-                    total_probs,
+                    totalProbs,
                     totalChunkLength,
                 )
-                total_probs = []
-                totalChunkLength = frame_probs[0].shape[1] * chunk
-        return label_sequences, scores, wordFrames, wordTimestamps
+                totalProbs = []
+                totalChunkLength = frameProbs[0].shape[1] * chunk
+        return labelSequences, scores, wordFrames, wordTimestamps
 
     def _batchDecodePartialWithLocalFormatting(self, input) -> OnnxRuntimeResult:
         iterationOverSameChunk = 0
@@ -394,15 +394,15 @@ class OnnxRuntime(Runtime):
 
         for i in range(input.shape[1]):
             self._session.logger.debug(f" - softmax")
-            frame_probs = self._session.run(
+            frameProbs = self._session.run(
                 None, {self._inputName: input[:, i, :].numpy()}
             )
             if i > 0:
-                accumulated_probs += frame_probs
-                y = np.concatenate(accumulated_probs, axis=1)
+                accumulatedProbs += frameProbs
+                y = np.concatenate(accumulatedProbs, axis=1)
             else:
-                accumulated_probs = frame_probs
-                y = frame_probs[0]
+                accumulatedProbs = frameProbs
+                y = frameProbs[0]
             (
                 partialDecoding,
                 saveInBufferFrom,
@@ -414,15 +414,13 @@ class OnnxRuntime(Runtime):
             partialDecodingTotal.append(partialDecoding)
             self._session.logger.info(partialDecoding)
             if saveInBufferFrom > -1:
-                accumulated_probs = np.concatenate(accumulated_probs, axis=1)
-                accumulated_probs = [
-                    np.array([accumulated_probs[0][saveInBufferFrom:]])
-                ]
+                accumulatedProbs = np.concatenate(accumulatedProbs, axis=1)
+                accumulatedProbs = [np.array([accumulatedProbs[0][saveInBufferFrom:]])]
             else:
-                accumulated_probs = []
+                accumulatedProbs = []
             totalChunkLength += chunkLength
         partialDecodingTotal.append(
-            self._runAccumulatedLastChunk(accumulated_probs, totalChunkLength)
+            self._runAccumulatedLastChunk(accumulatedProbs, totalChunkLength)
         )
         return self._formatPartialDecodingTotal(partialDecodingTotal)
 
@@ -434,15 +432,15 @@ class OnnxRuntime(Runtime):
             else torch.from_numpy(y)
         )
         self._session.logger.debug(" - decoding global")
-        decoding_output = self._decoder.decode(normalized_y)
-        postprocessed_output = self._postprocess(decoding_output)
+        decodingOutput = self._decoder.decode(normalized_y)
+        postprocessed_output = self._postprocess(decodingOutput)
         if enable_formatting:
             return self._performFormatting(postprocessed_output)
         else:
             return postprocessed_output
 
     def _accumulatePartialDecoding(
-        self, label_sequences, scores, wordFrames, wordTimestamps, y, chunkLength
+        self, labelSequences, scores, wordFrames, wordTimestamps, y, chunkLength
     ):
         y = np.concatenate(y, axis=1)
         normalized_y = (
@@ -451,18 +449,18 @@ class OnnxRuntime(Runtime):
             else torch.from_numpy(y)
         )
         self._session.logger.debug(" - decoding partial with global formatting")
-        decoded_part = self._decoder.decode(normalized_y)
-        if len(label_sequences) > 0 and self.lmAlgorithm == "kenlm":
-            label_sequences += " "
-        label_sequences += decoded_part.label_sequences[0][0]
-        scores += [decoded_part.scores[0][0]]
+        decodedPart = self._decoder.decode(normalized_y)
+        if len(labelSequences) > 0 and self.lmAlgorithm == "kenlm":
+            labelSequences += " "
+        labelSequences += decodedPart.label_sequences[0][0]
+        scores += [decodedPart.scores[0][0]]
         wordFrames += self._sumOffsetToFrames(
-            decoded_part.wordsFrames[0][0], chunkLength
+            decodedPart.wordsFrames[0][0], chunkLength
         )
         wordTimestamps += self._sumOffsetToTimestamps(
-            decoded_part.timesteps[0][0], chunkLength
+            decodedPart.timesteps[0][0], chunkLength
         )
-        return label_sequences, scores, wordFrames, wordTimestamps
+        return labelSequences, scores, wordFrames, wordTimestamps
 
     def _sumOffsetToFrames(
         self, wordFrames: List[List[int]], chunkLength: int
