@@ -32,7 +32,7 @@ class TimeStampsStatistics:
     def updateSilenceStats(self, silenceDuration):
         self.silenceTime += silenceDuration
         self.numberOfSilences += 1
-        self.meanSilenceDuration = self.slienceTime / self.numberOfSilences
+        self.meanSilenceDuration = self.silenceTime / self.numberOfSilences
         if silenceDuration < self.minSilenceDuration:
             self.minSilenceDuration = silenceDuration
         if silenceDuration > self.maxSilenceDuration:
