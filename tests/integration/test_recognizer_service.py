@@ -4,7 +4,6 @@ import pytest
 import unittest
 from shutil import rmtree
 from subprocess import Popen, PIPE
-from typing import Optional
 from asr4.recognizer import Language
 from typing import Optional
 
@@ -278,38 +277,70 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         process = self.launchRecognitionProcess(self._audio, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        message = self.__thereAreMessagesInOutputJsonData(output)
+        message = self.__extractMessageAsAJsonObject(process.stdout.read())
+        audioLength = parseSeconds(message["results"]["duration"])
         if message:
-            lastTimestamp = self.__checkTimestampsAreCoherent(
-                message["results"]["alternatives"][0]["words"]
-            )
-            if self.__asrIsIssuingTimestamps(lastTimestamp):
-                self.assertGreater(
-                    lastTimestamp, 0.75 * parseSeconds(message["results"]["duration"])
-                )
+            stats = self.__calculateTimeStampsStats(message["results"]["alternatives"][0]["words"], audioLength)
+            if self.__asrIsIssuingTimestamps(stats):
+                self.assertGreater(stats.meanWordDuration, 0)
+                self.assertGreater(stats.minWordDuration, 0)  # no negative duration
+                self.assertGreater(stats.maxWordDuration, 2)  # extreme long words
+                self.assertGreater(stats.numberOfWords, 5)  # test audios should be somehow long enough
+                self.assertGreater(stats.speechTime, 0.60 * audioLength)
 
-    def __asrIsIssuingTimestamps(self, timestamp: float) -> bool:
-        return timestamp != 0
+                self.assertGreater(stats.minSilenceDuration, 0)  # on negative durations
+                self.assertGreater(stats.silenceTime, 0.40 * audioLength)
+                self.assertGreater(stats.maxSilenceDuration, 5)   # reasonable time for a test audio
+                self.assertGreater(stats.numberOfSilences, 1)  # initial and final silences at least
 
-    def __thereAreMessagesInOutputJsonData(self, text) -> Optional[str]:
+    @staticmethod
+    def __extractMessageAsAJsonObject(text) -> Optional[object]:
         header = "Messages:"
         i = text.find(header)
         if i != -1:
             return json.loads(text[1 + len(header) + i :])
         return None
 
-    def __checkTimestampsAreCoherent(self, words) -> float:
-        previousEnd = -1.0
+    class TimeStampsStatisticsInSeconds:
+        numberOfWords: [int] = 0.0
+        numberOfSilences: [int] = 0.0
+        speechTime: [float] = 0.0
+
+        meanWordDuration: [float] = 0.0
+        maxWordDuration: [float] = sys.float_info.min
+        minWordDuration: [float]  = sys.float_info.max
+        silenceTime: [float] = 0.0
+
+        minSilenceDuration: [float] = sys.float_info.max
+        maxSilenceDuration: [float] = sys.float_info.min
+        meanSilenceDuration: [float] = 0.0
+
+        def updateSpeechStats(self, wordDuration):
+            self.speechTime += wordDuration
+            self.meanWordDuration = (self.meanWordDuration * self.numberOfWords + wordDuration) / (self.numberOfWords + 1)
+            self.numberOfWords += 1
+            if wordDuration > self.maxWordDuration: self.maxWordDuration = wordDuration
+            if wordDuration < self.minWordDuration: self.minWordDuration = wordDuration
+
+        def updateSilenceStats(self, silenceDuration):
+            self.silenceTime += silenceDuration
+            self.meanSilenceDuration = (self.meanSilenceDuration * self.numberOfSilences + silenceDuration) / (self.numberOfSilences + 1)
+            self.numberOfSilences += 1
+            if silenceDuration < self.minSilenceDuration: self.minSilenceDuration = silenceDuration
+            if silenceDuration > self.maxSilenceDuration: self.maxSilenceDuration = silenceDuration
+
+    @staticmethod
+    def __asrIsIssuingTimestamps(stats: TimeStampsStatisticsInSeconds) -> bool:
+        return stats.meanWordDuration != 0.0
+
+    def __calculateTimeStampsStats(self, words, audioLength) -> TimeStampsStatisticsInSeconds:
+        stats = self.TimeStampsStatisticsInSeconds()
+        previousEnd = 0.0
         for word in words:
-            self.assertNotEqual("", word["startTime"])
-            self.assertNotEqual("", word["endTime"])
-            start = parseSeconds(word["startTime"])
-            end = parseSeconds(word["endTime"])
-            self.assertTrue(end >= start)
-            self.assertTrue(start >= previousEnd)
-            previousEnd = end
-        return previousEnd
+            stats.updateSilenceStats(parseSeconds(word["startTime"]) - previousEnd)
+            stats.updateSpeechStats(parseSeconds(word["endTime"]) - parseSeconds(word["startTime"]))
+        stats.updateSilenceStats(audioLength - previousEnd)
+        return stats
 
 
 def parseSeconds(text: str) -> float:
