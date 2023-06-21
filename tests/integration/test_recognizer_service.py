@@ -8,6 +8,37 @@ from asr4.recognizer import Language
 from typing import Optional
 
 
+class TimeStampsStatistics:
+    numberOfWords: [int] = 0.0
+    numberOfSilences: [int] = 0.0
+    speechTime: [float] = 0.0
+    meanWordDuration: [float] = 0.0
+    maxWordDuration: [float] = sys.float_info.min
+    minWordDuration: [float]  = sys.float_info.max
+    silenceTime: [float] = 0.0
+    minSilenceDuration: [float] = sys.float_info.max
+    maxSilenceDuration: [float] = sys.float_info.min
+    meanSilenceDuration: [float] = 0.0
+
+    def updateSpeechStats(self, wordDuration):
+        self.speechTime += wordDuration
+        self.numberOfWords += 1
+        self.meanWordDuration = self.speechTime / Self.numberOfWords
+        if wordDuration > self.maxWordDuration: self.maxWordDuration = wordDuration
+        if wordDuration < self.minWordDuration: self.minWordDuration = wordDuration
+
+    def updateSilenceStats(self, silenceDuration):
+        self.silenceTime += silenceDuration
+        self.meanSilenceDuration = (self.meanSilenceDuration * self.numberOfSilences + silenceDuration) / (self.numberOfSilences + 1)
+        self.numberOfSilences += 1
+        if silenceDuration < self.minSilenceDuration: self.minSilenceDuration = silenceDuration
+        if silenceDuration > self.maxSilenceDuration: self.maxSilenceDuration = silenceDuration
+
+def parseSeconds(text: str) -> float:
+    return float(text[:-1])
+            
+
+
 class TestRecognizerUtils(object):
     def readReference(self, referencePath: str) -> str:
         with open(referencePath) as f:
@@ -287,7 +318,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 self.assertGreater(stats.maxWordDuration, 2)  # extreme long words
                 self.assertGreater(stats.numberOfWords, 5)  # test audios should be somehow long enough
                 self.assertGreater(stats.speechTime, 0.60 * audioLength)
-
                 self.assertGreater(stats.minSilenceDuration, 0)  # on negative durations
                 self.assertGreater(stats.silenceTime, 0.40 * audioLength)
                 self.assertGreater(stats.maxSilenceDuration, 5)   # reasonable time for a test audio
@@ -301,40 +331,12 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             return json.loads(text[1 + len(header) + i :])
         return None
 
-    class TimeStampsStatisticsInSeconds:
-        numberOfWords: [int] = 0.0
-        numberOfSilences: [int] = 0.0
-        speechTime: [float] = 0.0
-
-        meanWordDuration: [float] = 0.0
-        maxWordDuration: [float] = sys.float_info.min
-        minWordDuration: [float]  = sys.float_info.max
-        silenceTime: [float] = 0.0
-
-        minSilenceDuration: [float] = sys.float_info.max
-        maxSilenceDuration: [float] = sys.float_info.min
-        meanSilenceDuration: [float] = 0.0
-
-        def updateSpeechStats(self, wordDuration):
-            self.speechTime += wordDuration
-            self.meanWordDuration = (self.meanWordDuration * self.numberOfWords + wordDuration) / (self.numberOfWords + 1)
-            self.numberOfWords += 1
-            if wordDuration > self.maxWordDuration: self.maxWordDuration = wordDuration
-            if wordDuration < self.minWordDuration: self.minWordDuration = wordDuration
-
-        def updateSilenceStats(self, silenceDuration):
-            self.silenceTime += silenceDuration
-            self.meanSilenceDuration = (self.meanSilenceDuration * self.numberOfSilences + silenceDuration) / (self.numberOfSilences + 1)
-            self.numberOfSilences += 1
-            if silenceDuration < self.minSilenceDuration: self.minSilenceDuration = silenceDuration
-            if silenceDuration > self.maxSilenceDuration: self.maxSilenceDuration = silenceDuration
-
     @staticmethod
-    def __asrIsIssuingTimestamps(stats: TimeStampsStatisticsInSeconds) -> bool:
+    def __asrIsIssuingTimestamps(stats: TimeStampsStatistics) -> bool:
         return stats.meanWordDuration != 0.0
 
-    def __calculateTimeStampsStats(self, words, audioLength) -> TimeStampsStatisticsInSeconds:
-        stats = self.TimeStampsStatisticsInSeconds()
+    def __calculateTimeStampsStats(self, words, audioLength) -> TimeStampsStatistics:
+        stats = TimeStampsStatistics()
         previousEnd = 0.0
         for word in words:
             stats.updateSilenceStats(parseSeconds(word["startTime"]) - previousEnd)
@@ -342,6 +344,3 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         stats.updateSilenceStats(audioLength - previousEnd)
         return stats
 
-
-def parseSeconds(text: str) -> float:
-    return float(text[:-1])
