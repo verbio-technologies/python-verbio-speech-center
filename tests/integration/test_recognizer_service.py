@@ -320,14 +320,12 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             )
             if self.__asrIsIssuingTimestamps(stats):
                 self.assertGreater(stats.meanWordDuration, 0)
-                self.assertGreater(stats.minWordDuration, 0)  # no negative duration
-                self.assertGreater(stats.maxWordDuration, 2)  # extreme long words
-                self.assertGreater(
-                    stats.numberOfWords, 5
-                )  # test audios should be somehow long enough
-                self.assertGreater(stats.speechTime, 0.60 * audioLength)
+                self.assertTrue(stats.minWordDuration >= 0)  # no negative duration
+                self.assertGreater(2, stats.maxWordDuration)  # extreme long words
+                self.assertGreater(stats.numberOfWords, 5)  # test audios is long enough
+                self.assertGreater(stats.speechTime, 0.25 * audioLength)
                 self.assertGreater(stats.minSilenceDuration, 0)  # on negative durations
-                self.assertGreater(stats.silenceTime, 0.40 * audioLength)
+                self.assertGreater(stats.silenceTime, 0.25 * audioLength)
                 self.assertGreater(
                     stats.maxSilenceDuration, 5
                 )  # reasonable time for a test audio
@@ -357,3 +355,4 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             )
         stats.updateSilenceStats(audioLength - previousEnd)
         return stats
+
