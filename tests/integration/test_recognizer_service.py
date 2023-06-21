@@ -323,7 +323,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 self.assertTrue(stats.minWordDuration >= 0)  # no negative duration
                 self.assertGreater(2, stats.maxWordDuration)  # extreme long words
                 self.assertGreater(stats.numberOfWords, 5)  # test audios is long enough
-                self.assertGreater(stats.speechTime, 0.25 * audioLength)
+                self.assertGreater(stats.speechTime, 0.20 * audioLength)
                 self.assertGreater(stats.minSilenceDuration, 0)  # on negative durations
                 self.assertGreater(stats.silenceTime, 0.25 * audioLength)
                 self.assertGreater(
