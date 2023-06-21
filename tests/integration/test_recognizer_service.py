@@ -14,7 +14,7 @@ class TimeStampsStatistics:
     speechTime: [float] = 0.0
     meanWordDuration: [float] = 0.0
     maxWordDuration: [float] = sys.float_info.min
-    minWordDuration: [float]  = sys.float_info.max
+    minWordDuration: [float] = sys.float_info.max
     silenceTime: [float] = 0.0
     minSilenceDuration: [float] = sys.float_info.max
     maxSilenceDuration: [float] = sys.float_info.min
@@ -24,19 +24,25 @@ class TimeStampsStatistics:
         self.speechTime += wordDuration
         self.numberOfWords += 1
         self.meanWordDuration = self.speechTime / Self.numberOfWords
-        if wordDuration > self.maxWordDuration: self.maxWordDuration = wordDuration
-        if wordDuration < self.minWordDuration: self.minWordDuration = wordDuration
+        if wordDuration > self.maxWordDuration:
+            self.maxWordDuration = wordDuration
+        if wordDuration < self.minWordDuration:
+            self.minWordDuration = wordDuration
 
     def updateSilenceStats(self, silenceDuration):
         self.silenceTime += silenceDuration
-        self.meanSilenceDuration = (self.meanSilenceDuration * self.numberOfSilences + silenceDuration) / (self.numberOfSilences + 1)
+        self.meanSilenceDuration = (
+            self.meanSilenceDuration * self.numberOfSilences + silenceDuration
+        ) / (self.numberOfSilences + 1)
         self.numberOfSilences += 1
-        if silenceDuration < self.minSilenceDuration: self.minSilenceDuration = silenceDuration
-        if silenceDuration > self.maxSilenceDuration: self.maxSilenceDuration = silenceDuration
+        if silenceDuration < self.minSilenceDuration:
+            self.minSilenceDuration = silenceDuration
+        if silenceDuration > self.maxSilenceDuration:
+            self.maxSilenceDuration = silenceDuration
+
 
 def parseSeconds(text: str) -> float:
     return float(text[:-1])
-            
 
 
 class TestRecognizerUtils(object):
@@ -311,17 +317,25 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         message = self.__extractMessageAsAJsonObject(process.stdout.read())
         audioLength = parseSeconds(message["results"]["duration"])
         if message:
-            stats = self.__calculateTimeStampsStats(message["results"]["alternatives"][0]["words"], audioLength)
+            stats = self.__calculateTimeStampsStats(
+                message["results"]["alternatives"][0]["words"], audioLength
+            )
             if self.__asrIsIssuingTimestamps(stats):
                 self.assertGreater(stats.meanWordDuration, 0)
                 self.assertGreater(stats.minWordDuration, 0)  # no negative duration
                 self.assertGreater(stats.maxWordDuration, 2)  # extreme long words
-                self.assertGreater(stats.numberOfWords, 5)  # test audios should be somehow long enough
+                self.assertGreater(
+                    stats.numberOfWords, 5
+                )  # test audios should be somehow long enough
                 self.assertGreater(stats.speechTime, 0.60 * audioLength)
                 self.assertGreater(stats.minSilenceDuration, 0)  # on negative durations
                 self.assertGreater(stats.silenceTime, 0.40 * audioLength)
-                self.assertGreater(stats.maxSilenceDuration, 5)   # reasonable time for a test audio
-                self.assertGreater(stats.numberOfSilences, 1)  # initial and final silences at least
+                self.assertGreater(
+                    stats.maxSilenceDuration, 5
+                )  # reasonable time for a test audio
+                self.assertGreater(
+                    stats.numberOfSilences, 1
+                )  # initial and final silences at least
 
     @staticmethod
     def __extractMessageAsAJsonObject(text) -> Optional[object]:
@@ -340,7 +354,8 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         previousEnd = 0.0
         for word in words:
             stats.updateSilenceStats(parseSeconds(word["startTime"]) - previousEnd)
-            stats.updateSpeechStats(parseSeconds(word["endTime"]) - parseSeconds(word["startTime"]))
+            stats.updateSpeechStats(
+                parseSeconds(word["endTime"]) - parseSeconds(word["startTime"])
+            )
         stats.updateSilenceStats(audioLength - previousEnd)
         return stats
-
