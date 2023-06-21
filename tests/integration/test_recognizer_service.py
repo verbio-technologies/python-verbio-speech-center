@@ -355,4 +355,3 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             )
         stats.updateSilenceStats(audioLength - previousEnd)
         return stats
-
