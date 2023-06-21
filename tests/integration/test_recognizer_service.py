@@ -23,7 +23,7 @@ class TimeStampsStatistics:
     def updateSpeechStats(self, wordDuration):
         self.speechTime += wordDuration
         self.numberOfWords += 1
-        self.meanWordDuration = self.speechTime / Self.numberOfWords
+        self.meanWordDuration = self.speechTime / self.numberOfWords
         if wordDuration > self.maxWordDuration:
             self.maxWordDuration = wordDuration
         if wordDuration < self.minWordDuration:
@@ -31,10 +31,8 @@ class TimeStampsStatistics:
 
     def updateSilenceStats(self, silenceDuration):
         self.silenceTime += silenceDuration
-        self.meanSilenceDuration = (
-            self.meanSilenceDuration * self.numberOfSilences + silenceDuration
-        ) / (self.numberOfSilences + 1)
         self.numberOfSilences += 1
+        self.meanSilenceDuration = self.slienceTime / self.numberOfSilences
         if silenceDuration < self.minSilenceDuration:
             self.minSilenceDuration = silenceDuration
         if silenceDuration > self.maxSilenceDuration:
