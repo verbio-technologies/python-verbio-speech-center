@@ -81,7 +81,10 @@ class Server:
     def createGRpcServer(configuration: ServerConfiguration) -> grpc.aio.server:
         grpcServer = grpc.aio.server(
             futures.ThreadPoolExecutor(max_workers=configuration.numberOfListeners),
-            options=(("grpc.so_reuseport", 1),),
+            options=(
+                ("grpc.so_reuseport", 1),
+                ("grpc.max_receive_message_length", -1),
+            ),
         )
         Server._addRecognizerService(
             grpcServer, configuration.getServiceConfiguration()
