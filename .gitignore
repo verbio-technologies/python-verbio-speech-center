@@ -141,6 +141,9 @@ proto/generated/recognition_streaming_pb2_grpc.py
 proto/generated/recognition_streaming_request_pb2.py
 proto/generated/verbio_speech_center_recognizer_pb2_grpc.py
 proto/generated/verbio_speech_center_synthesizer_pb2.py
+proto/generated/verbio_speech_center_recognizer_pb2_grpc.py
+proto/generated/texttospeech_test_pb2.py
+proto/generated/texttospeech_test_pb2_grpc.py
 
 # token resource
 resources
