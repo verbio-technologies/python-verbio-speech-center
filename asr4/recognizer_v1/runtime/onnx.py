@@ -368,7 +368,7 @@ class OnnxRuntime(Runtime):
                     y, iterationOverSameChunk, totalChunkLength
                 )
                 partialDecodingTotal.append(partial_decoding)
-                self._session.logger.info(partial_decoding)
+                self._session.logger.trace(partial_decoding)
                 # yield(partial_decoding)
                 if saveInBufferFrom > -1:
                     accumulated_probs = np.concatenate(accumulated_probs, axis=1)
@@ -592,7 +592,7 @@ class OnnxRuntime(Runtime):
             wordFrames=self._sumOffsetToFrames(wordFrames, chunkLength),
             wordTimestamps=self._sumOffsetToTimestamps(wordTimestamps, chunkLength),
         )
-        self._session.logger.info(partial_decoding)
+        self._session.logger.trace(partial_decoding)
         return partial_decoding
 
     def _postprocess(
