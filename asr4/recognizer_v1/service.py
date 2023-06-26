@@ -208,7 +208,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         response = self.eventHandle(request)
         response = self.eventSink(response, duration, duration)
-        self.logger.info(f"Recognition result: '{response}'")
+        self.logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
         return response
 
     async def StreamingRecognize(
@@ -220,6 +220,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
         innerRecognizeRequest, totalDuration = RecognizeRequest(), Duration()
+        audio = bytes(0)
+
         async for request in request_iterator:
             if request.HasField("config"):
                 self.logger.info(
@@ -231,20 +233,25 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
             if request.HasField("audio"):
-                innerRecognizeRequest.audio = (
-                    innerRecognizeRequest.audio + request.audio
-                )
-                self.eventSource(innerRecognizeRequest)
-                duration = self.calculateAudioDuration(innerRecognizeRequest)
+                audio += request.audio
                 self.logger.info(
-                    f" Received partial audio "
-                    f"[length={len(request.audio)}] "
-                    f"[duration={duration.ToTimedelta().total_seconds()}] "
+                    f"Received partial audio " f"[length={len(request.audio)}] "
                 )
+
+        innerRecognizeRequest.audio = audio
+        self.eventSource(innerRecognizeRequest)
+        duration = self.calculateAudioDuration(innerRecognizeRequest)
+        self.logger.info(
+            f"Received total audio "
+            f"[length={len(request.audio)}] "
+            f"[duration={duration.ToTimedelta().total_seconds()}] "
+        )
         totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
         response = self.eventHandle(innerRecognizeRequest)
         innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
-        self.logger.info(f"Recognition result: '{innerRecognizeResponse}'")
+        self.logger.info(
+            f"Recognition result: '{innerRecognizeResponse.alternatives[0].transcript}'"
+        )
         yield StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=innerRecognizeResponse.alternatives,
