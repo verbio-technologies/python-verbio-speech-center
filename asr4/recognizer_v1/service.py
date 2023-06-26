@@ -233,6 +233,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
             if request.HasField("audio"):
+                audio += request.audio
                 self.logger.info(
                     f"Received partial audio " f"[length={len(request.audio)}] "
                 )
