@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.6.4 (2023-06-26)
+
+### Patch (2 changes)
+
+- [Update VERSION to 0.6.4](csr/asr4@2ba3a676a48f7bbfb525ae8cce82a60c021c8f5d) ([merge request](csr/asr4!277))
+- [upgraded base image](csr/asr4@7d0edfef9802f2bfbbec56f87715468ea29050d5) ([merge request](csr/asr4!276))
+
 ## 0.6.3 (2023-06-21)
 
 ### Patch (2 changes)
