@@ -208,7 +208,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         response = self.eventHandle(request)
         response = self.eventSink(response, duration, duration)
-        self.logger.trace(f"Recognition result: '{response}'")
+        self.logger.info(f"Recognition result: '{response.transcription}'")
         return response
 
     async def StreamingRecognize(
