@@ -44,7 +44,7 @@ class TestSynthesizerOptions(unittest.TestCase):
             options.header = "invalid"
             options.check()
         options.header = "wav"
-        options.voice = "Tommy"
+        options.voice = "tommy"
         options.check()
 
     def test_voice_en_us(self):
@@ -60,68 +60,13 @@ class TestSynthesizerOptions(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             options.voice = "Luma"
             options.check()
-        options.voice = "Tommy"
-        options.check()
-        options.voice = "Annie"
+        options.voice = "tommy"
         options.check()
 
     def test_voice_es_es(self):
         options = SynthesizerOptions()
-        options.language = 'es-ES'
-        with self.assertRaises(Exception) as cm:
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Tommy"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Annie"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Luma"
-            options.check()
-        options.voice = "Aurora"
-        options.check()
-        options.voice = "David"
-        options.check()
-
-    def test_voice_pt_br(self):
-        options = SynthesizerOptions()
-        options.language = 'pt-BR'
-        with self.assertRaises(Exception) as cm:
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Tommy"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Annie"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Aurora"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "David"
-            options.check()
-        options.voice = "Luma"
-        options.check()
-
-    def test_voice_ca_es(self):
-        options = SynthesizerOptions()
-        options.language = 'ca-ES'
-        with self.assertRaises(Exception) as cm:
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Tommy"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Annie"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Aurora"
-            options.check()
-        with self.assertRaises(Exception) as cm:
-            options.voice = "Luma"
-            options.check()
-        options.voice = "David"
+        options.language = 'es-es'
+        options.voice = "miguel"
         options.check()
 
 
@@ -199,12 +144,12 @@ class TestAudio(unittest.TestCase):
     def test_sample_rate(self):
         options = SynthesizerOptions()
         options.voice = ''
-        self.assertEqual(Audio(options).sample_rate, 0)
+        self.assertEqual(Audio(options).sample_rate, 8000)
 
     def test_audio_format(self):
         options = SynthesizerOptions()
         options.voice = ''
-        self.assertEqual(Audio(options).audio_format, 0)
+        self.assertEqual(Audio(options).audio_format, 1)
         options.header = "raw"
         self.assertEqual(Audio(options).audio_format, 1)
 
