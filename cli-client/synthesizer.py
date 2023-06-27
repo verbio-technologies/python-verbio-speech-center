@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-
 # Used to make sure python find proto files
 import sys
+
 sys.path.insert(1, '../proto/generated')
+
 
 import wave
 import logging
 import argparse
 
 import grpc
-import verbio_speech_center_synthesizer_pb2
-import verbio_speech_center_synthesizer_pb2_grpc
+import texttospeech_test_pb2
+import texttospeech_test_pb2_grpc
 
 
 class Options:
@@ -22,21 +23,17 @@ class Options:
         self.sample_rate = 8000
         self.encoding = 'PCM'
         self.header = 'wav'
-        self.language = 'en-US'
+        self.language = 'en-us'
 
     def check(self):
         Options.__check_voice(self.voice, self.language)
         Options.__check_audio_format(self.header, self.encoding)
 
     def __check_voice(voice: str, language: str) -> str:
-        if language == "en-US" and voice not in ["Tommy", "Annie"]:
-            raise Exception("Only Tommy and Annie are available for en-US.")
-        elif language == "es-ES" and voice not in ["Aurora", "David"]:
-            raise Exception("Only Aurora and David are available for es-ES.")
-        elif language == "pt-BR" and voice not in ["Luma"]:
-            raise Exception("Only Luma is available for pt-BR.")
-        elif language == "ca-ES" and voice not in ["David"]:
-            raise Exception("Only David is available for ca-ES.")
+        if language == "en-us" and voice not in ["tommy"]:
+            raise Exception("Only tommy is available for en-US.")
+        elif language == "es-pe" and voice not in ["miguel"]:
+            raise Exception("Only miguel is available for es-pe.")
 
     def __check_audio_format(header: str, encoding: str) -> str:
         if encoding == "PCM" and header not in ["wav", "raw"]:
@@ -68,14 +65,11 @@ class Audio:
 
     @staticmethod
     def __get_sample_rate(_sample_rate: int) -> int:
-        return verbio_speech_center_synthesizer_pb2.VOICE_SAMPLING_RATE_8KHZ
+        return 8000
 
     @staticmethod
     def __get_audio_format(header: str, _encoding: str) -> int:
-        if header == "raw":
-            return verbio_speech_center_synthesizer_pb2.AUDIO_FORMAT_RAW_LPCM_S16LE
-        else:
-            return verbio_speech_center_synthesizer_pb2.AUDIO_FORMAT_WAV_LPCM_S16LE
+        return 1
 
     def save_audio(self, audio: bytes, filename: str):
         if self.header == "raw":
@@ -106,7 +100,7 @@ class Audio:
 class SpeechCenterSynthesisClient:
     def __init__(self, options: Options):
         options.check()
-        self.credentials = Credentials(self.__read_token(options.token_file))
+        self.options = options
         self.audio = Audio(options)
         self.host = options.host
         self.text = options.text
@@ -115,17 +109,17 @@ class SpeechCenterSynthesisClient:
     def run(self):
         logging.info("Running Synthesizer inference example...")
         # Open connection to grpc channel to provided host.
-        with grpc.secure_channel(self.host, credentials=self.credentials.get_channel_credentials()) as channel:
+        with grpc.insecure_channel(self.host) as channel:
             # Instantiate a speech_synthesizer to manage grpc calls to backend.
-            speech_synthesizer = verbio_speech_center_synthesizer_pb2_grpc.SpeechSynthesizerStub(channel)
+            speech_synthesizer = texttospeech_test_pb2_grpc.TextToSpeechStub(channel)
             try:
                 # Send inference requests for the text.
-                response, call = speech_synthesizer.Synthesize.with_call(
-                        self.__generate_inferences(text=self.text, voice=self.audio.speaker, sample_rate=self.audio.sample_rate, audio_format=self.audio.audio_format))
+                response, call = speech_synthesizer.SynthesizeSpeech.with_call(
+                        self.__generate_inferences(text=self.text, voice=self.options.voice, language=self.options.language))
                 # Print out inference response and call status
-                logging.info("Inference response [status=%s]", str(call.code()))
+                logging.info("Synthesis response [status=%s]", str(call.code()))
                 # Store the inference response audio into an audio file
-                self.audio.save_audio(response.audio, self.audio_file)
+                self.audio.save_audio(response.audio_samples, self.audio_file)
                 logging.info("Stored resulting audio at %s", self.audio_file)
 
             except Exception as ex:
@@ -133,16 +127,14 @@ class SpeechCenterSynthesisClient:
 
     @staticmethod
     def __generate_inferences(
-        text: str = "",
-        voice: str = "",
-        sample_rate: int = verbio_speech_center_synthesizer_pb2.VOICE_SAMPLING_RATE_8KHZ,
-        audio_format: int = verbio_speech_center_synthesizer_pb2.AUDIO_FORMAT_WAV_LPCM_S16LE
-    ) -> verbio_speech_center_synthesizer_pb2.SynthesisRequest:
-        message = verbio_speech_center_synthesizer_pb2.SynthesisRequest(
-            voice=verbio_speech_center_synthesizer_pb2.SynthesisVoice(voice=voice),
+        text: str,
+        voice: str,
+        language: str,
+    ) -> texttospeech_test_pb2.SynthesizeSpeechRequest:
+        message = texttospeech_test_pb2.SynthesizeSpeechRequest(
             text=text,
-            voice_sampling_rate=sample_rate,
-            audio_format=audio_format,
+            language=language,
+            speaker=voice
         )
         logging.info("Sending message SynthesisRequest")
         return message
@@ -157,17 +149,15 @@ def parse_command_line() -> Options:
     options = Options()
     parser = argparse.ArgumentParser(description='Perform speech synthesis on a sample text')
     parser.add_argument('--text', '-T', help='Text to synthesize to audio', required=True)
-    parser.add_argument('--voice', '-v', choices=['Tommy', 'Annie', 'Aurora', 'Luma', 'David'], help='Voice to use for the synthesis', required=True)
+    parser.add_argument('--voice', '-v', choices=['tommy', 'miguel'], help='Voice to use for the synthesis', required=True)
     parser.add_argument('--sample-rate', '-s', type=int, choices=[8000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
     parser.add_argument('--encoding', '-e', choices=['PCM'], help='Output audio encoding algorithm (default: ' + options.encoding + ' [Signed 16-bit little endian PCM])', default=options.encoding)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio header (default: ' + options.header + ')', default=options.header)
-    parser.add_argument('--language', '-l', choices=['en-US', 'pt-BR', 'es-ES', 'ca-ES'], help='A Language ID (default: ' + options.language + ')', default=options.language)
-    parser.add_argument('--token', '-t', help='A string with the authentication token', required=True)
+    parser.add_argument('--language', '-l', choices=['en-us', 'es-pe'], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)
     args = parser.parse_args()
-    options.token_file = args.token
     options.audio_file = args.audio_file
     options.host = args.host
     options.text = args.text
@@ -182,8 +172,7 @@ def parse_command_line() -> Options:
 
 
 if __name__ == '__main__':
-    print("This module is deprecated.")
+    print("This module is only intended for demo purposes")
     # Setup minimal logger and run example.
-    #logging.basicConfig(level=logging.INFO)
-
-    #SpeechCenterSynthesisClient(parse_command_line()).run()
+    logging.basicConfig(level=logging.INFO)
+    SpeechCenterSynthesisClient(parse_command_line()).run()
