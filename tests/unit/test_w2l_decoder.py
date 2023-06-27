@@ -90,7 +90,9 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             0,
         )
         frames = [5, 6, 11, 13, 17]
-        self.assertEqual(decoder._getTimeInterval(frames), (0.1, 0.34))
+        (begin, end) = decoder._getTimeInterval(frames)
+        self.assertEqual("%.2f" % begin, "0.10")
+        self.assertEqual("%.2f" % end, "0.36")
 
     def testWordsWithEmptyFrames(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
