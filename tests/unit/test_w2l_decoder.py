@@ -89,10 +89,10 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             -1,
             0,
         )
-        token_idxs = [4, 20, 20, 4, 4, 5, 4, 4, 4, 5, 5, 4, 4]
+        token_idxs = [4, 6, 6, 4, 4, 6, 4, 4, 4, 6, 6, 6, 4]
         self.assertEqual(
             decoder._getWordsFrames(token_idxs),
-            [[1, 2], [5], [9, 10]],
+            [[1, 2], [5], [9, 10, 11]],
         )
 
     def testGetTimeInterval(self):
