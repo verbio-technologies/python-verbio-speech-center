@@ -189,6 +189,8 @@ class W2lKenLMDecoder:
             elif tokenIdx != tokenIdxs[i - 1] and tokenIdx != self.silence:
                 wordFound = 1
                 wordFrames.append(i)
+            elif wordFound and tokenIdx != self.silence:
+                wordFrames.append(i)
             elif tokenIdx == self.silence and wordFound:
                 timesteps.append(wordFrames)
                 wordFound = 0
