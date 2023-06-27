@@ -172,6 +172,7 @@ def parse_command_line() -> Options:
 
 
 if __name__ == '__main__':
+    print("This module is only intended for demo purposes")
     # Setup minimal logger and run example.
     logging.basicConfig(level=logging.INFO)
     SpeechCenterSynthesisClient(parse_command_line()).run()
