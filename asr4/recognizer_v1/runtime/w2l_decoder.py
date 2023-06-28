@@ -46,7 +46,7 @@ class W2lKenLMDecoder:
         ), f"If KenLM is used, neither the language model nor the lexicon can be empty!"
 
         self._nbest = 1
-
+        self.frameSize = 0.02
         self._subwords = subwords
 
         self.blank = (
@@ -189,6 +189,8 @@ class W2lKenLMDecoder:
             elif tokenIdx != tokenIdxs[i - 1] and tokenIdx != self.silence:
                 wordFound = 1
                 wordFrames.append(i)
+            elif wordFound and tokenIdx != self.silence:
+                wordFrames.append(i)
             elif tokenIdx == self.silence and wordFound:
                 timesteps.append(wordFrames)
                 wordFound = 0
@@ -196,11 +198,12 @@ class W2lKenLMDecoder:
         return timesteps
 
     def _getTimeInterval(self, frames: List[int]) -> Tuple[float, float]:
-        return (
-            self._getFrameTime(frames[0]),
-            self._getFrameTime(frames[len(frames) - 1]),
+        return self._extendFramesToBoundaries(
+            self._getFrameTime(frames[0]), self._getFrameTime(frames[len(frames) - 1])
         )
 
     def _getFrameTime(self, frame: int) -> float:
-        # Each frame takes 0.02 sec
-        return frame * 0.02
+        return frame * self.frameSize
+
+    def _extendFramesToBoundaries(self, begin: int, end: int) -> Tuple[int, int]:
+        return (begin, end + self.frameSize)

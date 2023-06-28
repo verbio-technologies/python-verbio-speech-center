@@ -75,9 +75,24 @@ class TestW2lKenLMDecoder(unittest.TestCase):
         self.assertEqual(
             decoder._getWordsFrames(token_idxs),
             [
-                [1, 4, 6],
+                [1, 2, 4, 6],
                 [9, 11],
             ],
+        )
+
+    def testGetMoreWordsFrames(self):
+        decoder = w2l_decoder.W2lKenLMDecoder(
+            self.vocabulary,
+            str(self.datapath.joinpath("en-us_lm.bin")),
+            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
+            0.2,
+            -1,
+            0,
+        )
+        token_idxs = [4, 6, 6, 4, 4, 6, 4, 4, 4, 6, 6, 6, 4]
+        self.assertEqual(
+            decoder._getWordsFrames(token_idxs),
+            [[1, 2], [5], [9, 10, 11]],
         )
 
     def testGetTimeInterval(self):
@@ -90,7 +105,9 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             0,
         )
         frames = [5, 6, 11, 13, 17]
-        self.assertEqual(decoder._getTimeInterval(frames), (0.1, 0.34))
+        (begin, end) = decoder._getTimeInterval(frames)
+        self.assertEqual("%.2f" % begin, "0.10")
+        self.assertEqual("%.2f" % end, "0.36")
 
     def testWordsWithEmptyFrames(self):
         decoder = w2l_decoder.W2lKenLMDecoder(
