@@ -83,7 +83,7 @@ class TestW2lKenLMDecoder(unittest.TestCase):
     def testFrameToWord(self):
         silence = 0
         boundary = 4
-        
+
         tokens = [4, 8, 4]
         result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
         self.assertEqual(result, [[1]])

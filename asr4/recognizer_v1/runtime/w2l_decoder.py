@@ -193,7 +193,6 @@ class W2lKenLMDecoder:
         return (begin, end + self.frameSize)
 
 
-
 class FrameToWordProcessor:
     def __init__(self, tokenIdxs, silence, boundary):
         self.silence = silence
@@ -221,8 +220,8 @@ class FrameToWordProcessor:
         elif self.__wordContinues():
             self.wordFrames.append(self.current)
         elif self.__wordEndsHere():
-            if self.current-2 == self.wordFrames[-1]:
-                self.wordFrames.append(self.current-1)
+            if self.current - 2 == self.wordFrames[-1]:
+                self.wordFrames.append(self.current - 1)
             self.timesteps.append(self.wordFrames)
             self.__correctLastWordBoundaries()
             self.wordFound = False
@@ -239,12 +238,12 @@ class FrameToWordProcessor:
         return self.wordFound and self.letter == self.boundary
 
     def __correctLastWordBoundaries(self):
-        if len(self.timesteps)<2:
+        if len(self.timesteps) < 2:
             return
         endOfFirst = self.timesteps[-2][-1]
         beginOfSecond = self.timesteps[-1][0]
         distance = beginOfSecond - endOfFirst - 1
-        if distance<=6 and distance>0:
+        if distance <= 6 and distance > 0:
             self.timesteps[-1].insert(0, beginOfSecond - distance)
-        elif distance>6:
+        elif distance > 6:
             self.timesteps[-1].insert(0, beginOfSecond - 6)
