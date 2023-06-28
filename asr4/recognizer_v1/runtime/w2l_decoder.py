@@ -49,17 +49,16 @@ class W2lKenLMDecoder:
         self.frameSize = 0.02
         self._subwords = subwords
 
-        self.blank = (
-            vocabulary.index("<ctc_blank>")
-            if "<ctc_blank>" in vocabulary
-            else vocabulary.index("<s>")
-        )
-        if "<sep>" in vocabulary:
-            self.silence = vocabulary.index("<sep>")
-        elif "|" in vocabulary:
-            self.silence = vocabulary.index("|")
+        if "<ctc_blank>" in vocabulary:
+            self.silence = vocabulary.index("<ctc_blank>")
         else:
-            self.silence = vocabulary.index("</s>")
+            self.silence = vocabulary.index("<s>")
+        if "<sep>" in vocabulary:
+            self.boundary = vocabulary.index("<sep>")
+        elif "|" in vocabulary:
+            self.boundary = vocabulary.index("|")
+        else:
+            self.boundary = vocabulary.index("</s>")
 
         lexicon = load_words(lexicon)
         self._wordDict = create_word_dict(lexicon)
@@ -82,8 +81,8 @@ class W2lKenLMDecoder:
             options=decoderOpts,
             trie=trie,
             lm=lm,
-            sil_token_idx=self.silence,
-            blank_token_idx=self.blank,
+            sil_token_idx=self.boundary,
+            blank_token_idx=self.silence,
             unk_token_idx=self._wordDict.get_index("<unk>"),
             transitions=[],
             is_token_lm=False,
@@ -95,7 +94,7 @@ class W2lKenLMDecoder:
         languageModel: KenLM,
         lexicon: LEXICON,
     ) -> Trie:
-        trie = Trie(len(vocabulary), self.silence)
+        trie = Trie(len(vocabulary), self.boundary)
         startState = languageModel.start(False)
         unkWord = vocabulary.index("<unk>")
         for word, spellings in lexicon.items():
@@ -180,22 +179,7 @@ class W2lKenLMDecoder:
         return wordFrames, timeIntervals
 
     def _getWordsFrames(self, tokenIdxs: List[int]) -> List[List[int]]:
-        timesteps = []
-        wordFrames = []
-        wordFound = 0
-        for i, tokenIdx in enumerate(tokenIdxs):
-            if tokenIdx == self.blank:
-                continue
-            elif tokenIdx != tokenIdxs[i - 1] and tokenIdx != self.silence:
-                wordFound = 1
-                wordFrames.append(i)
-            elif wordFound and tokenIdx != self.silence:
-                wordFrames.append(i)
-            elif tokenIdx == self.silence and wordFound:
-                timesteps.append(wordFrames)
-                wordFound = 0
-                wordFrames = []
-        return timesteps
+        return FrameToWordProcessor(tokenIdxs, self.silence, self.boundary).invoke()
 
     def _getTimeInterval(self, frames: List[int]) -> Tuple[float, float]:
         return self._extendFramesToBoundaries(
@@ -207,3 +191,60 @@ class W2lKenLMDecoder:
 
     def _extendFramesToBoundaries(self, begin: int, end: int) -> Tuple[int, int]:
         return (begin, end + self.frameSize)
+
+
+
+class FrameToWordProcessor:
+    def __init__(self, tokenIdxs, silence, boundary):
+        self.silence = silence
+        self.boundary = boundary
+        self.timesteps = []
+        self.wordFrames = []
+        self.wordFound = False
+        self.letter = ""
+        self.prevLetter = boundary
+        self.frames = tokenIdxs
+
+    def invoke(self) -> List[List[int]]:
+        for i, l in enumerate(self.frames):
+            self.letter = l
+            self.current = i
+            self.processCurrentFrame()
+        return self.timesteps
+
+    def processCurrentFrame(self):
+        if self.letter == self.silence:
+            pass
+        elif self.__wordStartsHere():
+            self.wordFound = True
+            self.wordFrames.append(self.current)
+        elif self.__wordContinues():
+            self.wordFrames.append(self.current)
+        elif self.__wordEndsHere():
+            if self.current-2 == self.wordFrames[-1]:
+                self.wordFrames.append(self.current-1)
+            self.timesteps.append(self.wordFrames)
+            self.__correctLastWordBoundaries()
+            self.wordFound = False
+            self.wordFrames = []
+        self.prevLetter = self.letter
+
+    def __wordStartsHere(self):
+        return self.letter != self.prevLetter and self.letter != self.boundary
+
+    def __wordContinues(self):
+        return self.wordFound and self.letter != self.boundary
+
+    def __wordEndsHere(self):
+        return self.wordFound and self.letter == self.boundary
+
+    def __correctLastWordBoundaries(self):
+        if len(self.timesteps)<2:
+            return
+        endOfFirst = self.timesteps[-2][-1]
+        beginOfSecond = self.timesteps[-1][0]
+        distance = beginOfSecond - endOfFirst - 1
+        if distance<=6 and distance>0:
+            self.timesteps[-1].insert(0, beginOfSecond - distance)
+        elif distance>6:
+            self.timesteps[-1].insert(0, beginOfSecond - 6)

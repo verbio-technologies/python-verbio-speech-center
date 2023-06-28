@@ -76,23 +76,48 @@ class TestW2lKenLMDecoder(unittest.TestCase):
             decoder._getWordsFrames(token_idxs),
             [
                 [1, 2, 4, 6],
-                [9, 11],
+                [7, 9, 11],
             ],
         )
 
-    def testGetMoreWordsFrames(self):
-        decoder = w2l_decoder.W2lKenLMDecoder(
-            self.vocabulary,
-            str(self.datapath.joinpath("en-us_lm.bin")),
-            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
-            0.2,
-            -1,
-            0,
-        )
-        token_idxs = [4, 6, 6, 4, 4, 6, 4, 4, 4, 6, 6, 6, 4]
+    def testFrameToWord(self):
+        silence = 0
+        boundary = 4
+        
+        tokens = [4, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1]])
+
+        tokens = [4, 0, 8, 0, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[2, 3]])
+
+        tokens = [4, 6, 6, 4, 4, 6, 4, 4, 4, 6, 6, 6, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
         self.assertEqual(
-            decoder._getWordsFrames(token_idxs),
-            [[1, 2], [5], [9, 10, 11]],
+            result,
+            [[1, 2], [3, 5], [6, 9, 10, 11]],
+        )
+
+        tokens = [0, 8, 8, 0, 0, 8, 0, 8, 8, 8, 4, 4, 4, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[1, 2, 5, 7, 8, 9]],
+        )
+
+        tokens = [4, 0, 8, 0, 4, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[2, 3]],
+        )
+
+        tokens = [4, 8, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[1, 2], [7, 13]],
         )
 
     def testGetTimeInterval(self):
