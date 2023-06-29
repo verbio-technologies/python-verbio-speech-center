@@ -224,12 +224,18 @@ class FrameToWordProcessor:
         elif self.__wordContinues():
             self.wordFrames.append(self.current)
         elif self.__wordEndsHere():
-            if self.current - 2 == self.wordFrames[-1]:
-                self.wordFrames.append(self.current - 1)
-            self.timesteps.append(self.wordFrames)
-            self.__correctLastWordBoundaries()
-            self.wordFound = False
-            self.wordFrames = []
+            self.__closeCurrentWord()
+
+    def __closeCurrentWord(self):
+        self.__extendLastSilence()
+        self.timesteps.append(self.wordFrames)
+        self.__correctLastWordBoundaries()
+        self.wordFound = False
+        self.wordFrames = []
+
+    def __extendLastSilence(self):
+        if self.current - 2 == self.wordFrames[-1]:
+            self.wordFrames.append(self.current - 1)
 
     def __wordStartsHere(self):
         return self.letter != self.prevLetter and self.letter != self.boundary
@@ -241,8 +247,10 @@ class FrameToWordProcessor:
         return self.wordFound and self.letter == self.boundary
 
     def __correctLastWordBoundaries(self):
-        if len(self.timesteps) < 2:
-            return
+        if len(self.timesteps) >= 2:
+            self.__removeSilences()
+
+    def __removeSilences(self):
         endOfFirst = self.timesteps[-2][-1]
         beginOfSecond = self.timesteps[-1][0]
         distance = beginOfSecond - endOfFirst - 1
