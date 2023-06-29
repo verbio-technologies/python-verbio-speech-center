@@ -236,6 +236,9 @@ class FrameToWordProcessor:
     def __extendLastSilence(self):
         if self.current - 2 == self.wordFrames[-1]:
             self.wordFrames.append(self.current - 1)
+            self.wordFrames.append(self.current)
+        elif self.current - 1 == self.wordFrames[-1]:
+            self.wordFrames.append(self.current)
 
     def __wordStartsHere(self):
         return self.letter != self.prevLetter and self.letter != self.boundary
