@@ -153,6 +153,35 @@ class TestW2lKenLMDecoder(unittest.TestCase):
 
 
 class TestFrameToWordProcessor(unittest.TestCase):
+    def testNothing(self):
+        silence = 0
+        boundary = 4
+
+        result = w2l_decoder.FrameToWordProcessor([], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([0], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([0, 0], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([4], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor(
+            [0, 0, 4, 0], silence, boundary
+        ).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([0, 0, 4], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor(
+            [0, 4, 0, 0, 4, 0], silence, boundary
+        ).invoke()
+        self.assertEqual(result, [])
+
     def testSingleWord(self):
         silence = 0
         boundary = 4
@@ -220,3 +249,15 @@ class TestFrameToWordProcessor(unittest.TestCase):
         tokens = [4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 4]
         result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
         self.assertEqual(result, [[1], [5, 11]])
+
+    def testWeirdSilences(self):
+        silence = 0
+        boundary = 4
+
+        tokens = [4, 8, 9, 10, 0, 4, 0, 4, 0, 4, 0, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2, 3, 4], [5, 11]])
+
+        tokens = [4, 8, 9, 10, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 8, 8, 0, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2, 3], [8, 14, 15, 16]])
