@@ -75,8 +75,8 @@ class TestW2lKenLMDecoder(unittest.TestCase):
         self.assertEqual(
             decoder._getWordsFrames(token_idxs),
             [
-                [1, 2, 4, 6],
-                [7, 9, 11],
+                [1, 2, 4, 6, 7],
+                [8, 9, 11, 12],
             ],
         )
 
