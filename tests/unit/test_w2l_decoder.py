@@ -261,3 +261,7 @@ class TestFrameToWordProcessor(unittest.TestCase):
         tokens = [4, 8, 9, 10, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 8, 8, 0, 4]
         result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
         self.assertEqual(result, [[1, 2, 3], [8, 14, 15, 16]])
+
+        tokens = [0, 0, 4, 0, 8, 8, 0, 4, 0, 0]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[4, 5, 6]])

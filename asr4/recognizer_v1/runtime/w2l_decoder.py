@@ -195,6 +195,7 @@ class W2lKenLMDecoder:
 
 class FrameToWordProcessor:
     def __init__(self, tokenIdxs, silence, boundary):
+        self.maxSilenceToRemove = 6
         self.silence = silence
         self.boundary = boundary
         self.timesteps = []
@@ -212,9 +213,12 @@ class FrameToWordProcessor:
         return self.timesteps
 
     def processCurrentFrame(self):
-        if self.letter == self.silence:
-            pass
-        elif self.__wordStartsHere():
+        if self.letter != self.silence:
+            self.__processVoicedFrame()
+        self.prevLetter = self.letter
+
+    def __processVoicedFrame(self):
+        if self.__wordStartsHere():
             self.wordFound = True
             self.wordFrames.append(self.current)
         elif self.__wordContinues():
@@ -226,7 +230,6 @@ class FrameToWordProcessor:
             self.__correctLastWordBoundaries()
             self.wordFound = False
             self.wordFrames = []
-        self.prevLetter = self.letter
 
     def __wordStartsHere(self):
         return self.letter != self.prevLetter and self.letter != self.boundary
@@ -243,7 +246,7 @@ class FrameToWordProcessor:
         endOfFirst = self.timesteps[-2][-1]
         beginOfSecond = self.timesteps[-1][0]
         distance = beginOfSecond - endOfFirst - 1
-        if distance <= 6 and distance > 0:
+        if distance <= self.maxSilenceToRemove and distance > 0:
             self.timesteps[-1].insert(0, beginOfSecond - distance)
-        elif distance > 6:
-            self.timesteps[-1].insert(0, beginOfSecond - 6)
+        elif distance > self.maxSilenceToRemove:
+            self.timesteps[-1].insert(0, beginOfSecond - self.maxSilenceToRemove)
