@@ -75,24 +75,9 @@ class TestW2lKenLMDecoder(unittest.TestCase):
         self.assertEqual(
             decoder._getWordsFrames(token_idxs),
             [
-                [1, 2, 4, 6],
-                [9, 11],
+                [1, 2, 4, 6, 7],
+                [8, 9, 11, 12],
             ],
-        )
-
-    def testGetMoreWordsFrames(self):
-        decoder = w2l_decoder.W2lKenLMDecoder(
-            self.vocabulary,
-            str(self.datapath.joinpath("en-us_lm.bin")),
-            str(self.datapath.joinpath("en-us_lm.lexicon.txt")),
-            0.2,
-            -1,
-            0,
-        )
-        token_idxs = [4, 6, 6, 4, 4, 6, 4, 4, 4, 6, 6, 6, 4]
-        self.assertEqual(
-            decoder._getWordsFrames(token_idxs),
-            [[1, 2], [5], [9, 10, 11]],
         )
 
     def testGetTimeInterval(self):
@@ -165,3 +150,125 @@ class TestW2lKenLMDecoder(unittest.TestCase):
         )
         self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).scores), 1)
         self.assertEqual(len(decoder.decode(torch.tensor([[[0, 0, 0]]])).timesteps), 1)
+
+
+class TestFrameToWordProcessor(unittest.TestCase):
+    def testNothing(self):
+        silence = 0
+        boundary = 4
+
+        result = w2l_decoder.FrameToWordProcessor([], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([0], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([0, 0], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([4], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor(
+            [0, 0, 4, 0], silence, boundary
+        ).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor([0, 0, 4], silence, boundary).invoke()
+        self.assertEqual(result, [])
+
+        result = w2l_decoder.FrameToWordProcessor(
+            [0, 4, 0, 0, 4, 0], silence, boundary
+        ).invoke()
+        self.assertEqual(result, [])
+
+    def testSingleWord(self):
+        silence = 0
+        boundary = 4
+
+        tokens = [4, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2]])
+
+        tokens = [4, 0, 8, 0, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[2, 3, 4]])
+
+        tokens = [4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1]])
+
+    def testMultipleWords(self):
+        silence = 0
+        boundary = 4
+
+        tokens = [4, 6, 6, 4, 4, 6, 4, 4, 4, 6, 6, 6, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[1, 2, 3], [4, 5, 6], [7, 9, 10, 11, 12]],
+        )
+
+        tokens = [0, 8, 8, 0, 0, 8, 0, 8, 8, 8, 4, 4, 4, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[1, 2, 5, 7, 8, 9, 10]],
+        )
+
+        tokens = [4, 0, 8, 0, 4, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[2, 3, 4]],
+        )
+
+        tokens = [4, 8, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[1, 2, 3], [7, 13, 14]],
+        )
+
+        tokens = [4, 8, 4, 7, 4, 6, 4, 5, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(
+            result,
+            [[1, 2], [3, 4], [5, 6], [7, 8]],
+        )
+
+    def testMultipleBoundaries(self):
+        silence = 0
+        boundary = 4
+
+        tokens = [4, 8, 4, 4, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2], [3, 4, 5]])
+
+        tokens = [4, 8, 4, 4, 4, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2], [3, 5, 6]])
+
+        tokens = [4, 8, 4, 4, 4, 4, 4, 4, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2], [3, 8, 9]])
+
+        tokens = [4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2], [5, 11, 12]])
+
+    def testWeirdSilences(self):
+        silence = 0
+        boundary = 4
+
+        tokens = [4, 8, 9, 10, 0, 4, 0, 4, 0, 4, 0, 8, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2, 3, 4, 5], [6, 11, 12]])
+
+        tokens = [4, 8, 9, 10, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 8, 8, 0, 4]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[1, 2, 3, 4], [8, 14, 15, 16, 17]])
+
+        tokens = [0, 0, 4, 0, 8, 8, 0, 4, 0, 0]
+        result = w2l_decoder.FrameToWordProcessor(tokens, silence, boundary).invoke()
+        self.assertEqual(result, [[4, 5, 6, 7]])
