@@ -150,3 +150,5 @@ resources
 .idea
 *.token
 *.wav
+
+cli-client/token.file
