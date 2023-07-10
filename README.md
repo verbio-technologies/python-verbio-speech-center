@@ -60,7 +60,7 @@ The CLI clients will use the generated code to connect to the speech center clou
 
 Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following command:
 
-**Example**
+**Example for streaming**
 
 ```console
 python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
@@ -96,6 +96,12 @@ python3 recognizer_stream.py --help
 ```
   
 to list all the available options.
+
+**Example for text to speech**
+```
+python synthesizer.py --text "Hello my friend" --voice tommy --sample-rate 8000 --encoding PCM --format wav --language en-us --audio-file out.wav
+```
+
 
 ## Automatically Refresh Service Token
 This repository optionally implements an automatic token update. To do so, you must specify your credentials (find them in the Client Credentials section of the [user dashboard](https://dashboard.speechcenter.verbio.com)).

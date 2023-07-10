@@ -17,7 +17,7 @@ import texttospeech_test_pb2_grpc
 class Options:
     def __init__(self):
         self.token_file = None
-        self.host = 'tts.api.speechcenter.verbio.com'
+        self.host = 'tts.verbiospeechcenter.com'
         self.text = None
         self.voice = None
         self.sample_rate = 8000
@@ -96,7 +96,6 @@ class Audio:
         with open(filename, 'wb') as f:
             f.write(audio)
 
-
 class SpeechCenterSynthesisClient:
     def __init__(self, options: Options):
         options.check()
@@ -109,7 +108,7 @@ class SpeechCenterSynthesisClient:
     def run(self):
         logging.info("Running Synthesizer inference example...")
         # Open connection to grpc channel to provided host.
-        with grpc.insecure_channel(self.host) as channel:
+        with grpc.secure_channel(self.host, credentials=grpc.ssl_channel_credentials()) as channel:
             # Instantiate a speech_synthesizer to manage grpc calls to backend.
             speech_synthesizer = texttospeech_test_pb2_grpc.TextToSpeechStub(channel)
             try:

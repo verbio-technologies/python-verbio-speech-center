@@ -32,7 +32,7 @@ class TestRecognizerOptions(unittest.TestCase):
 class TestSynthesizerOptions(unittest.TestCase):
     def test_empty(self):
         options = SynthesizerOptions()
-        self.assertEqual(options.host, "tts.api.speechcenter.verbio.com")
+        self.assertEqual(options.host, "tts.verbiospeechcenter.com")
 
         with self.assertRaises(Exception) as cm:
             options.check()
