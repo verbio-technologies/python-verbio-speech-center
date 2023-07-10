@@ -60,7 +60,7 @@ The CLI clients will use the generated code to connect to the speech center clou
 
 Our Recognizer will allow you to easily convert an audio resource into its associated text. In order to run the CLI Speech Center Recognizer client, check out the following command:
 
-**Example for straming**
+**Example for streaming**
 
 ```console
 python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
