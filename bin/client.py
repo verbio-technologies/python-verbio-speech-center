@@ -177,10 +177,12 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
     return responses, trnHypothesis
 
 
-def _chunk_audio(audio: bytes, singleChunk: bool=False):
+def _chunk_audio(audio: bytes, singleChunk: bool = False):
     defaultChunkSize = 20000
     if singleChunk:
-        _LOGGER.info("Audio chunk size for gRPC channel set to 0. Uploading all the audio at once")
+        _LOGGER.info(
+            "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
+        )
         yield audio
     else:
         for i in range(0, len(audio), defaultChunkSize):
