@@ -165,7 +165,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
                 Language.parse(args.language),
                 args.format,
                 f"{n}/{length}",
-                args.batch
+                args.batch,
             ),
         )
         responses.append(response)
@@ -254,7 +254,7 @@ def _createStreamingRequests(
             request.append(StreamingRecognizeRequest(audio=chunk))
     else:
         for chunk in _chunk_audio(audio=audio):
-            request.append(StreamingRecognizeRequest(audio=chunk))            
+            request.append(StreamingRecognizeRequest(audio=chunk))
     return request
 
 
@@ -266,7 +266,9 @@ def _runWorkerQuery(
     queryID: int,
     batchMode: bool,
 ) -> bytes:
-    request = _createStreamingRequests(audio, sample_rate_hz, language, useFormat, batchMode)
+    request = _createStreamingRequests(
+        audio, sample_rate_hz, language, useFormat, batchMode
+    )
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
