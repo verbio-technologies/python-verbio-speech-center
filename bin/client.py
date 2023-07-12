@@ -165,6 +165,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
                 Language.parse(args.language),
                 args.format,
                 f"{n}/{length}",
+                args.batch
             ),
         )
         responses.append(response)
@@ -234,6 +235,7 @@ def _createStreamingRequests(
     sample_rate_hz: int,
     language: Language,
     useFormat: bool,
+    batchMode: bool,
 ) -> List[StreamingRecognizeRequest]:
     request = [
         StreamingRecognizeRequest(
@@ -247,10 +249,12 @@ def _createStreamingRequests(
             )
         )
     ]
-
-    for chunk in _chunk_audio(audio):
-        request.append(StreamingRecognizeRequest(audio=chunk))
-
+    if batchMode:
+        for chunk in _chunk_audio(audio=audio, chunk_size=0):
+            request.append(StreamingRecognizeRequest(audio=chunk))
+    else:
+        for chunk in _chunk_audio(audio=audio):
+            request.append(StreamingRecognizeRequest(audio=chunk))            
     return request
 
 
@@ -260,8 +264,9 @@ def _runWorkerQuery(
     language: Language,
     useFormat: bool,
     queryID: int,
+    batchMode: bool,
 ) -> bytes:
-    request = _createStreamingRequests(audio, sample_rate_hz, language, useFormat)
+    request = _createStreamingRequests(audio, sample_rate_hz, language, useFormat, batchMode)
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
@@ -340,6 +345,12 @@ def _parseArguments() -> argparse.Namespace:
         "--metrics",
         action="store_true",
         help="Calculate metrics using the audio transcription references.",
+    )
+    parser.add_argument(
+        "-b",
+        "--batch",
+        action="store_true",
+        help="Sent all audio at once instead of streaming.",
     )
     parser.add_argument(
         "-v",
