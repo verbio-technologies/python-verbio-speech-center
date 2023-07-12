@@ -6,6 +6,13 @@
 
 ### Removed :no_entry:
 
+## 0.6.6 (2023-07-12)
+
+### Patch (2 changes)
+
+- [[EEE-894] Add heuristics to timestamps calculation](csr/asr4@6ddf82ea2eba086cc347e68ffd7d1d121a35efc9) ([merge request](csr/asr4!280))
+- [[EEE-894] Fix time intervals](csr/asr4@a50706f36d3d74337e835b6464eef89a352fc0db) ([merge request](csr/asr4!279))
+
 ## 0.6.5 (2023-06-27)
 
 ### Patch (1 change)
