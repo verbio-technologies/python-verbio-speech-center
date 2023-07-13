@@ -180,16 +180,18 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
 
 def _chunk_audio(audio: bytes, chunkSize: int):
     if not audio:
-        raise ValueError("Empty audio content.")
-    defaultChunkSize = 20000
-    if chunkSize == 0:
-        _LOGGER.info(
-            "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
-        )
+        _LOGGER.error(f"Empty audio content: {audio}")
         yield audio
     else:
-        for i in range(0, len(audio), chunkSize):
-            yield audio[i : i + chunkSize]
+        defaultChunkSize = 20000
+        if chunkSize == 0:
+            _LOGGER.info(
+                "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
+            )
+            yield audio
+        else:
+            for i in range(0, len(audio), chunkSize):
+                yield audio[i : i + chunkSize]
 
 
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
@@ -255,7 +257,8 @@ def _createStreamingRequests(
     else:
         chunkSize = _DEFAULT_CHUNK_SIZE
     for chunk in _chunk_audio(audio=audio, chunkSize=chunkSize):
-        request.append(StreamingRecognizeRequest(audio=chunk))
+        if chunk != []:
+            request.append(StreamingRecognizeRequest(audio=chunk))
     return request
 
 
