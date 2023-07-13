@@ -22,4 +22,3 @@ class TestStreamingClient(unittest.TestCase):
         audio_bytes = []
         chunk_iterator = client._chunk_audio(audio_bytes, 0)
         self.assertEqual(list(chunk_iterator), [[]])
-
