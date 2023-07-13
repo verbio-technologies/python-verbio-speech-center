@@ -42,6 +42,7 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 _ENCODING = "utf-8"
+_DEFAULT_CHUNK_SIZE = 20000
 
 
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
@@ -165,6 +166,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
                 Language.parse(args.language),
                 args.format,
                 f"{n}/{length}",
+                args.batch,
             ),
         )
         responses.append(response)
@@ -176,18 +178,19 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
     return responses, trnHypothesis
 
 
-def _chunk_audio(audio: bytes, chunk_size: int = 20000):
-    if audio:
-        if chunk_size == 0:
+def _chunk_audio(audio: bytes, chunkSize: int):
+    if not audio:
+        _LOGGER.error(f"Empty audio content: {audio}")
+        yield audio
+    else:
+        if chunkSize == 0:
             _LOGGER.info(
                 "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
             )
             yield audio
         else:
-            for i in range(0, len(audio), chunk_size):
-                yield audio[i : i + chunk_size]
-    else:
-        raise ValueError("Empty audio content.")
+            for i in range(0, len(audio), chunkSize):
+                yield audio[i : i + chunkSize]
 
 
 def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
@@ -234,6 +237,7 @@ def _createStreamingRequests(
     sample_rate_hz: int,
     language: Language,
     useFormat: bool,
+    batchMode: bool,
 ) -> List[StreamingRecognizeRequest]:
     request = [
         StreamingRecognizeRequest(
@@ -247,10 +251,21 @@ def _createStreamingRequests(
             )
         )
     ]
+    chunkSize = _setChunkSize(batchMode)
+    return _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
 
-    for chunk in _chunk_audio(audio):
-        request.append(StreamingRecognizeRequest(audio=chunk))
 
+def _setChunkSize(batchMode: bool) -> int:
+    if batchMode:
+        return 0
+    else:
+        return _DEFAULT_CHUNK_SIZE
+
+
+def _addAudioSegmentsToStreamingRequest(request, audio, chunkSize):
+    for chunk in _chunk_audio(audio=audio, chunkSize=chunkSize):
+        if chunk != []:
+            request.append(StreamingRecognizeRequest(audio=chunk))
     return request
 
 
@@ -260,8 +275,11 @@ def _runWorkerQuery(
     language: Language,
     useFormat: bool,
     queryID: int,
+    batchMode: bool,
 ) -> bytes:
-    request = _createStreamingRequests(audio, sample_rate_hz, language, useFormat)
+    request = _createStreamingRequests(
+        audio, sample_rate_hz, language, useFormat, batchMode
+    )
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
@@ -340,6 +358,12 @@ def _parseArguments() -> argparse.Namespace:
         "--metrics",
         action="store_true",
         help="Calculate metrics using the audio transcription references.",
+    )
+    parser.add_argument(
+        "-b",
+        "--batch",
+        action="store_true",
+        help="Sent all audio at once instead of streaming.",
     )
     parser.add_argument(
         "-v",

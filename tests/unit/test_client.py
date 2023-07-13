@@ -15,12 +15,10 @@ class TestStreamingClient(unittest.TestCase):
 
     def testAudioChunkingEmpty(self):
         audio_bytes = []
-        with self.assertRaises(ValueError):
-            chunk_iterator = client._chunk_audio(audio_bytes, 3)
-            list(chunk_iterator)
+        chunk_iterator = client._chunk_audio(audio_bytes, 3)
+        self.assertEqual(list(chunk_iterator), [[]])
 
     def testAudioChunking0EmptyAudio(self):
         audio_bytes = []
-        with self.assertRaises(ValueError):
-            chunk_iterator = client._chunk_audio(audio_bytes, 0)
-            list(chunk_iterator)
+        chunk_iterator = client._chunk_audio(audio_bytes, 0)
+        self.assertEqual(list(chunk_iterator), [[]])
