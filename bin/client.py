@@ -44,6 +44,7 @@ _workerStubSingleton = None
 _ENCODING = "utf-8"
 _DEFAULT_CHUNK_SIZE = 20000
 
+
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
     return [
         f'<StreamingRecognizeRequest first alternative: "{r.results.alternatives[0].transcript}">'
