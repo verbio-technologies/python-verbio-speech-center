@@ -58,11 +58,6 @@ lint:python:
 
 unit-testing:
   stage: test
-  only:
-    - tags
-    - merge_requests
-    - master
-    - web
   before_script:
     - pip install .[client,server,cpu,test]
   script:
