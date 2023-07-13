@@ -254,17 +254,20 @@ def _createStreamingRequests(
     chunkSize = _setChunkSize(batchMode)
     return _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
 
+
 def _setChunkSize(batchMode: bool) -> int:
     if batchMode:
         return 0
     else:
         return _DEFAULT_CHUNK_SIZE
 
+
 def _addAudioSegmentsToStreamingRequest(request, audio, chunkSize):
     for chunk in _chunk_audio(audio=audio, chunkSize=chunkSize):
         if chunk != []:
             request.append(StreamingRecognizeRequest(audio=chunk))
     return request
+
 
 def _runWorkerQuery(
     audio: bytes,
