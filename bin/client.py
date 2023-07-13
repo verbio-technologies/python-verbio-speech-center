@@ -183,7 +183,6 @@ def _chunk_audio(audio: bytes, chunkSize: int):
         _LOGGER.error(f"Empty audio content: {audio}")
         yield audio
     else:
-        defaultChunkSize = 20000
         if chunkSize == 0:
             _LOGGER.info(
                 "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
@@ -252,15 +251,20 @@ def _createStreamingRequests(
             )
         )
     ]
+    chunkSize = _setChunkSize(batchMode)
+    return _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
+
+def _setChunkSize(batchMode: bool) -> int:
     if batchMode:
-        chunkSize = 0
+        return 0
     else:
-        chunkSize = _DEFAULT_CHUNK_SIZE
+        return _DEFAULT_CHUNK_SIZE
+
+def _addAudioSegmentsToStreamingRequest(request, audio, chunkSize):
     for chunk in _chunk_audio(audio=audio, chunkSize=chunkSize):
         if chunk != []:
             request.append(StreamingRecognizeRequest(audio=chunk))
     return request
-
 
 def _runWorkerQuery(
     audio: bytes,
