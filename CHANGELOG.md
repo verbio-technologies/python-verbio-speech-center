@@ -6,6 +6,15 @@
 
 ### Removed :no_entry:
 
+## 0.6.7 (2023-07-14)
+
+### Patch (4 changes)
+
+- [Revert "now works compiled with torch 2.0.1"](csr/asr4@56495b1799b6bd5c474599920648b16c77fc75b5) ([merge request](csr/asr4!288))
+- [[EEE-932] Add testing script for batch long audios](csr/asr4@87a15b7d9919cfad00596f9f7e43fd77af2b7c08) ([merge request](csr/asr4!284))
+- [Add batch option to client.py](csr/asr4@a4aca3a60d427aecb2494ce571ac596c632a89d2) ([merge request](csr/asr4!281))
+- [Update to models of 10s and expected metrics with these models](csr/asr4@9817a01cbc46e2aacca0be3f76968d530e99d398) ([merge request](csr/asr4!285))
+
 ## 0.6.6 (2023-07-12)
 
 ### Patch (2 changes)
