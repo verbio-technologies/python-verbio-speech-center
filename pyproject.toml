@@ -88,9 +88,8 @@ cpu = [
     "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'"
 ]
 gpu = [
-    "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/8e401aff0afb20599bbaec6c958b5ae44c5535e14835328fea1d36a657ce3898/torch-1.12.0a0+git8c5c07c-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
-    "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/b24b22852724d0e984a584126826f1f7af6e88a0bf197000e054941b82c9af26/torch-1.12.0a0+git8c5c07c-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "torch @ https://__token__:glpat-24_xaTZ1MS3vQCHrUPxx@gitlab.lan.verbio.com/api/v4/projects/1450/packages/pypi/files/6e51331904abe93dda728401a2aa46afc24d13ab97a0496db29df2194758ec0a/torch-2.0.0a0+gite9ebda2-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "torch @ https://download.pytorch.org/whl/torch-1.12.1-cp310-cp310-manylinux2014_aarch64.whl ; python_version=='3.10' and platform_system=='Linux'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp37-cp37m-win_amd64.whl ; python_version=='3.7' and platform_system=='Windows'",
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-win_amd64.whl ; python_version=='3.8' and platform_system=='Windows'",
@@ -100,8 +99,7 @@ gpu = [
     "onnxruntime-gpu @ https://__token__:glpat-2aabCj5voGjGLsDZJhZw@gitlab.lan.verbio.com/api/v4/projects/1452/packages/pypi/files/93e8bd4a4aadf2ee1be72cbdd00ae9342f56df6e7697f8ab557fcc94a2c2f043/onnxruntime_gpu-1.14.0-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "onnxruntime-gpu @ https://__token__:glpat-2aabCj5voGjGLsDZJhZw@gitlab.lan.verbio.com/api/v4/projects/1452/packages/pypi/files/28213e773ada613e73e61489e19807a950f4a139dd49e03d016ee0c7253d9417/onnxruntime_gpu-1.14.0-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "onnxruntime-gpu >= 1.13.1 ; python_version!='3.7' and python_version!='3.9'",
-    "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/dd46c5d18a1078b5e46bb3dfde441adb3a5cc00b29939396cd522154e84abaa2/simple_ctc-0.0.1-cp37-cp37m-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
-    "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/00c8abf05423d962eced6a108bedf70895954c28d501caad27942a7d1607c8da/simple_ctc-0.0.1-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
+    "simple-ctc @ https://__token__:glpat-nXw-FysVGGS8-xz24g3x@gitlab.lan.verbio.com/api/v4/projects/1451/packages/pypi/files/30e83e1674e5ebee129caa4d3a8d98a5ff7373efdd29639bc60f28a7384409f9/simple_ctc-0.0.1.4-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "simple-ctc @ git+https://github.com/mthrok/ctcdecode@b1a30d7a65342012e0d2524d9bae1c5412b24a23 ; python_version!='3.7' and python_version!='3.9'"
 ]
 test = [

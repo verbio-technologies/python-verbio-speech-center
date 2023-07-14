@@ -41,6 +41,7 @@ settings:
 
 lint:python:
   stage: lint
+  needs: []
   only:
     - tags
     - merge_requests
@@ -58,11 +59,7 @@ lint:python:
 
 unit-testing:
   stage: test
-  only:
-    - tags
-    - merge_requests
-    - master
-    - web
+  needs: []
   before_script:
     - pip install .[client,server,cpu,test]
   script:
