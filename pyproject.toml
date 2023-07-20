@@ -66,6 +66,7 @@ server = [
     "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/2b8875da0a15eb16cbb4e4a13d7f851bdbb511925b47f11d32ef81d7465c516f/pyformatter-1.4.2-cp310-cp310-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
     "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/b005e0475cd0f9a260c700a7bf71bb5aa98fb15570c1f6dbc3182c4f914a3c11/pyformatter-1.4.2-cp39-cp39-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "pyformatter @ https://__token__:qKtzEZznR88brmJub-nm@gitlab.lan.verbio.com/api/v4/projects/949/packages/pypi/files/f8a64b917b1a402b040f3be30882846199a506a997f3cc3d8c8596ea08b2d045/pyformatter-1.4.2-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
+]
 cpu = [
     "torch @ https://download.pytorch.org/whl/cpu/torch-1.12.1%2Bcpu-cp38-cp38-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
     "torch @ https://__token__:glpat-T_XsetcZptjqx11YLAyG@gitlab.lan.verbio.com/api/v4/projects/1440/packages/pypi/files/8e1ff8348e1ef95add56c33e0c39cf9b1ad03c31b5f36833a116612d11f29c39/torch-1.12.0a0+git8c5c07c-cp39-cp39-linux_x86_64.whl  ; python_version=='3.9' and platform_system=='Linux'",
