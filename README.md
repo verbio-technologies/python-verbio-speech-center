@@ -97,11 +97,16 @@ python3 recognizer_stream.py --help
   
 to list all the available options.
 
+### Synthesizer
+
+Verbio's Speech Center text-to-speech is still in beta version, therefore having some limitations but is able to be tested through the use of the following command.
+
 **Example for text to speech**
 ```
-python synthesizer.py --text "Hello my friend" --voice tommy --sample-rate 8000 --encoding PCM --format wav --language en-us --audio-file out.wav
+python3 synthesizer.py --text "Hello my friend" --voice tommy --sample-rate 8000 --encoding PCM --format wav --language en-us --audio-file out.wav
 ```
 
+Please check out documentation at speechcenter.verbio.com/documentation for current TTS limitations.
 
 ## Automatically Refresh Service Token
 This repository optionally implements an automatic token update. To do so, you must specify your credentials (find them in the Client Credentials section of the [user dashboard](https://dashboard.speechcenter.verbio.com)).
