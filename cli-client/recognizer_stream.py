@@ -11,8 +11,6 @@ from threading import Timer
 from typing import Iterator, Iterable
 import argparse
 import logging
-import math
-import wave
 import grpc
 from speechcenterauth import SpeechCenterCredentials
 import recognition_pb2_grpc, recognition_streaming_request_pb2, recognition_streaming_response_pb2
@@ -173,19 +171,19 @@ class SpeechCenterStreamingASRClient:
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(
+            request_iterator = self._stub.StreamingRecognize(
                 self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, file=self.__file,
                                            chunks=self.__chunks, language=self._language,
                                            sample_rate=self.__sample_rate, formatting=self._formatting,
                                            diarization=self._diarization, label=self._label))
         else:
-            response_iterator = self._stub.StreamingRecognize(
+            request_iterator = self._stub.StreamingRecognize(
                 self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, file=self.__file,
                                            chunks=self.__chunks, language=self._language,
                                            sample_rate=self.__sample_rate, formatting=self._formatting,
                                            diarization=self._diarization, label=self._label), metadata=metadata)
 
-        self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
+        self._consumer_future = self._executor.submit(self._response_watcher, request_iterator)
 
     def wait_server(self) -> bool:
         logging.info("Waiting for server to respond...")
