@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Used to make sure python find proto files
 import sys
+import time
 
 sys.path.insert(1, '../proto/generated')
 
@@ -56,22 +57,31 @@ def parse_command_line() -> Options:
     parser = argparse.ArgumentParser(description='Perform speech recognition on an audio file')
     topicGroup = parser.add_mutually_exclusive_group(required=True)
     topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
-    parser.add_argument('--language', '-l', choices=['en', 'en-US', 'en-GB', 'pt-BR', 'es', 'es-419', 'tr', 'ja', 'fr', 'fr-CA', 'de', 'it'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l',
+                        choices=['en', 'en-US', 'en-GB', 'pt-BR', 'es', 'es-419', 'tr', 'ja', 'fr', 'fr-CA', 'de',
+                                 'it'], help='A Language ID (default: ' + options.language + ')',
+                        default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
-    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')', required=True)
-    parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
+    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
+                        required=True)
+    parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.',
+                        required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_false')
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
-    parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
+    parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response',
+                        required=False, default=20.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--label', help='Label for the request', required=False, default="")
     parser.add_argument('--input-file', help='Input file descriptor', required=True)
     parser.add_argument('--chunks', help='Chunks of input', required=False, default=400)
     parser.add_argument('--sample-rate', help='audio sample rate', required=True)
 
-    credentialGroup = parser.add_argument_group('credentials', '[OPTIONAL] Client authentication credentials used to refresh the token. You can find your credentials on the dashboard at https://dashboard.speechcenter.verbio.com/access-token')
-    credentialGroup.add_argument('--client-id', help='Client id for authentication. MUST be written as --client-id=CLIENT_ID')
-    credentialGroup.add_argument('--client-secret', help='Client secret for authentication. MUST be written as --client-secret=CLIENT_SECRET')
+    credentialGroup = parser.add_argument_group('credentials',
+                                                '[OPTIONAL] Client authentication credentials used to refresh the token. You can find your credentials on the dashboard at https://dashboard.speechcenter.verbio.com/access-token')
+    credentialGroup.add_argument('--client-id',
+                                 help='Client id for authentication. MUST be written as --client-id=CLIENT_ID')
+    credentialGroup.add_argument('--client-secret',
+                                 help='Client secret for authentication. MUST be written as --client-secret=CLIENT_SECRET')
 
     args = parser.parse_args()
     parse_credential_args(args, options)
@@ -91,6 +101,7 @@ def parse_command_line() -> Options:
     options.sample_rate = int(args.sample_rate)
 
     return options
+
 
 class GrpcChannelCredentials:
     def __init__(self, token):
@@ -128,7 +139,7 @@ class SpeechCenterStreamingASRClient:
         logging.info("Stream inactivity detected, closing stream...")
         self._peer_responded.set()
 
-    def _start_inactivity_timer(self, inactivity_timeout : float):
+    def _start_inactivity_timer(self, inactivity_timeout: float):
         self._inactivity_timer = Timer(inactivity_timeout, self._close_stream_by_inactivity)
         self._inactivity_timer.start()
 
@@ -136,7 +147,8 @@ class SpeechCenterStreamingASRClient:
         duration = response.result.duration
         for alternative in response.result.alternatives:
             if alternative.transcript:
-                print('\t"transcript": "%s",\n\t"confidence": "%f",\n\t"duration": "%f"' % (alternative.transcript, alternative.confidence, duration))
+                print('\t"transcript": "%s",\n\t"confidence": "%f",\n\t"duration": "%f"' % (
+                    alternative.transcript, alternative.confidence, duration))
 
     def _response_watcher(
             self,
@@ -157,87 +169,90 @@ class SpeechCenterStreamingASRClient:
             logging.error("Error running response watcher: %s", str(e))
             self._peer_responded.set()
             raise
-    
+
     def call(self) -> None:
         metadata = [('authorization', "Bearer " + self.token)]
         if self._secure_channel:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, file=self.__file, chunks=self.__chunks, language=self._language, sample_rate=self.__sample_rate, formatting=self._formatting, diarization=self._diarization, label=self._label))
+            response_iterator = self._stub.StreamingRecognize(
+                self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, file=self.__file,
+                                           chunks=self.__chunks, language=self._language,
+                                           sample_rate=self.__sample_rate, formatting=self._formatting,
+                                           diarization=self._diarization, label=self._label))
         else:
-            response_iterator = self._stub.StreamingRecognize(self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, file=self.__file, chunks=self.__chunks, language=self._language, sample_rate=self.__sample_rate, formatting=self._formatting, diarization=self._diarization, label=self._label), metadata=metadata)
-        
+            response_iterator = self._stub.StreamingRecognize(
+                self.__generate_inferences(topic=self._topic, asr_version=self._asr_version, file=self.__file,
+                                           chunks=self.__chunks, language=self._language,
+                                           sample_rate=self.__sample_rate, formatting=self._formatting,
+                                           diarization=self._diarization, label=self._label), metadata=metadata)
+
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
-    
+
     def wait_server(self) -> bool:
         logging.info("Waiting for server to respond...")
         self._peer_responded.wait(timeout=None)
         if self._consumer_future.done():
             # If the future raises, forwards the exception here
             self._consumer_future.result()
-        
+
         return True
-    
+
     @staticmethod
-    def divide_audio(file, chunks):
+    def divide_audio(file, chunks, sample_rate):
         file = io.open(file, 'rb', -1)
 
+        time.sleep(chunks / sample_rate)
         audio = file.read(chunks)
         while 1:
             if not audio:
                 break
             yield audio
+            time.sleep(chunks / sample_rate)
             audio = file.read(chunks)
 
         file.close()
-    
+
     @staticmethod
     def __generate_inferences(
-        file: int,
-        chunks: int,
-        asr_version: str,
-        topic: str = "",
-        language: str = "",
-        sample_rate: int = 16000,
-        diarization = False,
-        formatting = False,
-        label: str = "",
+            file: int,
+            chunks: int,
+            asr_version: str,
+            topic: str = "",
+            language: str = "",
+            sample_rate: int = 16000,
+            diarization=False,
+            formatting=False,
+            label: str = "",
     ) -> Iterable[recognition_streaming_request_pb2.RecognitionStreamingRequest]:
-        
+
         if len(topic):
             var_resource = recognition_streaming_request_pb2.RecognitionResource(topic=topic)
         else:
             raise Exception("Topic must be declared in order to perform the recognition")
-        
+
         if len(asr_version):
-            asr_versions = {"V1":0, "V2":1}
+            asr_versions = {"V1": 0, "V2": 1}
             selected_asr_version = asr_versions[asr_version]
         else:
             raise Exception("ASR version must be declared in order to perform the recognition")
-        
-        messages = [
-            ("config", 
-                recognition_streaming_request_pb2.RecognitionStreamingRequest(
-                    config=recognition_streaming_request_pb2.RecognitionConfig(
-                        parameters=recognition_streaming_request_pb2.RecognitionParameters(
-                            language=language,
-                            pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate),
-                            enable_formatting = formatting,
-                            enable_diarization = diarization
-                        ), 
-                        resource=var_resource,
-                        label=[label],
-                        version=selected_asr_version
-                    )
-                )
-            ),
-        ]
 
-        for chunk in SpeechCenterStreamingASRClient.divide_audio(file, chunks):
+        yield recognition_streaming_request_pb2.RecognitionStreamingRequest(
+            config=recognition_streaming_request_pb2.RecognitionConfig(
+                parameters=recognition_streaming_request_pb2.RecognitionParameters(
+                    language=language,
+                    pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate),
+                    enable_formatting=formatting,
+                    enable_diarization=diarization
+                ),
+                resource=var_resource,
+                label=[label],
+                version=selected_asr_version
+            )
+        )
+
+        for chunk in SpeechCenterStreamingASRClient.divide_audio(file, chunks, sample_rate):
             logging.debug("Appending chunk as message: " + repr(chunk)[0:20] + "...")
-            messages.append(("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=chunk)))
+            yield recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=chunk)
 
-        for message_type, message in messages:
-            logging.info("Sending streaming message " + message_type)
-            yield message
         logging.info("All audio messages sent")
 
 
@@ -254,12 +269,14 @@ def run_executor(command_line_options, executor, channel):
     logging.info("Running executor...")
     future = executor.submit(process_recognition, executor, channel, command_line_options)
     future.result()
- 
+
+
 def retrieve_token(options):
     if options.client_id:
         return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
     else:
         return SpeechCenterCredentials.read_token(token_file=options.token_file)
+
 
 def run(command_line_options):
     executor = ThreadPoolExecutor()
@@ -268,14 +285,14 @@ def run(command_line_options):
     if command_line_options.secure_channel:
         token = retrieve_token(command_line_options)
         credentials = GrpcChannelCredentials(token)
-        with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
+        with grpc.secure_channel(command_line_options.host,
+                                 credentials=credentials.get_channel_credentials()) as channel:
             run_executor(command_line_options, executor, channel)
-            
+
     else:
         with grpc.insecure_channel(command_line_options.host) as channel:
             run_executor(command_line_options, executor, channel)
 
-   
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s]:%(message)s')
@@ -283,4 +300,3 @@ if __name__ == '__main__':
     command_line_options = parse_command_line()
     command_line_options.check()
     run(command_line_options)
-    
