@@ -20,7 +20,7 @@ class Options:
         self.host = 'tts.verbiospeechcenter.com'
         self.text = None
         self.voice = None
-        self.sample_rate = 8000
+        self.sample_rate = 16000
         self.encoding = 'PCM'
         self.header = 'wav'
         self.language = 'en-us'
@@ -65,7 +65,7 @@ class Audio:
 
     @staticmethod
     def __get_sample_rate(_sample_rate: int) -> int:
-        return 8000
+        return 16000
 
     @staticmethod
     def __get_audio_format(header: str, _encoding: str) -> int:
@@ -148,11 +148,11 @@ def parse_command_line() -> Options:
     options = Options()
     parser = argparse.ArgumentParser(description='Perform speech synthesis on a sample text')
     parser.add_argument('--text', '-T', help='Text to synthesize to audio', required=True)
-    parser.add_argument('--voice', '-v', choices=['tommy', 'miguel'], help='Voice to use for the synthesis', required=True)
-    parser.add_argument('--sample-rate', '-s', type=int, choices=[8000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
+    parser.add_argument('--voice', '-v', choices=['tommy', 'miguel', 'anna', 'david_es', 'bel'], help='Voice to use for the synthesis', required=True)
+    parser.add_argument('--sample-rate', '-s', type=int, choices=[16000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
     parser.add_argument('--encoding', '-e', choices=['PCM'], help='Output audio encoding algorithm (default: ' + options.encoding + ' [Signed 16-bit little endian PCM])', default=options.encoding)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio header (default: ' + options.header + ')', default=options.header)
-    parser.add_argument('--language', '-l', choices=['en-us', 'es-pe'], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-us', 'es-pe', 'ca', 'pt-br', 'es', ], help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)
