@@ -109,7 +109,7 @@ class TestResources(unittest.TestCase):
             wav_hdl = wave.open(file_hdl, 'w')
             wav_hdl.setnchannels(1)
             wav_hdl.setsampwidth(2)
-            wav_hdl.setframerate(8000)
+            wav_hdl.setframerate(16000)
             wav_hdl.writeframes(self.wav_content)
             wav_hdl.close()
         return filename
@@ -144,7 +144,7 @@ class TestAudio(unittest.TestCase):
     def test_sample_rate(self):
         options = SynthesizerOptions()
         options.voice = ''
-        self.assertEqual(Audio(options).sample_rate, 8000)
+        self.assertEqual(Audio(options).sample_rate, 16000)
 
     def test_audio_format(self):
         options = SynthesizerOptions()
