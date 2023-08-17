@@ -12,11 +12,12 @@ fi
 pip install .[client]
 PYTHONPATH=. python bin/client.py --no-format -v ERROR -l "${language}" --host "${host}" -a "${audio}" --batch --json > "${language}-test.json"
 if [ -z "$(cat ${language}-test.json | grep transcript)" ];
-    echo "Transcription is successful"
 then
     echo "Error:"
     cat "${language}-test.json"
     exit 1;
+else
+    echo "Transcription is successful"
 fi
 
 exit 0
