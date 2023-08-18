@@ -11,7 +11,7 @@ stages:
   - cleanup
   - speech-center-integration-testing
 
-image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:latest
+image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:1.11.7
 
 variables:
   DOCKER_IMAGE_VERSION: $CI_COMMIT_REF_SLUG
