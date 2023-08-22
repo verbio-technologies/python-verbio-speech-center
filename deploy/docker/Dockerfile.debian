@@ -18,7 +18,7 @@ COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 COPY dummy asr4-$LANGUAGE-lm.* /
 COPY asr4_config.toml /
 
-RUN pip install asr4-$VERSION-py3-none-any.whl[server,cpu]
+RUN pip install asr4_streaming-$VERSION-py3-none-any.whl[server,cpu]
 RUN python -m pip install intel_extension_for_pytorch -f https://software.intel.com/ipex-whl-stable-cpu
 RUN python -m pip uninstall cmake ninja -y
 

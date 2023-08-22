@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y libgomp1 && apt-get clean
 
 ARG VERSION
 COPY asr4_streaming-$VERSION-py3-none-any.whl /asr4_streaming-$VERSION-py3-none-any.whl
-RUN python -m pip install --no-cache-dir asr4-$VERSION-py3-none-any.whl[server,gpu]
+RUN python -m pip install --no-cache-dir asr4_streaming-$VERSION-py3-none-any.whl[server,gpu]
 RUN python -m pip uninstall cmake ninja -y && pip cache purge && rm /tmp/*
 
 ARG LANGUAGE
