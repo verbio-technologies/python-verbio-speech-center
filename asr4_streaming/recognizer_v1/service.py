@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
 
-from asr4.types.language import Language
+from asr4_streaming.types.language import Language
 
 from .types import RecognizerServicer
 from .types import RecognizeRequest

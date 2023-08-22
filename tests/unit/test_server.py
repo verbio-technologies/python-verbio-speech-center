@@ -4,9 +4,9 @@ import tempfile
 from unittest.mock import patch
 
 import argparse, os
-from asr4.recognizer import Server, ServerConfiguration
-from asr4.recognizer import RecognitionServiceConfiguration
-from asr4.recognizer import LoggerService
+from asr4_streaming.recognizer import Server, ServerConfiguration
+from asr4_streaming.recognizer import RecognitionServiceConfiguration
+from asr4_streaming.recognizer import LoggerService
 from bin.server import Asr4ArgParser
 
 

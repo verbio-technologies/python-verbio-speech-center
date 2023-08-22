@@ -23,7 +23,7 @@ from .types import StreamingRecognitionResult
 from .types import StreamingRecognizeRequest
 from .types import StreamingRecognizeResponse
 
-from asr4.types.language import Language
+from asr4_streaming.types.language import Language
 
 from .types import RecognizerStub
 from .types import RecognizerServicer
