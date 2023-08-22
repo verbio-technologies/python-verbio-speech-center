@@ -3,7 +3,7 @@ import unittest
 import logging
 
 
-from asr4.recognizer_v1 import LoggerService, Logger, LoggerQueue
+from asr4_streaming.recognizer_v1 import LoggerService, Logger, LoggerQueue
 
 
 class TestLoggerService(unittest.TestCase):
