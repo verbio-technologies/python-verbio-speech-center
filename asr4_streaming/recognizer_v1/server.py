@@ -11,8 +11,6 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 from .types import SERVICES_NAMES
 from .types import add_RecognizerServicer_to_server
 
-from .formatter import FormatterFactory
-
 from .service import RecognitionServiceConfiguration
 from .service import RecognizerService
 
@@ -98,14 +96,7 @@ class Server:
         server: grpc.aio.Server, configuration: RecognitionServiceConfiguration
     ) -> None:
         add_RecognizerServicer_to_server(
-            RecognizerService(
-                configuration,
-                FormatterFactory.createFormatter(
-                    configuration.formatterModelPath, configuration.language
-                )
-                if configuration.formatterModelPath
-                else None,
-            ),
+            RecognizerService(configuration),
             server,
         )
 

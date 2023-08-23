@@ -234,7 +234,6 @@ class Asr4ArgParser:
 
     def replaceUndefinedWithConfigFile(args: argparse.Namespace) -> argparse.Namespace:
         configFile = args.config or "asr4_config.toml"
-        args.language = args.language or Language.EN_US.value
         if os.path.exists(configFile):
             config = toml.load(configFile)
             config.setdefault("global", {})
@@ -253,9 +252,6 @@ class Asr4ArgParser:
                 del config["global"]["port"]
         for k, v in config["global"].items():
             setattr(args, k, getattr(args, k, None) or v)
-        if args.language.lower() in config:
-            for k, v in config[args.language.lower()].items():
-                setattr(args, k, getattr(args, k, None) or v)
         return args
 
     def replaceUndefinedWithDefaultValues(
