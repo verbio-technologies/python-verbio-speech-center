@@ -4,10 +4,11 @@ import argparse
 import multiprocessing
 import toml
 
-from asr4_streaming.recognizer import Language
 from asr4_streaming.recognizer import LoggerService
 from asr4_streaming.recognizer import Server, ServerConfiguration
-from asr4_streaming.recognizer import DecodingType
+
+from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 
 
 def main():
