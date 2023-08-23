@@ -18,9 +18,9 @@ from onnxruntime.quantization.quant_utils import (
     model_has_infer_metadata,
 )
 
-from asr4.recognizer_v1.runtime.base import Runtime
-from asr4.recognizer_v1.runtime.w2l_decoder import _DecodeResult
-from asr4.recognizer_v1.formatter import TimeFixer
+from asr4_streaming.recognizer_v1.runtime.base import Runtime
+from asr4_streaming.recognizer_v1.runtime.w2l_decoder import _DecodeResult
+from asr4_streaming.recognizer_v1.formatter import TimeFixer
 from pyformatter import PyFormatter as Formatter
 
 MODEL_QUANTIZATION_PRECISION = "INT8"
@@ -248,7 +248,7 @@ class OnnxRuntime(Runtime):
             )
         elif lmAlgorithm == "kenlm":
             self._session.logger.debug(f" Using KenLM algorithm for decoding")
-            from asr4.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
+            from asr4_streaming.recognizer_v1.runtime.w2l_decoder import W2lKenLMDecoder
 
             self._decoder = W2lKenLMDecoder(
                 vocabulary, lmFile, lexicon, lm_weight, word_score, sil_score, subwords

@@ -4,7 +4,7 @@ import pytest
 import unittest
 from shutil import rmtree
 from subprocess import Popen, PIPE
-from asr4.recognizer import Language
+from asr4_streaming.recognizer import Language
 from typing import Optional
 
 

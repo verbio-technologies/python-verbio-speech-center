@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 from functools import reduce
 
 from pyformatter import PyFormatter as Formatter
-from asr4.types.language import Language
+from asr4_streaming.types.language import Language
 import logging
 
 

@@ -3,8 +3,8 @@ FROM docker.registry.verbio.com/csr/devops/asr4-base-gpu:0.1.0
 RUN apt-get update && apt-get install -y libgomp1 && apt-get clean
 
 ARG VERSION
-COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
-RUN python -m pip install --no-cache-dir asr4-$VERSION-py3-none-any.whl[server,gpu]
+COPY asr4_streaming-$VERSION-py3-none-any.whl /asr4_streaming-$VERSION-py3-none-any.whl
+RUN python -m pip install --no-cache-dir asr4_streaming-$VERSION-py3-none-any.whl[server,gpu]
 RUN python -m pip uninstall cmake ninja -y && pip cache purge && rm /tmp/*
 
 ARG LANGUAGE

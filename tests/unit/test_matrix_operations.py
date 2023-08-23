@@ -2,7 +2,7 @@ import unittest
 import pytest
 import numpy as np
 
-from asr4.recognizer_v1.runtime.onnx import MatrixOperations
+from asr4_streaming.recognizer_v1.runtime.onnx import MatrixOperations
 
 
 class TestMatrixOperation(unittest.TestCase):

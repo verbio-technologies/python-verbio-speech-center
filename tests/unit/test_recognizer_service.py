@@ -6,20 +6,20 @@ import tempfile
 import numpy as np
 import argparse
 
-from asr4.recognizer import Duration
-from asr4.recognizer import RecognizerService
-from asr4.recognizer import RecognitionServiceConfiguration
-from asr4.recognizer import RecognizeRequest
-from asr4.recognizer import StreamingRecognizeRequest
-from asr4.recognizer import RecognitionConfig
-from asr4.recognizer import RecognitionParameters
-from asr4.recognizer import RecognitionResource
-from asr4.recognizer import RecognizeResponse
-from asr4.recognizer import StreamingRecognizeResponse
-from asr4.recognizer import StreamingRecognitionResult
-from asr4.recognizer import Session, OnnxRuntime
-from asr4.types.language import Language
-from asr4.recognizer_v1.service import TranscriptionResult
+from asr4_streaming.recognizer import Duration
+from asr4_streaming.recognizer import RecognizerService
+from asr4_streaming.recognizer import RecognitionServiceConfiguration
+from asr4_streaming.recognizer import RecognizeRequest
+from asr4_streaming.recognizer import StreamingRecognizeRequest
+from asr4_streaming.recognizer import RecognitionConfig
+from asr4_streaming.recognizer import RecognitionParameters
+from asr4_streaming.recognizer import RecognitionResource
+from asr4_streaming.recognizer import RecognizeResponse
+from asr4_streaming.recognizer import StreamingRecognizeResponse
+from asr4_streaming.recognizer import StreamingRecognitionResult
+from asr4_streaming.recognizer import Session, OnnxRuntime
+from asr4_streaming.types.language import Language
+from asr4_streaming.recognizer_v1.service import TranscriptionResult
 import os
 
 from typing import Any, Dict, List, Optional, Union

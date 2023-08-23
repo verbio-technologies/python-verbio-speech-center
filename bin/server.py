@@ -4,10 +4,10 @@ import argparse
 import multiprocessing
 import toml
 
-from asr4.recognizer import Language
-from asr4.recognizer import LoggerService
-from asr4.recognizer import Server, ServerConfiguration
-from asr4.recognizer import DecodingType
+from asr4_streaming.recognizer import Language
+from asr4_streaming.recognizer import LoggerService
+from asr4_streaming.recognizer import Server, ServerConfiguration
+from asr4_streaming.recognizer import DecodingType
 
 
 def main():

@@ -11,17 +11,17 @@ from random import randint
 from typing import Any, Tuple, Dict, List, Optional, Union
 import torch.nn.functional as F
 
-from asr4.recognizer_v1.runtime import (
+from asr4_streaming.recognizer_v1.runtime import (
     Session,
     OnnxRuntime,
     OnnxSession,
     DecodingType,
     OnnxRuntimeResult,
 )
-from asr4.recognizer_v1.runtime.onnx import _DecodeResult, OnnxRuntimeResult
-from asr4.recognizer_v1.loggerService import LoggerService
-from asr4.recognizer import Language
-from asr4.recognizer_v1.formatter import FormatterFactory
+from asr4_streaming.recognizer_v1.runtime.onnx import _DecodeResult, OnnxRuntimeResult
+from asr4_streaming.recognizer_v1.loggerService import LoggerService
+from asr4_streaming.recognizer import Language
+from asr4_streaming.recognizer_v1.formatter import FormatterFactory
 import os
 
 

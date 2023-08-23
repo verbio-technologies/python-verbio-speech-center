@@ -2,7 +2,7 @@ import unittest
 import pytest
 import torch
 
-from asr4.recognizer_v1.runtime import w2l_decoder
+from asr4_streaming.recognizer_v1.runtime import w2l_decoder
 
 
 class TestW2lKenLMDecoder(unittest.TestCase):

@@ -1,5 +1,5 @@
 import unittest
-from asr4.types.language import Language
+from asr4_streaming.types.language import Language
 
 
 class TestLanguage(unittest.TestCase):

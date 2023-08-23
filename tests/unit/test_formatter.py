@@ -2,9 +2,9 @@ import pytest, unittest
 import os, json
 from pathlib import Path
 
-from asr4.recognizer_v1.formatter import *
-from asr4.recognizer_v1.runtime.onnx import OnnxRuntimeResult
-from asr4.types.language import Language
+from asr4_streaming.recognizer_v1.formatter import *
+from asr4_streaming.recognizer_v1.runtime.onnx import OnnxRuntimeResult
+from asr4_streaming.types.language import Language
 
 
 class TestFormatter(unittest.TestCase):
