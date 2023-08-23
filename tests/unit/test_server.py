@@ -13,6 +13,7 @@ from bin.server import Asr4ArgParser
 class MockArguments(argparse.Namespace):
     def __init__(self):
         super().__init__()
+        self.config = "config.toml"
         self.bindAddress = "bind:address"
         self.servers = 3
         self.listeners = 2
@@ -140,8 +141,6 @@ class TestreplaceUndefinedWithConfigFile(unittest.TestCase):
         host = "localhost"
         port = 8080
         gpu = 0
-
-        [en-us]
         cpu_version = "2.0.0"
         gpu_version = "2.0.0"
         lm_version = "2.0.0"
