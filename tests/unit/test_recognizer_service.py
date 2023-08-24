@@ -36,6 +36,7 @@ FORMATTED_SPANISH_MESSAGE: str = (
 )
 DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
 
+
 class MockArguments(argparse.Namespace):
     def __init__(self):
         super().__init__()
