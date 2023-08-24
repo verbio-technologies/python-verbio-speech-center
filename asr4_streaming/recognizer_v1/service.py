@@ -227,8 +227,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             result = self._engine.recognize(
                 Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
                 language=self._languageCode,
+                formatter=request.config.parameters.enable_formatting,
             )
-            print(result)
             return TranscriptionResult(
                 transcription=result.text,
                 score=self.calculateAverageScore(result.segments),
