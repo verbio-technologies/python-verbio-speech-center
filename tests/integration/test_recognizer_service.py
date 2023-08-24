@@ -6,6 +6,7 @@ from shutil import rmtree
 from subprocess import Popen, PIPE
 from typing import Optional
 
+from asr4.engines.wav2vec.v1.engine_types import Language
 
 class TimeStampsStatistics:
     numberOfWords: [int] = 0.0
