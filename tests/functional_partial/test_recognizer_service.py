@@ -4,6 +4,7 @@ import asyncio
 import unittest
 import multiprocessing
 from concurrent import futures
+import tempfile
 
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
@@ -31,15 +32,22 @@ async def runServerAsyncPartialDecoding(
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=1),
     )
-    configuration = MockRecognitionServiceConfiguration(MockArguments())
-    configuration.language = Language.EN_US
-    configuration.vocabulary = None
-    configuration.formatterModelPath = "path_to_formatter/formatter.fm"
-    configuration.decodingType = "LOCAL"
-    configuration.lmAlgorithm = "kenlm"
-    configuration.lmFile = "path_to_lm/lm.bin"
-    configuration.lexicon = "path_to_lm/lm.lexicon.txt"
-    configuration.local_formatting = "True"
+    arguments = MockArguments()
+    config_str = """
+            [global]
+            language = "en-US"
+            formatterModelPath = "path_to_formatter/formatter.fm"
+            decoding_type = "LOCAL"
+            lm_algorithm = "kenlm"
+            lm_model = "path_to_lm/lm.bin"
+            lexicon = "path_to_lm/lm.lexicon.txt"
+            local_formatting = "True"
+            """
+    tmpfile = tempfile.NamedTemporaryFile(mode="w")
+    with open(tmpfile.name, "w") as f:
+        f.write(config_str)
+    arguments.config = tmpfile.name
+    configuration = MockRecognitionServiceConfiguration(arguments=arguments)
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
     await server.start()
