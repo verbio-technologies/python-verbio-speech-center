@@ -48,12 +48,12 @@ class RecognitionServiceConfiguration:
         if arguments is not None:
             self.config = arguments.config
 
-    def initializeEngine(self, tomlConfiguration: dict, languageCode: str) -> Wav2VecEngineFactory:
+    def initializeEngine(
+        self, tomlConfiguration: dict, languageCode: str
+    ) -> Wav2VecEngineFactory:
         factory = Wav2VecEngineFactory()
         engine = factory.create_engine()
-        engine.initialize(
-            config=toml.dumps(tomlConfiguration), language=languageCode
-        )
+        engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
         return engine
 
     @staticmethod
@@ -94,9 +94,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "language", "en-US"
         )
         self._language = Language.parse(self._languageCode)
-        self._engine = configuration.initializeEngine(tomlConfiguration, self._languageCode)
+        self._engine = configuration.initializeEngine(
+            tomlConfiguration, self._languageCode
+        )
         logging.info(f"Recognizer supported language is: {self._languageCode}")
-
 
     async def Recognize(
         self,
@@ -227,7 +228,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
                 language=self._languageCode,
             )
-
+            print(result)
             return TranscriptionResult(
                 transcription=result.text,
                 score=self.calculateAverageScore(result.segments),
