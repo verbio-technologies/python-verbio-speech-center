@@ -48,8 +48,16 @@ class RecognitionServiceConfiguration:
         if arguments is not None:
             self.config = arguments.config
 
+    def initializeEngine(self, tomlConfiguration: dict, languageCode: str) -> Wav2VecEngineFactory:
+        factory = Wav2VecEngineFactory()
+        engine = factory.create_engine()
+        engine.initialize(
+            config=toml.dumps(tomlConfiguration), language=languageCode
+        )
+        return engine
+
     @staticmethod
-    def _createProvidersList(gpu: bool) -> List[str]:
+    def _initializeEnginersList(gpu: bool) -> List[str]:
         providers = ["CPUExecutionProvider"]
         if gpu:
             providers = ["CUDAExecutionProvider"] + providers
@@ -82,16 +90,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         tomlConfiguration = toml.load(configuration.config)
         logging.debug(f"Toml configuration file: {configuration.config}")
         logging.debug(f"Toml configuration: {tomlConfiguration}")
-        factory = Wav2VecEngineFactory()
-        self._engine = factory.create_engine()
         self._languageCode = tomlConfiguration.get("global", {}).get(
             "language", "en-US"
         )
-        self._engine.initialize(
-            config=toml.dumps(tomlConfiguration), language=self._languageCode
-        )
         self._language = Language.parse(self._languageCode)
+        self._engine = configuration.initializeEngine(tomlConfiguration, self._languageCode)
         logging.info(f"Recognizer supported language is: {self._languageCode}")
+
 
     async def Recognize(
         self,

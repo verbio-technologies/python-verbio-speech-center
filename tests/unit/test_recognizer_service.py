@@ -17,136 +17,100 @@ from asr4_streaming.recognizer import RecognitionResource
 from asr4_streaming.recognizer import RecognizeResponse
 from asr4_streaming.recognizer import StreamingRecognizeResponse
 from asr4_streaming.recognizer import StreamingRecognitionResult
-from asr4_streaming.recognizer import Session, OnnxRuntime
-from asr4_streaming.types.language import Language
 from asr4_streaming.recognizer_v1.service import TranscriptionResult
+
+from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Signal, Segment, Transcription
+from asr4_engine.data_classes.transcription import WordTiming
+
 import os
 
 from typing import Any, Dict, List, Optional, Union
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 DEFAULT_SPANISH_MESSAGE: str = (
-    "hola estoy  levantado y en marcha  y he recibido un mensaje tuyo"
-)
-DEFAULT_CORRECT_SPANISH_MESSAGE: str = (
     "hola estoy levantado y en marcha y he recibido un mensaje tuyo"
 )
 FORMATTED_SPANISH_MESSAGE: str = (
     "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
 )
-DEFAULT_PORTUGUESE_MESSAGE: str = "ola  estou de pe recebi uma mensagem sua"
-DEFAULT_CORRECT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
-
+DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
 
 class MockArguments(argparse.Namespace):
     def __init__(self):
         super().__init__()
-        self.vocabularyLabels = ["|", "<s>", "</s>", "<pad>"]
-        self.vocabulary = self.createVocabulary()
-        self.formatter = "path_to_formatter/formatter.fm"
-        self.language = "es"
-        self.model = "path_to_models/model.onnx"
-        self.gpu = False
-        self.workers = 4
-        self.lexicon = None
-        self.lm_model = None
-        self.lm_algorithm = "viterbi"
-        self.lm_weight = None
-        self.word_score = None
-        self.sil_score = None
-        self.overlap = None
-        self.subwords = None
-        self.local_formatting = False
-        self.maxChunksForDecoding = 1
-
-    def createVocabulary(self) -> str:
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-            vocabularyPath = f.name
-            for label in self.vocabularyLabels:
-                f.write(f"{label}\n")
-        return vocabularyPath
-
-    def getVocabularyLabels(self):
-        return self.vocabularyLabels
+        self.config = "asr4_config.toml"
 
 
 class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
     def __init__(self, arguments: MockArguments = MockArguments()):
         super().__init__(arguments)
 
-    def createOnnxSession(self):
-        return MockOnnxSession(
-            self.model,
+    def initializeEngine(self, config, language):
+        print(language)
+        return MockEngine(
+            config,
+            language,
+        )
+
+
+class MockEngine:
+    def __init__(self, _path_or_bytes: Union[str, bytes], language) -> None:
+        self.logger = logging.getLogger("TEST")
+        self._message = {
+            "en-US": DEFAULT_ENGLISH_MESSAGE,
+            "es": DEFAULT_SPANISH_MESSAGE,
+            "pt-BR": DEFAULT_PORTUGUESE_MESSAGE,
+        }.get(language, DEFAULT_ENGLISH_MESSAGE)
+        self.language = language
+
+    def recognize(
+        self,
+        input: Signal,
+        **kwargs,
+    ) -> Transcription:
+        return Transcription(
+            text=self._message,
+            segments=self._generateDefaultSegmentsArray(self._message),
             language=self.language,
         )
 
-
-class MockOnnxSession(Session):
-    def __init__(self, _path_or_bytes: Union[str, bytes], **kwargs) -> None:
-        super().__init__(_path_or_bytes, **kwargs)
-        self.logger = logging.getLogger("TEST")
-        self._message = {
-            Language.EN_US: DEFAULT_ENGLISH_MESSAGE,
-            Language.ES: DEFAULT_SPANISH_MESSAGE,
-            Language.PT_BR: DEFAULT_PORTUGUESE_MESSAGE,
-        }.get(kwargs.get("language"), DEFAULT_ENGLISH_MESSAGE)
-
-    def run(
-        self,
-        _output_names: Optional[List[str]],
-        input_feed: Dict[str, Any],
-        **kwargs,
-    ) -> np.ndarray:
-        defaultMessage = list(self._message.replace(" ", "|"))
-        return [self._generateDefaultMessageArray(defaultMessage)]
-
-    def _generateDefaultMessageArray(self, defaultMessage: List[str]) -> np.ndarray:
-        defaultMessageArray = np.full(
-            (1, len(defaultMessage), len(OnnxRuntime.DEFAULT_VOCABULARY)),
-            -10.0,
-            np.float32,
-        )
-        for i, letter in enumerate(defaultMessage):
-            defaultMessageArray[
-                0, i, OnnxRuntime.DEFAULT_VOCABULARY.index(letter)
-            ] = 10.0
-        return self._insertBlankBetweenRepeatedLetters(
-            defaultMessage, defaultMessageArray
-        )
-
-    def _insertBlankBetweenRepeatedLetters(
-        self, defaultMessage: List[str], defaultMessageArray: np.ndarray
-    ) -> np.ndarray:
-        lastLetter, offset = "", 0
-        blank_row = self._getBlankArray()
-        for i, letter in enumerate(defaultMessage):
-            if lastLetter == letter:
-                defaultMessageArray = np.insert(
-                    defaultMessageArray, i + offset, blank_row, axis=1
+    def _generateDefaultSegmentsArray(self, defaultMessage: List[str]) -> np.ndarray:
+        segments = []
+        for i, token in enumerate(defaultMessage.split(" ")):
+            segments.append(
+                Segment(
+                    id=i,
+                    start_index=i,
+                    end_index=i + 1,
+                    seek=0,
+                    start=i,
+                    end=i + 1,
+                    text=token,
+                    tokens=[0],
+                    temperature=random.uniform(0.0, 1.0),
+                    avg_logprob=random.uniform(0.0, 1.0),
+                    compression_ratio=random.uniform(0.0, 1.0),
+                    no_speech_prob=random.uniform(0.0, 1.0),
+                    words=[
+                        WordTiming(
+                            word=token,
+                            start=i,
+                            end=i + 1,
+                            probability=1.0,
+                        )
+                    ],
                 )
-                offset += 1
-            lastLetter = letter
-        return defaultMessageArray
-
-    def _getBlankArray(self) -> np.ndarray:
-        blank_row = np.zeros(len(OnnxRuntime.DEFAULT_VOCABULARY), dtype=np.float32)
-        blank_row[OnnxRuntime.DEFAULT_VOCABULARY.index("<s>")] = 10.0
-        return blank_row
-
-    def get_inputs_names(self) -> List[str]:
-        return ["input"]
+            )
+        return segments
 
 
 class TestRecognizerServiceConfiguration(unittest.TestCase):
     def testInit(self):
         arguments = MockArguments()
+        arguments._languageCode = "en-US"
         configuration = RecognitionServiceConfiguration(arguments)
-        self.assertEqual(configuration.language, Language.parse(arguments.language))
-        self.assertEqual(configuration.model, arguments.model)
-        self.assertEqual(configuration.gpu, arguments.gpu)
-        self.assertEqual(configuration.formatterModelPath, arguments.formatter)
-        self.assertEqual(configuration.vocabulary, arguments.vocabulary)
-        self.assertEqual(configuration.numberOfWorkers, arguments.workers)
+        self.assertEqual(configuration.config, "asr4_config.toml")
 
     def testEmpyInit(self):
         configuration = RecognitionServiceConfiguration()
@@ -155,26 +119,6 @@ class TestRecognizerServiceConfiguration(unittest.TestCase):
 
 
 class TestRecognizerService(unittest.TestCase):
-    def testNoExistentVocabulary(self):
-        with self.assertRaises(FileNotFoundError):
-            configuration = MockRecognitionServiceConfiguration()
-            configuration.vocabulary = "file_that_doesnt_exist"
-            RecognizerService(configuration)
-
-    def testEmptyvocabularyPath(self):
-        with self.assertRaises(FileNotFoundError):
-            configuration = MockRecognitionServiceConfiguration()
-            configuration.vocabulary = ""
-            RecognizerService(configuration)
-
-    def testVocabulary(self):
-        arguments = MockArguments()
-        configuration = MockRecognitionServiceConfiguration(arguments)
-        service = RecognizerService(configuration)
-        self.assertEqual(
-            service._runtime._decoder.labels, arguments.getVocabularyLabels()
-        )
-
     def testInvalidAudio(self):
         service = RecognizerService(MockRecognitionServiceConfiguration())
         request = RecognizeRequest(
@@ -479,8 +423,6 @@ class TestRecognizerService(unittest.TestCase):
 
     def testRecognizeRequestHandleEnUs(self):
         arguments = MockArguments()
-        arguments.language = Language.EN_US
-        arguments.vocabulary = None
         service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
         request = RecognizeRequest(
             config=RecognitionConfig(
@@ -501,8 +443,14 @@ class TestRecognizerService(unittest.TestCase):
 
     def testRecognizeRequestHandleEs(self):
         arguments = MockArguments()
-        arguments.language = Language.ES
-        arguments.vocabulary = None
+        config_str = """
+            [global]
+            language = "es"
+            """
+        tmpfile = tempfile.NamedTemporaryFile(mode="w")
+        with open(tmpfile.name, "w") as f:
+            f.write(config_str)
+        arguments.config = tmpfile.name
         service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
         request = RecognizeRequest(
             config=RecognitionConfig(
@@ -518,13 +466,19 @@ class TestRecognizerService(unittest.TestCase):
         )
         self.assertEqual(
             service.eventHandle(request).transcription,
-            DEFAULT_CORRECT_SPANISH_MESSAGE,
+            DEFAULT_SPANISH_MESSAGE,
         )
 
     def testRecognizeRequestHandlePtBr(self):
         arguments = MockArguments()
-        arguments.language = Language.PT_BR
-        arguments.vocabulary = None
+        config_str = """
+            [global]
+            language = "pt-BR"
+            """
+        tmpfile = tempfile.NamedTemporaryFile(mode="w")
+        with open(tmpfile.name, "w") as f:
+            f.write(config_str)
+        arguments.config = tmpfile.name
         service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
         request = RecognizeRequest(
             config=RecognitionConfig(
@@ -538,9 +492,10 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"0000",
         )
+        print(service.eventHandle(request))
         self.assertEqual(
             service.eventHandle(request).transcription,
-            DEFAULT_CORRECT_PORTUGUESE_MESSAGE,
+            DEFAULT_PORTUGUESE_MESSAGE,
         )
 
     def testRecognizeRequestSink(self):
@@ -548,7 +503,10 @@ class TestRecognizerService(unittest.TestCase):
         response = TranscriptionResult(
             transcription="hello world",
             score=1.0,
-            wordTimestamps=[(1.0, 1.5), (1.8, 2.6)],
+            words=[
+                WordTiming(word="hello", start=1.0, end=1.5, probability=1.0),
+                WordTiming(word="world", start=1.8, end=2.6, probability=1.0),
+            ],
         )
         result = {
             "alternatives": [
@@ -581,7 +539,7 @@ class TestRecognizerService(unittest.TestCase):
         response = TranscriptionResult(
             transcription="",
             score=1.0,
-            wordTimestamps=[],
+            words=[],
         )
         result = {
             "alternatives": [
@@ -603,7 +561,11 @@ class TestRecognizerService(unittest.TestCase):
         )
         response = service.eventSink(
             TranscriptionResult(
-                transcription=transcription, score=1.0, wordTimestamps=[(1.0, 1.5)]
+                transcription=transcription,
+                score=1.0,
+                words=[
+                    WordTiming(word=transcription, start=1.0, end=1.5, probability=1.0)
+                ],
             )
         )
         self.assertEqual(len(response.alternatives), 1)
@@ -621,7 +583,11 @@ class TestRecognizerService(unittest.TestCase):
         )
         innerRecognizeResponse = service.eventSink(
             TranscriptionResult(
-                transcription=transcription, score=1.0, wordTimestamps=[(1.0, 1.5)]
+                transcription=transcription,
+                score=1.0,
+                words=[
+                    WordTiming(word=transcription, start=1.0, end=1.5, probability=1.0)
+                ],
             ),
             Duration(seconds=1, nanos=0),
         )
@@ -638,8 +604,6 @@ class TestRecognizerService(unittest.TestCase):
 
     def testAudioDuration(self):
         arguments = MockArguments()
-        arguments.language = Language.EN_US
-        arguments.vocabulary = None
         service = RecognizerService(MockRecognitionServiceConfiguration(arguments))
 
         config16 = RecognitionConfig(
