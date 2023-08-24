@@ -19,7 +19,6 @@ from asr4_streaming.recognizer import StreamingRecognizeResponse
 from asr4_streaming.recognizer import StreamingRecognitionResult
 from asr4_streaming.recognizer_v1.service import TranscriptionResult
 
-from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4_engine.data_classes import Signal, Segment, Transcription
 from asr4_engine.data_classes.transcription import WordTiming
 
@@ -48,7 +47,6 @@ class MockRecognitionServiceConfiguration(RecognitionServiceConfiguration):
         super().__init__(arguments)
 
     def initializeEngine(self, config, language):
-        print(language)
         return MockEngine(
             config,
             language,

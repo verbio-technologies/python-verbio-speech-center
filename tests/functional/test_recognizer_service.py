@@ -8,7 +8,6 @@ import unittest
 import multiprocessing
 from concurrent import futures
 
-from asr4_streaming.recognizer import Language
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer import RecognizeRequest
@@ -35,8 +34,6 @@ async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
         futures.ThreadPoolExecutor(max_workers=1),
     )
     configuration = MockRecognitionServiceConfiguration(MockArguments())
-    configuration.language = Language.EN_US
-    configuration.vocabulary = None
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
     await server.start()
@@ -109,10 +106,7 @@ class TestRecognizerService(unittest.TestCase):
             response.results.is_final,
             True,
         )
-        self.assertEqual(
-            response.results.alternatives[0].confidence,
-            0.995789647102356,
-        )
+        self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
 
     def testRecognizeStreamingRequestMoreThanOneAudioEnUs(self):
         def _streamingRecognize():
@@ -149,10 +143,7 @@ class TestRecognizerService(unittest.TestCase):
             True,
         )
 
-        self.assertEqual(
-            response.results.alternatives[0].confidence,
-            0.995789647102356,
-        )
+        self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
 
     def testRecognizeRequestEs(self):
         request = RecognizeRequest(

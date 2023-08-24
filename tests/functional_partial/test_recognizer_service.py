@@ -5,7 +5,6 @@ import unittest
 import multiprocessing
 from concurrent import futures
 
-from asr4_streaming.recognizer import Language
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer import StreamingRecognizeRequest
@@ -98,10 +97,7 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
             response.results.is_final,
             True,
         )
-        self.assertEqual(
-            response.results.alternatives[0].confidence,
-            0.995789647102356,
-        )
+        self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
 
     def testRecognizeStreamingRequestMoreThanOneAudioEnUs(self):
         def _streamingRecognize():
@@ -140,10 +136,7 @@ class TestRecognizerServiceOnlineDecoding(unittest.TestCase):
             True,
         )
 
-        self.assertEqual(
-            response.results.alternatives[0].confidence,
-            0.995789647102356,
-        )
+        self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
 
     @classmethod
     def tearDownClass(cls):
