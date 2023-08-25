@@ -23,7 +23,7 @@ rm -rf "wer" || true
 rm -rf "trnHypothesis.trn" || true
 rm -rf "refHypothesis.trn" || true
 
-pip install .[client]
+pip install .[client, cpu]
 PYTHONPATH=. python bin/client.py --no-format -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
 sleep 10
 if [ -f "test_${language}_results.tsv" ]; then
