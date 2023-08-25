@@ -14,10 +14,7 @@ from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import RecognitionResource
 from asr4_streaming.recognizer import add_RecognizerServicer_to_server
 
-from tests.unit.test_recognizer_service import (
-    MockArguments,
-    MockRecognitionServiceConfiguration,
-)
+from tests.unit.test_recognizer_service import MockArguments
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
@@ -46,9 +43,7 @@ async def runServerAsyncPartialDecoding(
     tmpfile = tempfile.NamedTemporaryFile(mode="w")
     with open(tmpfile.name, "w") as f:
         f.write(config_str)
-    arguments.config = tmpfile.name
-    configuration = MockRecognitionServiceConfiguration(arguments=arguments)
-    add_RecognizerServicer_to_server(RecognizerService(configuration), server)
+    add_RecognizerServicer_to_server(tmpfile.name, server)
     server.add_insecure_port(serverAddress)
     await server.start()
     event.set()

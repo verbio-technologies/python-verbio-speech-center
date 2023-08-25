@@ -17,10 +17,7 @@ from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import RecognitionResource
 from asr4_streaming.recognizer import add_RecognizerServicer_to_server
 
-from tests.unit.test_recognizer_service import (
-    MockArguments,
-    MockRecognitionServiceConfiguration,
-)
+from tests.unit.test_recognizer_service import MockArguments
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
@@ -33,7 +30,7 @@ async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=1),
     )
-    configuration = MockRecognitionServiceConfiguration(MockArguments())
+    configuration = MockArguments().config
     add_RecognizerServicer_to_server(RecognizerService(configuration), server)
     server.add_insecure_port(serverAddress)
     await server.start()
