@@ -54,8 +54,8 @@ class SourceSinkService(abc.ABC):
 
 
 class RecognizerService(RecognizerServicer, SourceSinkService):
-    def __init__(self, arguments: Optional[argparse.Namespace] = None) -> None:
-        self.config = arguments.config
+    def __init__(self, config: str) -> None:
+        self.config = config
         self.logger = logging.getLogger("ASR4")
         tomlConfiguration = toml.load(self.config)
         logging.debug(f"Toml configuration file: {self.config}")
