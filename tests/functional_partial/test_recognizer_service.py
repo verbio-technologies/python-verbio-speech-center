@@ -14,7 +14,9 @@ from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import RecognitionResource
 from asr4_streaming.recognizer import add_RecognizerServicer_to_server
 
-from tests.unit.test_recognizer_service import MockArguments
+from asr4.engines.wav2vec.v1.engine_types import Language
+
+from tests.unit.test_recognizer_service import MockArguments, MockEngine
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
@@ -23,31 +25,45 @@ def runServerPartialDecoding(serverAddress: str, event: multiprocessing.Event):
     asyncio.run(runServerAsyncPartialDecoding(serverAddress, event))
 
 
+def initializeEngine(config, language):
+    return MockEngine(
+        config,
+        language,
+    )
+
+
 async def runServerAsyncPartialDecoding(
     serverAddress: str, event: multiprocessing.Event
 ):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=1),
     )
-    arguments = MockArguments()
-    config_str = """
-            [global]
-            language = "en-US"
-            formatterModelPath = "path_to_formatter/formatter.fm"
-            decoding_type = "LOCAL"
-            lm_algorithm = "kenlm"
-            lm_model = "path_to_lm/lm.bin"
-            lexicon = "path_to_lm/lm.lexicon.txt"
-            local_formatting = "True"
-            """
-    tmpfile = tempfile.NamedTemporaryFile(mode="w")
-    with open(tmpfile.name, "w") as f:
-        f.write(config_str)
-    add_RecognizerServicer_to_server(tmpfile.name, server)
-    server.add_insecure_port(serverAddress)
-    await server.start()
-    event.set()
-    await server.wait_for_termination()
+    arguments = MockArguments(language="en-US")
+    with patch.object(RecognizerService, "__init__", lambda x, y: None):
+        config_str = """
+        [global]
+        language = "en-US"
+        formatterModelPath = "path_to_formatter/formatter.fm"
+        decoding_type = "LOCAL"
+        lm_algorithm = "kenlm"
+        lm_model = "path_to_lm/lm.bin"
+        lexicon = "path_to_lm/lm.lexicon.txt"
+        local_formatting = "True"
+        """
+        tmpfile = tempfile.NamedTemporaryFile(mode="w")
+        with open(tmpfile.name, "w") as f:
+            f.write(config_str)
+        service = RecognizerService(tmpfile.name)
+        service.logger = logging.getLogger("ASR4")
+        service._languageCode = "en-US"
+        service._language = Language.EN_US
+        service._engine = initializeEngine(arguments.config, arguments.language)
+        add_RecognizerServicer_to_server(service, server)
+        add_RecognizerServicer_to_server(tmpfile.name, server)
+        server.add_insecure_port(serverAddress)
+        await server.start()
+        event.set()
+        await server.wait_for_termination()
 
 
 @pytest.mark.usefixtures("datadir")
