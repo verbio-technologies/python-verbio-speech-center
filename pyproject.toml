@@ -54,7 +54,7 @@ client = [
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/734c88c08f37f4bcc0d85121fd6bbb1badc2bcd54b24f5d7d9ffe8dbecffa1bd/csr_evaluation_tools-0.0.22-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/80e98be34e5798c3c2ac410b1f9696216aaed413cda01213c5a207b286317d6b/csr_evaluation_tools-0.0.22-py39-none-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/0f6bbb9642c692941c7e6e4de52c9d356bcf090f2d4eb17a6c3e63f09c9a1396/csr_evaluation_tools-0.0.22-py310-none-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
-    "asr4-engine-wav2vec[cpu] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/1f1b7b8055c2b7f4db5760fbbae50b46dfadde6f55f5f97be806ca581307e427/asr4_engine_wav2vec-0.7.1-py3-none-any.whl"
+    "asr4-engine-wav2vec[cpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/1f1b7b8055c2b7f4db5760fbbae50b46dfadde6f55f5f97be806ca581307e427/asr4_engine_wav2vec-0.7.1-py3-none-any.whl"
 ]
 server = [
     "toml >= 0.10.2",
