@@ -239,11 +239,11 @@ image:release:gpu:
   before_script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
-    - export MODEL_VERSION=$(stoml asr4_streaming_config_${LANGUAGE}.toml ${LANGUAGE}.${DEVICE}_version)
+    - export MODEL_VERSION=$(stoml asr4_streaming_config_${LANGUAGE}.toml global.${DEVICE}_version)
     - echo ${MODEL_VERSION}
     - SERVICE_VERSION=$(cat VERSION)
     - echo SERVICE_VERSION=${SERVICE_VERSION}
-    - export LM_VERSION=$(stoml asr4_streaming_config_${LANGUAGE}.toml ${LANGUAGE}.lm_version)
+    - export LM_VERSION=$(stoml asr4_streaming_config_${LANGUAGE}.toml global.lm_version)
     - echo LM_VERSION=${LM_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
