@@ -2,9 +2,11 @@ import grpc
 import pytest
 import asyncio
 import unittest
+from mock import patch
 import multiprocessing
 from concurrent import futures
 import tempfile
+import logging
 
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
@@ -57,9 +59,8 @@ async def runServerAsyncPartialDecoding(
         service.logger = logging.getLogger("ASR4")
         service._languageCode = "en-US"
         service._language = Language.EN_US
-        service._engine = initializeEngine(arguments.config, arguments.language)
+        service._engine = initializeEngine(tmpfile.name, arguments.language)
         add_RecognizerServicer_to_server(service, server)
-        add_RecognizerServicer_to_server(tmpfile.name, server)
         server.add_insecure_port(serverAddress)
         await server.start()
         event.set()
