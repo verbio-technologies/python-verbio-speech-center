@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import argparse, os
 from asr4_streaming.recognizer import Server, ServerConfiguration
-from asr4_streaming.recognizer import RecognitionServiceConfiguration
 from asr4_streaming.recognizer import LoggerService
 from bin.server import Asr4ArgParser
 
@@ -42,10 +41,6 @@ class TestServerConfiguration(unittest.TestCase):
         self.assertEqual(configuration.numberOfListeners, arguments.listeners)
         self.assertEqual(configuration.numberOfServers, arguments.servers)
         self.assertEqual(configuration.bindAddress, arguments.bindAddress)
-        self.assertEqual(
-            type(configuration.getServiceConfiguration()),
-            RecognitionServiceConfiguration,
-        )
 
 
 class ArgumentParserTests(unittest.TestCase):
