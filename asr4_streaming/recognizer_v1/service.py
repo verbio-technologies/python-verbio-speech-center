@@ -56,19 +56,6 @@ class RecognitionServiceConfiguration:
         engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
         return engine
 
-    @staticmethod
-    def _initializeEnginersList(gpu: bool) -> List[str]:
-        providers = ["CPUExecutionProvider"]
-        if gpu:
-            providers = ["CUDAExecutionProvider"] + providers
-        return providers
-
-    @staticmethod
-    def _validateLanguage(language: str) -> Language:
-        if not Language.check(language):
-            raise ValueError(f"Invalid language '{language}'")
-        return Language.parse(language)
-
 
 class SourceSinkService(abc.ABC):
     def eventSource(
