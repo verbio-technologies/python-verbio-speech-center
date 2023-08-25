@@ -11,8 +11,8 @@ ARG LANGUAGE
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
 ARG MODEL_VERSION
-COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /asr4-$LANGUAGE.onnx
-COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
+COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /w2v-$LANGUAGE-$MODEL_VERSION.onnx
+COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /w2v-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt
 
 ARG LM_VERSION
 COPY dummy asr4-$LANGUAGE-lm.* /
