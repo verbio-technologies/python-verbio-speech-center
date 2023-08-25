@@ -16,7 +16,7 @@ COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
 
 ARG LM_VERSION
 COPY dummy asr4-$LANGUAGE-lm.* /
-COPY asr4_streamin_config_$LANGUAGE.toml /
+COPY asr4_streaming_config_$LANGUAGE.toml /
 
 COPY server.py /server.py
 COPY init-gpu.sh /init.sh
