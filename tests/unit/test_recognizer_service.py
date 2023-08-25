@@ -491,7 +491,6 @@ class TestRecognizerService(unittest.TestCase):
             ),
             audio=b"0000",
         )
-        print(service.eventHandle(request))
         self.assertEqual(
             service.eventHandle(request).transcription,
             DEFAULT_PORTUGUESE_MESSAGE,
