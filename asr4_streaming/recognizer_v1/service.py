@@ -39,24 +39,6 @@ class TranscriptionResult:
     words: List[WordTiming]
 
 
-class RecognitionServiceConfiguration:
-    def __init__(self, arguments: Optional[argparse.Namespace] = None):
-        self.config = None
-        self.__setArguments(arguments)
-
-    def __setArguments(self, arguments: argparse.Namespace):
-        if arguments is not None:
-            self.config = arguments.config
-
-    def initializeEngine(
-        self, tomlConfiguration: dict, languageCode: str
-    ) -> Wav2VecEngineFactory:
-        factory = Wav2VecEngineFactory()
-        engine = factory.create_engine()
-        engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
-        return engine
-
-
 class SourceSinkService(abc.ABC):
     def eventSource(
         self,
@@ -72,19 +54,26 @@ class SourceSinkService(abc.ABC):
 
 
 class RecognizerService(RecognizerServicer, SourceSinkService):
-    def __init__(self, configuration: RecognitionServiceConfiguration) -> None:
+    def __init__(self, arguments: Optional[argparse.Namespace] = None) -> None:
+        self.config = arguments.config
         self.logger = logging.getLogger("ASR4")
-        tomlConfiguration = toml.load(configuration.config)
-        logging.debug(f"Toml configuration file: {configuration.config}")
+        tomlConfiguration = toml.load(self.config)
+        logging.debug(f"Toml configuration file: {self.config}")
         logging.debug(f"Toml configuration: {tomlConfiguration}")
         self._languageCode = tomlConfiguration.get("global", {}).get(
             "language", "en-US"
         )
         self._language = Language.parse(self._languageCode)
-        self._engine = configuration.initializeEngine(
-            tomlConfiguration, self._languageCode
-        )
+        self._engine = self.initializeEngine(tomlConfiguration, self._languageCode)
         logging.info(f"Recognizer supported language is: {self._languageCode}")
+
+    def initializeEngine(
+        self, tomlConfiguration: dict, languageCode: str
+    ) -> Wav2VecEngineFactory:
+        factory = Wav2VecEngineFactory()
+        engine = factory.create_engine()
+        engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
+        return engine
 
     async def Recognize(
         self,

@@ -11,7 +11,6 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 from .types import SERVICES_NAMES
 from .types import add_RecognizerServicer_to_server
 
-from .service import RecognitionServiceConfiguration
 from .service import RecognizerService
 
 from .loggerService import LoggerQueue
@@ -22,10 +21,7 @@ class ServerConfiguration:
         self.bindAddress = arguments.bindAddress
         self.numberOfServers = arguments.servers
         self.numberOfListeners = arguments.listeners
-        self.serviceConfiguration = RecognitionServiceConfiguration(arguments)
-
-    def getServiceConfiguration(self) -> RecognitionServiceConfiguration:
-        return self.serviceConfiguration
+        self.serviceConfiguration = arguments.config
 
 
 class Server:
@@ -84,17 +80,13 @@ class Server:
                 ("grpc.max_receive_message_length", -1),
             ),
         )
-        Server._addRecognizerService(
-            grpcServer, configuration.getServiceConfiguration()
-        )
+        Server._addRecognizerService(grpcServer, configuration.serviceConfiguration)
         Server._addHealthCheckService(grpcServer, configuration.numberOfListeners)
         grpcServer.add_insecure_port(configuration.bindAddress)
         return grpcServer
 
     @staticmethod
-    def _addRecognizerService(
-        server: grpc.aio.Server, configuration: RecognitionServiceConfiguration
-    ) -> None:
+    def _addRecognizerService(server: grpc.aio.Server, configuration: str) -> None:
         add_RecognizerServicer_to_server(
             RecognizerService(configuration),
             server,

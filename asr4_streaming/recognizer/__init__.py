@@ -22,7 +22,6 @@ from asr4_streaming.recognizer_v1 import StreamingRecognizeResponse
 
 try:
     from asr4_streaming.recognizer_v1 import RecognizerService
-    from asr4_streaming.recognizer_v1 import RecognitionServiceConfiguration
     from asr4_streaming.recognizer_v1 import add_RecognizerServicer_to_server
     from asr4_streaming.recognizer_v1 import Server, ServerConfiguration
 
@@ -46,7 +45,6 @@ __all__ = (
     "ServerConfiguration",
     "add_RecognizerServicer_to_server",
     "RecognizerService",
-    "RecognitionServiceConfiguration",
     "Logger",
     "LoggerService",
     "LoggerQueue",
