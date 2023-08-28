@@ -15,7 +15,8 @@ COPY asr4_streaming-$VERSION-py3-none-any.whl /asr4_streaming-$VERSION-py3-none-
 COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /w2v-$LANGUAGE-$MODEL_VERSION.onnx
 COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /w2v-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
-COPY dummy asr4-$LANGUAGE-lm.* /
+COPY asr4-$LANGUAGE-lm-$LM_VERSION.bin /w2v-$LANGUAGE-lm-$LM_VERSION.bin
+COPY asr4-$LANGUAGE-lm-$LM_VERSION.lexicon.txt /w2v-$LANGUAGE-lm-$LM_VERSION.lexicon.txt
 COPY asr4_streaming_config_$LANGUAGE.toml /
 
 RUN pip install asr4_streaming-$VERSION-py3-none-any.whl[server,cpu]
