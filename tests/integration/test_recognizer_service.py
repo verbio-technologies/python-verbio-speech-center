@@ -313,6 +313,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         message = self.__extractMessageAsAJsonObject(process.stdout.read())
+        print("[MESSAGE]",message)
         audioLength = parseSeconds(message["results"]["duration"])
         if message:
             stats = self.__calculateTimeStampsStats(

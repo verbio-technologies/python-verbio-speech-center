@@ -342,7 +342,7 @@ testing:integration-testing:gpu:
     - pip install .[client,test]
   script:
     - python3 --version
-    - pytest tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
+    - pytest --log-cli-level=DEBUG --verbose --capture=tee-sys tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
   artifacts:
     expire_in: 5 days
     reports:
