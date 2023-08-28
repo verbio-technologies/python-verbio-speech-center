@@ -3,12 +3,13 @@ import grpc
 import math
 import wave
 import pytest
+import logging
+from mock import patch
 import asyncio
 import unittest
 import multiprocessing
 from concurrent import futures
 
-from asr4_streaming.recognizer import Language
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer import RecognizeRequest
@@ -18,10 +19,10 @@ from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import RecognitionResource
 from asr4_streaming.recognizer import add_RecognizerServicer_to_server
 
-from tests.unit.test_recognizer_service import (
-    MockArguments,
-    MockRecognitionServiceConfiguration,
-)
+from asr4.engines.wav2vec.v1.engine_types import Language
+
+from tests.unit.test_recognizer_service import MockArguments, MockEngine
+
 
 DEFAULT_ENGLISH_MESSAGE: str = "hello i am up and running received a message from you"
 
@@ -30,18 +31,29 @@ def runServer(serverAddress: str, event: multiprocessing.Event):
     asyncio.run(runServerAsync(serverAddress, event))
 
 
+def initializeEngine(config, language):
+    return MockEngine(
+        config,
+        language,
+    )
+
+
 async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
     server = grpc.aio.server(
         futures.ThreadPoolExecutor(max_workers=1),
     )
-    configuration = MockRecognitionServiceConfiguration(MockArguments())
-    configuration.language = Language.EN_US
-    configuration.vocabulary = None
-    add_RecognizerServicer_to_server(RecognizerService(configuration), server)
-    server.add_insecure_port(serverAddress)
-    await server.start()
-    event.set()
-    await server.wait_for_termination()
+    arguments = MockArguments(language="en-US")
+    with patch.object(RecognizerService, "__init__", lambda x, y: None):
+        service = RecognizerService("asr4_config.toml")
+        service.logger = logging.getLogger("ASR4")
+        service._languageCode = "en-US"
+        service._language = Language.EN_US
+        service._engine = initializeEngine(arguments.config, arguments.language)
+        add_RecognizerServicer_to_server(service, server)
+        server.add_insecure_port(serverAddress)
+        await server.start()
+        event.set()
+        await server.wait_for_termination()
 
 
 @pytest.mark.usefixtures("datadir")
@@ -109,10 +121,7 @@ class TestRecognizerService(unittest.TestCase):
             response.results.is_final,
             True,
         )
-        self.assertEqual(
-            response.results.alternatives[0].confidence,
-            0.995789647102356,
-        )
+        self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
 
     def testRecognizeStreamingRequestMoreThanOneAudioEnUs(self):
         def _streamingRecognize():
@@ -149,10 +158,7 @@ class TestRecognizerService(unittest.TestCase):
             True,
         )
 
-        self.assertEqual(
-            response.results.alternatives[0].confidence,
-            0.995789647102356,
-        )
+        self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
 
     def testRecognizeRequestEs(self):
         request = RecognizeRequest(

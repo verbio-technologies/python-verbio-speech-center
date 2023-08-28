@@ -12,7 +12,6 @@ from examples import run_evaluator
 
 from typing import List
 
-from asr4_streaming.types.language import Language
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 from asr4_streaming.recognizer import StreamingRecognizeResponse
@@ -20,6 +19,7 @@ from asr4_streaming.recognizer import RecognitionConfig
 from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import RecognitionResource
 
+from asr4.engines.wav2vec.v1.engine_types import Language
 
 _LOGGER = logging.getLogger(__name__)
 _PROCESS_COUNT = 8

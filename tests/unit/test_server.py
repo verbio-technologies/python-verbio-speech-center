@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import argparse, os
 from asr4_streaming.recognizer import Server, ServerConfiguration
-from asr4_streaming.recognizer import RecognitionServiceConfiguration
 from asr4_streaming.recognizer import LoggerService
 from bin.server import Asr4ArgParser
 
@@ -13,6 +12,7 @@ from bin.server import Asr4ArgParser
 class MockArguments(argparse.Namespace):
     def __init__(self):
         super().__init__()
+        self.config = "config.toml"
         self.bindAddress = "bind:address"
         self.servers = 3
         self.listeners = 2
@@ -41,10 +41,6 @@ class TestServerConfiguration(unittest.TestCase):
         self.assertEqual(configuration.numberOfListeners, arguments.listeners)
         self.assertEqual(configuration.numberOfServers, arguments.servers)
         self.assertEqual(configuration.bindAddress, arguments.bindAddress)
-        self.assertEqual(
-            type(configuration.getServiceConfiguration()),
-            RecognitionServiceConfiguration,
-        )
 
 
 class ArgumentParserTests(unittest.TestCase):
@@ -140,8 +136,6 @@ class TestreplaceUndefinedWithConfigFile(unittest.TestCase):
         host = "localhost"
         port = 8080
         gpu = 0
-
-        [en-us]
         cpu_version = "2.0.0"
         gpu_version = "2.0.0"
         lm_version = "2.0.0"
