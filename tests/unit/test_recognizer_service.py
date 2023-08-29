@@ -54,7 +54,7 @@ class MockEngine:
         }.get(language, DEFAULT_ENGLISH_MESSAGE)
         self.language = language
 
-    def recognize(
+    def sendAudioChunk(
         self,
         input: Signal,
         **kwargs,
