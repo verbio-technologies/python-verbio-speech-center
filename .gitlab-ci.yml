@@ -338,7 +338,7 @@ testing:integration-testing:gpu:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
-    - pip install .[client,test]
+    - pip install .[client,cpu,test]
   script:
     - python3 --version
     - pytest tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
