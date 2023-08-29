@@ -285,7 +285,7 @@ testing:formatting-testing:gpu:
   tags:
     - gpu
   before_script:
-    - pip install .client,server,gpu,test]
+    - pip install .[client,server,gpu,test]
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
