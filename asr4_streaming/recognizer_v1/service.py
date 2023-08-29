@@ -1,7 +1,6 @@
 import abc
 import grpc
 import logging
-import argparse
 from datetime import timedelta
 from dataclasses import dataclass, field
 
@@ -20,12 +19,15 @@ from .types import WordInfo
 from .types import SampleRate
 from .types import AudioEncoding
 
-from typing import Optional, List
+from typing import List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
 import toml
 import numpy as np
+import time
+import math
 
+from asr4_engine import ASR4EngineOnlineHandler
 from asr4_engine.data_classes import Signal, Segment
 from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec import Wav2VecEngineFactory
@@ -122,35 +124,40 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
             if request.HasField("audio"):
-                audio += request.audio
-                self.logger.info(
-                    f"Received partial audio " f"[length={len(request.audio)}] "
-                )
+                innerRecognizeRequest.audio = request.audio
+                await self.eventSource(innerRecognizeRequest)
+                await self.eventHandle(innerRecognizeRequest)
+                # duration = self.calculateAudioDuration(innerRecognizeRequest)
+                # self.logger.info(
+                #     f"Received total audio "
+                #     f"[length={len(request.audio)}] "
+                #     f"[duration={duration.ToTimedelta().total_seconds()}] "
+                # )
+                # totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
 
-        innerRecognizeRequest.audio = audio
-        self.eventSource(innerRecognizeRequest)
-        duration = self.calculateAudioDuration(innerRecognizeRequest)
-        self.logger.info(
-            f"Received total audio "
-            f"[length={len(request.audio)}] "
-            f"[duration={duration.ToTimedelta().total_seconds()}] "
-        )
-        totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
-        response = self.eventHandle(innerRecognizeRequest)
-        innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
-        self.logger.info(
-            f"Recognition result: '{innerRecognizeResponse.alternatives[0].transcript}'"
-        )
-        yield StreamingRecognizeResponse(
-            results=StreamingRecognitionResult(
-                alternatives=innerRecognizeResponse.alternatives,
-                end_time=innerRecognizeResponse.end_time,
-                duration=innerRecognizeResponse.duration,
-                is_final=True,
+    async def listenForTranscription(self):
+        receivedRecognitionMessages, firstMessageLatency = 0, math.inf
+        async for response in self._handler.listenForCompleteAudio():
+            if receivedRecognitionMessages == 0:
+                firstMessageLatency = time.time()
+            receivedRecognitionMessages += 1
+            await self.eventSink(response, duration, totalDuration)
+            self.logger.info(
+                f"Recognition result: '{response.alternatives[0].transcript}'"
             )
-        )
+            yield StreamingRecognizeResponse(
+                results=StreamingRecognitionResult(
+                    alternatives=response.alternatives,
+                    end_time=response.end_time,
+                    duration=response.duration,
+                    is_final=True,
+                )
+            )
+            self.logger.info(
+                f"Received partial audio " f"[length={len(request.audio)}] "
+            )
 
-    def eventSource(
+    async def eventSource(
         self,
         request: RecognizeRequest,
     ) -> None:
@@ -197,19 +204,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
+    async def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
         language = Language.parse(request.config.parameters.language)
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
-            result = self._handler.sendAudioChunk(
+            await self._handler.sendAudioChunk(
                 Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz)
             )
-            return TranscriptionResult(
-                transcription=result.text,
-                score=self.calculateAverageScore(result.segments),
-                words=self.extractWords(result.segments),
-            )
-
         else:
             raise ValueError(
                 f"Invalid language '{language}'. Only '{self._language}' is supported."
@@ -227,7 +228,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             words.extend(segment.words)
         return words
 
-    def eventSink(
+    async def eventSink(
         self,
         response: TranscriptionResult,
         duration: Duration = Duration(seconds=0, nanos=0),
