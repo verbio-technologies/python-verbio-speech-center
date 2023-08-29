@@ -1,5 +1,5 @@
 import unittest
-from asr4.recognizer_v1.types.sample_rate import SampleRate
+from asr4_streaming.recognizer_v1.types.sample_rate import SampleRate
 
 
 class TestSampleRate(unittest.TestCase):

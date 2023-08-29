@@ -1,0 +1,13 @@
+[global]
+language = "pt-BR"
+workers = 0
+model = "/mnt/shared/squad2/projects/asr4models/wav2vec_small_10m.dynamic.uint8.onnx"
+vocabulary = "/mnt/shared/squad2/projects/asr4models/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt"
+lm_algorithm = "kenlm"
+lm_model = "/mnt/shared/squad2/projects/asr4models/asr4-en-us-lm-1.2.0.bin"
+lexicon = "/mnt/shared/squad2/projects/asr4models/asr4-en-us-lm-1.2.0.lexicon.txt"
+lm_weight = "0.91715"
+word_score = "-0.29761"
+sil_score = "0.31423"
+formatter = "/mnt/shared/squad2/projects/asr4models/formatter/format-model.en-us-1.0.1.fm"
+

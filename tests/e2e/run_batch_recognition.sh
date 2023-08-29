@@ -18,11 +18,12 @@ else
 fi
 
 if [ -z "$(cat ${language}-test.json | grep transcript)" ];
-    echo "Transcription is successful"
 then
     echo "Error:"
     cat "${language}-test.json"
     exit 1;
+else
+    echo "Transcription is successful"
 fi
 
 exit 0

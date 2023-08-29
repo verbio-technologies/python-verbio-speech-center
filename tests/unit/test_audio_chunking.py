@@ -3,7 +3,7 @@ import os
 import shutil
 import unittest
 from pathlib import Path
-from asr4.recognizer_v1.types.audio_chunking import (
+from asr4_streaming.recognizer_v1.types.audio_chunking import (
     AudioChunking,
     loadAudio,
     saveAudio,

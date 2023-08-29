@@ -1,0 +1,20 @@
+
+[global]
+language = "pt-BR"
+model = "w2v-pt-br-1.3.0.onnx"
+vocabulary = "w2v-pt-br-1.3.0.dict.ltr.txt"
+lm_algorithm = "kenlm"
+lm_model = "w2v-pt-br-lm-1.2.0.bin"
+lexicon = "w2v-pt-br-lm-1.2.0.lexicon.txt"
+listeners = 1
+workers = 0
+verbose = "INFO"
+host = "[::]"
+port = 50051
+cpu_version = "1.3.0"
+gpu_version = "1.3.0"
+lm_version = "1.2.0"
+lm_weight = "1.0"
+word_score = "-0.25422"
+sil_score = "0.24403"
+formatter = "format-model.pt-br.fm"

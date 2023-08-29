@@ -2,24 +2,22 @@
 
 set -eo pipefail
 
-if [ $# -lt 3 ]
+if [ $# -lt 0 ]
 then
-      echo "Usage: launch_server.sh <model_path> <dictionary_path> <formatter_path> <language> [<with_gpu>]"
+      echo "Usage: launch_server.sh <config_path> [<with_gpu>]"
       exit -1
 fi
 
-MODEL=$1
-DICTIONARY=$2
-LANGUAGE=$4
-FORMATTER=$(ls $3/format-model.${LANGUAGE}*)
+CONFIG=$1
 export CUDA_VISIBLE_DEVICES=1
 
-if [ -z $5 ]
+if [ -z $2 ]
 then
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 -v TRACE &
+      python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 -v TRACE &
 else
-      python3 bin/server.py -m ${MODEL} -d ${DICTIONARY} -l ${LANGUAGE} -f ${FORMATTER} -s1 -L1 -w2 --gpu -v TRACE &
+      python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 --gpu -v TRACE &
 fi
+
 
 export TIME=30
 echo "Server launched, sleeping by ${TIME}"

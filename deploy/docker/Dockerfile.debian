@@ -11,14 +11,15 @@ RUN apt update && apt install -y libgomp1
 
 COPY init.sh /init.sh
 COPY server.py /server.py
-COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
-COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /asr4-$LANGUAGE.onnx
-COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
+COPY asr4_streaming-$VERSION-py3-none-any.whl /asr4_streaming-$VERSION-py3-none-any.whl
+COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /w2v-$LANGUAGE-$MODEL_VERSION.onnx
+COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /w2v-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
-COPY dummy asr4-$LANGUAGE-lm.* /
-COPY asr4_config.toml /
+COPY asr4-$LANGUAGE-lm-$LM_VERSION.bin /w2v-$LANGUAGE-lm-$LM_VERSION.bin
+COPY asr4-$LANGUAGE-lm-$LM_VERSION.lexicon.txt /w2v-$LANGUAGE-lm-$LM_VERSION.lexicon.txt
+COPY asr4_streaming_config_$LANGUAGE.toml /
 
-RUN pip install asr4-$VERSION-py3-none-any.whl[server,cpu]
+RUN pip install asr4_streaming-$VERSION-py3-none-any.whl[server,cpu]
 RUN python -m pip install intel_extension_for_pytorch -f https://software.intel.com/ipex-whl-stable-cpu
 RUN python -m pip uninstall cmake ninja -y
 

@@ -5,10 +5,6 @@ import argparse
 from datetime import timedelta
 from dataclasses import dataclass, field
 
-from .runtime import OnnxRuntime, Session, OnnxSession, DecodingType
-
-from asr4.types.language import Language
-
 from .types import RecognizerServicer
 from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
@@ -27,78 +23,20 @@ from .types import AudioEncoding
 from typing import Optional, List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
-from pyformatter import PyFormatter as Formatter
+import toml
+import numpy as np
+
+from asr4_engine.data_classes import Signal, Segment
+from asr4_engine.data_classes.transcription import WordTiming
+from asr4.engines.wav2vec import Wav2VecEngineFactory
+from asr4.engines.wav2vec.v1.engine_types import Language
 
 
 @dataclass
 class TranscriptionResult:
     transcription: str
     score: float
-    wordTimestamps: List[tuple[float]] = field(default_factory=lambda: [(0, 0)])
-
-
-class RecognitionServiceConfiguration:
-    def __init__(self, arguments: Optional[argparse.Namespace] = None):
-        self.vocabulary = None
-        self.formatterModelPath = None
-        self.language = Language.EN_US
-        self.model = None
-        self.lmFile = None
-        self.lexicon = None
-        self.gpu = False
-        self.numberOfWorkers = 1
-        self.decodingType = DecodingType["GLOBAL"]
-        self.lmAlgorithm = "viterbi"
-        self.lm_weight = 0.2
-        self.word_score = -1
-        self.sil_score = 0
-        self.overlap = 0
-        self.local_formatting = False
-        self.maxChunksForDecoding = 1
-        self.__setArguments(arguments)
-
-    def __setArguments(self, arguments: argparse.Namespace):
-        if arguments is not None:
-            self.vocabulary = arguments.vocabulary
-            self.formatterModelPath = arguments.formatter
-            self.subwords = arguments.subwords
-            self.language = self._validateLanguage(arguments.language)
-            self.model = arguments.model
-            self.lexicon = arguments.lexicon
-            self.lmFile = arguments.lm_model
-            self.gpu = arguments.gpu
-            self.numberOfWorkers = arguments.workers
-            self.decodingType = DecodingType[
-                getattr(arguments, "decoding_type", "GLOBAL")
-            ]
-            self.lmAlgorithm = arguments.lm_algorithm
-            self.lm_weight = arguments.lm_weight
-            self.word_score = arguments.word_score
-            self.sil_score = arguments.sil_score
-            self.overlap = arguments.overlap
-            self.local_formatting = arguments.local_formatting
-            self.maxChunksForDecoding = arguments.maxChunksForDecoding
-
-    def createOnnxSession(self) -> OnnxSession:
-        return OnnxSession(
-            self.model,
-            decoding_type=self.decodingType,
-            providers=RecognitionServiceConfiguration._createProvidersList(self.gpu),
-            number_of_workers=self.numberOfWorkers,
-        )
-
-    @staticmethod
-    def _createProvidersList(gpu: bool) -> List[str]:
-        providers = ["CPUExecutionProvider"]
-        if gpu:
-            providers = ["CUDAExecutionProvider"] + providers
-        return providers
-
-    @staticmethod
-    def _validateLanguage(language: str) -> Language:
-        if not Language.check(language):
-            raise ValueError(f"Invalid language '{language}'")
-        return Language.parse(language)
+    words: List[WordTiming]
 
 
 class SourceSinkService(abc.ABC):
@@ -116,76 +54,26 @@ class SourceSinkService(abc.ABC):
 
 
 class RecognizerService(RecognizerServicer, SourceSinkService):
-    def __init__(
-        self,
-        configuration: RecognitionServiceConfiguration,
-        formatter: Formatter = None,
-    ) -> None:
+    def __init__(self, config: str) -> None:
+        self.config = config
         self.logger = logging.getLogger("ASR4")
-        self._language = configuration.language
-        self._runtime = self._createRuntime(
-            configuration.createOnnxSession(),
-            configuration.vocabulary,
-            formatter,
-            configuration.lmFile,
-            configuration.lexicon,
-            configuration.lmAlgorithm,
-            configuration.lm_weight,
-            configuration.word_score,
-            configuration.sil_score,
-            configuration.overlap,
-            configuration.subwords,
-            configuration.local_formatting,
-            configuration.maxChunksForDecoding,
+        tomlConfiguration = toml.load(self.config)
+        logging.debug(f"Toml configuration file: {self.config}")
+        logging.debug(f"Toml configuration: {tomlConfiguration}")
+        self._languageCode = tomlConfiguration.get("global", {}).get(
+            "language", "en-US"
         )
-        if formatter is None:
-            self.logger.warning(
-                "No formatter provided. Text will be generated without format"
-            )
+        self._language = Language.parse(self._languageCode)
+        self._engine = self.initializeEngine(tomlConfiguration, self._languageCode)
+        logging.info(f"Recognizer supported language is: {self._languageCode}")
 
-    @staticmethod
-    def _createRuntime(
-        session: Session,
-        vocabularyPath: Optional[str],
-        formatter: Formatter,
-        lmFile: Optional[str],
-        lexicon: Optional[str],
-        lmAlgorithm: Optional[str],
-        lm_weight: Optional[float],
-        word_score: Optional[float],
-        sil_score: Optional[float],
-        overlap: Optional[int],
-        subwords: bool = False,
-        local_formatting: bool = False,
-        maxChunksForDecoding: int = 1,
-    ) -> OnnxRuntime:
-        if vocabularyPath is not None:
-            vocabulary = RecognizerService._readVocabulary(vocabularyPath)
-            return OnnxRuntime(
-                session,
-                vocabulary,
-                formatter,
-                lmFile,
-                lexicon,
-                lmAlgorithm,
-                lm_weight,
-                word_score,
-                sil_score,
-                overlap,
-                subwords,
-                local_formatting,
-                maxChunksForDecoding,
-            )
-        else:
-            return OnnxRuntime(session)
-
-    @staticmethod
-    def _readVocabulary(
-        vocabularyPath: str,
-    ) -> List[str]:
-        with open(vocabularyPath) as f:
-            vocabulary = f.read().splitlines()
-        return vocabulary
+    def initializeEngine(
+        self, tomlConfiguration: dict, languageCode: str
+    ) -> Wav2VecEngineFactory:
+        factory = Wav2VecEngineFactory()
+        engine = factory.create_engine()
+        engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
+        return engine
 
     async def Recognize(
         self,
@@ -312,20 +200,33 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         language = Language.parse(request.config.parameters.language)
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
-            result = self._runtime.run(
-                request.audio,
-                sample_rate_hz,
-                request.config.parameters.enable_formatting,
+            result = self._engine.recognize(
+                Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
+                language=self._languageCode,
+                formatter=request.config.parameters.enable_formatting,
             )
             return TranscriptionResult(
-                transcription=result.sequence,
-                score=result.score,
-                wordTimestamps=result.wordTimestamps,
+                transcription=result.text,
+                score=self.calculateAverageScore(result.segments),
+                words=self.extractWords(result.segments),
             )
+
         else:
             raise ValueError(
                 f"Invalid language '{language}'. Only '{self._language}' is supported."
             )
+
+    def calculateAverageScore(self, segments: List[Segment]) -> float:
+        acummScore = 0.0
+        for segment in segments:
+            acummScore += segment.avg_logprob
+        return acummScore / len(segments)
+
+    def extractWords(self, segments: List[Segment]) -> List[WordTiming]:
+        words = []
+        for segment in segments:
+            words.extend(segment.words)
+        return words
 
     def eventSink(
         self,
@@ -333,26 +234,19 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         duration: Duration = Duration(seconds=0, nanos=0),
         endTime: Duration = Duration(seconds=0, nanos=0),
     ) -> RecognizeResponse:
-        def getWord(i: int, token: str) -> WordInfo:
-            word = WordInfo(
+        def getWord(word: WordTiming) -> WordInfo:
+            wordInfo = WordInfo(
                 start_time=Duration(),
                 end_time=Duration(),
-                word=token,
-                confidence=1.0,
+                word=word.word,
+                confidence=word.probability,
             )
-            word.start_time.FromTimedelta(
-                td=timedelta(seconds=response.wordTimestamps[i][0])
-            )
-            word.end_time.FromTimedelta(
-                td=timedelta(seconds=response.wordTimestamps[i][1])
-            )
-            return word
+            wordInfo.start_time.FromTimedelta(td=timedelta(seconds=word.start))
+            wordInfo.end_time.FromTimedelta(td=timedelta(seconds=word.end))
+            return wordInfo
 
-        if len(response.wordTimestamps) > 0:
-            words = [
-                getWord(i, token)
-                for i, token in enumerate(response.transcription.strip().split(" "))
-            ]
+        if len(response.words) > 0:
+            words = [getWord(word) for word in response.words]
         else:
             words = []
 

@@ -1,5 +1,5 @@
 import unittest
-from asr4.recognizer_v1.types.audio_encoding import AudioEncoding
+from asr4_streaming.recognizer_v1.types.audio_encoding import AudioEncoding
 
 
 class TestAudioEncoding(unittest.TestCase):

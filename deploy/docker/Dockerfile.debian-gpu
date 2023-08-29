@@ -3,20 +3,21 @@ FROM docker.registry.verbio.com/csr/devops/asr4-base-gpu:0.1.0
 RUN apt-get update && apt-get install -y libgomp1 && apt-get clean
 
 ARG VERSION
-COPY asr4-$VERSION-py3-none-any.whl /asr4-$VERSION-py3-none-any.whl
-RUN python -m pip install --no-cache-dir asr4-$VERSION-py3-none-any.whl[server,gpu]
+COPY asr4_streaming-$VERSION-py3-none-any.whl /asr4_streaming-$VERSION-py3-none-any.whl
+RUN python -m pip install --no-cache-dir asr4_streaming-$VERSION-py3-none-any.whl[server,gpu]
 RUN python -m pip uninstall cmake ninja -y && pip cache purge && rm /tmp/*
 
 ARG LANGUAGE
 COPY format-model.$LANGUAGE-*.fm /format-model.$LANGUAGE.fm
 
 ARG MODEL_VERSION
-COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /asr4-$LANGUAGE.onnx
-COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /dict.ltr.txt
+COPY asr4-$LANGUAGE-$MODEL_VERSION.onnx /w2v-$LANGUAGE-$MODEL_VERSION.onnx
+COPY asr4-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt /w2v-$LANGUAGE-$MODEL_VERSION.dict.ltr.txt
 
 ARG LM_VERSION
-COPY dummy asr4-$LANGUAGE-lm.* /
-COPY asr4_config.toml /
+COPY asr4-$LANGUAGE-lm-$LM_VERSION.bin /w2v-$LANGUAGE-lm-$LM_VERSION.bin
+COPY asr4-$LANGUAGE-lm-$LM_VERSION.lexicon.txt /w2v-$LANGUAGE-lm-$LM_VERSION.lexicon.txt
+COPY asr4_streaming_config_$LANGUAGE.toml /
 
 COPY server.py /server.py
 COPY init-gpu.sh /init.sh

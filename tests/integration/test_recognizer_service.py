@@ -4,8 +4,9 @@ import pytest
 import unittest
 from shutil import rmtree
 from subprocess import Popen, PIPE
-from asr4.recognizer import Language
 from typing import Optional
+
+from asr4.engines.wav2vec.v1.engine_types import Language
 
 
 class TimeStampsStatistics:
@@ -322,7 +323,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             if self.__asrIsIssuingTimestamps(stats):
                 self.assertGreater(stats.meanWordDuration, 0)
                 self.assertTrue(stats.minWordDuration >= 0)  # no negative duration
-                self.assertGreater(2, stats.maxWordDuration)  # extreme long words
+                self.assertGreater(3, stats.maxWordDuration)  # extreme long words
                 self.assertGreater(stats.numberOfWords, 5)  # test audios is long enough
                 self.assertGreater(stats.speechTime, 0.20 * audioLength)
                 self.assertGreater(stats.minSilenceDuration, 0)  # on negative durations

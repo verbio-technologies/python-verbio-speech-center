@@ -90,7 +90,7 @@ functional-testing:endpoints:
     - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
     - pip install .[client,server,cpu,test]
     - export MODEL_VERSION=$(stoml asr4_config.toml en-us.cpu_version)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_en-us.toml
   script:
     - cd tests/functional/data
     - bash ../streaming_tests.sh
@@ -119,7 +119,7 @@ functional-testing:e2e:
     - python -m venv venv-server
     - . ./venv-server/bin/activate
     - pip install .[server,cpu]
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ en-us
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_en-us.toml
   script:
     - apt-get -y -q update && apt-get install -y asrtest-eval
     - deactivate
@@ -141,7 +141,7 @@ integration-testing:cpu:
     - pip install .[client,server,cpu,test]
     - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
     - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.cpu_version)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 0
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 0
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
 
@@ -161,7 +161,7 @@ integration-testing:gpu:
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
     - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
     - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.gpu_version)
-    - bash tests/integration/launch_server.sh ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt ${MODELS_PATH}/formatter/ $LANGUAGE 1
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 1
     - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
     - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
     # Install the remaining testing dependencies
@@ -239,22 +239,21 @@ image:release:gpu:
   before_script:
     - echo "IMAGE_NAME=${IMAGE_NAME}"
     - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
-    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.${DEVICE}_version)
+    - export MODEL_VERSION=$(stoml asr4_streaming_config_${LANGUAGE}.toml global.${DEVICE}_version)
     - echo ${MODEL_VERSION}
     - SERVICE_VERSION=$(cat VERSION)
     - echo SERVICE_VERSION=${SERVICE_VERSION}
-    - export LM_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.lm_version)
+    - export LM_VERSION=$(stoml asr4_streaming_config_${LANGUAGE}.toml global.lm_version)
     - echo LM_VERSION=${LM_VERSION}
     - mv *.whl deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.onnx deploy/docker/
     - cp ${MODELS_PATH}/asr4-${LANGUAGE}-${MODEL_VERSION}.dict.ltr.txt deploy/docker/
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.onnx deploy/docker/
     - cp ${MODELS_PATH}/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt deploy/docker/
-    - cp ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* deploy/docker/
-    - cp asr4_config.toml deploy/docker/
-    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.bin deploy/docker/asr4-${LANGUAGE}-lm.bin || true
-    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.lexicon.txt deploy/docker/asr4-${LANGUAGE}-lm.lexicon.txt || true
-    - touch deploy/docker/dummy
+    - cp $(ls ${MODELS_PATH}/formatter/format-model.${LANGUAGE}* | head -n 1) deploy/docker/
+    - cp asr4_streaming_config_${LANGUAGE}.toml deploy/docker/
+    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.bin deploy/docker/
+    - cp ${MODELS_PATH}/asr4-${LANGUAGE}-lm-${LM_VERSION}.lexicon.txt deploy/docker/
     - cp bin/server.py deploy/docker/
   script:
     - docker build --pull deploy/docker/ -f deploy/docker/${DOCKERFILE} --build-arg MODEL_VERSION=${MODEL_VERSION} --build-arg LM_VERSION=${LM_VERSION} --build-arg VERSION=${SERVICE_VERSION} --build-arg LANGUAGE=${LANGUAGE} -t "${IMAGE_NAME}"
