@@ -66,7 +66,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "language", "en-US"
         )
         self._language = Language.parse(self._languageCode)
-        self._handler = self.initializeEngine(tomlConfiguration, self._languageCode)
+        self._engine = self.initializeEngine(tomlConfiguration, self._languageCode)
         logging.info(f"Recognizer supported language is: {self._languageCode}")
 
     def initializeEngine(
@@ -75,8 +75,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         factory = Wav2VecEngineFactory()
         engine = factory.create_engine()
         engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
-        handler = engine.getRecognizerHandler(language=languageCode)
-        return handler
+        return engine
 
     async def Recognize(
         self,
@@ -123,6 +122,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
                 )
                 innerRecognizeRequest.config.CopyFrom(request.config)
+                self._handler = self._engine.getRecognizerHandler(
+                    language=request.config.parameters.language,
+                    formatter=request.config.parameters.enable_formatting,
+                )
             if request.HasField("audio"):
                 innerRecognizeRequest.audio = request.audio
                 await self.eventSource(innerRecognizeRequest)
@@ -134,6 +137,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 #     f"[duration={duration.ToTimedelta().total_seconds()}] "
                 # )
                 # totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
+        self._handler.notifyEndOfAudio()
 
     async def listenForTranscription(self):
         receivedRecognitionMessages, firstMessageLatency = 0, math.inf

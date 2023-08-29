@@ -540,7 +540,7 @@ class TestRecognizerService(unittest.TestCase):
         with patch.object(RecognizerService, "__init__", lambda x, y: None):
             service = RecognizerService(arguments)
             service._language = Language.EN_US
-            service._handler = self.initializeEngine(
+            service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
             service._languageCode = "en-US"
@@ -566,7 +566,7 @@ class TestRecognizerService(unittest.TestCase):
         with patch.object(RecognizerService, "__init__", lambda x, y: None):
             service = RecognizerService(arguments)
             service._language = Language.ES
-            service._handler = self.initializeEngine(
+            service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
             service._languageCode = "es"
@@ -592,7 +592,7 @@ class TestRecognizerService(unittest.TestCase):
         with patch.object(RecognizerService, "__init__", lambda x, y: None):
             service = RecognizerService(arguments)
             service._language = Language.PT_BR
-            service._handler = self.initializeEngine(
+            service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
             service._languageCode = "pt-BR"
