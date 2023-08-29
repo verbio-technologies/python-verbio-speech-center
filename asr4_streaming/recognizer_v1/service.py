@@ -201,7 +201,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         language = Language.parse(request.config.parameters.language)
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
-            result = self._handler.recognize(
+            result = self._handler.sendAudioChunk(
                 Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
                 language=self._languageCode,
                 formatter=request.config.parameters.enable_formatting,
