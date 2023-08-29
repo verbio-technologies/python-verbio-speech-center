@@ -275,7 +275,7 @@ testing:formatting-testing:cpu:
   variables:
     ASR4_HOSTNAME: asr4-server
   before_script:
-    - pip install .[cpu]
+    - pip install .[client,server,cpu,test]
   script:
     - python3 --version
     - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
@@ -285,7 +285,7 @@ testing:formatting-testing:gpu:
   tags:
     - gpu
   before_script:
-    - pip install .[gpu]
+    - pip install .[client,server,gpu,test]
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
@@ -312,14 +312,14 @@ testing:integration-testing:cpu:
   variables:
     ASR4_HOSTNAME: asr4-server
   before_script:
-    - pip install .[cpu]
+    - pip install .[client,server,cpu,test]
 
 testing:integration-testing:gpu:
   extends: .template:integration-testing
   tags:
     - gpu
   before_script:
-    - pip install .[gpu]
+    - pip install .[client,server,gpu,test]
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
