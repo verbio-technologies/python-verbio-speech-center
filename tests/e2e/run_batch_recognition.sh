@@ -4,18 +4,15 @@ set -eEuo pipefail
 language=$1
 host=$2
 audio=$3
-stream=$4
+streaming=$4
 
 if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
 	language="es"
 fi
 
 pip install .[client]
-if [ "${stream}" == "stream" ]; then
-    PYTHONPATH=. python bin/client.py --no-format -v ERROR -l "${language}" --host "${host}" -a "${audio}" --json > "${language}-test.json"
-else
-    PYTHONPATH=. python bin/client.py --no-format -v ERROR -l "${language}" --host "${host}" -a "${audio}" --batch --json > "${language}-test.json"
-fi
+if [ "${streaming}" == "stream" ]; then mode=""; else mode="--batch"; fi
+PYTHONPATH=. python bin/client.py --no-format -v ERROR -l "${language}" --host "${host}" -a "${audio}" "${mode}" --json > "${language}-test.json"
 
 if [ -z "$(cat ${language}-test.json | grep transcript)" ];
 then
