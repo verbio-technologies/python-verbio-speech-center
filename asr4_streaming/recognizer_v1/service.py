@@ -64,7 +64,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             "language", "en-US"
         )
         self._language = Language.parse(self._languageCode)
-        self._handler = self.initializeEngine(tomlConfiguration, self._languageCode)
+        self._handler = self.initializeEngine(tomlConfiguration)
         logging.info(f"Recognizer supported language is: {self._languageCode}")
 
     def initializeEngine(
@@ -73,7 +73,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         factory = Wav2VecEngineFactory()
         engine = factory.create_engine()
         engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
-        handler = engine.getRecognizerHandler(languageCode)
+        handler = engine.getRecognizerHandler(language=languageCode)
         return handler
 
     async def Recognize(
@@ -202,9 +202,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
             result = self._handler.sendAudioChunk(
-                Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
-                language=self._languageCode,
-                formatter=request.config.parameters.enable_formatting,
+                Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz)
             )
             return TranscriptionResult(
                 transcription=result.text,
