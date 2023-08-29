@@ -48,7 +48,7 @@ async def runServerAsync(serverAddress: str, event: multiprocessing.Event):
         service.logger = logging.getLogger("ASR4")
         service._languageCode = "en-US"
         service._language = Language.EN_US
-        service._engine = initializeEngine(arguments.config, arguments.language)
+        service._handler = initializeEngine(arguments.config, arguments.language)
         add_RecognizerServicer_to_server(service, server)
         server.add_insecure_port(serverAddress)
         await server.start()

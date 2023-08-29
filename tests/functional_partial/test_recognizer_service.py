@@ -59,7 +59,7 @@ async def runServerAsyncPartialDecoding(
         service.logger = logging.getLogger("ASR4")
         service._languageCode = "en-US"
         service._language = Language.EN_US
-        service._engine = initializeEngine(tmpfile.name, arguments.language)
+        service._handler = initializeEngine(tmpfile.name, arguments.language)
         add_RecognizerServicer_to_server(service, server)
         server.add_insecure_port(serverAddress)
         await server.start()
