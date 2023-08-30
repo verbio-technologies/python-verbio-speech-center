@@ -205,7 +205,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 language=self._languageCode,
                 formatter=request.config.parameters.enable_formatting,
             )
-            print(result)
             return TranscriptionResult(
                 transcription=result.text,
                 score=self.calculateAverageScore(result.segments),
