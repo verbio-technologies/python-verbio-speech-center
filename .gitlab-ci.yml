@@ -275,7 +275,8 @@ testing:formatting-testing:cpu:
   variables:
     ASR4_HOSTNAME: asr4-server
   before_script:
-    - pip install .[client,server,cpu,test]
+    - !reference [.template:integration-testing, before_script]
+    - pip install .[cpu]
   script:
     - python3 --version
     - pytest tests/integration/test_formatter.py --junit-xml=report.xml --verbose --capture=no
@@ -285,7 +286,6 @@ testing:formatting-testing:gpu:
   tags:
     - gpu
   before_script:
-    - pip install .[client,server,gpu,test]
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
@@ -295,6 +295,7 @@ testing:formatting-testing:gpu:
     - sleep 30
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
+    - pip install .[cpu]
   after_script:
     - nvidia-smi
     - docker logs asr4-gpu-${LANGUAGE}
@@ -311,6 +312,9 @@ testing:integration-testing:cpu:
       command: ["env", "/bin/bash", "-c", "/init.sh"]
   variables:
     ASR4_HOSTNAME: asr4-server
+  before_script:
+    - !reference [.template:integration-testing, before_script]
+    - pip install .[cpu]
 
 testing:integration-testing:gpu:
   extends: .template:integration-testing
@@ -326,6 +330,7 @@ testing:integration-testing:gpu:
     - sleep 30
     # Install the remaining testing dependencies
     - !reference [.template:integration-testing, before_script]
+    - pip install .[cpu]
   after_script:
     - nvidia-smi
     - docker logs asr4-gpu-${LANGUAGE}
@@ -341,7 +346,7 @@ testing:integration-testing:gpu:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
-    - pip install .[client,cpu,test]
+    - pip install .[client,test]
   script:
     - python3 --version
     - pytest tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
