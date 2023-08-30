@@ -42,7 +42,7 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 _ENCODING = "utf-8"
-_DEFAULT_CHUNK_SIZE = 20000
+_DEFAULT_CHUNK_SIZE = 20_000
 
 
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
@@ -252,8 +252,16 @@ def _createStreamingRequests(
         )
     ]
     chunkSize = _setChunkSize(batchMode)
-    return _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
+    chunkDuration = chunkSize / (2*sample_rate_hz)
+    yield from _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration)
 
+
+def _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration):
+    messages = _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
+    for n, message in enumerate(messages):
+        _LOGGER.debug(f"Sending stream message {n} of {len(messages)-1}")
+        time.sleep(chunkDuration)
+        yield message
 
 def _setChunkSize(batchMode: bool) -> int:
     if batchMode:
