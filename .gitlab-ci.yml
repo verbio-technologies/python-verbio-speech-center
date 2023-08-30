@@ -312,6 +312,7 @@ testing:integration-testing:cpu:
   variables:
     ASR4_HOSTNAME: asr4-server
   before_script:
+    - apt-get update && apt-get install -y asrtest-eval libffi-dev
     - pip install .[client,server,cpu,test]
 
 testing:integration-testing:gpu:
@@ -319,6 +320,7 @@ testing:integration-testing:gpu:
   tags:
     - gpu
   before_script:
+    - apt-get update && apt-get install -y asrtest-eval libffi-dev
     - pip install .[client,server,gpu,test]
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
