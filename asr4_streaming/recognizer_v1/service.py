@@ -205,6 +205,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 language=self._languageCode,
                 formatter=request.config.parameters.enable_formatting,
             )
+            print(result)
             return TranscriptionResult(
                 transcription=result.text,
                 score=self.calculateAverageScore(result.segments),
@@ -220,7 +221,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         acummScore = 0.0
         for segment in segments:
             acummScore += segment.avg_logprob
-        return acummScore / len(segments)
+        return acummScore / len(segments) if len(segments) > 0 else 0.0
 
     def extractWords(self, segments: List[Segment]) -> List[WordTiming]:
         words = []
