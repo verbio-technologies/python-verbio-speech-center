@@ -287,6 +287,7 @@ def _runWorkerQuery(
     queryID: int,
     batchMode: bool,
 ) -> bytes:
+    audioDuration = _calculateTotalDuration(audio, sample_rate_hz)
     request = _createStreamingRequests(
         audio, sample_rate_hz, language, useFormat, batchMode
     )
@@ -298,7 +299,7 @@ def _runWorkerQuery(
             _workerStubSingleton.StreamingRecognize(
                 iter(request),
                 metadata=(("accept-language", language.value),),
-                timeout=900,
+                timeout=audioDuration,
             )
         )
 
@@ -306,6 +307,14 @@ def _runWorkerQuery(
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
     return response[0].SerializeToString()
+
+
+def _calculateTotalDuration(
+    audio: bytes,
+    sample_rate_hz: int,
+) -> int:
+    audioDuration = len(audio) / (_PRECISION_BYTES * sample_rate_hz)
+    return audioDuration * 1.3
 
 
 def _parseArguments() -> argparse.Namespace:
