@@ -109,7 +109,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        innerRecognizeRequest, totalDuration = RecognizeRequest(), Duration()
+        innerRecognizeRequest, self.totalDuration = RecognizeRequest(), Duration()
         audio = bytes(0)
 
         async for request in request_iterator:
@@ -127,17 +127,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     formatter=request.config.parameters.enable_formatting,
                 )
             if request.HasField("audio"):
+                self.logger.info(
+                    f"Received partial audio " f"[length={len(request.audio)}] "
+                )
                 innerRecognizeRequest.audio = request.audio
                 await self.eventSource(innerRecognizeRequest)
                 await self.eventHandle(innerRecognizeRequest)
-                # duration = self.calculateAudioDuration(innerRecognizeRequest)
-                # self.logger.info(
-                #     f"Received total audio "
-                #     f"[length={len(request.audio)}] "
-                #     f"[duration={duration.ToTimedelta().total_seconds()}] "
-                # )
-                # totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
-        self._handler.notifyEndOfAudio()
+        await self._handler.notifyEndOfAudio()
 
     async def listenForTranscription(self):
         receivedRecognitionMessages, firstMessageLatency = 0, math.inf
@@ -145,7 +141,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             if receivedRecognitionMessages == 0:
                 firstMessageLatency = time.time()
             receivedRecognitionMessages += 1
-            await self.eventSink(response, duration, totalDuration)
+            duration = self.calculateAudioDuration(response.end - response.start)
+            self.totalDuration = RecognizerService.addAudioDuration(
+                self.totalDuration, duration
+            )
+            await self.eventSink(response, duration, self.totalDuration)
             self.logger.info(
                 f"Recognition result: '{response.alternatives[0].transcript}'"
             )
@@ -158,7 +158,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
             )
             self.logger.info(
-                f"Received partial audio " f"[length={len(request.audio)}] "
+                f"Latency of first message " f"[latency={firstMessageLatency}] "
+            )
+            self.logger.info(
+                f"Total received transcriptions "
+                f"[transcriptions={receivedRecognitionMessages}] "
             )
 
     async def eventSource(
@@ -213,7 +217,10 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         sample_rate_hz = request.config.parameters.sample_rate_hz
         if language == self._language:
             await self._handler.sendAudioChunk(
-                Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz)
+                Signal(
+                    data=np.frombuffer(request.audio, dtype=np.int16),
+                    sample_rate=sample_rate_hz,
+                )
             )
         else:
             raise ValueError(
