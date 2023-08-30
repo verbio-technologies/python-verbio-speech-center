@@ -317,7 +317,6 @@ testing:integration-testing:gpu:
   tags:
     - gpu
   before_script:
-    - apt-get update && apt-get install -y asrtest-eval libffi-dev
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
