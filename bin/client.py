@@ -253,7 +253,7 @@ def _createStreamingRequests(
         )
     ]
     chunkSize = _setChunkSize(batchMode)
-    chunkDuration = chunkSize / ( _PRECISION_BYTES * sample_rate_hz )
+    chunkDuration = chunkSize / (_PRECISION_BYTES * sample_rate_hz)
     yield from _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration)
 
 
@@ -263,6 +263,7 @@ def _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration):
         _LOGGER.debug(f"Sending stream message {n} of {len(messages)-1}")
         time.sleep(chunkDuration)
         yield message
+
 
 def _setChunkSize(batchMode: bool) -> int:
     if batchMode:
