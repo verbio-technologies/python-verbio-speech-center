@@ -43,6 +43,7 @@ _workerStubSingleton = None
 
 _ENCODING = "utf-8"
 _DEFAULT_CHUNK_SIZE = 20_000
+_PRECISION_BYTES = 2
 
 
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
@@ -252,7 +253,7 @@ def _createStreamingRequests(
         )
     ]
     chunkSize = _setChunkSize(batchMode)
-    chunkDuration = chunkSize / (2*sample_rate_hz)
+    chunkDuration = chunkSize / ( _PRECISION_BYTES * sample_rate_hz )
     yield from _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration)
 
 
