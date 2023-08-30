@@ -311,9 +311,6 @@ testing:integration-testing:cpu:
       command: ["env", "/bin/bash", "-c", "/init.sh"]
   variables:
     ASR4_HOSTNAME: asr4-server
-  before_script:
-    - apt-get update && apt-get install -y asrtest-eval libffi-dev
-    - pip install .[client,server,cpu,test]
 
 testing:integration-testing:gpu:
   extends: .template:integration-testing
@@ -321,7 +318,6 @@ testing:integration-testing:gpu:
     - gpu
   before_script:
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
-    - pip install .[client,server,gpu,test]
     # Install docker to run ASR4 server docker
     - !reference [.install-docker, before_script]
     # Launch ASR4 server on GPU
@@ -346,7 +342,7 @@ testing:integration-testing:gpu:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
-    - pip install .[client,test]
+    - pip install .[client,cpu,test]
   script:
     - python3 --version
     - pytest tests/integration/test_recognizer_service.py --junit-xml=report.xml --verbose --capture=no
