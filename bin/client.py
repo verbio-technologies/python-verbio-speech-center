@@ -44,7 +44,6 @@ _workerStubSingleton = None
 
 _ENCODING = "utf-8"
 _DEFAULT_CHUNK_SIZE = 20_000
-_PRECISION_BYTES = 2
 
 
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
@@ -159,12 +158,13 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
     )
     length = len(audios)
     for n, audio_path in enumerate(audios):
-        audio, sample_rate_hz = _getAudio(audio_path)
+        audio, sampleRateHz, sampleWidth = _getAudio(audio_path)
         response = workerPool.apply(
             _runWorkerQuery,
             (
                 audio,
-                sample_rate_hz,
+                sampleRateHz,
+                sampleWidth,
                 Language.parse(args.language),
                 args.format,
                 f"{n}/{length}",
@@ -212,9 +212,10 @@ def _getAudio(audio_file: str) -> bytes:
     with wave.open(audio_file) as f:
         n = f.getnframes()
         audio = f.readframes(n)
-        sample_rate_hz = f.getframerate()
+        sampleRateHz = f.getframerate()
+        sampleWidth = f.getsampwidth()
     audio = np.frombuffer(audio, dtype=np.int16)
-    return audio.tobytes(), sample_rate_hz
+    return audio.tobytes(), sampleRateHz, sampleWidth
 
 
 def _initializeWorker(serverAddress: str):
@@ -236,7 +237,8 @@ def _shutdownWorker():
 
 def _createStreamingRequests(
     audio: bytes,
-    sample_rate_hz: int,
+    sampleRateHz: int,
+    sampleWidth: int,
     language: Language,
     useFormat: bool,
     batchMode: bool,
@@ -246,7 +248,7 @@ def _createStreamingRequests(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
                     language=language.value,
-                    sample_rate_hz=sample_rate_hz,
+                    sample_rate_hz=sampleRateHz,
                     enable_formatting=useFormat,
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
@@ -254,7 +256,7 @@ def _createStreamingRequests(
         )
     ]
     chunkSize = _setChunkSize(batchMode)
-    chunkDuration = chunkSize / (_PRECISION_BYTES * sample_rate_hz)
+    chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
     yield from _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration)
 
 
@@ -283,15 +285,16 @@ def _addAudioSegmentsToStreamingRequest(request, audio, chunkSize):
 
 def _runWorkerQuery(
     audio: bytes,
-    sample_rate_hz: int,
+    sampleRateHz: int,
+    sampleWidth: int,
     language: Language,
     useFormat: bool,
     queryID: int,
     batchMode: bool,
 ) -> bytes:
-    audioDuration = _calculateTotalDuration(audio, sample_rate_hz)
+    audioDuration = _calculateTotalDuration(audio, sampleRateHz, sampleWidth)
     request = _createStreamingRequests(
-        audio, sample_rate_hz, language, useFormat, batchMode
+        audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
     )
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
@@ -311,11 +314,8 @@ def _runWorkerQuery(
     return response[0].SerializeToString()
 
 
-def _calculateTotalDuration(
-    audio: bytes,
-    sample_rate_hz: int,
-) -> int:
-    audioDuration = len(audio) / (_PRECISION_BYTES * sample_rate_hz)
+def _calculateTotalDuration(audio: bytes, sampleRateHz: int, sampleWidth: int) -> int:
+    audioDuration = len(audio) / (sampleWidth * sampleRateHz)
     return audioDuration
 
 
