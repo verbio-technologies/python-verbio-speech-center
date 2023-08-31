@@ -29,7 +29,8 @@ from google.protobuf.reflection import GeneratedProtocolMessageType
 from asr4_engine.data_classes import Signal, Segment
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4_engine.data_classes.transcription import WordTiming
-from asr4.engines.wav2vec import Wav2VecEngineFactory, Wav2VecASR4EngineOnlineHandler
+from asr4.engines.wav2vec import Wav2VecEngineFactory
+from asr4.engines.wav2vec.wav2vec_engine import Wav2VecASR4EngineOnlineHandler
 
 
 @dataclass
