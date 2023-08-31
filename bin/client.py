@@ -220,9 +220,9 @@ def _getAudio(audioFile: str) -> bytes:
 
 
 def _checkSampleValues(fileName: str, sampleWidth: int):
-    if sampleWidth != 16:
+    if sampleWidth != 2:
         raise Exception(
-            f"Error, audio file {fileName} should have a bit rate of 16 instead of {sampleWidth}."
+            f"Error, audio file {fileName} should have 2-byte samples instead of {sampleWidth}-byte samples."
         )
 
 
