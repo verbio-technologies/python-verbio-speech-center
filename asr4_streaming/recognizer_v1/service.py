@@ -146,9 +146,13 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     f"[duration={duration.ToTimedelta().total_seconds()}] "
                 )
                 self._validateAudio(request.audio)
-                await self.__sendAudioChunk(
-                    request.audio, config.parameters.sample_rate_hz
+                await handler.sendAudioChunk(
+                    Signal(
+                        np.frombuffer(request.audio, dtype=np.int16),
+                        config.parameters.sample_rate_hz,
+                    )
                 )
+
         handler.notifyEndOfAudio()
         streamHasEnded.set()
         finalResponse = await listenerTask
