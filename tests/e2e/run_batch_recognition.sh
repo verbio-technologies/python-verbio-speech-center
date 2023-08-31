@@ -10,9 +10,9 @@ if [[ $language = @(es-es|es-mx|es-co|es-pe|es-us) ]]; then
 	language="es"
 fi
 
-pip install .[client]
+pip install .[client,cpu]
 if [ "${streaming}" == "stream" ]; then mode=""; else mode="--batch"; fi
-PYTHONPATH=. python bin/client.py --no-format -v ERROR -l "${language}" --host "${host}" -a "${audio}" "${mode}" --json > "${language}-test.json"
+PYTHONPATH=. python bin/client.py --no-format -v ERROR -l "${language}" --host "${host}" -a "${audio}" ${mode} --json > "${language}-test.json"
 
 if [ -z "$(cat ${language}-test.json | grep transcript)" ];
 then
