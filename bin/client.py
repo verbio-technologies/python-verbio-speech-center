@@ -208,14 +208,22 @@ def _getAudiosList(gui_file: str) -> List[str]:
     return [audio for audio in open(args.gui, "r").read().split("\n") if audio != ""]
 
 
-def _getAudio(audio_file: str) -> bytes:
-    with wave.open(audio_file) as f:
+def _getAudio(audioFile: str) -> bytes:
+    with wave.open(audioFile) as f:
         n = f.getnframes()
         audio = f.readframes(n)
         sampleRateHz = f.getframerate()
         sampleWidth = f.getsampwidth()
+    _checkSampleValues(audioFile, sampleWidth)
     audio = np.frombuffer(audio, dtype=np.int16)
     return audio.tobytes(), sampleRateHz, sampleWidth
+
+
+def _checkSampleValues(fileName: str, sampleWidth: int):
+    if sampleWidth != 16:
+        raise Exception(
+            f"Error, audio file {fileName} should have a bit rate of 16 instead of {sampleWidth}."
+        )
 
 
 def _initializeWorker(serverAddress: str):
