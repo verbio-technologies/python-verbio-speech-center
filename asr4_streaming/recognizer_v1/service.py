@@ -153,7 +153,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     )
                 )
 
-        handler.notifyEndOfAudio()
+        await handler.notifyEndOfAudio()
         streamHasEnded.set()
         finalResponse = await listenerTask
         yield finalResponse
