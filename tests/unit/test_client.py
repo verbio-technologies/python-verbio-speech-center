@@ -10,7 +10,7 @@ class TestStreamingClient(unittest.TestCase):
         self.datapath = pytestconfig.rootpath.joinpath("tests/unit/data")
         self.audio_8k_path = os.path.join(self.datapath, "en-us.8k.wav")
         self.audio_16k_path = os.path.join(self.datapath, "en-us.16k.wav")
-    
+
     def testAudioChunking(self):
         audio_bytes = [i for i in range(10)]
         chunk_iterator = client._chunk_audio(audio_bytes, 3)
@@ -34,4 +34,3 @@ class TestStreamingClient(unittest.TestCase):
     def testGetAudio(self):
         audioBytes = client._getAudio(self.audio_16k_path)
         audioBytes = client._getAudio(self.audio_8k_path)
-
