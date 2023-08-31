@@ -4,6 +4,7 @@ import toml
 import asyncio
 import logging
 import numpy as np
+import soxr
 from typing import List, Optional
 from datetime import timedelta
 from dataclasses import dataclass
@@ -147,9 +148,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 )
                 self._validateAudio(request.audio)
                 await handler.sendAudioChunk(
-                    Signal(
-                        np.frombuffer(request.audio, dtype=np.int16),
-                        config.parameters.sample_rate_hz,
+                    self.convertAudioToSignal(
+                        audio=request.audio, sampleRate=config.parameters.sample_rate_hz
                     )
                 )
 
@@ -158,6 +158,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         finalResponse = await listenerTask
         yield finalResponse
         return
+
+    def convertAudioToSignal(self, audio: bytes, sampleRate: int) -> Signal:
+        audioArray = np.frombuffer(audio, dtype=np.int16)
+        audioArrayResampled = soxr.resample(audioArray, sampleRate, 16000)
+        return Signal(audioArrayResampled, 16000)
 
     async def listenForTranscription(
         self,
