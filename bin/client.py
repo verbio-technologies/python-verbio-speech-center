@@ -2,7 +2,8 @@ import grpc
 import wave
 import atexit
 import logging
-import argparse, re, os, sys, time
+import argparse, pause, re, os, sys, time
+from datetime import datetime, timedelta
 import multiprocessing
 import numpy as np
 
@@ -260,9 +261,10 @@ def _createStreamingRequests(
 def _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration):
     messages = _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
     for n, message in enumerate(messages):
+        getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
         _LOGGER.debug(f"Sending stream message {n} of {len(messages)-1}")
-        time.sleep(chunkDuration)
         yield message
+        pause.until(getUpTime)
 
 
 def _setChunkSize(batchMode: bool) -> int:
@@ -299,7 +301,7 @@ def _runWorkerQuery(
             _workerStubSingleton.StreamingRecognize(
                 iter(request),
                 metadata=(("accept-language", language.value),),
-                timeout=audioDuration,
+                timeout=1.1 * audioDuration,
             )
         )
 
@@ -314,7 +316,7 @@ def _calculateTotalDuration(
     sample_rate_hz: int,
 ) -> int:
     audioDuration = len(audio) / (_PRECISION_BYTES * sample_rate_hz)
-    return audioDuration * 1.3
+    return audioDuration
 
 
 def _parseArguments() -> argparse.Namespace:
