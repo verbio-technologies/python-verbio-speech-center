@@ -189,7 +189,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 partialTranscriptionResult, duration, self.totalDuration
             )
             if not streamHasEnded.is_set():
-                await self.sendPartialResult(response, context)
+                await context.write(self.buildPartialResult(response))
                 response = None
         return self.buildPartialResult(response, isFinal=True)
 
