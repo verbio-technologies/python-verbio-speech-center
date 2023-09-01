@@ -27,7 +27,7 @@ from .types import AudioEncoding
 
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
-from asr4_engine.data_classes import Signal, Segment
+from asr4_engine.data_classes import Signal, Segment, Transcription
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec import Wav2VecEngineFactory
@@ -183,22 +183,23 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 score=self.calculateAverageScore(partialResult.segments),
                 words=self.extractWords(partialResult.segments),
             )
-            duration = self.calculateAudioDuration(
-                partialResult.end - partialResult.start
-            )
-            self.totalDuration = RecognizerService.addAudioDuration(
-                self.totalDuration, duration
-            )
-            self.totalDuration = RecognizerService.addAudioDuration(
-                self.totalDuration, duration
-            )
+            duration = self.getAudioDuration(partialResult)
+            self.totalDuration = self.addAudioDuration(self.totalDuration, duration)
             response = self.eventSink(
-                partialTranscriptionResult, duration, totalDuration
+                partialTranscriptionResult, duration, self.totalDuration
             )
             if not streamHasEnded.is_set():
                 await self.sendPartialResult(response, context)
                 response = None
         return self.buildPartialResult(response, isFinal=True)
+
+    def getAudioDuration(self, transcription: Transcription) -> float:
+        duration = Duration()
+        firstSegment = transcription.segments[0]
+        lastSegment = transcription.segments[-1]
+        td = timedelta(seconds=lastSegment.end - firstSegment.start)
+        duration.FromTimedelta(td=td)
+        return duration
 
     def buildPartialResult(
         self, response: RecognizeResponse, isFinal: bool = False
