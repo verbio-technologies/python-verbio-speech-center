@@ -23,7 +23,7 @@ rm -rf "wer" || true
 rm -rf "trnHypothesis.trn" || true
 rm -rf "refHypothesis.trn" || true
 
-PYTHONPATH=. python bin/client.py --no-format -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
+PYTHONPATH=. python bin/client.py --batch --no-format -v INFO -l "${language}" --host "${AWS_IP}" -g "${gui}" -m
 sleep 10
 if [ -f "test_${language}_results.tsv" ]; then
 	python tests/e2e/metrics.py --model_accuracy "test_${language}_results.tsv" \
