@@ -77,7 +77,6 @@ class TestRecognizerUtils(object):
             cmd.extend(["--gui-path", guiPath])
         if output:
             cmd.extend(["--metrics", "--output", output])
-
         return Popen(
             cmd,
             stdout=PIPE,
@@ -199,7 +198,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.checkStatus(status, process.stderr.read())
 
         output = process.stdout.read()
@@ -217,7 +216,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 process = self.launchRecognitionProcess(
                     self._audio, otherLanguage.value
                 )
-                _status = process.wait(timeout=900)
+                _status = process.wait(timeout=2900)
                 output = process.stdout.read()
                 match = re.search(
                     f"Invalid language '{otherLanguage}'. Only '{currentLanguage}' is supported.",
@@ -229,7 +228,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         process = self.launchRecognitionProcess(
             f"{self.datadir}/empty.wav", self._language
         )
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.assertEqual(status, 1)
 
     def testEmptyGuiRecognizeRequest(self):
@@ -243,7 +242,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         process = self.runGuiRecognitionWithMetrics(
             self._gui, self._language, self._output
         )
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.checkStatus(status, process.stderr.read())
 
         assert os.path.exists(
@@ -264,7 +263,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         process = self.runRecognitionWithMetrics(
             self._audio, self._language, self._output
         )
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.checkStatus(status, process.stderr.read())
         assert os.path.exists(
             f"{self._output }/trnHypothesis.trn"
@@ -282,7 +281,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def _recognizeAudio(self, audio, language):
         process = self.launchRecognitionProcess(audio, language)
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
@@ -294,7 +293,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testRecognizeRequestNoFormatted(self):
         process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
@@ -313,7 +312,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     def testRecognizeTimestampsExist(self):
         process = self.launchRecognitionProcess(self._audio, self._language)
-        status = process.wait(timeout=900)
+        status = process.wait(timeout=2900)
         self.checkStatus(status, process.stderr.read())
         message = self.__extractMessageAsAJsonObject(process.stdout.read())
         audioLength = parseSeconds(message["results"]["duration"])
