@@ -1,5 +1,4 @@
-import pytest
-import unittest
+import os, pytest, unittest
 from bin import client
 
 
@@ -10,6 +9,7 @@ class TestStreamingClient(unittest.TestCase):
         self.datapath = pytestconfig.rootpath.joinpath("tests/unit/data")
         self.audio_8k_path = os.path.join(self.datapath, "en-us.8k.wav")
         self.audio_16k_path = os.path.join(self.datapath, "en-us.16k.wav")
+        self.audio_24b_path = os.path.join(self.datapath, "en-us.24b.wav")
 
     def testAudioChunking(self):
         audio_bytes = [i for i in range(10)]
@@ -32,5 +32,12 @@ class TestStreamingClient(unittest.TestCase):
         self.assertEqual(list(chunk_iterator), [[]])
 
     def testGetAudio(self):
-        audioBytes = client._getAudio(self.audio_16k_path)
-        audioBytes = client._getAudio(self.audio_8k_path)
+        _audioBytes, rate, width = client._getAudio(self.audio_8k_path)
+        self.assertEqual(width, 2)
+        self.assertEqual(rate, 8_000)
+        _audioBytes, rate, width = client._getAudio(self.audio_16k_path)
+        self.assertEqual(width, 2)
+        self.assertEqual(rate, 16_000)
+        with self.assertRaises(Exception):
+            client._getAudio(self.audio_24b_path)
+
