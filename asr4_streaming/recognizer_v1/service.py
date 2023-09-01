@@ -195,11 +195,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def getAudioDuration(self, transcription: Transcription) -> float:
         duration = Duration()
-        firstSegment = transcription.segments[0]
-        lastSegment = transcription.segments[-1]
-        td = timedelta(seconds=lastSegment.end - firstSegment.start)
-        duration.FromTimedelta(td=td)
-        return duration
+        if len(transcription.segments) > 0:
+            firstSegment = transcription.segments[0]
+            lastSegment = transcription.segments[-1]
+            td = timedelta(seconds=lastSegment.end - firstSegment.start)
+            duration.FromTimedelta(td=td)
+            return duration
+        else:
+            return duration.FromTimedelta(td=0)
 
     def buildPartialResult(
         self, response: RecognizeResponse, isFinal: bool = False
