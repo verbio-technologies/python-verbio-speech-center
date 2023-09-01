@@ -40,4 +40,3 @@ class TestStreamingClient(unittest.TestCase):
         self.assertEqual(rate, 16_000)
         with self.assertRaises(Exception):
             client._getAudio(self.audio_24b_path)
-
