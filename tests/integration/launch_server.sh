@@ -13,7 +13,7 @@ export CUDA_VISIBLE_DEVICES=1
 
 if [ $# -gt 1 ]
 then
-      export W2V_GPU=${USE_GPU:="True"}
+      export W2V_GPU=1
 fi
 
 python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 -v TRACE &
