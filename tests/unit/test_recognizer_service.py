@@ -54,7 +54,7 @@ class MockEngine:
         }.get(language, DEFAULT_ENGLISH_MESSAGE)
         self.language = language
 
-    def sendAudioChunk(
+    def recognize(
         self,
         input: Signal,
         **kwargs,
@@ -106,6 +106,7 @@ class TestRecognizerService(unittest.TestCase):
         arguments = MockArguments(language="en-US")
         with patch.object(RecognizerService, "__init__", lambda x, y: None):
             service = RecognizerService(arguments)
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -125,6 +126,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -144,6 +146,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -163,6 +166,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(language="", sample_rate_hz=16000),
@@ -191,6 +195,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -222,6 +227,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest()
             with self.assertRaises(ValueError):
                 service.eventSource(request)
@@ -244,6 +250,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(audio=b"SOMETHING")
             with self.assertRaises(ValueError):
                 service.eventSource(request)
@@ -255,6 +262,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(audio=b"SOMETHING")
             with self.assertRaises(ValueError):
                 service.eventSource(request)
@@ -266,6 +274,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
             )
@@ -279,6 +288,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(resource=RecognitionResource(topic="GENERIC"))
             )
@@ -292,6 +302,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(language="en-US"),
@@ -307,6 +318,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(language="en-US"),
@@ -322,6 +334,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(audio_encoding="PCM"),
@@ -337,6 +350,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(sample_rate_hz=4000),
@@ -352,6 +366,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(sample_rate_hz=4000),
@@ -367,6 +382,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -384,6 +400,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -401,6 +418,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -419,6 +437,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -437,6 +456,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -456,6 +476,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -474,6 +495,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -492,6 +514,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(
@@ -511,6 +534,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = RecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(),
@@ -527,6 +551,7 @@ class TestRecognizerService(unittest.TestCase):
             service._engine = self.initializeEngine(
                 arguments.config, arguments.language
             )
+            service._language = Language.EN_US
             request = StreamingRecognizeRequest(
                 config=RecognitionConfig(
                     parameters=RecognitionParameters(),
@@ -758,22 +783,30 @@ class TestRecognizerService(unittest.TestCase):
             )
 
             request = RecognizeRequest(audio=b"", config=config16)
-            duration = service.calculateAudioDuration(request)
+            duration = service.calculateAudioDuration(
+                request.audio, audioEncoding=0, sampleRate=16000
+            )
             self.assertEqual(duration.seconds, 0)
             self.assertEqual(duration.nanos, 0)
 
             request = RecognizeRequest(audio=b"0124", config=config16)
-            duration = service.calculateAudioDuration(request)
+            duration = service.calculateAudioDuration(
+                request.audio, audioEncoding=0, sampleRate=16000
+            )
             self.assertEqual(duration.seconds, 0)
             self.assertEqual(duration.nanos, 125000)
 
             request = RecognizeRequest(audio=b"12345678901234567890", config=config16)
-            duration = service.calculateAudioDuration(request)
+            duration = service.calculateAudioDuration(
+                request.audio, audioEncoding=0, sampleRate=16000
+            )
             self.assertEqual(duration.seconds, 0)
             self.assertEqual(duration.nanos, 625000)
 
             request = RecognizeRequest(audio=b"0124", config=config1)
-            duration = service.calculateAudioDuration(request)
+            duration = service.calculateAudioDuration(
+                request.audio, audioEncoding=0, sampleRate=1
+            )
             self.assertEqual(duration.seconds, 2)
             self.assertEqual(duration.nanos, 0)
 
@@ -784,4 +817,6 @@ class TestRecognizerService(unittest.TestCase):
                         parameters=RecognitionParameters(sample_rate_hz=0)
                     ),
                 )
-                service.calculateAudioDuration(request)
+                service.calculateAudioDuration(
+                    request.audio, audioEncoding=0, sampleRate=0
+                )
