@@ -117,6 +117,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         config: Optional[RecognitionConfig] = RecognitionConfig()
         streamHasEnded = Event()
 
+        self.totalDuration = Duration()
+
         async for request in request_iterator:
             if request.HasField("config"):
                 self.logger.info(
@@ -181,9 +183,15 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 score=self.calculateAverageScore(partialResult.segments),
                 words=self.extractWords(partialResult.segments),
             )
-            # TODO: This should come from the transcription
-            duration = duration.FromTimedelta(td=timedelta(seconds=10))
-            totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
+            duration = self.calculateAudioDuration(
+                partialResult.end - partialResult.start
+            )
+            self.totalDuration = RecognizerService.addAudioDuration(
+                self.totalDuration, duration
+            )
+            self.totalDuration = RecognizerService.addAudioDuration(
+                self.totalDuration, duration
+            )
             response = self.eventSink(
                 partialTranscriptionResult, duration, totalDuration
             )
