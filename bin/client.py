@@ -312,7 +312,7 @@ def _runWorkerQuery(
             _workerStubSingleton.StreamingRecognize(
                 iter(request),
                 metadata=(("accept-language", language.value),),
-                timeout=2*audioDuration,
+                timeout=2 * audioDuration,
             )
         )
 
