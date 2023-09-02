@@ -120,7 +120,7 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
 
     def testRecognizeRequestFormatted(self):
         process = self.launchRecognitionProcess(self._audio, self._language)
-        status = process.wait(timeout=1900)
+        status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
@@ -134,7 +134,7 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
     def testRecognizeRequestNoFormatted(self):
         process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
 
-        status = process.wait(timeout=1900)
+        status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
         match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
