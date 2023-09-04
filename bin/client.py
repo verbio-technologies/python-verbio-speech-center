@@ -1,7 +1,7 @@
 import grpc
 import wave
 import atexit
-import logging
+import loguru
 import argparse, pause, re, os, sys, time
 from datetime import datetime, timedelta
 import multiprocessing
@@ -22,15 +22,15 @@ from asr4_streaming.recognizer import RecognitionResource
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = loguru.logger
 _PROCESS_COUNT = 8
 
 _LOG_LEVELS = {
-    "ERROR": logging.ERROR,
-    "WARNING": logging.WARNING,
-    "INFO": logging.INFO,
-    "DEBUG": logging.DEBUG,
-    "TRACE": logging.DEBUG,
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+    "TRACE",
 }
 _LOG_LEVEL = "ERROR"
 CHANNEL_OPTIONS = [
@@ -397,7 +397,7 @@ def _parseArguments() -> argparse.Namespace:
     parser.add_argument(
         "-v",
         "--verbose",
-        choices=list(_LOG_LEVELS.keys()),
+        choices=list(_LOG_LEVELS),
         default=os.environ.get("LOG_LEVEL", _LOG_LEVEL),
         help="Log levels. Options: CRITICAL, ERROR, WARNING, INFO and DEBUG. By default reads env variable LOG_LEVEL.",
     )
@@ -413,19 +413,33 @@ def validateLogLevel(args):
             % (offender, args.verbose)
         )
 
+def configureLogger(logLevel: str) -> None:
+    _LOGGER.remove()
+    _LOGGER.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
+    _LOGGER.add(
+        sys.stderr,
+        level=logLevel,
+        format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
+        "[{extra[user_id]}][{extra[transcription_id]}] "
+        "<level>{message}</level>",
+        enqueue=True,
+     )
+
 
 if __name__ == "__main__":
     args = _parseArguments()
     if not (args.audio or args.gui):
         raise ValueError(f"Audio path (-a) or audios gui file (-g) is required")
     validateLogLevel(args)
-    logging.Formatter.converter = time.gmtime
-    logging.basicConfig(
-        level=_LOG_LEVELS.get(args.verbose, logging.INFO),
-        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[logging.StreamHandler(sys.stdout)],
-    )
+    configureLogger(args.verbose)
+    
+#    logging.Formatter.converter = time.gmtime
+#    logging.basicConfig(
+#        level=_LOG_LEVELS.get(args.verbose, logging.INFO),
+#        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
+#        datefmt="%Y-%m-%d %H:%M:%S",
+#        handlers=[logging.StreamHandler(sys.stdout)],
+#    )
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
