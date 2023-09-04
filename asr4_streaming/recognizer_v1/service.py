@@ -172,7 +172,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         context: grpc.aio.ServicerContext,
         streamHasEnded: Event,
     ):
-        totalDuration = Duration()
+        self.totalDuration = Duration()
         response: Optional[RecognizeResponse] = None
         # TODO: listenForCompleteAudio should tell me if the partialResult is the last one
         async for partialResult in handler.listenForCompleteAudio():
