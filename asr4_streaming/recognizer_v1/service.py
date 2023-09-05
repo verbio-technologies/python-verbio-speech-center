@@ -183,7 +183,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 score=self.calculateAverageScore(partialResult.segments),
                 words=self.extractWords(partialResult.segments),
             )
-            duration = self.getAudioDuration(partialTranscriptionResult)
+            duration = self.getAudioDuration(partialResult.duration)
             self.totalDuration = self.addAudioDuration(self.totalDuration, duration)
             response = self.eventSink(
                 partialTranscriptionResult, duration, self.totalDuration
@@ -193,16 +193,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 response = None
         return self.buildPartialResult(response, isFinal=True)
 
-    def getAudioDuration(self, transcription: TranscriptionResult) -> float:
+    def getAudioDuration(self, audioDuration: float) -> Duration:
         duration = Duration()
-        if len(transcription.words) > 0:
-            duration.FromTimedelta(
-                td=timedelta(
-                    seconds=transcription.words[-1].end - transcription.words[0].start
-                )
-            )
-        else:
-            duration.FromTimedelta(td=timedelta(seconds=0))
+        duration.FromTimedelta(td=timedelta(seconds=audioDuration))
         return duration
 
     def buildPartialResult(
