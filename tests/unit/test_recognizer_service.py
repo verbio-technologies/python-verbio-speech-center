@@ -272,6 +272,7 @@ class TestRecognizerService(unittest.TestCase):
                 ],
                 "duration": {},
                 "end_time": {"seconds": 0, "nanos": 0},
+                "is_final": True,
             }
             self.assertEqual(
                 service.eventSink(response), StreamingRecognitionResult(**result)
@@ -299,6 +300,7 @@ class TestRecognizerService(unittest.TestCase):
                 ],
                 "duration": {},
                 "end_time": {"seconds": 0, "nanos": 0},
+                "is_final": True,
             }
             self.assertEqual(
                 service.eventSink(response), StreamingRecognitionResult(**result)
