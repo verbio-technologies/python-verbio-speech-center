@@ -1,6 +1,6 @@
 from loguru import logger
 #import logging
-#import logging.handlers
+import logging.handlers
 import time
 import multiprocessing
 import traceback
@@ -18,6 +18,9 @@ from typing import List
 #        super().__init__(name, level)
 #        self.add(queue, level=level, enqueue=True)
 
+def filterMyMessages(record):
+    print("[+]",record)
+    return record["level"].name == "INFO"
 
 class LoggerQueue:
     def __init__(
@@ -28,7 +31,10 @@ class LoggerQueue:
         self._queue = logsQueue
 
     def getLogger(self):
-        logger.add(self.queue, level=self._log_level, enqueue=True)
+        logger.add(logging.handlers.QueueHandler(self._queue),
+                   level=self._log_level,
+                   filter=filterMyMessages,
+                   enqueue=True)
         return logger
         # return Logger(self._logger_name, self._log_level, self._queue)
 
@@ -83,15 +89,17 @@ class LoggerService:
 
     @staticmethod
     def configureLogger(level: int) -> None:
-        logging.getLogger("numba").setLevel(min(level, logging.INFO))
-        logging.getLogger("asyncio").setLevel(logging.WARNING)
-        logging.getLogger("grpc").setLevel(logging.WARNING)
-        logging.Formatter.converter = time.gmtime
-        logging.basicConfig(
-            level=level,
-            format="[%(asctime)s.%(msecs)03d %(levelname)s %(name)s::%(module)s::%(funcName)s] (PID %(process)d): %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+        filters = {"numba": "INFO", "asyncio": "WARNING", "grpc": "WARNING"}
+        logger.add(sys.stdout, filter=filters, format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
+                   # "[{extra[user_id]}][{extra[transcription_id]}] "
+                   "<level>{message}</level>",
+                   enqueue=True)
+        #logging.Formatter.converter = time.gmtime
+        #logging.basicConfig(
+        #    level=level,
+        #    format="[%(asctime)s.%(msecs)03d %(levelname)s %(name)s::%(module)s::%(funcName)s] (PID %(process)d): %(message)s",
+        #    datefmt="%Y-%m-%d %H:%M:%S",
+        #)
 
     def _spawnService(self):
         self._stopSignal = multiprocessing.Event()

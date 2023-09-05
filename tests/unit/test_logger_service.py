@@ -1,9 +1,9 @@
 from multiprocessing import Queue
 import unittest
-import logging
+from loguru import logger
+import logging.handlers
 
-
-from asr4_streaming.recognizer_v1 import LoggerService, Logger, LoggerQueue
+from asr4_streaming.recognizer_v1 import LoggerService, LoggerQueue
 
 
 class TestLoggerService(unittest.TestCase):
@@ -19,10 +19,12 @@ class TestLoggerService(unittest.TestCase):
         queue = Queue(-1)
         loggerName = "TestASR4"
         message = "message"
-        logger = Logger(loggerName, logging.INFO, queue)
+        # logger = Logger(loggerName, "INFO", queue)
+        logger.add(logging.handlers.QueueHandler(queue))
         self.assertEqual(0, queue.qsize())
         logger.info(message)
         self.assertEqual(1, queue.qsize())
+
         record = queue.get(timeout=5)
         self.assertEqual(record.name, loggerName)
         self.assertEqual(record.message, message)
@@ -34,10 +36,11 @@ class TestLoggerService(unittest.TestCase):
         queue = Queue(-1)
         loggerName = "TestASR4"
         message = "message"
-        loggerQueue = LoggerQueue(loggerName, logging.INFO, queue)
-        self.assertEqual(type(loggerQueue.getLogger()), Logger)
+        loggerQueue = LoggerQueue(loggerName, "INFO", queue)
+#        self.assertEqual(type(loggerQueue.getLogger()), logger)
         loggerQueue.configureGlobalLogger()
         loggerQueue.getLogger().info(message)
+        loggerQueue.getLogger().debug("PATATA")
         self.assertEqual(1, queue.qsize())
         record = queue.get(timeout=5)
         self.assertEqual(record.name, loggerName)
@@ -46,9 +49,9 @@ class TestLoggerService(unittest.TestCase):
     def testValidateLogLevel(self):
         self.assertEqual(LoggerService.getDefaultLogLevel(), "ERROR")
         loggerService = LoggerService()
-        self.assertEqual(loggerService.validateLogLevel("INFO"), logging.INFO)
-        self.assertEqual(loggerService.validateLogLevel("WARNING"), logging.WARNING)
-        self.assertEqual(loggerService.validateLogLevel("WARN"), logging.WARNING)
+        self.assertEqual(loggerService.validateLogLevel("INFO"), "INFO")
+        self.assertEqual(loggerService.validateLogLevel("WARNING"), "WARNING")
+        self.assertEqual(loggerService.validateLogLevel("WARN"), "WARN")
         self.assertEqual(
             loggerService.validateLogLevel("xxxxx"),
             loggerService.validateLogLevel(LoggerService.getDefaultLogLevel()),
