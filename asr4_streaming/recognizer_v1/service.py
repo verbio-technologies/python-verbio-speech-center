@@ -170,7 +170,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def eventHandle(self, config: RecognitionConfig, audio: bytes) -> TranscriptionResult:
+    def eventHandle(
+        self, config: RecognitionConfig, audio: bytes
+    ) -> TranscriptionResult:
         language = Language.parse(config.parameters.language)
         sample_rate_hz = config.parameters.sample_rate_hz
         if language == self._language:
@@ -233,15 +235,15 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             duration=duration,
         )
 
-    def calculateAudioDuration(self, config: RecognitionConfig, audio: bytes) -> Duration:
+    def calculateAudioDuration(
+        self, config: RecognitionConfig, audio: bytes
+    ) -> Duration:
         duration = Duration()
         audioEncoding = AudioEncoding.parse(config.parameters.audio_encoding)
         # We only support 1 channel
         bytesPerFrame = audioEncoding.getSampleSizeInBytes() * 1
         framesNumber = len(audio) / bytesPerFrame
-        td = timedelta(
-            seconds=(framesNumber / config.parameters.sample_rate_hz)
-        )
+        td = timedelta(seconds=(framesNumber / config.parameters.sample_rate_hz))
         duration.FromTimedelta(td=td)
         return duration
 
