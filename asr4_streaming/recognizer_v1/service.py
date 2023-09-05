@@ -1,10 +1,10 @@
 import abc
 import grpc
 import logging
-import argparse
 from datetime import timedelta
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
+from .types import RecognizerServicer
 from .types import StreamingRecognizeRequest
 from .types import RecognitionConfig
 from .types import RecognitionParameters
@@ -18,7 +18,7 @@ from .types import WordInfo
 from .types import SampleRate
 from .types import AudioEncoding
 
-from typing import Optional, List
+from typing import List
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
 import toml
