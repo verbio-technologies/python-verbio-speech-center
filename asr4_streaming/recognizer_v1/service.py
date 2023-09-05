@@ -154,7 +154,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                         audio=request.audio, sampleRate=config.parameters.sample_rate_hz
                     )
                 )
-                await asyncio.sleep(0.000000001)
 
         await handler.notifyEndOfAudio()
         streamHasEnded.set()
