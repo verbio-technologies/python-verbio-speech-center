@@ -2,7 +2,7 @@ import grpc
 import pytest
 import asyncio
 import unittest
-from mock import patch
+from unittest.mock import patch
 import multiprocessing
 from concurrent import futures
 import tempfile
