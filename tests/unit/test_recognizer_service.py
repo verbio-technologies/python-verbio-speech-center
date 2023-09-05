@@ -1,5 +1,5 @@
 import unittest
-from mock import patch
+from unittest.mock import patch
 import logging
 import random
 import string
@@ -273,7 +273,9 @@ class TestRecognizerService(unittest.TestCase):
                 "duration": {},
                 "end_time": {"seconds": 0, "nanos": 0},
             }
-            self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
+            self.assertEqual(
+                service.eventSink(response), StreamingRecognitionResult(**result)
+            )
 
     def testRecognizeRequestSinkNoFrames(self):
         arguments = MockArguments(language="en-US")
@@ -298,7 +300,9 @@ class TestRecognizerService(unittest.TestCase):
                 "duration": {},
                 "end_time": {"seconds": 0, "nanos": 0},
             }
-            self.assertEqual(service.eventSink(response), RecognizeResponse(**result))
+            self.assertEqual(
+                service.eventSink(response), StreamingRecognitionResult(**result)
+            )
 
     def testResponseParameters(self):
         arguments = MockArguments(language="en-US")

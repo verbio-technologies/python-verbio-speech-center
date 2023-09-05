@@ -9,7 +9,6 @@ from .types import StreamingRecognizeRequest
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
-from .types import RecognizeResponse
 from .types import StreamingRecognizeResponse
 from .types import StreamingRecognitionResult
 from .types import RecognitionAlternative
@@ -109,18 +108,9 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
         response = self.eventHandle(config, audio)
-        innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
-        self.logger.info(
-            f"Recognition result: '{innerRecognizeResponse.alternatives[0].transcript}'"
-        )
-        yield StreamingRecognizeResponse(
-            results=StreamingRecognitionResult(
-                alternatives=innerRecognizeResponse.alternatives,
-                end_time=innerRecognizeResponse.end_time,
-                duration=innerRecognizeResponse.duration,
-                is_final=True,
-            )
-        )
+        results = self.eventSink(response, duration, totalDuration)
+        self.logger.info(f"Recognition result: '{results.alternatives[0].transcript}'")
+        yield StreamingRecognizeResponse(results=results)
 
     def eventSource(
         self,
@@ -209,7 +199,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         response: TranscriptionResult,
         duration: Duration = Duration(seconds=0, nanos=0),
         endTime: Duration = Duration(seconds=0, nanos=0),
-    ) -> RecognizeResponse:
+    ) -> StreamingRecognitionResult:
         def getWord(word: WordTiming) -> WordInfo:
             wordInfo = WordInfo(
                 start_time=Duration(),
@@ -229,7 +219,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
-        return RecognizeResponse(
+        return StreamingRecognitionResult(
             alternatives=[alternative],
             end_time=endTime,
             duration=duration,
