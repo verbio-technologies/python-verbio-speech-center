@@ -5,8 +5,6 @@ import argparse
 from datetime import timedelta
 from dataclasses import dataclass, field
 
-from .types import RecognizerServicer
-from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
 from .types import RecognitionConfig
 from .types import RecognitionParameters
@@ -75,30 +73,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
         return engine
 
-    async def Recognize(
-        self,
-        request: RecognizeRequest,
-        _context: grpc.aio.ServicerContext,
-    ) -> RecognizeResponse:
-        """
-        Send audio as bytes and receive the transcription of the audio.
-        """
-        self.eventSource(request)
-        duration = self.calculateAudioDuration(request)
-        self.logger.info(
-            "Received request "
-            f"[language={request.config.parameters.language}] "
-            f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-            f"[formatting={request.config.parameters.enable_formatting}] "
-            f"[length={len(request.audio)}] "
-            f"[duration={duration.ToTimedelta().total_seconds()}] "
-            f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
-        )
-        response = self.eventHandle(request)
-        response = self.eventSink(response, duration, duration)
-        self.logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
-        return response
-
     async def StreamingRecognize(
         self,
         request_iterator: StreamingRecognizeRequest,
@@ -107,7 +81,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        innerRecognizeRequest, totalDuration = RecognizeRequest(), Duration()
+        config, totalDuration = RecognitionConfig(), Duration()
         audio = bytes(0)
 
         async for request in request_iterator:
@@ -119,23 +93,22 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     f"[formatting={request.config.parameters.enable_formatting}] "
                     f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
                 )
-                innerRecognizeRequest.config.CopyFrom(request.config)
+                config.CopyFrom(request.config)
             if request.HasField("audio"):
                 audio += request.audio
                 self.logger.info(
                     f"Received partial audio " f"[length={len(request.audio)}] "
                 )
 
-        innerRecognizeRequest.audio = audio
-        self.eventSource(innerRecognizeRequest)
-        duration = self.calculateAudioDuration(innerRecognizeRequest)
+        self.eventSource(config, audio)
+        duration = self.calculateAudioDuration(config, audio)
         self.logger.info(
             f"Received total audio "
-            f"[length={len(request.audio)}] "
+            f"[length={len(audio)}] "
             f"[duration={duration.ToTimedelta().total_seconds()}] "
         )
         totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
-        response = self.eventHandle(innerRecognizeRequest)
+        response = self.eventHandle(config, audio)
         innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
         self.logger.info(
             f"Recognition result: '{innerRecognizeResponse.alternatives[0].transcript}'"
@@ -151,10 +124,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def eventSource(
         self,
-        request: RecognizeRequest,
+        config: RecognitionConfig,
+        audio: bytes,
     ) -> None:
-        self._validateConfig(request.config)
-        self._validateAudio(request.audio)
+        self._validateConfig(config)
+        self._validateAudio(audio)
 
     def _validateConfig(
         self,
@@ -196,14 +170,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
 
-    def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
-        language = Language.parse(request.config.parameters.language)
-        sample_rate_hz = request.config.parameters.sample_rate_hz
+    def eventHandle(self, config: RecognitionConfig, audio: bytes) -> TranscriptionResult:
+        language = Language.parse(config.parameters.language)
+        sample_rate_hz = config.parameters.sample_rate_hz
         if language == self._language:
             result = self._engine.recognize(
-                Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
+                Signal(np.frombuffer(audio, dtype=np.int16), sample_rate_hz),
                 language=self._languageCode,
-                formatter=request.config.parameters.enable_formatting,
+                formatter=config.parameters.enable_formatting,
             )
             return TranscriptionResult(
                 transcription=result.text,
@@ -259,14 +233,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             duration=duration,
         )
 
-    def calculateAudioDuration(self, request: RecognizeRequest) -> Duration:
+    def calculateAudioDuration(self, config: RecognitionConfig, audio: bytes) -> Duration:
         duration = Duration()
-        audioEncoding = AudioEncoding.parse(request.config.parameters.audio_encoding)
+        audioEncoding = AudioEncoding.parse(config.parameters.audio_encoding)
         # We only support 1 channel
         bytesPerFrame = audioEncoding.getSampleSizeInBytes() * 1
-        framesNumber = len(request.audio) / bytesPerFrame
+        framesNumber = len(audio) / bytesPerFrame
         td = timedelta(
-            seconds=(framesNumber / request.config.parameters.sample_rate_hz)
+            seconds=(framesNumber / config.parameters.sample_rate_hz)
         )
         duration.FromTimedelta(td=td)
         return duration
