@@ -1,9 +1,11 @@
-FROM docker.registry.verbio.com/engineering/devops/python:3.9-slim
+ARG PYTHON_VERSION=3.9
+FROM docker.registry.verbio.com/engineering/devops/python:${PYTHON_VERSION}-slim
 
 ARG MODEL_VERSION
 ARG LM_VERSION
 ARG VERSION
 ARG LANGUAGE
+ARG PIPELINE
 ENV WORKERS=${WORKERS}
 ENV PORT=${PORT}
 
@@ -34,6 +36,7 @@ LABEL lm_version=${LM_VERSION}
 LABEL service_version=${VERSION}
 LABEL language=${LANGUAGE}
 LABEL flags="LOG_LEVEL${LOG_LEVEL}, WORKERS=${WORKERS}"
+LABEL pipeline="${PIPELINE}"
 
 CMD [ "/init.sh"]
 
