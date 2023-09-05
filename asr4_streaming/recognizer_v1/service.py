@@ -223,6 +223,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             alternatives=[alternative],
             end_time=endTime,
             duration=duration,
+            is_final=True,
         )
 
     def calculateAudioDuration(
