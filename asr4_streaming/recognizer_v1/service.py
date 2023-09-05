@@ -202,7 +202,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             duration.FromTimedelta(td=td)
             return duration
         else:
-            return duration.FromTimedelta(td=0)
+            return duration.FromTimedelta(td=timedelta(seconds=0))
 
     def buildPartialResult(
         self, response: RecognizeResponse, isFinal: bool = False
