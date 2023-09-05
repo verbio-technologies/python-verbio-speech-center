@@ -4,7 +4,7 @@ import math
 import wave
 import pytest
 import logging
-from mock import patch
+from unittest.mock import patch
 import asyncio
 import unittest
 import multiprocessing
