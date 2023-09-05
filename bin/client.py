@@ -2,7 +2,8 @@ import grpc
 import wave
 import atexit
 import logging
-import argparse, re, os, sys, time
+import argparse, pause, re, os, sys, time
+from datetime import datetime, timedelta
 import multiprocessing
 import numpy as np
 
@@ -42,7 +43,7 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 _ENCODING = "utf-8"
-_DEFAULT_CHUNK_SIZE = 20000
+_DEFAULT_CHUNK_SIZE = 20_000
 
 
 def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
@@ -157,12 +158,13 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
     )
     length = len(audios)
     for n, audio_path in enumerate(audios):
-        audio, sample_rate_hz = _getAudio(audio_path)
+        audio, sampleRateHz, sampleWidth = _getAudio(audio_path)
         response = workerPool.apply(
             _runWorkerQuery,
             (
                 audio,
-                sample_rate_hz,
+                sampleRateHz,
+                sampleWidth,
                 Language.parse(args.language),
                 args.format,
                 f"{n}/{length}",
@@ -206,13 +208,22 @@ def _getAudiosList(gui_file: str) -> List[str]:
     return [audio for audio in open(args.gui, "r").read().split("\n") if audio != ""]
 
 
-def _getAudio(audio_file: str) -> bytes:
-    with wave.open(audio_file) as f:
+def _getAudio(audioFile: str) -> bytes:
+    with wave.open(audioFile) as f:
         n = f.getnframes()
         audio = f.readframes(n)
-        sample_rate_hz = f.getframerate()
+        sampleRateHz = f.getframerate()
+        sampleWidth = f.getsampwidth()
+    _checkSampleValues(audioFile, sampleWidth)
     audio = np.frombuffer(audio, dtype=np.int16)
-    return audio.tobytes(), sample_rate_hz
+    return audio.tobytes(), sampleRateHz, sampleWidth
+
+
+def _checkSampleValues(fileName: str, sampleWidth: int):
+    if sampleWidth != 2:
+        raise Exception(
+            f"Error, audio file {fileName} should have 2-byte samples instead of {sampleWidth}-byte samples."
+        )
 
 
 def _initializeWorker(serverAddress: str):
@@ -234,7 +245,8 @@ def _shutdownWorker():
 
 def _createStreamingRequests(
     audio: bytes,
-    sample_rate_hz: int,
+    sampleRateHz: int,
+    sampleWidth: int,
     language: Language,
     useFormat: bool,
     batchMode: bool,
@@ -244,7 +256,7 @@ def _createStreamingRequests(
             config=RecognitionConfig(
                 parameters=RecognitionParameters(
                     language=language.value,
-                    sample_rate_hz=sample_rate_hz,
+                    sample_rate_hz=sampleRateHz,
                     enable_formatting=useFormat,
                 ),
                 resource=RecognitionResource(topic="GENERIC"),
@@ -252,7 +264,17 @@ def _createStreamingRequests(
         )
     ]
     chunkSize = _setChunkSize(batchMode)
-    return _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
+    chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
+    yield from _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration)
+
+
+def _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration):
+    messages = _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
+    for n, message in enumerate(messages):
+        getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
+        _LOGGER.debug(f"Sending stream message {n} of {len(messages)-1}")
+        yield message
+        pause.until(getUpTime)
 
 
 def _setChunkSize(batchMode: bool) -> int:
@@ -271,14 +293,16 @@ def _addAudioSegmentsToStreamingRequest(request, audio, chunkSize):
 
 def _runWorkerQuery(
     audio: bytes,
-    sample_rate_hz: int,
+    sampleRateHz: int,
+    sampleWidth: int,
     language: Language,
     useFormat: bool,
     queryID: int,
     batchMode: bool,
 ) -> bytes:
+    audioDuration = _calculateTotalDuration(audio, sampleRateHz, sampleWidth)
     request = _createStreamingRequests(
-        audio, sample_rate_hz, language, useFormat, batchMode
+        audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
     )
     _LOGGER.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
@@ -288,7 +312,7 @@ def _runWorkerQuery(
             _workerStubSingleton.StreamingRecognize(
                 iter(request),
                 metadata=(("accept-language", language.value),),
-                timeout=900,
+                timeout=5 * audioDuration,
             )
         )
 
@@ -296,6 +320,11 @@ def _runWorkerQuery(
         _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
     return response[0].SerializeToString()
+
+
+def _calculateTotalDuration(audio: bytes, sampleRateHz: int, sampleWidth: int) -> int:
+    audioDuration = len(audio) / (sampleWidth * sampleRateHz)
+    return audioDuration
 
 
 def _parseArguments() -> argparse.Namespace:
