@@ -1,12 +1,35 @@
-import json, os, re, sys
+import os
+import re
+import sys
+import json
 import jiwer
 import pytest
 import unittest
 from shutil import rmtree
-from subprocess import Popen, PIPE
 from typing import Optional
+from subprocess import Popen, PIPE
 
 from asr4.engines.wav2vec.v1.engine_types import Language
+
+
+def parseSeconds(text: str) -> float:
+    return float(text[:-1])
+
+
+def evaluateHypothesis(reference: str, hypothesis: str):
+    measures = jiwer.compute_measures(reference, hypothesis)
+    cer = jiwer.cer(reference, hypothesis)
+    print("\nHypothesis =", hypothesis)
+    print("\nReference =", reference)
+    print("\nCharacter Error Rate (CER) =", round(cer, 3))
+    print("Word Error Rate (WER) =", round(measures["wer"], 3))
+    print("Match Error Rate (MER) =", round(measures["mer"], 3))
+    print("Word Information Preserved (WIP) =", round(measures["wip"], 3))
+    print("Word Information Lost (WIL) =", round(measures["wil"], 3))
+    print("Correct =", measures["hits"])
+    print("Substitutions =", measures["substitutions"])
+    print("Deletions =", measures["deletions"])
+    print("Insertions =", measures["insertions"])
 
 
 class TimeStampsStatistics:
@@ -40,10 +63,6 @@ class TimeStampsStatistics:
             self.maxSilenceDuration = silenceDuration
 
 
-def parseSeconds(text: str) -> float:
-    return float(text[:-1])
-
-
 class TestRecognizerUtils(object):
     def readReference(self, referencePath: str) -> str:
         with open(referencePath) as f:
@@ -64,7 +83,6 @@ class TestRecognizerUtils(object):
             "TRACE",
             "--json",
             "--batch",
-            "--format",
             "--language",
             language,
             "--host",
@@ -77,41 +95,6 @@ class TestRecognizerUtils(object):
             cmd.extend(["--gui-path", guiPath])
         if output:
             cmd.extend(["--metrics", "--output", output])
-        return Popen(
-            cmd,
-            stdout=PIPE,
-            stderr=PIPE,
-            universal_newlines=True,
-        )
-
-    def _runNoFormatRecognition(
-        self,
-        language: str,
-        *,
-        audioPath: Optional[str] = None,
-        guiPath: Optional[str] = None,
-        output: Optional[str] = None,
-    ) -> Popen:
-        cmd = [
-            "python3",
-            f"{self.rootdir}/bin/client.py",
-            "-v",
-            "TRACE",
-            "--no-format",
-            "--batch",
-            "--language",
-            language,
-            "--host",
-            self._host,
-        ]
-
-        if audioPath:
-            cmd.extend(["--audio-path", audioPath])
-        elif guiPath:
-            cmd.extend(["--gui-path", guiPath])
-        if output:
-            cmd.extend(["--metrics", "--output", output])
-
         return Popen(
             cmd,
             stdout=PIPE,
@@ -121,9 +104,6 @@ class TestRecognizerUtils(object):
 
     def launchRecognitionProcess(self, audioPath: str, language: str) -> Popen:
         return self._runRecognition(language, audioPath=audioPath)
-
-    def launchRecognitionWithNoFormatting(self, audioPath: str, language: str) -> Popen:
-        return self._runNoFormatRecognition(language, audioPath=audioPath)
 
     def runGuiRecognition(self, guiPath: str, language: str) -> Popen:
         return self._runRecognition(language, guiPath=guiPath)
@@ -145,22 +125,6 @@ class TestRecognizerUtils(object):
         except:
             print(stderr, file=sys.stderr)
             exit(-1)
-
-    @staticmethod
-    def evaluateHypothesis(reference: str, hypothesis: str) -> None:
-        measures = jiwer.compute_measures(reference, hypothesis)
-        cer = jiwer.cer(reference, hypothesis)
-        print("\nHypothesis =", hypothesis)
-        print("\nReference =", reference)
-        print("\nCharacter Error Rate (CER) =", round(cer, 3))
-        print("Word Error Rate (WER) =", round(measures["wer"], 3))
-        print("Match Error Rate (MER) =", round(measures["mer"], 3))
-        print("Word Information Preserved (WIP) =", round(measures["wip"], 3))
-        print("Word Information Lost (WIL) =", round(measures["wil"], 3))
-        print("Correct =", measures["hits"])
-        print("Substitutions =", measures["substitutions"])
-        print("Deletions =", measures["deletions"])
-        print("Insertions =", measures["insertions"])
 
     def removeOutputContents(self) -> None:
         for _, dirs, files in os.walk(self._output):
@@ -194,7 +158,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
     def testRecognizeRequest(self):
         hypothesis = self._recognizeAudio(self._audio, self._language)
         self.assertGreater(len(hypothesis), 1)
-        self.evaluateHypothesis(self._reference, hypothesis)
+        evaluateHypothesis(self._reference, hypothesis)
 
     def testRecognizeGuiRequest(self):
         process = self.runGuiRecognition(self._gui, self._language)
@@ -217,7 +181,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 _status = process.wait(timeout=900)
                 output = process.stdout.read()
                 match = re.search(
-                    f"Invalid language '{otherLanguage}'. Only '{currentLanguage}' is supported.",
+                    f"Invalid language '{otherLanguage.value}'. Only '{currentLanguage.value}' is supported.",
                     output,
                 )
                 self.assertIsNotNone(match)
@@ -288,25 +252,6 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
-
-    def testRecognizeRequestNoFormatted(self):
-        process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
-        status = process.wait(timeout=900)
-        self.checkStatus(status, process.stderr.read())
-        output = process.stdout.read()
-        match = re.search('RecognizeRequest first alternative: "(.+?)"', output)
-        hypothesis = (
-            match.group(match.lastindex)
-            if match is not None and match.lastindex is not None
-            else ""
-        )
-        self.assertGreater(len(hypothesis), 1)
-        self.evaluateHypothesis(self._reference, hypothesis)
-        self.ensureLowerCase(hypothesis)
-
-    def ensureLowerCase(self, text):
-        match = re.search("[A-Z]", text)
-        self.assertEqual(match, None)
 
     def testRecognizeTimestampsExist(self):
         process = self.launchRecognitionProcess(self._audio, self._language)

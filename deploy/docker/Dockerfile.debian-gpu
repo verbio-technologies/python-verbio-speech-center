@@ -22,6 +22,7 @@ COPY asr4_streaming_config_$LANGUAGE.toml /
 COPY server.py /server.py
 COPY init-gpu.sh /init.sh
 
+ARG PIPELINE
 ENV WORKERS=${WORKERS}
 ENV PORT=${PORT}
 ENV MAKEFLAGS="-j4"
@@ -36,5 +37,6 @@ LABEL lm_version=${LM_VERSION}
 LABEL service_version=${VERSION}
 LABEL language=${LANGUAGE}
 LABEL flags="LOG_LEVEL${LOG_LEVEL}, WORKERS=${WORKERS}"
+LABEL pipeline="${PIPELINE}"
 
 CMD [ "/init.sh"]

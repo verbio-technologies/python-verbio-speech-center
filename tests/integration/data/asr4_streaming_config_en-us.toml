@@ -1,6 +1,7 @@
 [global]
 language = "en-US"
 workers = 0
+decoding_type = "LOCAL"
 model = "/mnt/shared/squad2/projects/asr4models/wav2vec_small_10m.static.10s.onnx"
 vocabulary = "/mnt/shared/squad2/projects/asr4models/wav2vec_small_10m.dynamic.uint8.dict.ltr.txt"
 lm_algorithm = "kenlm"
