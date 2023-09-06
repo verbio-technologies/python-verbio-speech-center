@@ -2,7 +2,6 @@ import grpc
 import soxr
 import logging
 import numpy as np
-from asyncio import Event
 from datetime import timedelta
 from dataclasses import dataclass
 from typing import List, Optional
@@ -128,42 +127,17 @@ class EventHandler:
         audioArrayResampled = soxr.resample(audioArray, sampleRate, 16000)
         return Signal(audioArrayResampled, 16000)
 
-    async def listenForTranscription(
-        self,
-        streamHasEnded: Event,
-    ) -> Optional[StreamingRecognizeResponse]:
-        response: Optional[StreamingRecognizeResponse] = None
-        # TODO: listenForCompleteAudio should tell me if the partialResult is the last one
+    async def listenForTranscription(self):
         async for partialResult in self._onlineHandler.listenForCompleteAudio():
-            if response and streamHasEnded.is_set():
-                await self._context.write(self.__buildPartialResult(response))
+            self.logger.info(f"Partial recognition result: '{partialResult.text}'")
             partialTranscriptionResult = TranscriptionResult(
                 transcription=partialResult.text,
                 duration=partialResult.duration,
                 score=EventHandler.__calculateAverageScore(partialResult.segments),
                 words=EventHandler.__extractWords(partialResult.segments),
             )
-            response = self.sink(partialTranscriptionResult)
+            await self._context.write(self.sink(partialTranscriptionResult))
             self._totalDuration += partialResult.duration
-            if not streamHasEnded.is_set():
-                await self._context.write(self.__buildPartialResult(response))
-                response = None
-        if response:
-            return self.__buildPartialResult(response, isFinal=True)
-        return None
-
-    def __buildPartialResult(
-        self, response: StreamingRecognizeResponse, isFinal: bool = False
-    ) -> StreamingRecognizeResponse:
-        self.logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
-        return StreamingRecognizeResponse(
-            results=StreamingRecognitionResult(
-                alternatives=response.alternatives,
-                end_time=response.end_time,
-                duration=response.duration,
-                is_final=isFinal,
-            )
-        )
 
     @staticmethod
     def __calculateAverageScore(segments: List[Segment]) -> float:
@@ -178,20 +152,22 @@ class EventHandler:
     def sink(
         self,
         response: TranscriptionResult,
-    ) -> StreamingRecognitionResult:
+    ) -> StreamingRecognizeResponse:
         words = [
             EventHandler.__getWord(word, self._totalDuration) for word in response.words
         ]
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
-        return StreamingRecognitionResult(
-            alternatives=[alternative],
-            end_time=EventHandler.__getDuration(
-                response.duration + self._totalDuration
-            ),
-            duration=EventHandler.__getDuration(response.duration),
-            is_final=True,
+        return StreamingRecognizeResponse(
+            StreamingRecognitionResult(
+                alternatives=[alternative],
+                end_time=EventHandler.__getDuration(
+                    response.duration + self._totalDuration
+                ),
+                duration=EventHandler.__getDuration(response.duration),
+                is_final=True,
+            )
         )
 
     @staticmethod

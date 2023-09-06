@@ -3,7 +3,7 @@ import grpc
 import toml
 import logging
 import asyncio
-from asyncio import Event, Task
+from asyncio import Task
 from typing import Dict, AsyncIterator, Union, Optional
 
 from .handler import EventHandler
@@ -43,19 +43,13 @@ class RecognizerService(RecognizerServicer):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        streamHasEnded = Event()
         listenerTask: Optional[Task] = None
         handler = EventHandler(self._language, self._engine, context)
         async for request in request_iterator:
             await handler.source(request)
             if not listenerTask:
-                listenerTask = asyncio.create_task(
-                    handler.listenForTranscription(streamHasEnded)
-                )
+                listenerTask = asyncio.create_task(handler.listenForTranscription())
         await handler.notifyEndOfAudio()
-        streamHasEnded.set()
         if listenerTask:
-            finalResponse = await listenerTask
-            if finalResponse:
-                yield finalResponse
+            await listenerTask
         return
