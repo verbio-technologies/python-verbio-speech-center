@@ -153,6 +153,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             response = self.eventSink(
                 partialTranscriptionResult, duration, self.totalDuration
             )
+            self.audioDurationInSec += partialResult.duration
             if not streamHasEnded.is_set():
                 await context.write(self.buildPartialResult(response))
                 response = None
@@ -227,11 +228,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
     ) -> None:
         if len(audio) == 0:
             raise ValueError(f"Empty value for audio")
-
-    async def sendAudioChunk(self, audio: bytes, sampleRate: int):
-        await self._handler.sendAudioChunk(
-            Signal(np.frombuffer(audio, dtype=np.int16), sampleRate)
-        )
 
     def eventHandle(
         self, config: RecognitionConfig, audio: bytes
