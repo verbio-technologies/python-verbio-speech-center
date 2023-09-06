@@ -415,12 +415,10 @@ def validateLogLevel(args):
 
 def configureLogger(logLevel: str) -> None:
     logger.remove()
-    logger.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
     logger.add(
         sys.stdout,
         level=logLevel,
         format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
-        "[{extra[user_id]}][{extra[transcription_id]}] "
         "<level>{message}</level>",
         enqueue=True,
     )
@@ -446,6 +444,7 @@ if __name__ == "__main__":
     logger.debug(f"Returned responses: {_repr(responses)}")
 
     if args.json:
-        print("Messages:")
+        print("> Messages:")
         for r in responses:
             print(MessageToJson(r))
+        print("< messages finished")
