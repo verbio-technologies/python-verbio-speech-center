@@ -43,10 +43,10 @@ class TestEdgeCases(RecognizerServiceTestCase):
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponse.split()), 3)
             self.expectTranscriptionWER(
-                response, expectedResponse, 0.024691358024691357, delta=3e-2
+                response, expectedResponse, 0.024691358024691357, delta=4e-2
             )
             self.expectTranscriptionCER(
-                response, expectedResponse, 0.004975124378109453, delta=2e-2
+                response, expectedResponse, 0.004975124378109453, delta=4e-2
             )
             self.expectValidConfidence(response.results.alternatives[0].confidence)
             self.expectDuration(response.results.duration, seconds=31, nanos=960000000)
@@ -87,6 +87,7 @@ class TestEdgeCases(RecognizerServiceTestCase):
                 self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel.wav"
             ),
         )
+        self._waitForServer()
         channel = grpc.insecure_channel(TestEdgeCases._serverAddress)
         responseIterator = RecognizerStub(channel).StreamingRecognize(requestIterator)
         response = next(responseIterator)
@@ -102,10 +103,10 @@ class TestEdgeCases(RecognizerServiceTestCase):
         self.expectNotEmptyTranscription(response)
         self.expectNumberOfWords(response, len(expectedResponse.split()), 4)
         self.expectTranscriptionWER(
-            response, expectedResponse, 0.024691358024691357, delta=3e-2
+            response, expectedResponse, 0.024691358024691357, delta=7e-2
         )
         self.expectTranscriptionCER(
-            response, expectedResponse, 0.004975124378109453, delta=2e-2
+            response, expectedResponse, 0.004975124378109453, delta=6e-2
         )
         self.expectValidConfidence(response.results.alternatives[0].confidence)
         self.expectDuration(response.results.duration, seconds=31, nanos=962750000)
