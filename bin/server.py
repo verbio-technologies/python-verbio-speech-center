@@ -12,7 +12,7 @@ from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 def main():
     multiprocessing.set_start_method("spawn", force=True)
     args = Asr4ArgParser(sys.argv[1:]).getArgs()
-    LoggerService().configure(args.verbose)
+    _ = LoggerService(args.verbose)
     serve(ServerConfiguration(args))
 
 
