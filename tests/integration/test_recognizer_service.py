@@ -217,7 +217,7 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                 _status = process.wait(timeout=900)
                 output = process.stdout.read()
                 match = re.search(
-                    f"Invalid language '{otherLanguage}'. Only '{currentLanguage}' is supported.",
+                    f"Invalid language '{otherLanguage.value}'. Only '{currentLanguage.value}' is supported.",
                     output,
                 )
                 self.assertIsNotNone(match)
