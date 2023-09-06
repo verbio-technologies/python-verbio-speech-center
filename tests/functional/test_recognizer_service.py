@@ -4,7 +4,7 @@ import math
 import wave
 import pytest
 import logging
-from mock import patch
+from unittest.mock import patch
 import asyncio
 import unittest
 import multiprocessing
@@ -12,7 +12,6 @@ from concurrent import futures
 
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
-from asr4_streaming.recognizer import RecognizeRequest
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 from asr4_streaming.recognizer import RecognitionConfig
 from asr4_streaming.recognizer import RecognitionParameters
@@ -75,23 +74,6 @@ class TestRecognizerService(unittest.TestCase):
         )
         cls._worker.start()
         event.wait(timeout=180)
-
-    def testRecognizeRequestEnUs(self):
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
-                ),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-            audio=b"0000",
-        )
-        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).Recognize(request, timeout=10)
-        self.assertEqual(
-            response.alternatives[0].transcript,
-            DEFAULT_ENGLISH_MESSAGE,
-        )
 
     def testRecognizeStreamingRequestOneAudioEnUs(self):
         def _streamingRecognize():
@@ -159,69 +141,6 @@ class TestRecognizerService(unittest.TestCase):
         )
 
         self.assertTrue(0.0 <= response.results.alternatives[0].confidence <= 1.0)
-
-    def testRecognizeRequestEs(self):
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(language="es", sample_rate_hz=16000),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-            audio=b"0000",
-        )
-        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        with self.assertRaises(grpc._channel._InactiveRpcError):
-            RecognizerStub(channel).Recognize(request, timeout=10)
-
-    def testRecognizeRequestPtBr(self):
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(
-                    language="pt-BR", sample_rate_hz=16000
-                ),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-            audio=b"0000",
-        )
-        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        with self.assertRaises(grpc._channel._InactiveRpcError):
-            RecognizerStub(channel).Recognize(request, timeout=10)
-
-    def testRecognizeStereoAudio(self):
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(
-                    language="en-US", sample_rate_hz=16000
-                ),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-            audio=open(
-                os.path.join(
-                    self.datadir, "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut.wav"
-                ),
-                "rb",
-            ).read(),
-        )
-        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).Recognize(request, timeout=10)
-        self.assertEqual(
-            response.alternatives[0].transcript,
-            DEFAULT_ENGLISH_MESSAGE,
-        )
-
-    def testRecognizeRequest8kHz(self):
-        request = RecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(language="en-US", sample_rate_hz=8000),
-                resource=RecognitionResource(topic="GENERIC"),
-            ),
-            audio=b"0000",
-        )
-        channel = grpc.insecure_channel(TestRecognizerService._serverAddress)
-        response = RecognizerStub(channel).Recognize(request, timeout=10)
-        self.assertEqual(
-            response.alternatives[0].transcript,
-            DEFAULT_ENGLISH_MESSAGE,
-        )
 
     def testCheckDurationInStreaming(self):
         def _streamingRecognize():

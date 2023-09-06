@@ -11,8 +11,6 @@ from .types import Duration
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
-from .types import RecognizeRequest
-from .types import RecognizeResponse
 from .types import StreamingRecognitionResult
 from .types import StreamingRecognizeRequest
 from .types import StreamingRecognizeResponse
@@ -29,9 +27,8 @@ except Exception as e:
 
 __all__ = (
     "SERVICES_NAMES",
-    "RecognizeRequest",
+    "Duration",
     "StreamingRecognizeRequest",
-    "RecognizeResponse",
     "StreamingRecognizeResponse",
     "StreamingRecognitionResult",
     "RecognitionConfig",

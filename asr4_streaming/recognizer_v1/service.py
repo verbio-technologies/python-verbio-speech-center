@@ -2,21 +2,18 @@ import abc
 import grpc
 import toml
 import asyncio
+from asyncio import Event
 import logging
-import numpy as np
-import soxr
-from typing import List, Optional
 from datetime import timedelta
 from dataclasses import dataclass
-from asyncio import Event
+import numpy as np
+import soxr
 
 from .types import RecognizerServicer
-from .types import RecognizeRequest
 from .types import StreamingRecognizeRequest
 from .types import RecognitionConfig
 from .types import RecognitionParameters
 from .types import RecognitionResource
-from .types import RecognizeResponse
 from .types import StreamingRecognizeResponse
 from .types import StreamingRecognitionResult
 from .types import RecognitionAlternative
@@ -25,9 +22,10 @@ from .types import WordInfo
 from .types import SampleRate
 from .types import AudioEncoding
 
+from typing import List, Optional
 from google.protobuf.reflection import GeneratedProtocolMessageType
 
-from asr4_engine.data_classes import Signal, Segment, Transcription
+from asr4_engine.data_classes import Signal, Segment
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec import Wav2VecEngineFactory
@@ -77,34 +75,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
         return engine
 
-    async def Recognize(
-        self,
-        request: RecognizeRequest,
-        _context: grpc.aio.ServicerContext,
-    ) -> RecognizeResponse:
-        """
-        Send audio as bytes and receive the transcription of the audio.
-        """
-        self.eventSource(request)
-        duration = self.calculateAudioDuration(
-            request.audio,
-            request.config.parameters.audio_encoding,
-            request.config.parameters.sample_rate_hz,
-        )
-        self.logger.info(
-            "Received request "
-            f"[language={request.config.parameters.language}] "
-            f"[sample_rate={request.config.parameters.sample_rate_hz}] "
-            f"[formatting={request.config.parameters.enable_formatting}] "
-            f"[length={len(request.audio)}] "
-            f"[duration={duration.ToTimedelta().total_seconds()}] "
-            f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
-        )
-        response = self.eventHandle(request)
-        response = self.eventSink(response, duration, duration)
-        self.logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
-        return response
-
     async def StreamingRecognize(
         self,
         request_iterator: StreamingRecognizeRequest,
@@ -138,11 +108,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                     self.listenForTranscription(handler, context, streamHasEnded)
                 )
             if request.HasField("audio"):
-                duration = self.calculateAudioDuration(
-                    request.audio,
-                    config.parameters.audio_encoding,
-                    config.parameters.sample_rate_hz,
-                )
+                duration = self.calculateAudioDuration(config, request.audio)
                 self.logger.info(
                     f"Received partial audio "
                     f"[length={len(request.audio)}] "
@@ -157,8 +123,8 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
         await handler.notifyEndOfAudio()
         streamHasEnded.set()
-        # finalResponse = await listenerTask
-        # yield finalResponse
+        finalResponse = await listenerTask
+        yield finalResponse
         return
 
     def convertAudioToSignal(self, audio: bytes, sampleRate: int) -> Signal:
@@ -173,7 +139,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         streamHasEnded: Event,
     ):
         self.totalDuration = Duration()
-        response: Optional[RecognizeResponse] = None
+        response: Optional[StreamingRecognizeResponse] = None
         # TODO: listenForCompleteAudio should tell me if the partialResult is the last one
         async for partialResult in handler.listenForCompleteAudio():
             if response and streamHasEnded.is_set():
@@ -199,7 +165,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         return duration
 
     def buildPartialResult(
-        self, response: RecognizeResponse, isFinal: bool = False
+        self, response: StreamingRecognizeResponse, isFinal: bool = False
     ) -> StreamingRecognizeResponse:
         self.logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
         return StreamingRecognizeResponse(
@@ -213,10 +179,11 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
     def eventSource(
         self,
-        request: RecognizeRequest,
+        config: RecognitionConfig,
+        audio: bytes,
     ) -> None:
-        self._validateConfig(request.config)
-        self._validateAudio(request.audio)
+        self._validateConfig(config)
+        self._validateAudio(audio)
 
     def _validateConfig(
         self,
@@ -267,14 +234,16 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
             Signal(np.frombuffer(audio, dtype=np.int16), sampleRate)
         )
 
-    def eventHandle(self, request: RecognizeRequest) -> TranscriptionResult:
-        language = Language.parse(request.config.parameters.language)
-        sample_rate_hz = request.config.parameters.sample_rate_hz
+    def eventHandle(
+        self, config: RecognitionConfig, audio: bytes
+    ) -> TranscriptionResult:
+        language = Language.parse(config.parameters.language)
+        sample_rate_hz = config.parameters.sample_rate_hz
         if language == self._language:
             result = self._engine.recognize(
-                Signal(np.frombuffer(request.audio, dtype=np.int16), sample_rate_hz),
+                Signal(np.frombuffer(audio, dtype=np.int16), sample_rate_hz),
                 language=self._languageCode,
-                formatter=request.config.parameters.enable_formatting,
+                formatter=config.parameters.enable_formatting,
             )
             return TranscriptionResult(
                 transcription=result.text,
@@ -304,7 +273,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         response: TranscriptionResult,
         duration: Duration = Duration(seconds=0, nanos=0),
         endTime: Duration = Duration(seconds=0, nanos=0),
-    ) -> RecognizeResponse:
+    ) -> StreamingRecognitionResult:
         def getWord(word: WordTiming) -> WordInfo:
             wordInfo = WordInfo(
                 start_time=Duration(),
@@ -324,21 +293,22 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
-        return RecognizeResponse(
+        return StreamingRecognitionResult(
             alternatives=[alternative],
             end_time=endTime,
             duration=duration,
+            is_final=True,
         )
 
     def calculateAudioDuration(
-        self, audio: bytes, audioEncoding: int, sampleRate: int
+        self, config: RecognitionConfig, audio: bytes
     ) -> Duration:
         duration = Duration()
-        audioEncoding = AudioEncoding.parse(audioEncoding)
+        audioEncoding = AudioEncoding.parse(config.parameters.audio_encoding)
         # We only support 1 channel
         bytesPerFrame = audioEncoding.getSampleSizeInBytes() * 1
         framesNumber = len(audio) / bytesPerFrame
-        td = timedelta(seconds=(framesNumber / sampleRate))
+        td = timedelta(seconds=(framesNumber / config.parameters.sample_rate_hz))
         duration.FromTimedelta(td=td)
         return duration
 

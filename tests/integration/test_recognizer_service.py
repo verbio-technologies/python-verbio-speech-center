@@ -77,7 +77,6 @@ class TestRecognizerUtils(object):
             cmd.extend(["--gui-path", guiPath])
         if output:
             cmd.extend(["--metrics", "--output", output])
-
         return Popen(
             cmd,
             stdout=PIPE,
@@ -201,10 +200,8 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
         process = self.runGuiRecognition(self._gui, self._language)
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
-
         output = process.stdout.read()
         hypothesis = re.findall('RecognizeRequest first alternative: "(.+?)"', output)
-
         self.assertEqual(len(hypothesis), 3)
         self.assertGreater(len(hypothesis[0]), 0)
         self.assertGreater(len(hypothesis[1]), 0)

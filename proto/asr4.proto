@@ -2,27 +2,13 @@ syntax = "proto3";
 
 package asr4.recognizer.v1;
 
-import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
 import "google/rpc/status.proto";
 
 // Service that implements ASR4 Recognition API.
-service Recognizer {    
-    // Performs synchronous speech recognition: receive results after all audio has been sent and processed.
-    rpc Recognize(RecognizeRequest) returns (RecognizeResponse) {
-      option(google.api.http) = {
-        post: "/v1/recognize"
-        body: "*"
-      };
-    }
-    
+service Recognizer {        
     // Performs bidirectional streaming speech recognition: receive results while sending audio.
     rpc StreamingRecognize(stream StreamingRecognizeRequest) returns (stream StreamingRecognizeResponse);
-}
-
-message RecognizeRequest {
-  RecognitionConfig config = 1; // Init message with the recognition data.
-  bytes audio = 2; // Raw audio in the selected format.
 }
 
 message StreamingRecognizeRequest {
@@ -57,12 +43,6 @@ message RecognitionResource {
   }
 
   Model topic = 1; // The topic will determine the statistic language model used for the recognition.
-}
-
-message RecognizeResponse {
-  repeated RecognitionAlternative alternatives = 1; // List of one or more recognition hypotheses ordered in terms of accuracy.
-  google.protobuf.Duration end_time = 2; // Time offset relative to the beginning of the audio.
-  google.protobuf.Duration duration = 3; // Duration in seconds of the submitted audio that corresponds to this result.
 }
 
 message StreamingRecognizeResponse {
