@@ -31,6 +31,7 @@ from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec import Wav2VecEngineFactory
 from asr4.engines.wav2vec.v1.engine_types import Language
 
+
 @dataclass
 class TranscriptionResult:
     transcription: str

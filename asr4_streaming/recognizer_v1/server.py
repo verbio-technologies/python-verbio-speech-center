@@ -20,6 +20,7 @@ class ServerConfiguration:
         self.numberOfListeners = arguments.listeners
         self.serviceConfiguration = arguments.config
 
+
 class Server:
     def __init__(self, configuration: ServerConfiguration):
         self._server = None

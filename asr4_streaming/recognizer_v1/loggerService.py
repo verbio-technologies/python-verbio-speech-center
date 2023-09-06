@@ -26,7 +26,7 @@ class LoggerService:
     def getDefaultLogLevel() -> str:
         return LoggerService._LOG_LEVEL
 
-    def _configure(self, level:int) -> None:
+    def _configure(self, level: int) -> None:
         logger.remove()
         logger.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
         log_level = self.validateLogLevel(level)
