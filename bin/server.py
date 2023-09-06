@@ -4,8 +4,8 @@ import argparse
 import multiprocessing
 import toml
 
-from asr4_streaming.recognizer import LoggerService
 from asr4_streaming.recognizer import Server, ServerConfiguration
+from asr4_streaming.recognizer import LoggerService
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
@@ -14,21 +14,18 @@ from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 def main():
     multiprocessing.set_start_method("spawn", force=True)
     args = Asr4ArgParser(sys.argv[1:]).getArgs()
-    logService = LoggerService(args.verbose)
-    logService.configureGlobalLogger()
-    serve(ServerConfiguration(args), logService)
+    LoggerService.configure(args.verbose)
+    serve(ServerConfiguration(args))
     logService.stop()
 
 
 def serve(
     configuration,
-    loggerService: LoggerService,
 ) -> None:
-    logger = loggerService.getLogger()
     servers = []
     for i in range(configuration.numberOfServers):
         logger.info("Starting server %s" % i)
-        server = Server(configuration, loggerService)
+        server = Server(configuration)
         server.spawn()
         servers.append(server)
 

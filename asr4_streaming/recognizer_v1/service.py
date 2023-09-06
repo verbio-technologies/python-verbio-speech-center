@@ -1,9 +1,9 @@
 import abc
 import grpc
-import logging
 import argparse
 from datetime import timedelta
 from dataclasses import dataclass, field
+from loguru import logger
 
 from .types import RecognizerServicer
 from .types import RecognizeRequest
@@ -56,16 +56,15 @@ class SourceSinkService(abc.ABC):
 class RecognizerService(RecognizerServicer, SourceSinkService):
     def __init__(self, config: str) -> None:
         self.config = config
-        self.logger = logging.getLogger("ASR4")
         tomlConfiguration = toml.load(self.config)
-        logging.debug(f"Toml configuration file: {self.config}")
-        logging.debug(f"Toml configuration: {tomlConfiguration}")
+        logger.debug(f"Toml configuration file: {self.config}")
+        logger.debug(f"Toml configuration: {tomlConfiguration}")
         self._languageCode = tomlConfiguration.get("global", {}).get(
             "language", "en-US"
         )
         self._language = Language.parse(self._languageCode)
         self._engine = self.initializeEngine(tomlConfiguration, self._languageCode)
-        logging.info(f"Recognizer supported language is: {self._languageCode}")
+        logger.info(f"Recognizer supported language is: {self._languageCode}")
 
     def initializeEngine(
         self, tomlConfiguration: dict, languageCode: str
@@ -85,7 +84,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         """
         self.eventSource(request)
         duration = self.calculateAudioDuration(request)
-        self.logger.info(
+        logger.info(
             "Received request "
             f"[language={request.config.parameters.language}] "
             f"[sample_rate={request.config.parameters.sample_rate_hz}] "
@@ -96,7 +95,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         )
         response = self.eventHandle(request)
         response = self.eventSink(response, duration, duration)
-        self.logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
+        logger.info(f"Recognition result: '{response.alternatives[0].transcript}'")
         return response
 
     async def StreamingRecognize(
@@ -112,7 +111,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
 
         async for request in request_iterator:
             if request.HasField("config"):
-                self.logger.info(
+                logger.info(
                     "Received streaming request "
                     f"[language={request.config.parameters.language}] "
                     f"[sample_rate={request.config.parameters.sample_rate_hz}] "
@@ -122,14 +121,14 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 innerRecognizeRequest.config.CopyFrom(request.config)
             if request.HasField("audio"):
                 audio += request.audio
-                self.logger.info(
+                logger.info(
                     f"Received partial audio " f"[length={len(request.audio)}] "
                 )
 
         innerRecognizeRequest.audio = audio
         self.eventSource(innerRecognizeRequest)
         duration = self.calculateAudioDuration(innerRecognizeRequest)
-        self.logger.info(
+        logger.info(
             f"Received total audio "
             f"[length={len(request.audio)}] "
             f"[duration={duration.ToTimedelta().total_seconds()}] "
@@ -137,7 +136,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         totalDuration = RecognizerService.addAudioDuration(totalDuration, duration)
         response = self.eventHandle(innerRecognizeRequest)
         innerRecognizeResponse = self.eventSink(response, duration, totalDuration)
-        self.logger.info(
+        logger.info(
             f"Recognition result: '{innerRecognizeResponse.alternatives[0].transcript}'"
         )
         yield StreamingRecognizeResponse(

@@ -13,8 +13,6 @@ from .types import add_RecognizerServicer_to_server
 
 from .service import RecognizerService
 
-from .loggerService import LoggerQueue
-
 
 class ServerConfiguration:
     def __init__(self, arguments: argparse.Namespace):
@@ -25,34 +23,27 @@ class ServerConfiguration:
 
 
 class Server:
-    def __init__(self, configuration: ServerConfiguration, loggerService):
-        self.loggerService = loggerService
-        self._logger = loggerService.getLogger()
+    def __init__(self, configuration: ServerConfiguration):
         self._server = None
         self._configuration = configuration
 
     def spawn(self):
-        self._logger.info("Spawning server process.")
+        logger.info("Spawning server process.")
         self._server = multiprocessing.Process(
             target=Server._asyncRunServer,
             args=(
-                self.loggerService.getQueue(),
                 self._configuration,
             ),
         )
         self._server.start()
-        self._logger.info("Server started")
+        logger.info("Server started")
 
     def join(self):
         if self._server is not None:
             self._server.join()
 
     @staticmethod
-    def _asyncRunServer(
-        logsQueue: LoggerQueue, configuration: ServerConfiguration
-    ) -> None:
-        logsQueue.configureGlobalLogger()
-        logger = logsQueue.getLogger()
+    def _asyncRunServer(configuration: ServerConfiguration) -> None:
         logger.info(
             "Running gRPC server with %d listeners on %s"
             % (configuration.numberOfListeners, configuration.bindAddress)
@@ -61,11 +52,7 @@ class Server:
         asyncio.run(Server._runGRpcServer(logsQueue, configuration))
 
     @staticmethod
-    async def _runGRpcServer(
-        logsQueue: LoggerQueue, configuration: ServerConfiguration
-    ) -> None:
-        logsQueue.configureGlobalLogger()
-        logger = logsQueue.getLogger()
+    async def _runGRpcServer(configuration: ServerConfiguration) -> None:
         gRpcServer = Server.createGRpcServer(configuration)
         await gRpcServer.start()
         logger.info("Server started")
