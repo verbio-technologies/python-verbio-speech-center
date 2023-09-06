@@ -14,29 +14,17 @@ Before to start you will need:
 3. Speech Center endpoint
 
 
-
-### Python packages:
-```text
-grpcio==1.57.0
-grpcio-tools==1.57.0
-requests==2.31.0
-pyjwt==2.8.0
-```
-they are already written in the requirements.txt in this repository.
-
-The grpc packages are necessary to automatically generate from the .proto specification all the necessary code that the main python script will use to connect with the gRCP server in the cloud.
-
 ##  Step by step
 The steps needed are very similar to the ones described in the grpc official guide.
 
 ### Install dependencies
-You can use the standard pip call to install all the necessary dependencies:
+You can use the standard pip call to install all the necessary dependencies, from the root of the repo run:
 ```shell
 pip install -r requirements.txt
 ```
 
 ### Generate grpc code with python
-In scritps directory there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you.
+In scripts directory there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you.
 ```shell
 cd scripts/
 ./generate_grpc_code.sh
@@ -44,7 +32,7 @@ cd scripts/
 ```
 It will generate all needed grpc files on the project root directory `proto/generated` like:
 
-```shell
+```text
 verbio_speech_center_recognizer_pb2.py
 verbio_speech_center_recognizer_pb2_grpc.py
 ...
