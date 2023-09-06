@@ -1,7 +1,6 @@
 import os
-import toml
+import pytest
 import unittest
-import tempfile
 from typing import AsyncIterator
 from unittest.mock import patch, Mock
 
@@ -19,18 +18,12 @@ from tests.unit.test_event_handler import (
 )
 
 
-def initializeTomlConfig(language: str = "en-US") -> str:
-    fp = tempfile.NamedTemporaryFile(delete=False)
-    tomlConfiguration = toml.load("asr4_config.toml")
-    tomlConfiguration["global"].setdefault("language", language)
-    tomlConfiguration = toml.dumps(tomlConfiguration)
-    fp.write(tomlConfiguration.encode())
-    fp.seek(0)
-    fp.close()
-    return fp.name
-
-
+@pytest.mark.usefixtures("datadir")
 class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
+    @pytest.fixture(autouse=True)
+    def datadir(self, pytestconfig):
+        self.datadir = f"{pytestconfig.rootdir}/tests/functional/data"
+
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testEmptyRequest(self, mock):
         async def requestIterator() -> AsyncIterator[StreamingRecognizeRequest]:
@@ -39,7 +32,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
 
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         with self.assertRaises(Exception) as context:
             await service.StreamingRecognize(requestIterator(), mockContext).__anext__()
         self.assertEqual(str(context.exception), "Empty request")
@@ -48,7 +43,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testInvalidAudio(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US",
             sampleRate=16000,
@@ -64,7 +61,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testInvalidTopic(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US",
             sampleRate=16000,
@@ -82,7 +81,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testInvalidAudioEncoding(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US",
             sampleRate=16000,
@@ -100,7 +101,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testInvalidSampleRate(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US", sampleRate=16001, topic="GENERIC", audio=[b"SOMETHING"]
         )
@@ -114,7 +117,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testInvalidLanguage(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="", sampleRate=16000, topic="GENERIC", audio=[b"SOMETHING"]
         )
@@ -141,7 +146,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
 
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         with self.assertRaises(Exception) as context:
             await service.StreamingRecognize(requestIterator(), mockContext).__anext__()
         self.assertEqual(str(context.exception), "RecognitionConfig was never received")
@@ -150,7 +157,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testMissingConfigParameters(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(topic="GENERIC")
         with self.assertRaises(Exception) as context:
             await service.StreamingRecognize(requestIterator, mockContext).__anext__()
@@ -162,7 +171,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testMissingConfigParametersExceptLanguage(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(language="en-US")
         with self.assertRaises(Exception) as context:
             await service.StreamingRecognize(requestIterator, mockContext).__anext__()
@@ -174,7 +185,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testMissingConfigParametersExceptEncoding(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(audioEncoding="PCM")
         with self.assertRaises(Exception) as context:
             await service.StreamingRecognize(requestIterator, mockContext).__anext__()
@@ -186,7 +199,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testMissingConfigParametersExceptSampleRate(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(sampleRate=8000)
         with self.assertRaises(Exception) as context:
             await service.StreamingRecognize(requestIterator, mockContext).__anext__()
@@ -198,7 +213,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testMissingAudio(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US", sampleRate=16000
         )
@@ -210,9 +227,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     async def testIncorrectLanguage(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
         mockContext = initializeMockContext(Mock())
-        tomlPath = initializeTomlConfig(language="es")
-        service = RecognizerService(tomlPath)
-        os.unlink(tomlPath)
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_es.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US",
             sampleRate=16000,
@@ -229,7 +246,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testRecognitionWithAllSampleRates(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         for sampleRate in SampleRate:
             requestIterator = asyncStreamingRequestIterator(
                 language="en-US",
@@ -248,7 +267,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testEnUsRecognition(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="en-US")
-        service = RecognizerService("asr4_config.toml")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="en-US",
             sampleRate=16000,
@@ -264,9 +285,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testEsRecognition(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="es")
-        tomlPath = initializeTomlConfig(language="es")
-        service = RecognizerService(tomlPath)
-        os.unlink(tomlPath)
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_es.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="es",
             sampleRate=16000,
@@ -282,9 +303,9 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testPtBrRecognition(self, mock):
         mock.return_value = initializeMockEngine(Mock(), language="pt-BR")
-        tomlPath = initializeTomlConfig(language="pt-BR")
-        service = RecognizerService(tomlPath)
-        os.unlink(tomlPath)
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_pt-br.toml")
+        )
         requestIterator = asyncStreamingRequestIterator(
             language="pt-BR",
             sampleRate=16000,
