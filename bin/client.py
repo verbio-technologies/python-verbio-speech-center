@@ -1,7 +1,7 @@
 import grpc
 import wave
 import atexit
-import loguru
+from loguru import logger
 import argparse, pause, re, os, sys, time
 from datetime import datetime, timedelta
 import multiprocessing
@@ -22,7 +22,6 @@ from asr4_streaming.recognizer import RecognitionResource
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 
-_LOGGER = loguru.logger
 _PROCESS_COUNT = 8
 
 _LOG_LEVELS = {
@@ -78,7 +77,7 @@ def _process(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
             args.language,
         )
 
-    _LOGGER.debug("[+] Generating Responses from %d candidates" % len(responses))
+    logger.debug("[+] Generating Responses from %d candidates" % len(responses))
     return list(map(StreamingRecognizeResponse.FromString, responses))
 
 
@@ -90,7 +89,7 @@ def _getMetrics(
     encoding: str,
     language: str,
 ) -> Popen:
-    _LOGGER.info("Running evaluation.")
+    logger.info("Running evaluation.")
 
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
@@ -123,7 +122,7 @@ def _getMetrics(
         universal_newlines=True,
     )
 
-    _LOGGER.info("You can find the files of results in path: " + outputDir)
+    logger.info("You can find the files of results in path: " + outputDir)
 
 
 def _getTrnReferences(gui: str) -> List[str]:
@@ -149,7 +148,7 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
         audios = _getAudiosList(args.gui)
     else:
         audios.append(args.audio)
-    _LOGGER.debug("- Read %d files from GUI." % len(audios))
+    logger.debug("- Read %d files from GUI." % len(audios))
 
     workerPool = multiprocessing.Pool(
         processes=args.jobs,
@@ -175,18 +174,18 @@ def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeRespon
         trnHypothesis.append(_getTrnHypothesis(response, audio_path))
 
     trnHypothesis.append("")
-    _LOGGER.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
+    logger.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
 
     return responses, trnHypothesis
 
 
 def _chunk_audio(audio: bytes, chunkSize: int):
     if not audio:
-        _LOGGER.error(f"Empty audio content: {audio}")
+        logger.error(f"Empty audio content: {audio}")
         yield audio
     else:
         if chunkSize == 0:
-            _LOGGER.info(
+            logger.info(
                 "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
             )
             yield audio
@@ -229,7 +228,7 @@ def _checkSampleValues(fileName: str, sampleWidth: int):
 def _initializeWorker(serverAddress: str):
     global _workerChannelSingleton  # pylint: disable=global-statement
     global _workerStubSingleton  # pylint: disable=global-statement
-    _LOGGER.info("Initializing worker process.")
+    logger.info("Initializing worker process.")
     _workerChannelSingleton = grpc.insecure_channel(
         serverAddress, options=CHANNEL_OPTIONS
     )
@@ -238,7 +237,7 @@ def _initializeWorker(serverAddress: str):
 
 
 def _shutdownWorker():
-    _LOGGER.info("Shutting worker process down.")
+    logger.info("Shutting worker process down.")
     if _workerChannelSingleton is not None:
         _workerStubSingleton.stop()
 
@@ -272,7 +271,7 @@ def _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration):
     messages = _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
     for n, message in enumerate(messages):
         getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
-        _LOGGER.debug(f"Sending stream message {n} of {len(messages)-1}")
+        logger.debug(f"Sending stream message {n} of {len(messages)-1}")
         yield message
         pause.until(getUpTime)
 
@@ -304,7 +303,7 @@ def _runWorkerQuery(
     request = _createStreamingRequests(
         audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
     )
-    _LOGGER.info(
+    logger.info(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
@@ -317,7 +316,7 @@ def _runWorkerQuery(
         )
 
     except Exception as e:
-        _LOGGER.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
+        logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
     return response[0].SerializeToString()
 
@@ -408,17 +407,17 @@ def validateLogLevel(args):
     if args.verbose not in _LOG_LEVELS:
         offender = args.verbose
         args.verbose = _LOG_LEVEL
-        _LOGGER.warning(
+        logger.warning(
             "Level [%s] is not valid log level. Will use %s instead."
             % (offender, args.verbose)
         )
 
 
 def configureLogger(logLevel: str) -> None:
-    _LOGGER.remove()
-    _LOGGER.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
-    _LOGGER.add(
-        sys.stderr,
+    logger.remove()
+    logger.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
+    logger.add(
+        sys.stdout,
         level=logLevel,
         format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
         "[{extra[user_id]}][{extra[transcription_id]}] "
@@ -444,7 +443,8 @@ if __name__ == "__main__":
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
-    _LOGGER.debug(f"Returned responses: {_repr(responses)}")
+    logger.debug(f"Returned responses: {_repr(responses)}")
+
     if args.json:
         print("Messages:")
         for r in responses:
