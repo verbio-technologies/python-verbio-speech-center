@@ -7,7 +7,7 @@ from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 
 from tests.unit.test_event_handler import streamingRequestIterator
-from recognizer_service_test_case import RecognizerServiceTestCase
+from .recognizer_service_test_case import RecognizerServiceTestCase
 
 
 class TestEdgeCases(RecognizerServiceTestCase):
