@@ -13,6 +13,7 @@ from .types import add_RecognizerServicer_to_server
 from .service import RecognizerService
 from .loggerService import LoggerService
 
+
 class ServerConfiguration:
     def __init__(self, arguments: argparse.Namespace):
         self.bindAddress = arguments.bindAddress
