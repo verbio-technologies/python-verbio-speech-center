@@ -233,7 +233,7 @@ build-image:release:gpu:
 .template:docker_build:
   stage: build-image
   image: docker:20.10.15
-  needs: ["build:python"]
+  needs: ["build-package:python"]
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
