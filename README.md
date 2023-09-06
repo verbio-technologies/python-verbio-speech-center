@@ -55,7 +55,7 @@ python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en
 ```
 
 This code will generate the following terminal output on success:
-```shell
+```text
 [2023-04-04 12:28:29,078][INFO]:Running speechcenter streaming channel...
 [2023-04-04 12:28:29,080][INFO]:Connecting to us.speechcenter.verbio.com
 [2023-04-04 12:28:29,082][INFO]:Running executor...
