@@ -67,7 +67,7 @@ unit-testing:
     - pip install .[client,server,cpu,test]
   script:
     - python3 --version
-    - pytest tests/unit --junit-xml=report.xml --cov=asr4 --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
+    - pytest tests/unit --junit-xml=report.xml --cov=asr4_streaming --cov-config=.coveragerc --cov-report=html:coverage --cov-report=term --verbose
   artifacts:
     expire_in: 5 days
     reports:
