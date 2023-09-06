@@ -27,6 +27,8 @@ class LoggerService:
         return LoggerService._LOG_LEVEL
 
     def configure(self, level: int) -> None:
+        logger.remove()
+        logger.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
         log_level = self.validateLogLevel(level)
         logger.log(log_level, "Loglevel set to: " + log_level)
         filters = {"numba": "INFO", "asyncio": "WARNING", "grpc": "WARNING"}
