@@ -1,8 +1,8 @@
 import argparse
-
-import grpc
 import asyncio
 from concurrent import futures
+import grpc
+from loguru import logger
 import multiprocessing
 from grpc_health.v1 import health
 from grpc_health.v1.health_pb2 import HealthCheckResponse
@@ -31,9 +31,7 @@ class Server:
         logger.info("Spawning server process.")
         self._server = multiprocessing.Process(
             target=Server._asyncRunServer,
-            args=(
-                self._configuration,
-            ),
+            args=(self._configuration,),
         )
         self._server.start()
         logger.info("Server started")
@@ -48,8 +46,7 @@ class Server:
             "Running gRPC server with %d listeners on %s"
             % (configuration.numberOfListeners, configuration.bindAddress)
         )
-
-        asyncio.run(Server._runGRpcServer(logsQueue, configuration))
+        asyncio.run(Server._runGRpcServer(configuration))
 
     @staticmethod
     async def _runGRpcServer(configuration: ServerConfiguration) -> None:

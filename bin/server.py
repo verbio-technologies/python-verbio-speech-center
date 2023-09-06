@@ -1,8 +1,6 @@
-import os, sys
-
-import argparse
+import argparse, os, sys, toml
+from loguru import logger
 import multiprocessing
-import toml
 
 from asr4_streaming.recognizer import Server, ServerConfiguration
 from asr4_streaming.recognizer import LoggerService
@@ -14,10 +12,8 @@ from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 def main():
     multiprocessing.set_start_method("spawn", force=True)
     args = Asr4ArgParser(sys.argv[1:]).getArgs()
-    LoggerService.configure(args.verbose)
+    LoggerService().configure(args.verbose)
     serve(ServerConfiguration(args))
-    logService.stop()
-
 
 def serve(
     configuration,
