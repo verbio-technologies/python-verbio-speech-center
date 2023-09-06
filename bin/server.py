@@ -15,6 +15,7 @@ def main():
     LoggerService().configure(args.verbose)
     serve(ServerConfiguration(args))
 
+
 def serve(
     configuration,
 ) -> None:
