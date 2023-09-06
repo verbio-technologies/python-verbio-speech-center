@@ -6,6 +6,20 @@
 
 ### Removed :no_entry:
 
+## 0.7.8 (2023-09-04)
+
+### Patch (9 changes)
+
+- [Fix: Update release](csr/asr4@79aefbd9b8e9d6b0f9cfc4a74c24373c183adcd5) ([merge request](csr/asr4!321))
+- [Increase grpc timeout from 3 to 4.](csr/asr4@9a6087350b2a5863f4c66e947faf54e1ac49b12d) ([merge request](csr/asr4!320))
+- [Increase grpc timeout from 2 to 3](csr/asr4@8113df7cf98981c13e2f74c35476120cc59d0afc) ([merge request](csr/asr4!319))
+- [Fix release 0.7.8](csr/asr4@0992924aebb9fe4179cb651b3dea810fcda74468) ([merge request](csr/asr4!318))
+- [Fix some testing timeouts](csr/asr4@2234bda943ed50b66a702cc76d683d9da5f5dec5) ([merge request](csr/asr4!317))
+- [Release 0.7.8](csr/asr4@b6a1c7afa54db9151e02744b5e7106f632f1aaa3) ([merge request](csr/asr4!316))
+- [Fix/launch server ing gpu for integration tests](csr/asr4@a5864e1e12d717bfdc42b9d73044af40c45fd02c) ([merge request](csr/asr4!315))
+- [Remove unused config file](csr/asr4@0f9419d8b00637087549537c9f24bf4b7b257a0c) ([merge request](csr/asr4!314))
+- [[EEE-1044] fix streaming behaviour](csr/asr4@f1a54a32e3d7fd0fd5e1a6704ced4004dd3dcf91) ([merge request](csr/asr4!310))
+
 ## 0.6.7 (2023-07-14)
 
 ### Patch (4 changes)

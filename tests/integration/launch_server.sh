@@ -11,12 +11,13 @@ fi
 CONFIG=$1
 export CUDA_VISIBLE_DEVICES=1
 
-if [ -z $2 ]
+if [ $# -gt 1 ]
 then
-      python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 -v TRACE &
-else
-      python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 --gpu -v TRACE &
+      export W2V_GPU=1
 fi
+
+python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 -v TRACE &
+
 
 
 export TIME=30
