@@ -87,8 +87,6 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         config: Optional[RecognitionConfig] = RecognitionConfig()
         streamHasEnded = Event()
 
-        self.totalDuration = Duration()
-
         async for request in request_iterator:
             if request.HasField("config"):
                 self.logger.info(
@@ -139,6 +137,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         streamHasEnded: Event,
     ):
         self.totalDuration = Duration()
+        self.audioDurationInSec = 0.0
         response: Optional[StreamingRecognizeResponse] = None
         # TODO: listenForCompleteAudio should tell me if the partialResult is the last one
         async for partialResult in handler.listenForCompleteAudio():
@@ -281,8 +280,12 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
                 word=word.word,
                 confidence=word.probability,
             )
-            wordInfo.start_time.FromTimedelta(td=timedelta(seconds=word.start))
-            wordInfo.end_time.FromTimedelta(td=timedelta(seconds=word.end))
+            wordInfo.start_time.FromTimedelta(
+                td=timedelta(seconds=word.start + self.audioDurationInSec)
+            )
+            wordInfo.end_time.FromTimedelta(
+                td=timedelta(seconds=word.end + self.audioDurationInSec)
+            )
             return wordInfo
 
         if len(response.words) > 0:
@@ -296,7 +299,7 @@ class RecognizerService(RecognizerServicer, SourceSinkService):
         return StreamingRecognitionResult(
             alternatives=[alternative],
             end_time=endTime,
-            duration=duration,
+            duration=self.totalDuration,
             is_final=True,
         )
 
