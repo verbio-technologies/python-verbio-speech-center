@@ -43,13 +43,10 @@ class RecognizerService(RecognizerServicer):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        listenerTask: Optional[Task] = None
         handler = EventHandler(self._language, self._engine, context)
+        listenerTask = asyncio.create_task(handler.listenForTranscription())
         async for request in request_iterator:
             await handler.source(request)
-            if not listenerTask:
-                listenerTask = asyncio.create_task(handler.listenForTranscription())
         await handler.notifyEndOfAudio()
-        if listenerTask:
-            await listenerTask
+        await listenerTask
         return

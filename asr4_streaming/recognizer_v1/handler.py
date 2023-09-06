@@ -2,6 +2,7 @@ import grpc
 import soxr
 import logging
 import numpy as np
+from asyncio import Event
 from datetime import timedelta
 from dataclasses import dataclass
 from typing import List, Optional
@@ -49,10 +50,13 @@ class EventHandler:
         self._config = RecognitionConfig()
         self._totalDuration = 0.0
         self._logger = logging.getLogger("ASR4")
+        self._startListening = Event()
         self._onlineHandler: Optional[Wav2VecASR4EngineOnlineHandler] = None
 
     async def notifyEndOfAudio(self):
-        await self._onlineHandler.notifyEndOfAudio()
+        self._startListening.set()
+        if self._onlineHandler:
+            await self._onlineHandler.notifyEndOfAudio()
 
     async def source(self, request: StreamingRecognizeRequest):
         if request.HasField("config"):
@@ -76,6 +80,7 @@ class EventHandler:
             language=self._config.parameters.language,
             formatter=self._config.parameters.enable_formatting,
         )
+        self._startListening.set()
 
     async def __validateRecognitionConfig(self, config: RecognitionConfig):
         await self.__validateParameters(config.parameters)
@@ -128,16 +133,18 @@ class EventHandler:
         return Signal(audioArrayResampled, 16000)
 
     async def listenForTranscription(self):
-        async for partialResult in self._onlineHandler.listenForCompleteAudio():
-            self.logger.info(f"Partial recognition result: '{partialResult.text}'")
-            partialTranscriptionResult = TranscriptionResult(
-                transcription=partialResult.text,
-                duration=partialResult.duration,
-                score=EventHandler.__calculateAverageScore(partialResult.segments),
-                words=EventHandler.__extractWords(partialResult.segments),
-            )
-            await self._context.write(self.sink(partialTranscriptionResult))
-            self._totalDuration += partialResult.duration
+        await self._startListening.wait()
+        if self._onlineHandler:
+            async for partialResult in self._onlineHandler.listenForCompleteAudio():
+                self.logger.info(f"Partial recognition result: '{partialResult.text}'")
+                partialTranscriptionResult = TranscriptionResult(
+                    transcription=partialResult.text,
+                    duration=partialResult.duration,
+                    score=EventHandler.__calculateAverageScore(partialResult.segments),
+                    words=EventHandler.__extractWords(partialResult.segments),
+                )
+                await self._context.write(self.sink(partialTranscriptionResult))
+                self._totalDuration += partialResult.duration
 
     @staticmethod
     def __calculateAverageScore(segments: List[Segment]) -> float:
