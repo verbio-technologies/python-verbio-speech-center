@@ -56,7 +56,7 @@ class EventHandler:
                 f"[topic={RecognitionResource.Model.Name(request.config.resource.topic)}]"
             )
             self._config.CopyFrom(request.config)
-            self._audio.clear()
+            self._audio = bytearray()
         elif request.HasField("audio"):
             await self.__validateAudio(request.audio)
             self._logger.info(f"Received partial audio [length={len(request.audio)}]")
