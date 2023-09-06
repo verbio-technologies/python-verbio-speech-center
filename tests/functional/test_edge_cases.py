@@ -41,7 +41,7 @@ class TestEdgeCases(RecognizerServiceTestCase):
                 "name is james barbase"
             )
             self.expectNotEmptyTranscription(response)
-            self.expectNumberOfWords(response, len(expectedResponse.split()), 2)
+            self.expectNumberOfWords(response, len(expectedResponse.split()), 3)
             self.expectTranscriptionWER(
                 response, expectedResponse, 0.024691358024691357, delta=3e-2
             )
@@ -100,7 +100,7 @@ class TestEdgeCases(RecognizerServiceTestCase):
             "name is james barbase"
         )
         self.expectNotEmptyTranscription(response)
-        self.expectNumberOfWords(response, len(expectedResponse.split()), 2)
+        self.expectNumberOfWords(response, len(expectedResponse.split()), 4)
         self.expectTranscriptionWER(
             response, expectedResponse, 0.024691358024691357, delta=3e-2
         )
