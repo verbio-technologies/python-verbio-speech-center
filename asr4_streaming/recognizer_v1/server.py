@@ -10,7 +10,6 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 
 from .types import SERVICES_NAMES
 from .types import add_RecognizerServicer_to_server
-
 from .service import RecognizerService
 
 
@@ -20,7 +19,6 @@ class ServerConfiguration:
         self.numberOfServers = arguments.servers
         self.numberOfListeners = arguments.listeners
         self.serviceConfiguration = arguments.config
-
 
 class Server:
     def __init__(self, configuration: ServerConfiguration):

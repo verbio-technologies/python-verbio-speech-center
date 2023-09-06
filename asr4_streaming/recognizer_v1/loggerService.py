@@ -15,8 +15,8 @@ class LoggerService:
     _LOG_LEVEL = "ERROR"
     _LOGGER_NAME = "ASR4"
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, level: int) -> None:
+        self._configure(level)
 
     @staticmethod
     def getLogLevelOptions() -> List[str]:
@@ -26,7 +26,7 @@ class LoggerService:
     def getDefaultLogLevel() -> str:
         return LoggerService._LOG_LEVEL
 
-    def configure(self, level: int) -> None:
+    def _configure(self, level:int) -> None:
         logger.remove()
         logger.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
         log_level = self.validateLogLevel(level)
@@ -36,7 +36,7 @@ class LoggerService:
             sys.stdout,
             filter=filters,
             format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
-            "[{extra[user_id]}][{extra[transcription_id]}]"
+            "[{extra[user_id]}][{extra[transcription_id]}] "
             "<level>{message}</level>",
             enqueue=True,
         )
