@@ -142,8 +142,6 @@ integration-testing:cpu:
       - LANGUAGE: [en-us, es, pt-br]
   before_script:
     - pip install .[client,server,cpu,test]
-    - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
-    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.cpu_version)
     - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 0
     - apt-get update && apt-get install -y asrtest-eval libffi-dev
   script:
@@ -158,8 +156,6 @@ integration-testing:gpu:
   before_script:
     - . /opt/intel/oneapi/setvars.sh
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
-    - wget https://github.com/freshautomations/stoml/releases/download/v0.7.1/stoml_linux_amd64 -O /bin/stoml && chmod +x /bin/stoml
-    - export MODEL_VERSION=$(stoml asr4_config.toml ${LANGUAGE}.gpu_version)
     - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 1
     - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
     - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
