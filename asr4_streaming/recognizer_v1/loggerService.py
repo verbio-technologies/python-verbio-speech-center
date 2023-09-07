@@ -13,7 +13,6 @@ class Logger:
         "DEBUG",
         "TRACE",
     ]
-    _LOGGER_NAME = "ASR4"
     _FILTERS = {"numba": "INFO", "asyncio": "WARNING", "grpc": "WARNING"}
 
     def __init__(self, logLevel: str = _LOG_LEVEL) -> None:
