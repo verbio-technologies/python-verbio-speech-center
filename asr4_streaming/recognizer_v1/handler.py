@@ -139,7 +139,7 @@ class EventHandler:
                 self._logger.info(f"Partial recognition result: '{partialResult.text}'")
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
-                    duration=partialResult.duration,
+                    duration=self.__getDuration(partialResult.duration),
                     score=EventHandler.__calculateAverageScore(partialResult.segments),
                     words=EventHandler.__extractWords(partialResult.segments),
                 )
@@ -169,10 +169,10 @@ class EventHandler:
         return StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=[alternative],
-                end_time=EventHandler.__getDuration(
-                    response.duration + self._totalDuration
+                end_time=EventHandler.__addAudioDuration(
+                    EventHandler.__getDuration(self._totalDuration), response.duration
                 ),
-                duration=EventHandler.__getDuration(response.duration),
+                duration=response.duration,
                 is_final=True,
             )
         )
@@ -190,6 +190,13 @@ class EventHandler:
     def __getDuration(seconds: float) -> Duration:
         duration = Duration()
         duration.FromTimedelta(td=timedelta(seconds=seconds))
+        return duration
+
+    @staticmethod
+    def __addAudioDuration(a: Duration, b: Duration) -> Duration:
+        duration = Duration()
+        total = a.ToTimedelta().total_seconds() + b.ToTimedelta().total_seconds()
+        duration.FromTimedelta(td=timedelta(seconds=total))
         return duration
 
     async def __logError(self, message: str, statusCode: grpc.StatusCode):
