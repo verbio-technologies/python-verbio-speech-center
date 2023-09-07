@@ -46,7 +46,6 @@ class EventHandler:
         self._engine = engine
         self._context = context
         self._language = language
-        self._audio = bytearray()
         self._config = RecognitionConfig()
         self._totalDuration = 0.0
         self._logger = logging.getLogger("ASR4")
