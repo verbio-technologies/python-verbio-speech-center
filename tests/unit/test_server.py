@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import argparse, os
 from asr4_streaming.recognizer import Server, ServerConfiguration
-from asr4_streaming.recognizer import LoggerService
+from asr4_streaming.recognizer import Logger
 from bin.server import Asr4ArgParser
 
 
@@ -32,6 +32,7 @@ class MockArguments(argparse.Namespace):
         self.subwords = None
         self.local_formatting = False
         self.maxChunksForDecoding = 1
+        self.verbose = "INFO"
 
 
 class TestServerConfiguration(unittest.TestCase):
@@ -414,6 +415,5 @@ class TestServer(unittest.TestCase):
     def testServerNoSpawn(self):
         # It is not possible to test Server because it has not a stop() function
         multiprocessing.set_start_method("spawn", force=True)
-        loggerService = LoggerService("DEBUG")
-        server = Server(ServerConfiguration(MockArguments()), loggerService)
+        server = Server(ServerConfiguration(MockArguments()))
         server.join()

@@ -1,11 +1,9 @@
-import os, sys
-
-import argparse
+import argparse, os, sys, toml
+from loguru import logger
 import multiprocessing
-import toml
 
-from asr4_streaming.recognizer import LoggerService
 from asr4_streaming.recognizer import Server, ServerConfiguration
+from asr4_streaming.recognizer import Logger
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
@@ -14,21 +12,17 @@ from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 def main():
     multiprocessing.set_start_method("spawn", force=True)
     args = Asr4ArgParser(sys.argv[1:]).getArgs()
-    logService = LoggerService(args.verbose)
-    logService.configureGlobalLogger()
-    serve(ServerConfiguration(args), logService)
-    logService.stop()
+    _ = Logger(args.verbose)
+    serve(ServerConfiguration(args))
 
 
 def serve(
     configuration,
-    loggerService: LoggerService,
 ) -> None:
-    logger = loggerService.getLogger()
     servers = []
     for i in range(configuration.numberOfServers):
         logger.info("Starting server %s" % i)
-        server = Server(configuration, loggerService)
+        server = Server(configuration)
         server.spawn()
         servers.append(server)
 
@@ -128,7 +122,7 @@ class Asr4ArgParser:
             "-v",
             "--verbose",
             type=str,
-            choices=LoggerService.getLogLevelOptions(),
+            choices=Logger.getLevels(),
             help="Log levels. By default reads env variable LOG_LEVEL.",
         )
         parser.add_argument(
@@ -208,7 +202,7 @@ class Asr4ArgParser:
         args: argparse.Namespace,
     ) -> argparse.Namespace:
         args.verbose = args.verbose or os.environ.get(
-            "LOG_LEVEL", LoggerService.getDefaultLogLevel()
+            "LOG_LEVEL", Logger.getDefaultLevel()
         )
         args.gpu = args.gpu or os.environ.get("ASR4_GPU")
         args.servers = args.servers or os.environ.get("ASR4_SERVERS")

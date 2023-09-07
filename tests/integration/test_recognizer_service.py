@@ -280,10 +280,12 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
 
     @staticmethod
     def __extractMessageAsAJsonObject(text) -> Optional[object]:
-        header = "Messages:"
+        header = "> Messages:"
+        footer = "< messages finished"
         i = text.find(header)
+        j = text.find(footer)
         if i != -1:
-            return json.loads(text[1 + len(header) + i :])
+            return json.loads(text[1 + len(header) + i : j])
         return None
 
     @staticmethod
