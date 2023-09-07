@@ -136,7 +136,7 @@ class EventHandler:
         await self._startListening.wait()
         if self._onlineHandler:
             async for partialResult in self._onlineHandler.listenForCompleteAudio():
-                self.logger.info(f"Partial recognition result: '{partialResult.text}'")
+                self._logger.info(f"Partial recognition result: '{partialResult.text}'")
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
                     duration=partialResult.duration,
