@@ -1,6 +1,6 @@
 try:
     from .types import SERVICES_NAMES
-    from .loggerService import Logger, LoggerQueue, LoggerService
+    from .loggerService import Logger
 except Exception as e:
     print(
         "Unable to import runtime models, so inference will not be available. (%s)"
@@ -41,6 +41,4 @@ __all__ = (
     "add_RecognizerServicer_to_server",
     "RecognizerService",
     "Logger",
-    "LoggerQueue",
-    "LoggerService",
 )

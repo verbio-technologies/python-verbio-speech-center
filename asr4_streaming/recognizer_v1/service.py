@@ -1,10 +1,10 @@
 import toml
 import grpc
 import toml
-import logging
 import asyncio
-from asyncio import Task
-from typing import Dict, AsyncIterator, Union, Optional
+from typing import Dict, AsyncIterator, Union
+from loguru import logger
+from typing import Dict, AsyncIterator, Union
 
 from .handler import EventHandler
 from .types import RecognizerServicer
@@ -18,11 +18,10 @@ from asr4.engines.wav2vec.v1.engine_types import Language
 
 class RecognizerService(RecognizerServicer):
     def __init__(self, config: str) -> None:
-        self._logger = logging.getLogger("ASR4")
         tomlConfiguration = toml.load(config)
-        self._logger.debug(f"Toml configuration: {tomlConfiguration}")
+        logger.debug(f"Toml configuration: {tomlConfiguration}")
         languageCode = tomlConfiguration.get("global", {}).get("language", "en-US")
-        self._logger.info(f"Recognizer supported language is: {languageCode}")
+        logger.info(f"Recognizer supported language is: {languageCode}")
         self._language = Language.parse(languageCode)
         self._engine = self._initializeEngine(tomlConfiguration, languageCode)
 

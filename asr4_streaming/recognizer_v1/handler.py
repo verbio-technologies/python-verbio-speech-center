@@ -1,6 +1,6 @@
 import grpc
 import soxr
-import logging
+from loguru import logger
 import numpy as np
 from asyncio import Event
 from datetime import timedelta
@@ -48,7 +48,6 @@ class EventHandler:
         self._language = language
         self._config = RecognitionConfig()
         self._totalDuration = 0.0
-        self._logger = logging.getLogger("ASR4")
         self._startListening = Event()
         self._onlineHandler: Optional[Wav2VecASR4EngineOnlineHandler] = None
 
@@ -67,7 +66,7 @@ class EventHandler:
 
     async def __sourceConfig(self, config: RecognitionConfig):
         await self.__validateRecognitionConfig(config)
-        self._logger.info(
+        logger.info(
             "Received streaming request "
             f"[language={config.parameters.language}] "
             f"[sample_rate={config.parameters.sample_rate_hz}] "
@@ -107,7 +106,7 @@ class EventHandler:
 
     async def __sourceAudio(self, audio: bytes):
         await self.__validateAudio(audio)
-        self._logger.info(f"Received partial audio [length={len(audio)}]")
+        logger.info(f"Received partial audio [length={len(audio)}]")
         if self._onlineHandler:
             await self._onlineHandler.sendAudioChunk(
                 self.__convertAudioToSignal(
@@ -135,7 +134,7 @@ class EventHandler:
         await self._startListening.wait()
         if self._onlineHandler:
             async for partialResult in self._onlineHandler.listenForCompleteAudio():
-                self._logger.info(f"Partial recognition result: '{partialResult.text}'")
+                logger.info(f"Partial recognition result: '{partialResult.text}'")
                 duration = partialResult.duration if partialResult.duration else 0.0
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
@@ -193,5 +192,5 @@ class EventHandler:
         return duration
 
     async def __logError(self, message: str, statusCode: grpc.StatusCode):
-        self._logger.error(message)
+        logger.error(message)
         await self._context.abort(statusCode, message)

@@ -1,11 +1,7 @@
 from asr4_streaming.recognizer_v1 import SERVICES_NAMES
 
 try:
-    from asr4_streaming.recognizer_v1.loggerService import (
-        Logger,
-        LoggerQueue,
-        LoggerService,
-    )
+    from asr4_streaming.recognizer_v1.loggerService import Logger
 except:
     pass
 
@@ -43,6 +39,4 @@ __all__ = (
     "add_RecognizerServicer_to_server",
     "RecognizerService",
     "Logger",
-    "LoggerService",
-    "LoggerQueue",
 )
