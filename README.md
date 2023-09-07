@@ -43,7 +43,7 @@ verbio_speech_center_recognizer_pb2_grpc.py
 
 ### Run a client
 
-The CLI clients will use the generated code to connect to the speech center cloud to process your speech file. To run the clients, run either the `recognizer_stream.py` for CSR requests, or the `synthesizer.py` for TTS requests, from the `cli-client` directory.
+The CLI clients will use the generated code to connect to the speech center cloud to process your speech file. To run the clients, run either the `recognizer_stream.py` for CSR requests, or the `synthesizer_grpc.py` for TTS requests, from the `cli-client` directory.
 
 #### Recognizer stream
 
@@ -89,13 +89,13 @@ python3 recognizer_stream.py --help
   
 to list all the available options.
 
-### Synthesizer
+### Synthesizer (GRPC)
 
 Verbio's Speech Center text-to-speech is still in beta version, therefore having some limitations but is able to be tested through the use of the following command.
 
 **Example for text to speech**
 ```
-python3 synthesizer.py --text "Hello, my friend" --voice tommy --sample-rate 16000 --language en-us --audio-file out.wav --host "tts.speechcenter.verbio.com" --token ./my.token
+python3 synthesizer_grpc.py --text "Hello, my friend" --voice tommy --sample-rate 16000 --language en-us --audio-file out.wav --host "tts.speechcenter.verbio.com" --token ./my.token
 ```
 
 Please check out documentation at speechcenter.verbio.com/documentation for current TTS limitations.
@@ -208,7 +208,7 @@ Not defining the arguments like this will yield an error.
 
 ### Client flags
 
-#### Synthesizer
+#### Synthesizer (GRPC)
 
 ##### Audio file
 
@@ -292,7 +292,7 @@ URL of the host where the request will be sent. Main endpoints will be expanded 
 
 #### Recognizer (stream)
 
-Many arguments are the same as for the `Synthesizer` client. The differences are the following:
+Many arguments are the same as for the `Synthesizer (GRPC)` client. The differences are the following:
 
 ##### Audio file
 
