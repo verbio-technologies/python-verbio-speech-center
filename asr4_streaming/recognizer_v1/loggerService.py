@@ -15,7 +15,7 @@ class Logger:
     ]
     _LOGGER_NAME = "ASR4"
     _FILTERS = {"numba": "INFO", "asyncio": "WARNING", "grpc": "WARNING"}
-        
+
     def __init__(self, logLevel: str = _LOG_LEVEL) -> None:
         logLevel = self.__validateLogLevel(logLevel)
         logger.info(f"Logging Level set to '{logLevel}'")
@@ -39,7 +39,7 @@ class Logger:
             "[{extra[user_id]}][{extra[transcription_id]}] "
             "<level>{message}</level>",
             enqueue=True,
-            filter=self._FILTERS
+            filter=self._FILTERS,
         )
 
     @staticmethod
@@ -49,4 +49,3 @@ class Logger:
     @staticmethod
     def getDefaultLevel() -> str:
         return Logger._LOG_LEVEL
-
