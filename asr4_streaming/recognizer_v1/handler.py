@@ -136,9 +136,10 @@ class EventHandler:
         if self._onlineHandler:
             async for partialResult in self._onlineHandler.listenForCompleteAudio():
                 self._logger.info(f"Partial recognition result: '{partialResult.text}'")
+                duration = partialResult.duration if partialResult.duration else 0.0
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
-                    duration=partialResult.duration,
+                    duration=duration,
                     score=EventHandler.__calculateAverageScore(partialResult.segments),
                     words=EventHandler.__extractWords(partialResult.segments),
                 )

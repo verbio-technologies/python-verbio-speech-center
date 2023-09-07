@@ -10,7 +10,7 @@ from asr4_streaming.recognizer import RecognitionConfig
 from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import RecognitionResource
 from asr4_streaming.recognizer import StreamingRecognizeRequest
-from asr4_streaming.recognizer import StreamingRecognitionResult
+from asr4_streaming.recognizer import StreamingRecognizeResponse
 
 from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer_v1.handler import EventHandler
@@ -251,7 +251,10 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             async for request in requestIterator():
                 await handler.source(request)
             await handler.handle()
-        self.assertEqual(str(context.exception), "RecognitionConfig was never received")
+        self.assertEqual(
+            str(context.exception),
+            "A request containing RecognitionConfig must be sent first",
+        )
 
     async def testMissingConfigParameters(self):
         mockContext = initializeMockContext(Mock())
@@ -399,28 +402,30 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
     async def testEmptyEventSink(self):
         handler = EventHandler(Language.EN_US, None, None)
         response = TranscriptionResult(
-            transcription="", score=0.0, words=[], duration=Duration()
+            transcription="", score=0.0, words=[], duration=0.0
         )
         result = {
-            "alternatives": [
-                {
-                    "transcript": "",
-                    "confidence": 0.0,
-                    "words": [],
-                }
-            ],
-            "duration": {},
-            "end_time": {"seconds": 0, "nanos": 0},
-            "is_final": True,
+            "results": {
+                "alternatives": [
+                    {
+                        "transcript": "",
+                        "confidence": 0.0,
+                        "words": [],
+                    }
+                ],
+                "duration": {},
+                "end_time": {"seconds": 0, "nanos": 0},
+                "is_final": True,
+            }
         }
         self.assertEqual(
             handler.sink(response),
-            StreamingRecognitionResult(**result),
+            StreamingRecognizeResponse(**result),
         )
 
     async def testEventSink(self):
         handler = EventHandler(Language.EN_US, None, None)
-        handler._totalDuration = Duration(seconds=3, nanos=4)
+        handler._totalDuration = 3.4
         response = TranscriptionResult(
             transcription="Hello World!",
             score=1.0,
@@ -428,36 +433,38 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                 WordTiming(word="Hello", start=1.0, end=1.5, probability=1.0),
                 WordTiming(word="World!", start=1.8, end=2.6, probability=1.0),
             ],
-            duration=Duration(seconds=1, nanos=2),
+            duration=5,
         )
         result = {
-            "alternatives": [
-                {
-                    "transcript": "Hello World!",
-                    "confidence": 1.0,
-                    "words": [
-                        {
-                            "start_time": {"seconds": 1},
-                            "end_time": {"seconds": 1, "nanos": 500000000},
-                            "word": "Hello",
-                            "confidence": 1.0,
-                        },
-                        {
-                            "start_time": {"seconds": 1, "nanos": 800000000},
-                            "end_time": {"seconds": 2, "nanos": 600000000},
-                            "word": "World!",
-                            "confidence": 1.0,
-                        },
-                    ],
-                }
-            ],
-            "duration": {"seconds": 1, "nanos": 2},
-            "end_time": {"seconds": 3, "nanos": 4},
-            "is_final": True,
+            "results": {
+                "alternatives": [
+                    {
+                        "transcript": "Hello World!",
+                        "confidence": 1.0,
+                        "words": [
+                            {
+                                "start_time": {"seconds": 4, "nanos": 400000000},
+                                "end_time": {"seconds": 4, "nanos": 900000000},
+                                "word": "Hello",
+                                "confidence": 1.0,
+                            },
+                            {
+                                "start_time": {"seconds": 5, "nanos": 200000000},
+                                "end_time": {"seconds": 6},
+                                "word": "World!",
+                                "confidence": 1.0,
+                            },
+                        ],
+                    }
+                ],
+                "duration": {"seconds": 5},
+                "end_time": {"seconds": 8, "nanos": 400000000},
+                "is_final": True,
+            }
         }
         self.assertEqual(
             handler.sink(response),
-            StreamingRecognitionResult(**result),
+            StreamingRecognizeResponse(**result),
         )
 
     async def testRandomEventSink(self):
@@ -476,14 +483,14 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                     )
                     for idx, w in enumerate(words)
                 ],
-                duration=Duration(),
+                duration=0.0,
             )
         )
-        self.assertEqual(len(response.alternatives), 1)
-        self.assertEqual(response.alternatives[0].transcript, transcription)
-        self.assertEqual(response.alternatives[0].confidence, 1.0)
-        self.assertEqual(len(response.alternatives[0].words), 16)
-        for idx, w in enumerate(response.alternatives[0].words):
+        self.assertEqual(len(response.results.alternatives), 1)
+        self.assertEqual(response.results.alternatives[0].transcript, transcription)
+        self.assertEqual(response.results.alternatives[0].confidence, 1.0)
+        self.assertEqual(len(response.results.alternatives[0].words), 16)
+        for idx, w in enumerate(response.results.alternatives[0].words):
             self.assertEqual(w.word, words[idx])
             self.assertEqual(w.start_time.seconds, idx)
             self.assertEqual(w.end_time.seconds, idx + 1)
