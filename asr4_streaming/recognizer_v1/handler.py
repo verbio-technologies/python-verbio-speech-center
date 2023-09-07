@@ -89,8 +89,8 @@ class EventHandler:
         message = ""
         if not Language.check(parameters.language):
             message = f"Invalid value '{parameters.language}' for language parameter"
-        if Language.parse(parameters.language) != self._language:
-            message = f"Invalid language '{parameters.language.value}'. Only '{self._language.value}' is supported."
+        elif Language.parse(parameters.language) != self._language:
+            message = f"Invalid language '{parameters.language}'. Only '{self._language.value}' is supported."
         if not SampleRate.check(parameters.sample_rate_hz):
             message = f"Invalid value '{parameters.sample_rate_hz}' for sample_rate_hz parameter"
         if not AudioEncoding.check(parameters.audio_encoding):
