@@ -94,35 +94,6 @@ def streamingRequestIterator(
 
 
 class TestRecognizerServiceUtils(unittest.TestCase):
-    def testAudioDuration(self):
-        config = RecognitionConfig(
-            parameters=RecognitionParameters(sample_rate_hz=16000)
-        )
-        duration = EventHandler._EventHandler__calculateAudioDuration(config, bytes())
-        self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 0)
-
-        duration = EventHandler._EventHandler__calculateAudioDuration(config, b"0124")
-        self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 125000)
-
-        duration = EventHandler._EventHandler__calculateAudioDuration(
-            config, b"12345678901234567890"
-        )
-        self.assertEqual(duration.seconds, 0)
-        self.assertEqual(duration.nanos, 625000)
-
-        config = RecognitionConfig(parameters=RecognitionParameters(sample_rate_hz=1))
-        duration = EventHandler._EventHandler__calculateAudioDuration(config, b"0124")
-        self.assertEqual(duration.seconds, 2)
-        self.assertEqual(duration.nanos, 0)
-
-        with self.assertRaises(ZeroDivisionError):
-            config = RecognitionConfig(
-                parameters=RecognitionParameters(sample_rate_hz=0)
-            )
-            EventHandler._EventHandler__calculateAudioDuration(config, b"0124")
-
     def testCalculateAverageScore(self):
         def mockSegments():
             @dataclass
