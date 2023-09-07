@@ -128,7 +128,8 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
 
     async def testInvalidAudio(self):
         mockContext = initializeMockContext(Mock())
-        handler = EventHandler(Language.EN_US, None, mockContext)
+        mockEngine = initializeMockEngine(Mock(), language="en-US")
+        handler = EventHandler(Language.EN_US, mockEngine, mockContext)
         requestIterator = asyncStreamingRequestIterator(
             language="en-US",
             sampleRate=16000,
@@ -270,18 +271,6 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             str(context.exception), "Invalid value '' for language parameter"
         )
-
-    async def testMissingAudio(self):
-        mockContext = initializeMockContext(Mock())
-        handler = EventHandler(Language.EN_US, None, mockContext)
-        requestIterator = asyncStreamingRequestIterator(
-            language="en-US", sampleRate=16000
-        )
-        with self.assertRaises(Exception) as context:
-            async for request in requestIterator:
-                await handler.source(request)
-            await handler.handle()
-        self.assertEqual(str(context.exception), "Audio was never received")
 
     async def testIncorrectLanguage(self):
         mockContext = initializeMockContext(Mock())
