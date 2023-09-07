@@ -415,6 +415,5 @@ class TestServer(unittest.TestCase):
     def testServerNoSpawn(self):
         # It is not possible to test Server because it has not a stop() function
         multiprocessing.set_start_method("spawn", force=True)
-        Logger("DEBUG")
         server = Server(ServerConfiguration(MockArguments()))
         server.join()
