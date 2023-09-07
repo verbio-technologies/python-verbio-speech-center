@@ -167,7 +167,7 @@ class EventHandler:
             transcript=response.transcription, confidence=response.score, words=words
         )
         return StreamingRecognizeResponse(
-            StreamingRecognitionResult(
+            results=StreamingRecognitionResult(
                 alternatives=[alternative],
                 end_time=EventHandler.__getDuration(
                     response.duration + self._totalDuration
