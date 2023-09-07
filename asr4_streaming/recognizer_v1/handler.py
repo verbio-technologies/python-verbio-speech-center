@@ -32,7 +32,7 @@ from asr4.engines.wav2vec.wav2vec_engine import (
 class TranscriptionResult:
     transcription: str
     score: float
-    duration: Duration
+    duration: float
     words: List[WordTiming]
 
 
@@ -138,7 +138,7 @@ class EventHandler:
                 self._logger.info(f"Partial recognition result: '{partialResult.text}'")
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
-                    duration=self.__getDuration(partialResult.duration),
+                    duration=partialResult.duration,
                     score=EventHandler.__calculateAverageScore(partialResult.segments),
                     words=EventHandler.__extractWords(partialResult.segments),
                 )
@@ -168,10 +168,10 @@ class EventHandler:
         return StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=[alternative],
-                end_time=EventHandler.__addAudioDuration(
-                    EventHandler.__getDuration(self._totalDuration), response.duration
+                end_time=EventHandler.__getDuration(
+                    response.duration + self._totalDuration
                 ),
-                duration=response.duration,
+                duration=EventHandler.__getDuration(response.duration),
                 is_final=True,
             )
         )
@@ -189,13 +189,6 @@ class EventHandler:
     def __getDuration(seconds: float) -> Duration:
         duration = Duration()
         duration.FromTimedelta(td=timedelta(seconds=seconds))
-        return duration
-
-    @staticmethod
-    def __addAudioDuration(a: Duration, b: Duration) -> Duration:
-        duration = Duration()
-        total = a.ToTimedelta().total_seconds() + b.ToTimedelta().total_seconds()
-        duration.FromTimedelta(td=timedelta(seconds=total))
         return duration
 
     async def __logError(self, message: str, statusCode: grpc.StatusCode):
