@@ -47,4 +47,3 @@ class RecognizerService(RecognizerServicer):
         logger.info(f"Recognition result: '{results.alternatives[0].transcript}'")
         yield StreamingRecognizeResponse(results=results)
         return
-
