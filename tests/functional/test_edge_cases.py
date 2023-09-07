@@ -30,7 +30,7 @@ class TestEdgeCases(RecognizerServiceTestCase):
             "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut_1-channel.wav",
         ]:
             responseIterator = self.request(audioFile, "en-US")
-            response = next(responseIterator)
+            response = self.mergeAllResponsesIntoOne(responseIterator)
             self.expectStatus(responseIterator, grpc.StatusCode.OK)
             expectedResponse = (
                 "hi thank you so much for calling international bank this is "
@@ -61,7 +61,7 @@ class TestEdgeCases(RecognizerServiceTestCase):
             "en-US",
             alternativeSampleRate=16000,
         )
-        response = next(responseIterator)
+        response = self.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectNotEmptyTranscription(response)
         self.expectValidConfidence(response.results.alternatives[0].confidence)
@@ -90,7 +90,7 @@ class TestEdgeCases(RecognizerServiceTestCase):
         self._waitForServer()
         channel = grpc.insecure_channel(TestEdgeCases._serverAddress)
         responseIterator = RecognizerStub(channel).StreamingRecognize(requestIterator)
-        response = next(responseIterator)
+        response = self.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         expectedResponse = (
             "hi thank you so much for calling international bank this is "

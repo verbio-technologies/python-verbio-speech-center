@@ -20,7 +20,9 @@ from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 from asr4_streaming.recognizer import StreamingRecognizeResponse
+from asr4_streaming.recognizer import StreamingRecognitionResult
 from asr4_streaming.recognizer import add_RecognizerServicer_to_server
+from asr4_streaming.recognizer_v1.types import RecognitionAlternative
 
 from google.protobuf.duration_pb2 import Duration
 from grpc_health.v1.health_pb2_grpc import HealthStub
@@ -227,6 +229,29 @@ class RecognizerServiceTestCase(unittest.TestCase):
             )
         except Exception as e:
             self.fail(str(e))
+
+    def mergeAllResponsesIntoOne(
+        self, responseIterator: Iterator[StreamingRecognizeResponse]
+    ) -> StreamingRecognizeResponse:
+        responsesNum = 0
+        duration, endTime = Duration(), Duration()
+        mergedAlternative = RecognitionAlternative()
+        for response in responseIterator:
+            responsesNum += 1
+            endTime = response.results.end_time
+            duration = response.results.duration
+            mergedAlternative.transcript += response.results.alternatives[0].transcript
+            mergedAlternative.confidence += response.results.alternatives[0].confidence
+            mergedAlternative.words.extend(response.results.alternatives[0].words)
+        mergedAlternative.confidence /= responsesNum
+        return StreamingRecognizeResponse(
+            results=StreamingRecognitionResult(
+                alternatives=[mergedAlternative],
+                duration=duration,
+                end_time=endTime,
+                is_final=True,
+            )
+        )
 
     @staticmethod
     def streamingRequestIteratorFromAudio(
