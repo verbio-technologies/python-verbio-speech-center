@@ -430,14 +430,6 @@ if __name__ == "__main__":
         raise ValueError(f"Audio path (-a) or audios gui file (-g) is required")
     validateLogLevel(args)
     configureLogger(args.verbose)
-
-    #    logging.Formatter.converter = time.gmtime
-    #    logging.basicConfig(
-    #        level=_LOG_LEVELS.get(args.verbose, logging.INFO),
-    #        format="[%(asctime)s.%(msecs)03d %(levelname)s %(module)s::%(funcName)s] (PID %(process)d): %(message)s",
-    #        datefmt="%Y-%m-%d %H:%M:%S",
-    #        handlers=[logging.StreamHandler(sys.stdout)],
-    #    )
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
     responses = _process(args)
