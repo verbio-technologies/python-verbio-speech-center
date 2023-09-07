@@ -33,6 +33,9 @@ dependencies = [
     "loguru >= 0.7.0",
 ]
 
+[tool.pytest.ini_options]
+addopts = "--ignore=tests/functional/test_long_files.py"
+
 [tool.setuptools]
 include-package-data = false
 

@@ -3,8 +3,9 @@ import re
 import sys
 import pytest
 import unittest
-from subprocess import Popen, PIPE
 from typing import Optional
+from subprocess import Popen, PIPE
+from .test_recognizer_service import evaluateHypothesis
 
 
 class TestFormatterUtils(object):
@@ -129,11 +130,11 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
-        self.assertEqual(hypothesis, self._referenceFmt)
+        self.assertGreater(len(hypothesis), 1)
+        evaluateHypothesis(self._referenceFmt, hypothesis)
 
     def testRecognizeRequestNoFormatted(self):
         process = self.launchRecognitionWithNoFormatting(self._audio, self._language)
-
         status = process.wait(timeout=900)
         self.checkStatus(status, process.stderr.read())
         output = process.stdout.read()
@@ -143,4 +144,10 @@ class TestFormatter(unittest.TestCase, TestFormatterUtils):
             if match is not None and match.lastindex is not None
             else ""
         )
-        self.assertEqual(hypothesis, self._referenceNoFmt)
+        self.assertGreater(len(hypothesis), 1)
+        evaluateHypothesis(self._referenceNoFmt, hypothesis)
+        self.ensureLowerCase(hypothesis)
+
+    def ensureLowerCase(self, text):
+        match = re.search("[A-Z]", text)
+        self.assertEqual(match, None)

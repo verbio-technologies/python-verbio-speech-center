@@ -1,0 +1,2 @@
+*.wav filter=lfs diff=lfs merge=lfs -text
+tests/unit/data/en-us.24b.wav filter=lfs diff=lfs merge=lfs -text

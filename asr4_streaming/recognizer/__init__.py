@@ -9,8 +9,6 @@ from asr4_streaming.recognizer_v1 import Duration
 from asr4_streaming.recognizer_v1 import RecognitionConfig
 from asr4_streaming.recognizer_v1 import RecognitionParameters
 from asr4_streaming.recognizer_v1 import RecognitionResource
-from asr4_streaming.recognizer_v1 import RecognizeRequest
-from asr4_streaming.recognizer_v1 import RecognizeResponse
 from asr4_streaming.recognizer_v1 import RecognizerStub
 from asr4_streaming.recognizer_v1 import StreamingRecognitionResult
 from asr4_streaming.recognizer_v1 import StreamingRecognizeRequest
@@ -27,9 +25,8 @@ except Exception as e:
 
 __all__ = (
     "SERVICES_NAMES",
-    "RecognizeRequest",
+    "Duration",
     "StreamingRecognizeRequest",
-    "RecognizeResponse",
     "StreamingRecognizeResponse",
     "StreamingRecognitionResult",
     "RecognitionConfig",
