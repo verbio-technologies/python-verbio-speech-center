@@ -98,7 +98,7 @@ functional-testing:long-audios:
   only:
     - tags
     - merge_requests
-    - main
+    - master
     - web
   before_script:
     - pip install .[server,gpu,test]
