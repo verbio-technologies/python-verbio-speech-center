@@ -11,7 +11,7 @@ from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
 from .types import SERVICES_NAMES
 from .types import add_RecognizerServicer_to_server
 from .service import RecognizerService
-from .loggerService import LoggerService
+from .loggerService import Logger
 
 
 class ServerConfiguration:
@@ -43,7 +43,7 @@ class Server:
 
     @staticmethod
     def _asyncRunServer(configuration: ServerConfiguration) -> None:
-        LoggerService(configuration.logLevel)
+        Logger(configuration.logLevel)
         logger.info(
             "Running gRPC server with %d listeners on %s"
             % (configuration.numberOfListeners, configuration.bindAddress)

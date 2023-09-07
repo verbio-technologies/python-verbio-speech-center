@@ -1,7 +1,7 @@
 from asr4_streaming.recognizer_v1 import SERVICES_NAMES
 
 try:
-    from asr4_streaming.recognizer_v1.loggerService import LoggerService
+    from asr4_streaming.recognizer_v1.loggerService import Logger
 except:
     pass
 
@@ -41,5 +41,5 @@ __all__ = (
     "ServerConfiguration",
     "add_RecognizerServicer_to_server",
     "RecognizerService",
-    "LoggerService",
+    "Logger",
 )

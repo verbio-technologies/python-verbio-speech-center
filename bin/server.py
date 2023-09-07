@@ -3,7 +3,7 @@ from loguru import logger
 import multiprocessing
 
 from asr4_streaming.recognizer import Server, ServerConfiguration
-from asr4_streaming.recognizer import LoggerService
+from asr4_streaming.recognizer import Logger
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
@@ -12,7 +12,7 @@ from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 def main():
     multiprocessing.set_start_method("spawn", force=True)
     args = Asr4ArgParser(sys.argv[1:]).getArgs()
-    _ = LoggerService(args.verbose)
+    _ = Logger(args.verbose)
     serve(ServerConfiguration(args))
 
 
@@ -122,7 +122,7 @@ class Asr4ArgParser:
             "-v",
             "--verbose",
             type=str,
-            choices=LoggerService.getLogLevelOptions(),
+            choices=Logger.getLevels(),
             help="Log levels. By default reads env variable LOG_LEVEL.",
         )
         parser.add_argument(
@@ -202,7 +202,7 @@ class Asr4ArgParser:
         args: argparse.Namespace,
     ) -> argparse.Namespace:
         args.verbose = args.verbose or os.environ.get(
-            "LOG_LEVEL", LoggerService.getDefaultLogLevel()
+            "LOG_LEVEL", Logger.getDefaultLevel()
         )
         args.gpu = args.gpu or os.environ.get("ASR4_GPU")
         args.servers = args.servers or os.environ.get("ASR4_SERVERS")
