@@ -32,6 +32,7 @@ class MockArguments(argparse.Namespace):
         self.subwords = None
         self.local_formatting = False
         self.maxChunksForDecoding = 1
+        self.verbose = "INFO"
 
 
 class TestServerConfiguration(unittest.TestCase):
