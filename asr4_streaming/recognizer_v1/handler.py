@@ -1,7 +1,7 @@
 import grpc
 import soxr
-from loguru import logger
 import numpy as np
+from loguru import logger
 from asyncio import Event
 from datetime import timedelta
 from dataclasses import dataclass
@@ -135,10 +135,9 @@ class EventHandler:
         if self._onlineHandler:
             async for partialResult in self._onlineHandler.listenForCompleteAudio():
                 logger.info(f"Partial recognition result: '{partialResult.text}'")
-                duration = partialResult.duration if partialResult.duration else 0.0
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
-                    duration=duration,
+                    duration=partialResult.duration or 0.0,
                     score=EventHandler.__calculateAverageScore(partialResult.segments),
                     words=EventHandler.__extractWords(partialResult.segments),
                 )

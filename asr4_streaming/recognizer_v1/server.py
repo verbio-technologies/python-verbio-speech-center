@@ -1,9 +1,9 @@
-import argparse
-import asyncio
-from concurrent import futures
 import grpc
-from loguru import logger
+import asyncio
+import argparse
 import multiprocessing
+from loguru import logger
+from concurrent import futures
 from grpc_health.v1 import health
 from grpc_health.v1.health_pb2 import HealthCheckResponse
 from grpc_health.v1.health_pb2_grpc import add_HealthServicer_to_server
