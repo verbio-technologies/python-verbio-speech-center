@@ -18,7 +18,7 @@ class TestStereoFile(RecognizerServiceTestCase):
         response = self.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectValidConfidence(response.results.alternatives[0].confidence)
-        self.expectDuration(response.results.duration, seconds=63, nanos=920000000)
+        self.expectDuration(response.results.duration, seconds=3, nanos=920000000)
         self.expectDuration(response.results.end_time, seconds=63, nanos=920000000)
         self.expectFinal(response)
         self.expectValidWords(response)
