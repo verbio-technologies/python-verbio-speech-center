@@ -240,7 +240,9 @@ class RecognizerServiceTestCase(unittest.TestCase):
             responsesNum += 1
             endTime = response.results.end_time
             duration = response.results.duration
-            mergedAlternative.transcript += response.results.alternatives[0].transcript
+            transcript = response.results.alternatives[0].transcript
+            transcript = transcript if responsesNum == 1 else " " + transcript
+            mergedAlternative.transcript += transcript
             mergedAlternative.confidence += response.results.alternatives[0].confidence
             mergedAlternative.words.extend(response.results.alternatives[0].words)
         mergedAlternative.confidence /= responsesNum
