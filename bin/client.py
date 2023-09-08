@@ -198,7 +198,7 @@ def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
     recognizeResponse = StreamingRecognizeResponse.FromString(response)
     if len(recognizeResponse.results.alternatives) > 0:
-        return f"{recognizeResponse.results.alternatives[0].transcript} ({filename})"
+        return f"{recognizeResponse.results.alternatives[0].transcript.strip()} ({filename})"
     else:
         return f" ({filename})"
 
@@ -319,9 +319,9 @@ def _runWorkerQuery(
         logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
     for response in responses[1:]:
-        responses[0].results.alternatives[
-            0
-        ].transcript += response.results.alternatives[0].transcript
+        responses[0].results.alternatives[0].transcript += (
+            " " + response.results.alternatives[0].transcript
+        )
     return responses[0].SerializeToString()
 
 
