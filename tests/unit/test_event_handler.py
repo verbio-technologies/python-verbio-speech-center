@@ -2,9 +2,9 @@ import random
 import string
 import asyncio
 import unittest
-from unittest.mock import Mock, AsyncMock
 from dataclasses import dataclass
 from grpc.aio import ServicerContext
+from unittest.mock import Mock, AsyncMock
 from typing import List, Optional, Union, Iterator, AsyncIterator
 
 from asr4_streaming.recognizer import RecognitionConfig
@@ -17,7 +17,6 @@ from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer_v1.handler import EventHandler
 from asr4_streaming.recognizer_v1.handler import TranscriptionResult
 
-from asr4_engine import ASR4EngineOnlineHandler
 from asr4_engine.data_classes import Transcription
 from asr4.engines.wav2vec.v1.engine_types import Language
 from asr4_engine.data_classes.transcription import WordTiming
