@@ -44,7 +44,7 @@ class RecognizerService(RecognizerServicer):
         handler = EventHandler(self._language, self._engine, context)
         listenerTask = asyncio.create_task(handler.listenForTranscription())
         async for request in request_iterator:
-            await handler.source(request)
+            await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
         await listenerTask
         return
