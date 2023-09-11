@@ -232,7 +232,7 @@ class RecognizerServiceTestCase(unittest.TestCase):
 
     @staticmethod
     def mergeAllResponsesIntoOne(
-        self, responseIterator: Iterator[StreamingRecognizeResponse]
+        responseIterator: Iterator[StreamingRecognizeResponse],
     ) -> StreamingRecognizeResponse:
         responsesNum = 0
         duration, endTime = Duration(), Duration()
