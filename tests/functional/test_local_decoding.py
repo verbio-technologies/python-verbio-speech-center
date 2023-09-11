@@ -11,7 +11,7 @@ class TestMultipleEnglishLanguageTagsWithLocalDecoding(RecognizerServiceTestCase
 
     def testEnglish(self):
         responseIterator = self.request("en-us-1.wav", "en-US")
-        response = self.mergeAllResponsesIntoOne(responseIterator)
+        response = RecognizerServiceTestCase.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectNotEmptyTranscription(response)
         self.expectCapitalization(response)
@@ -28,7 +28,7 @@ class TestMultipleSpanishLanguageTagsWithLocalDecoding(RecognizerServiceTestCase
 
     def testSpanish(self):
         responseIterator = self.request("es-1.wav", "es")
-        response = self.mergeAllResponsesIntoOne(responseIterator)
+        response = RecognizerServiceTestCase.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectNotEmptyTranscription(response)
         self.expectCapitalization(response)
@@ -45,7 +45,7 @@ class TestMultiplePortugueseLanguageTagsWithLocalDecoding(RecognizerServiceTestC
 
     def testPortuguese(self):
         responseIterator = self.request("pt-br-1.wav", "pt-BR")
-        response = self.mergeAllResponsesIntoOne(responseIterator)
+        response = RecognizerServiceTestCase.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectNotEmptyTranscription(response)
         self.expectCapitalization(response)
