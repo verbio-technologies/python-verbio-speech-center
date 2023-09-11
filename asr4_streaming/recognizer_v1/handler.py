@@ -141,7 +141,9 @@ class EventHandler:
                     score=EventHandler.__calculateAverageScore(partialResult.segments),
                     words=EventHandler.__extractWords(partialResult.segments),
                 )
-                await self._context.write(self.sink(partialTranscriptionResult))
+                await self._context.write(
+                    self.getStreamingRecognizeResponse(partialTranscriptionResult)
+                )
                 self._totalDuration += partialResult.duration
 
     @staticmethod
@@ -154,7 +156,7 @@ class EventHandler:
     def __extractWords(segments: List[Segment]) -> List[WordTiming]:
         return [word for s in segments for word in s.words]
 
-    def sink(
+    def getStreamingRecognizeResponse(
         self,
         response: TranscriptionResult,
     ) -> StreamingRecognizeResponse:

@@ -430,7 +430,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             response.results.alternatives[0].transcript, DEFAULT_PORTUGUESE_MESSAGE
         )
 
-    async def testEmptyEventSink(self):
+    async def testEmptyEventGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
         response = TranscriptionResult(
             transcription="", score=0.0, words=[], duration=0.0
@@ -450,11 +450,11 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             }
         }
         self.assertEqual(
-            handler.sink(response),
+            handler.getStreamingRecognizeResponse(response),
             StreamingRecognizeResponse(**result),
         )
 
-    async def testEventSink(self):
+    async def testGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
         handler._totalDuration = 3.4
         response = TranscriptionResult(
@@ -494,17 +494,17 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             }
         }
         self.assertEqual(
-            handler.sink(response),
+            handler.getStreamingRecognizeResponse(response),
             StreamingRecognizeResponse(**result),
         )
 
-    async def testRandomEventSink(self):
+    async def testRandomEventGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
         transcription = " ".join(
             random.choices(string.ascii_letters + string.digits, k=16)
         )
         words = transcription.split()
-        response = handler.sink(
+        response = handler.getStreamingRecognizeResponse(
             TranscriptionResult(
                 transcription=transcription,
                 score=1.0,
