@@ -56,15 +56,15 @@ class EventHandler:
         if self._onlineHandler:
             await self._onlineHandler.notifyEndOfAudio()
 
-    async def source(self, request: StreamingRecognizeRequest):
+    async def processStreamingRequest(self, request: StreamingRecognizeRequest):
         if request.HasField("config"):
-            await self.__sourceConfig(request.config)
+            await self.__processRequestConfig(request.config)
         elif request.HasField("audio"):
-            await self.__sourceAudio(request.audio)
+            await self.__processRequestAudio(request.audio)
         else:
             await self.__logError("Empty request", grpc.StatusCode.INVALID_ARGUMENT)
 
-    async def __sourceConfig(self, config: RecognitionConfig):
+    async def __processRequestConfig(self, config: RecognitionConfig):
         await self.__validateRecognitionConfig(config)
         logger.info(
             "Received streaming request "
@@ -104,7 +104,7 @@ class EventHandler:
             message = f"Invalid value '{resource.topic}' for topic resource"
             await self.__logError(message, grpc.StatusCode.INVALID_ARGUMENT)
 
-    async def __sourceAudio(self, audio: bytes):
+    async def __processRequestAudio(self, audio: bytes):
         await self.__validateAudio(audio)
         logger.info(f"Received partial audio [length={len(audio)}]")
         if self._onlineHandler:

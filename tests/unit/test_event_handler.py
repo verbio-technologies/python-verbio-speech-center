@@ -137,7 +137,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         handler = EventHandler(Language.EN_US, None, mockContext)
         with self.assertRaises(Exception) as context:
             async for request in requestIterator():
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(str(context.exception), "Empty request")
 
     async def testInvalidAudio(self):
@@ -153,7 +153,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(str(context.exception), "Empty value for audio")
 
     async def testInvalidTopic(self):
@@ -168,7 +168,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '-1' for topic resource"
         )
@@ -185,7 +185,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '2' for audio_encoding parameter"
         )
@@ -198,7 +198,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '16001' for sample_rate_hz parameter"
         )
@@ -211,7 +211,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '' for language parameter"
         )
@@ -221,7 +221,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value 'INVALID' for language parameter"
         )
@@ -235,7 +235,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         handler = EventHandler(Language.EN_US, None, mockContext)
         with self.assertRaises(Exception) as context:
             async for request in requestIterator():
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception),
             "A request containing RecognitionConfig must be sent first",
@@ -247,7 +247,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         requestIterator = asyncStreamingRequestIterator(topic="GENERIC")
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '0' for sample_rate_hz parameter"
         )
@@ -258,7 +258,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         requestIterator = asyncStreamingRequestIterator(language="en-US")
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '0' for sample_rate_hz parameter"
         )
@@ -269,7 +269,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         requestIterator = asyncStreamingRequestIterator(audioEncoding="PCM")
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '0' for sample_rate_hz parameter"
         )
@@ -280,7 +280,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         requestIterator = asyncStreamingRequestIterator(sampleRate=8000)
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid value '' for language parameter"
         )
@@ -297,7 +297,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(Exception) as context:
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
         self.assertEqual(
             str(context.exception), "Invalid language 'en-US'. Only 'es' is supported."
         )
@@ -311,7 +311,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             language="en-US", sampleRate=16000
         )
         async for request in requestIterator:
-            await handler.source(request)
+            await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
         await listenerTask
         onlineHandlerMock = mockEngine.getRecognizerHandler()
@@ -334,7 +334,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                 audio=[b"0000"],
             )
             async for request in requestIterator:
-                await handler.source(request)
+                await handler.processStreamingRequest(request)
             await handler.notifyEndOfAudio()
             await listenerTask
 
@@ -362,7 +362,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             audio=[b"0000"],
         )
         async for request in requestIterator:
-            await handler.source(request)
+            await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
         await listenerTask
 
@@ -389,7 +389,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             audio=[b"0000"],
         )
         async for request in requestIterator:
-            await handler.source(request)
+            await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
         await listenerTask
 
@@ -416,7 +416,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             audio=[b"0000"],
         )
         async for request in requestIterator:
-            await handler.source(request)
+            await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
         await listenerTask
 
