@@ -230,6 +230,7 @@ class RecognizerServiceTestCase(unittest.TestCase):
         except Exception as e:
             self.fail(str(e))
 
+    @staticmethod
     def mergeAllResponsesIntoOne(
         self, responseIterator: Iterator[StreamingRecognizeResponse]
     ) -> StreamingRecognizeResponse:
