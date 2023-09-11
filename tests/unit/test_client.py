@@ -1,5 +1,5 @@
 import os, pytest, unittest
-from bin import client
+from bin.client import StreamingClient
 
 
 class TestStreamingClient(unittest.TestCase):
@@ -13,30 +13,30 @@ class TestStreamingClient(unittest.TestCase):
 
     def testAudioChunking(self):
         audio_bytes = [i for i in range(10)]
-        chunk_iterator = client._chunk_audio(audio_bytes, 3)
+        chunk_iterator = StreamingClient()._chunk_audio(audio_bytes, 3)
         self.assertEqual(list(chunk_iterator), [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]])
 
     def testAudioChunking0(self):
         audio_bytes = [i for i in range(10)]
-        chunk_iterator = client._chunk_audio(audio_bytes, 0)
+        chunk_iterator = StreamingClient()._chunk_audio(audio_bytes, 0)
         self.assertEqual(list(chunk_iterator), [audio_bytes])
 
     def testAudioChunkingEmpty(self):
         audio_bytes = []
-        chunk_iterator = client._chunk_audio(audio_bytes, 3)
+        chunk_iterator = StreamingClient()._chunk_audio(audio_bytes, 3)
         self.assertEqual(list(chunk_iterator), [[]])
 
     def testAudioChunking0EmptyAudio(self):
         audio_bytes = []
-        chunk_iterator = client._chunk_audio(audio_bytes, 0)
+        chunk_iterator = StreamingClient()._chunk_audio(audio_bytes, 0)
         self.assertEqual(list(chunk_iterator), [[]])
 
     def testGetAudio(self):
-        _audioBytes, rate, width = client._getAudio(self.audio_8k_path)
+        _audioBytes, rate, width = StreamingClient()._getAudio(self.audio_8k_path)
         self.assertEqual(width, 2)
         self.assertEqual(rate, 8_000)
-        _audioBytes, rate, width = client._getAudio(self.audio_16k_path)
+        _audioBytes, rate, width = StreamingClient()._getAudio(self.audio_16k_path)
         self.assertEqual(width, 2)
         self.assertEqual(rate, 16_000)
         with self.assertRaises(Exception):
-            client._getAudio(self.audio_24b_path)
+            StreamingClient()._getAudio(self.audio_24b_path)

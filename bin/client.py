@@ -45,289 +45,286 @@ _ENCODING = "utf-8"
 _DEFAULT_CHUNK_SIZE = 20_000
 
 
-def _repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
-    return [
-        f'<StreamingRecognizeRequest first alternative: "{r.results.alternatives[0].transcript}">'
-        for r in responses
-        if len(r.results.alternatives) > 0
-    ]
+class StreamingClient:
+    def __init__(self):
+        self.listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
+        self.trnHypothesis: List[str] = []
+        self.trnReferences: List[str] = []
 
+    def _repr(self, responses: List[StreamingRecognizeRequest]) -> List[str]:
+        return [
+            f'<StreamingRecognizeRequest first alternative: "{r.results.alternatives[0].transcript}">'
+            for r in responses
+            if len(r.results.alternatives) > 0
+        ]
 
-def _process(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
-    responses, trnHypothesis = _inferenceProcess(args)
-    trnReferences = []
-    if args.metrics:
+    def _process(self, args: argparse.Namespace) -> None:
+        self._inferenceProcess(args)
+        if args.metrics:
+            if args.gui:
+                self._getTrnReferences(args.gui)
+            else:
+                referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
+                self.trnReferences.append(
+                    open(referenceFile, "r").read().replace("\n", " ")
+                    + " ("
+                    + referenceFile.replace(".txt", "")
+                    + ")"
+                )
+                self.trnReferences.append("")
+            self._getMetrics(
+                args.output,
+                "test_" + args.language,
+                _ENCODING,
+                args.language,
+            )
+
+        logger.debug(
+            "[+] Generating Responses from %d candidates"
+            % len(self.listStreamingRecognizeResponses)
+        )
+        return list(
+            map(
+                StreamingRecognizeResponse.FromString,
+                self.listStreamingRecognizeResponses,
+            )
+        )
+
+    def _getMetrics(
+        self,
+        outputDir: str,
+        id: str,
+        encoding: str,
+        language: str,
+    ) -> Popen:
+        logger.info("Running evaluation.")
+
+        if not os.path.exists(outputDir):
+            os.makedirs(outputDir)
+        trnHypothesisFile = os.path.join(outputDir, "trnHypothesis.trn")
+        trnReferencesFile = os.path.join(outputDir, "trnReferences.trn")
+        with open(trnHypothesisFile, "w") as h:
+            h.write("\n".join(self.trnHypothesis))
+        with open(trnReferencesFile, "w") as r:
+            r.write("\n".join(self.trnReferences))
+
+        Popen(
+            [
+                "python3",
+                (run_evaluator.__file__),
+                "--hypothesis",
+                trnHypothesisFile,
+                "--reference",
+                trnReferencesFile,
+                "--output",
+                outputDir,
+                "--language",
+                language,
+                "--encoding",
+                encoding,
+                "--test_id",
+                id,
+            ],
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            universal_newlines=True,
+        )
+
+        logger.info("You can find the files of results in path: " + outputDir)
+
+    def _getTrnReferences(self, gui: str):
+        for line in open(gui).read().split("\n"):
+            referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", line)
+            if line != "":
+                try:
+                    reference = open(referenceFile, "r").read().replace("\n", " ")
+                except:
+                    raise FileNotFoundError(f"Reference file not found.")
+                self.trnReferences.append(
+                    reference + " (" + referenceFile.replace(".txt", "") + ")"
+                )
+        self.trnReferences.append("")
+
+    def _inferenceProcess(
+        self, args: argparse.Namespace
+    ) -> List[StreamingRecognizeResponse]:
+        audios = []
+
         if args.gui:
-            trnReferences = _getTrnReferences(args.gui)
+            audios = self._getAudiosList(args.gui)
         else:
-            referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
-            trnReferences.append(
-                open(referenceFile, "r").read().replace("\n", " ")
-                + " ("
-                + referenceFile.replace(".txt", "")
-                + ")"
-            )
-            trnReferences.append("")
-        _getMetrics(
-            trnHypothesis,
-            trnReferences,
-            args.output,
-            "test_" + args.language,
-            _ENCODING,
-            args.language,
+            audios.append(args.audio)
+        logger.debug("- Read %d files from GUI." % len(audios))
+
+        workerPool = multiprocessing.Pool(
+            processes=args.jobs,
+            initializer=self._initializeWorker,
+            initargs=(args.host,),
         )
-
-    logger.debug("[+] Generating Responses from %d candidates" % len(responses))
-    return list(map(StreamingRecognizeResponse.FromString, responses))
-
-
-def _getMetrics(
-    trnHypothesis: List[str],
-    trnReferences: List[str],
-    outputDir: str,
-    id: str,
-    encoding: str,
-    language: str,
-) -> Popen:
-    logger.info("Running evaluation.")
-
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir)
-    trnHypothesisFile = os.path.join(outputDir, "trnHypothesis.trn")
-    trnReferencesFile = os.path.join(outputDir, "trnReferences.trn")
-    with open(trnHypothesisFile, "w") as h:
-        h.write("\n".join(trnHypothesis))
-    with open(trnReferencesFile, "w") as r:
-        r.write("\n".join(trnReferences))
-
-    Popen(
-        [
-            "python3",
-            (run_evaluator.__file__),
-            "--hypothesis",
-            trnHypothesisFile,
-            "--reference",
-            trnReferencesFile,
-            "--output",
-            outputDir,
-            "--language",
-            language,
-            "--encoding",
-            encoding,
-            "--test_id",
-            id,
-        ],
-        stdout=sys.stdout,
-        stderr=sys.stderr,
-        universal_newlines=True,
-    )
-
-    logger.info("You can find the files of results in path: " + outputDir)
-
-
-def _getTrnReferences(gui: str) -> List[str]:
-    trn = []
-    for line in open(args.gui).read().split("\n"):
-        referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", line)
-        if line != "":
-            try:
-                reference = open(referenceFile, "r").read().replace("\n", " ")
-            except:
-                raise FileNotFoundError(f"Reference file not found.")
-            trn.append(reference + " (" + referenceFile.replace(".txt", "") + ")")
-    trn.append("")
-    return trn
-
-
-def _inferenceProcess(args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
-    audios = []
-    responses = []
-    trnHypothesis = []
-
-    if args.gui:
-        audios = _getAudiosList(args.gui)
-    else:
-        audios.append(args.audio)
-    logger.debug("- Read %d files from GUI." % len(audios))
-
-    workerPool = multiprocessing.Pool(
-        processes=args.jobs,
-        initializer=_initializeWorker,
-        initargs=(args.host,),
-    )
-    length = len(audios)
-    for n, audio_path in enumerate(audios):
-        audio, sampleRateHz, sampleWidth = _getAudio(audio_path)
-        response = workerPool.apply(
-            _runWorkerQuery,
-            (
-                audio,
-                sampleRateHz,
-                sampleWidth,
-                Language.parse(args.language),
-                args.format,
-                f"{n}/{length}",
-                args.batch,
-            ),
-        )
-        responses.append(response)
-        trnHypothesis.append(_getTrnHypothesis(response, audio_path))
-
-    trnHypothesis.append("")
-    logger.debug(f'[-] TRN Hypothesis: "{trnHypothesis}')
-
-    return responses, trnHypothesis
-
-
-def _chunk_audio(audio: bytes, chunkSize: int):
-    if not audio:
-        logger.error(f"Empty audio content: {audio}")
-        yield audio
-    else:
-        if chunkSize == 0:
-            logger.info(
-                "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
+        length = len(audios)
+        for n, audioPath in enumerate(audios):
+            audio, sampleRateHz, sampleWidth = self._getAudio(audioPath)
+            response = workerPool.apply(
+                self._runWorkerQuery,
+                (
+                    audio,
+                    sampleRateHz,
+                    sampleWidth,
+                    Language.parse(args.language),
+                    args.format,
+                    f"{n}/{length}",
+                    args.batch,
+                ),
             )
+            self.listStreamingRecognizeResponses.append(response)
+            self.trnHypothesis.append(self._getTrnHypothesis(response, audioPath))
+
+        self.trnHypothesis.append("")
+        logger.debug(f'[-] TRN Hypothesis: "{self.trnHypothesis}')
+
+    def _chunk_audio(self, audio: bytes, chunkSize: int):
+        if not audio:
+            logger.error(f"Empty audio content: {audio}")
             yield audio
         else:
-            for i in range(0, len(audio), chunkSize):
-                yield audio[i : i + chunkSize]
+            if chunkSize == 0:
+                logger.info(
+                    "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
+                )
+                yield audio
+            else:
+                for i in range(0, len(audio), chunkSize):
+                    yield audio[i : i + chunkSize]
 
+    def _getTrnHypothesis(self, response: bytes, audioPath: str) -> str:
+        filename = re.sub(r"(.*)\.wav$", r"\1", audioPath)
+        recognizeResponse = StreamingRecognizeResponse.FromString(response)
+        if len(recognizeResponse.results.alternatives) > 0:
+            return f"{recognizeResponse.results.alternatives[0].transcript.strip()} ({filename})"
+        else:
+            return f" ({filename})"
 
-def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
-    filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
-    recognizeResponse = StreamingRecognizeResponse.FromString(response)
-    if len(recognizeResponse.results.alternatives) > 0:
-        return f"{recognizeResponse.results.alternatives[0].transcript.strip()} ({filename})"
-    else:
-        return f" ({filename})"
+    def _getAudiosList(self, gui: str) -> List[str]:
+        return [audio for audio in open(gui, "r").read().split("\n") if audio != ""]
 
+    def _getAudio(self, audioFile: str) -> bytes:
+        with wave.open(audioFile) as f:
+            n = f.getnframes()
+            audio = f.readframes(n)
+            sampleRateHz = f.getframerate()
+            sampleWidth = f.getsampwidth()
+        self._checkSampleValues(audioFile, sampleWidth)
+        audio = np.frombuffer(audio, dtype=np.int16)
+        return audio.tobytes(), sampleRateHz, sampleWidth
 
-def _getAudiosList(gui_file: str) -> List[str]:
-    return [audio for audio in open(args.gui, "r").read().split("\n") if audio != ""]
-
-
-def _getAudio(audioFile: str) -> bytes:
-    with wave.open(audioFile) as f:
-        n = f.getnframes()
-        audio = f.readframes(n)
-        sampleRateHz = f.getframerate()
-        sampleWidth = f.getsampwidth()
-    _checkSampleValues(audioFile, sampleWidth)
-    audio = np.frombuffer(audio, dtype=np.int16)
-    return audio.tobytes(), sampleRateHz, sampleWidth
-
-
-def _checkSampleValues(fileName: str, sampleWidth: int):
-    if sampleWidth != 2:
-        raise Exception(
-            f"Error, audio file {fileName} should have 2-byte samples instead of {sampleWidth}-byte samples."
-        )
-
-
-def _initializeWorker(serverAddress: str):
-    global _workerChannelSingleton  # pylint: disable=global-statement
-    global _workerStubSingleton  # pylint: disable=global-statement
-    logger.info("Initializing worker process.")
-    _workerChannelSingleton = grpc.insecure_channel(
-        serverAddress, options=CHANNEL_OPTIONS
-    )
-    _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
-    atexit.register(_shutdownWorker)
-
-
-def _shutdownWorker():
-    logger.info("Shutting worker process down.")
-    if _workerChannelSingleton is not None:
-        _workerStubSingleton.stop()
-
-
-def _createStreamingRequests(
-    audio: bytes,
-    sampleRateHz: int,
-    sampleWidth: int,
-    language: Language,
-    useFormat: bool,
-    batchMode: bool,
-) -> List[StreamingRecognizeRequest]:
-    request = [
-        StreamingRecognizeRequest(
-            config=RecognitionConfig(
-                parameters=RecognitionParameters(
-                    language=language.value,
-                    sample_rate_hz=sampleRateHz,
-                    enable_formatting=useFormat,
-                ),
-                resource=RecognitionResource(topic="GENERIC"),
+    def _checkSampleValues(self, fileName: str, sampleWidth: int):
+        if sampleWidth != 2:
+            raise Exception(
+                f"Error, audio file {fileName} should have 2-byte samples instead of {sampleWidth}-byte samples."
             )
+
+    def _initializeWorker(self, serverAddress: str):
+        global _workerChannelSingleton  # pylint: disable=global-statement
+        global _workerStubSingleton  # pylint: disable=global-statement
+        logger.info("Initializing worker process.")
+        _workerChannelSingleton = grpc.insecure_channel(
+            serverAddress, options=CHANNEL_OPTIONS
         )
-    ]
-    chunkSize = _setChunkSize(batchMode)
-    chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
-    yield from _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration)
+        _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
+        atexit.register(self._shutdownWorker)
 
+    def _shutdownWorker(self):
+        logger.info("Shutting worker process down.")
+        if _workerChannelSingleton is not None:
+            _workerStubSingleton.stop()
 
-def _yieldAudioSegmentsInStream(request, audio, chunkSize, chunkDuration):
-    messages = _addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
-    for n, message in enumerate(messages):
-        getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
-        logger.debug(f"Sending stream message {n} of {len(messages)-1}")
-        yield message
-        pause.until(getUpTime)
-
-
-def _setChunkSize(batchMode: bool) -> int:
-    if batchMode:
-        return 0
-    else:
-        return _DEFAULT_CHUNK_SIZE
-
-
-def _addAudioSegmentsToStreamingRequest(request, audio, chunkSize):
-    for chunk in _chunk_audio(audio=audio, chunkSize=chunkSize):
-        if chunk != []:
-            request.append(StreamingRecognizeRequest(audio=chunk))
-    return request
-
-
-def _runWorkerQuery(
-    audio: bytes,
-    sampleRateHz: int,
-    sampleWidth: int,
-    language: Language,
-    useFormat: bool,
-    queryID: int,
-    batchMode: bool,
-) -> bytes:
-    audioDuration = _calculateTotalDuration(audio, sampleRateHz, sampleWidth)
-    request = _createStreamingRequests(
-        audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
-    )
-    logger.info(
-        f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
-    )
-    try:
-        responses = list(
-            _workerStubSingleton.StreamingRecognize(
-                iter(request),
-                metadata=(("accept-language", language.value),),
-                timeout=5 * audioDuration,
+    def _createStreamingRequests(
+        self,
+        audio: bytes,
+        sampleRateHz: int,
+        sampleWidth: int,
+        language: Language,
+        useFormat: bool,
+        batchMode: bool,
+    ) -> List[StreamingRecognizeRequest]:
+        request = [
+            StreamingRecognizeRequest(
+                config=RecognitionConfig(
+                    parameters=RecognitionParameters(
+                        language=language.value,
+                        sample_rate_hz=sampleRateHz,
+                        enable_formatting=useFormat,
+                    ),
+                    resource=RecognitionResource(topic="GENERIC"),
+                )
             )
+        ]
+        chunkSize = self._setChunkSize(batchMode)
+        chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
+        yield from self._yieldAudioSegmentsInStream(
+            request, audio, chunkSize, chunkDuration
         )
 
-    except Exception as e:
-        logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
-        return b""
-    for response in responses[1:]:
-        responses[0].results.alternatives[0].transcript += (
-            " " + response.results.alternatives[0].transcript
+    def _yieldAudioSegmentsInStream(self, request, audio, chunkSize, chunkDuration):
+        messages = self._addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
+        for n, message in enumerate(messages):
+            getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
+            logger.debug(f"Sending stream message {n} of {len(messages)-1}")
+            yield message
+            pause.until(getUpTime)
+
+    def _setChunkSize(self, batchMode: bool) -> int:
+        if batchMode:
+            return 0
+        else:
+            return _DEFAULT_CHUNK_SIZE
+
+    def _addAudioSegmentsToStreamingRequest(self, request, audio, chunkSize):
+        for chunk in self._chunk_audio(audio=audio, chunkSize=chunkSize):
+            if chunk != []:
+                request.append(StreamingRecognizeRequest(audio=chunk))
+        return request
+
+    def _runWorkerQuery(
+        self,
+        audio: bytes,
+        sampleRateHz: int,
+        sampleWidth: int,
+        language: Language,
+        useFormat: bool,
+        queryID: int,
+        batchMode: bool,
+    ) -> bytes:
+        audioDuration = self._calculateTotalDuration(audio, sampleRateHz, sampleWidth)
+        request = self._createStreamingRequests(
+            audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
         )
-    return responses[0].SerializeToString()
+        logger.info(
+            f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
+        )
+        try:
+            responses = list(
+                _workerStubSingleton.StreamingRecognize(
+                    iter(request),
+                    metadata=(("accept-language", language.value),),
+                    timeout=5 * audioDuration,
+                )
+            )
 
+        except Exception as e:
+            logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
+            return b""
+        for response in responses[1:]:
+            responses[0].results.alternatives[0].transcript += (
+                " " + response.results.alternatives[0].transcript
+            )
+        return responses[0].SerializeToString()
 
-def _calculateTotalDuration(audio: bytes, sampleRateHz: int, sampleWidth: int) -> int:
-    audioDuration = len(audio) / (sampleWidth * sampleRateHz)
-    return audioDuration
+    def _calculateTotalDuration(
+        self, audio: bytes, sampleRateHz: int, sampleWidth: int
+    ) -> int:
+        audioDuration = len(audio) / (sampleWidth * sampleRateHz)
+        return audioDuration
 
 
 def _parseArguments() -> argparse.Namespace:
@@ -436,11 +433,13 @@ if __name__ == "__main__":
     configureLogger(args.verbose)
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
-    responses = _process(args)
-    logger.debug(f"Returned responses: {_repr(responses)}")
+    StreamingClient()._process(args)
+    logger.debug(
+        f"Returned responses: {StreamingClient()._repr(StreamingClient().listStreamingRecognizeResponses)}"
+    )
 
     if args.json:
         print("> Messages:")
-        for r in responses:
+        for r in StreamingClient().listStreamingRecognizeResponses:
             print(MessageToJson(r))
         print("< messages finished")
