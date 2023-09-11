@@ -5,7 +5,7 @@ from .recognizer_service_test_case import RecognizerServiceTestCase
 class TestStereoFile(RecognizerServiceTestCase):
     def testStereoFileTwoSpeakers(self):
         responseIterator = self.request("stereo-en_US.wav", "en-US")
-        response = self.mergeAllResponsesIntoOne(responseIterator)
+        response = RecognizerServiceTestCase.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectNotEmptyTranscription(response)
         # the audio has 20 words in one channel and 30 words in the other channel aprox.
@@ -15,7 +15,7 @@ class TestStereoFile(RecognizerServiceTestCase):
         responseIterator = self.request(
             "0e4b2dbd-95c4-4070-ae6d-e79236e73afb_cut.wav", "en-US"
         )
-        response = self.mergeAllResponsesIntoOne(responseIterator)
+        response = RecognizerServiceTestCase.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         self.expectValidConfidence(response.results.alternatives[0].confidence)
         self.expectDuration(response.results.duration, seconds=3, nanos=920000000)
