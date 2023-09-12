@@ -198,7 +198,7 @@ def _getTrnHypothesis(response: bytes, audio_path: str) -> str:
     filename = re.sub(r"(.*)\.wav$", r"\1", audio_path)
     recognizeResponse = StreamingRecognizeResponse.FromString(response)
     if len(recognizeResponse.results.alternatives) > 0:
-        return f"{recognizeResponse.results.alternatives[0].transcript} ({filename})"
+        return f"{recognizeResponse.results.alternatives[0].transcript.strip()} ({filename})"
     else:
         return f" ({filename})"
 
@@ -307,18 +307,22 @@ def _runWorkerQuery(
         f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
     )
     try:
-        response = list(
+        responses = list(
             _workerStubSingleton.StreamingRecognize(
                 iter(request),
                 metadata=(("accept-language", language.value),),
-                timeout=5 * audioDuration,
+                timeout=20 * audioDuration,
             )
         )
 
     except Exception as e:
         logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         return b""
-    return response[0].SerializeToString()
+    for response in responses[1:]:
+        responses[0].results.alternatives[0].transcript += (
+            " " + response.results.alternatives[0].transcript
+        )
+    return responses[0].SerializeToString()
 
 
 def _calculateTotalDuration(audio: bytes, sampleRateHz: int, sampleWidth: int) -> int:

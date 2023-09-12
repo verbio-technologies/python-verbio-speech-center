@@ -1,5 +1,7 @@
 import toml
 import grpc
+import toml
+import asyncio
 from loguru import logger
 from typing import Dict, AsyncIterator, Union
 
@@ -40,10 +42,9 @@ class RecognizerService(RecognizerServicer):
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
         handler = EventHandler(self._language, self._engine, context)
+        listenerTask = asyncio.create_task(handler.listenForTranscription())
         async for request in request_iterator:
-            await handler.source(request)
-        transcriptionResult = await handler.handle()
-        results = handler.sink(transcriptionResult)
-        logger.info(f"Recognition result: '{results.alternatives[0].transcript}'")
-        yield StreamingRecognizeResponse(results=results)
+            await handler.processStreamingRequest(request)
+        await handler.notifyEndOfAudio()
+        await listenerTask
         return

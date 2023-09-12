@@ -1,6 +1,7 @@
 [global]
 language="pt-BR"
 workers = 0
+decoding_type = "LOCAL"
 lm_algorithm = "kenlm"
 lm_weight = "1.0"
 word_score = "-0.25422"

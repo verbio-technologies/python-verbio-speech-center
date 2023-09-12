@@ -104,7 +104,8 @@ functional-testing:long-audios:
     - pip install .[server,gpu,test]
   script:
     - export W2V_GPU=true
-    - pytest tests/functional/test_long_files.py --verbose --capture=no
+    - pytest tests/functional/test_streaming_requests.py --verbose
+    - pytest tests/functional/test_long_files.py --verbose
 
 
 functional-testing:e2e:
