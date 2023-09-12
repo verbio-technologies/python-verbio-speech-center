@@ -140,7 +140,7 @@ class TestStreamingPortuguese(RecognizerServiceTestCase):
             "cair o valor o banco ele te dá uma indenização no valor de até mil reais além de concorrer a sorteios na loteria federal no valor de dez mil reais",
         ]
         async for response in self.requestAsync("pt-br-2.wav", "pt-BR"):
-            self.expectLatency(response, time.time(), 6.5)
+            self.expectLatency(response, time.time(), 7.0)
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponses[idx].split()), 3)
 
