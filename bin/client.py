@@ -73,76 +73,6 @@ class StreamingClient:
             )
         )
 
-    def _getMetrics(self, args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
-        logger.info("Running evaluation.")
-        if not os.path.exists(args.output):
-            os.makedirs(args.output)
-        popenArgs = [
-            "python3",
-            (run_evaluator.__file__),
-            "--hypothesis",
-            self._generateTrnHypothesisFile(args, trnHypothesis),
-            "--reference",
-            self._generateTrnReferencesFile(args),
-            "--output",
-            args.output,
-            "--language",
-            args.language,
-            "--encoding",
-            _ENCODING,
-            "--test_id",
-            "test_" + args.language,
-        ]
-        Popen(
-            popenArgs,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-            universal_newlines=True,
-        )
-
-        logger.info("You can find the files of results in path: " + args.output)
-
-    def _generateTrnReferencesFile(self, args: argparse.Namespace) -> str:
-        if args.gui:
-            trnReferences = self._getTrnReferences(args.gui)
-        else:
-            trnReferences = []
-            referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
-            trnReferences.append(
-                open(referenceFile, "r").read().replace("\n", " ")
-                + " ("
-                + referenceFile.replace(".txt", "")
-                + ")"
-            )
-            trnReferences.append("")
-        trnReferencesFile = os.path.join(args.output, "trnReferences.trn")
-        with open(trnReferencesFile, "w") as r:
-            r.write("\n".join(trnReferences))
-        return trnReferencesFile
-
-    def _generateTrnHypothesisFile(
-        self, args: argparse.Namespace, trnHypothesis: List[str]
-    ) -> str:
-        trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
-        with open(trnHypothesisFile, "w") as h:
-            h.write("\n".join(trnHypothesis))
-        return trnHypothesisFile
-
-    def _getTrnReferences(self, gui: str) -> List[str]:
-        trnReferences = []
-        for line in open(gui).read().split("\n"):
-            referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", line)
-            if line != "":
-                try:
-                    reference = open(referenceFile, "r").read().replace("\n", " ")
-                except:
-                    raise FileNotFoundError(f"Reference file not found.")
-                trnReferences.append(
-                    reference + " (" + referenceFile.replace(".txt", "") + ")"
-                )
-        trnReferences.append("")
-        return trnReferences
-
     def _inferenceProcess(
         self, args: argparse.Namespace
     ) -> List[StreamingRecognizeResponse]:
@@ -330,6 +260,80 @@ class StreamingClient:
         return audioDuration
 
 
+def getMetrics(args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
+    logger.info("Running evaluation.")
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+    popenArgs = [
+        "python3",
+        (run_evaluator.__file__),
+        "--hypothesis",
+        generateTrnHypothesisFile(args, trnHypothesis),
+        "--reference",
+        generateTrnReferencesFile(args),
+        "--output",
+        args.output,
+        "--language",
+        args.language,
+        "--encoding",
+        _ENCODING,
+        "--test_id",
+        "test_" + args.language,
+    ]
+    Popen(
+        popenArgs,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        universal_newlines=True,
+    )
+
+    logger.info("You can find the files of results in path: " + args.output)
+
+
+def generateTrnReferencesFile(args: argparse.Namespace) -> str:
+    if args.gui:
+        trnReferences = getTrnReferences(args.gui)
+    else:
+        trnReferences = []
+        referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
+        trnReferences.append(
+            open(referenceFile, "r").read().replace("\n", " ")
+            + " ("
+            + referenceFile.replace(".txt", "")
+            + ")"
+        )
+        trnReferences.append("")
+    trnReferencesFile = os.path.join(args.output, "trnReferences.trn")
+    with open(trnReferencesFile, "w") as r:
+        r.write("\n".join(trnReferences))
+    return trnReferencesFile
+
+
+def generateTrnHypothesisFile(
+    args: argparse.Namespace, trnHypothesis: List[str]
+) -> str:
+    trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
+    with open(trnHypothesisFile, "w") as h:
+        h.write("\n".join(trnHypothesis))
+    return trnHypothesisFile
+
+
+def getTrnReferences(gui: str) -> List[str]:
+    trnReferences = []
+    for line in open(gui).read().split("\n"):
+        referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", line)
+        if line != "":
+            try:
+                reference = open(referenceFile, "r").read().replace("\n", " ")
+            except:
+                raise FileNotFoundError(f"Reference file not found.")
+            trnReferences.append(
+                reference + " (" + referenceFile.replace(".txt", "") + ")"
+            )
+    trnReferences.append("")
+    return trnReferences
+
+
 def _parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A Speech Recognition client.")
     parser.add_argument(
@@ -440,7 +444,7 @@ if __name__ == "__main__":
     logger.debug(f"Returned responses: {StreamingClient()._repr(responses)}")
 
     if args.metrics:
-        StreamingClient()._getMetrics(args, trnHypothesis)
+        getMetrics(args, trnHypothesis)
 
     if args.json:
         print("> Messages:")
