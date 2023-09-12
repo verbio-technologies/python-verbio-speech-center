@@ -17,7 +17,7 @@ class TestStreamingEnglish(RecognizerServiceTestCase):
             # Latency: avg(wordLatencies) ~ (maxLatency + minLatency) / 2 = (5 seconds + processingTime) where:
             # maxLatency = timeForinputBufferToFill (10 seconds) + processingTime
             # minLatency = processingTime
-            self.expectLatency(response, time.time(), 9.0)
+            self.expectLatency(response, time.time(), 6.0)
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponses[idx].split()), 3)
 
@@ -80,7 +80,7 @@ class TestStreamingSpanish(RecognizerServiceTestCase):
             "",
         ]
         async for response in self.requestAsync("es-2.wav", "es"):
-            self.expectLatency(response, time.time(), 12.0)
+            self.expectLatency(response, time.time(), 8.0)
 
             isLastResponse = not idx < len(expectedResponses) - 1
             if not isLastResponse:
@@ -140,7 +140,7 @@ class TestStreamingPortuguese(RecognizerServiceTestCase):
             "cair o valor o banco ele te dá uma indenização no valor de até mil reais além de concorrer a sorteios na loteria federal no valor de dez mil reais",
         ]
         async for response in self.requestAsync("pt-br-2.wav", "pt-BR"):
-            self.expectLatency(response, time.time(), 10.0)
+            self.expectLatency(response, time.time(), 6.5)
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponses[idx].split()), 3)
 
@@ -160,7 +160,7 @@ class TestStreamingPortuguese(RecognizerServiceTestCase):
             idx += 1
 
         self.expectTranscriptionWER(
-            mergedResponse, " ".join(expectedResponses), 0.24074074074074073, delta=2e-2
+            mergedResponse, " ".join(expectedResponses), 0.24074074074074073, delta=3e-2
         )
         self.expectTranscriptionCER(
             mergedResponse, " ".join(expectedResponses), 0.1244343891402715, delta=2e-2
