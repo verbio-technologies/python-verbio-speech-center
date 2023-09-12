@@ -43,7 +43,7 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 _ENCODING = "utf-8"
-_DEFAULT_CHUNK_SIZE = 2_000
+_DEFAULT_CHUNK_SIZE = 20_000
 
 
 class StreamingClient:
@@ -153,15 +153,9 @@ class StreamingClient:
 
         self._initializeWorker(args.host)
 
-        #workerPool = multiprocessing.Pool(
-        #    processes=args.jobs,
-        #    initializer=self._initializeWorker,
-        #    initargs=(args.host,),
-        #)
-
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self._getAudio(audioPath)
-            response = await asyncio.gather(
+            _, response = await asyncio.gather(
                 self._runWorkerQuery(audio,
                                      sampleRateHz,
                                      sampleWidth,
@@ -232,7 +226,7 @@ class StreamingClient:
         global _workerChannelSingleton  # pylint: disable=global-statement
         global _workerStubSingleton  # pylint: disable=global-statement
         logger.info("Initializing worker process.")
-        _workerChannelSingleton = grpc.insecure_channel(
+        _workerChannelSingleton = grpc.aio.insecure_channel(
             serverAddress, options=CHANNEL_OPTIONS
         )
         _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
@@ -319,7 +313,7 @@ class StreamingClient:
 
     async def _readResponse(self) -> str:
         response = []
-        for chunk in self.grpcResponseStream:
+        async for chunk in self.grpcResponseStream:
             logger.debug(" - Read a grpc response")
             if chunk == grpc.aio.EOF:
                 break
