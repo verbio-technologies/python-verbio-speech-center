@@ -58,39 +58,41 @@ class StreamingClient:
             if len(r.results.alternatives) > 0
         ]
 
-    def _process(self, args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
+    def _process(
+        self, args: argparse.Namespace
+    ) -> tuple[List[str], List[StreamingRecognizeResponse]]:
         self._inferenceProcess(args)
         logger.debug(
             "[+] Generating Responses from %d candidates"
             % len(self.listStreamingRecognizeResponses)
         )
-        return list(
+        return self.trnHypothesis, list(
             map(
                 StreamingRecognizeResponse.FromString,
                 self.listStreamingRecognizeResponses,
             )
         )
 
-    def _getMetrics(self, args) -> Popen:
+    def _getMetrics(self, args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
         logger.info("Running evaluation.")
         if not os.path.exists(args.output):
             os.makedirs(args.output)
         popenArgs = [
-                "python3",
-                (run_evaluator.__file__),
-                "--hypothesis",
-                self._generateTrnHypothesisFile(args),
-                "--reference",
-                self._generateTrnReferencesFile(args),
-                "--output",
-                args.output,
-                "--language",
-                args.language,
-                "--encoding",
-                _ENCODING,
-                "--test_id",
-                "test_" + args.language,
-            ]
+            "python3",
+            (run_evaluator.__file__),
+            "--hypothesis",
+            self._generateTrnHypothesisFile(args, trnHypothesis),
+            "--reference",
+            self._generateTrnReferencesFile(args),
+            "--output",
+            args.output,
+            "--language",
+            args.language,
+            "--encoding",
+            _ENCODING,
+            "--test_id",
+            "test_" + args.language,
+        ]
         Popen(
             popenArgs,
             stdout=sys.stdout,
@@ -118,11 +120,13 @@ class StreamingClient:
             r.write("\n".join(trnReferences))
         return trnReferencesFile
 
-    def _generateTrnHypothesisFile(self, args) -> str:
+    def _generateTrnHypothesisFile(
+        self, args: argparse.Namespace, trnHypothesis: List[str]
+    ) -> str:
         trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
         with open(trnHypothesisFile, "w") as h:
-            h.write("\n".join(self.trnHypothesis))
-        return(trnHypothesisFile)
+            h.write("\n".join(trnHypothesis))
+        return trnHypothesisFile
 
     def _getTrnReferences(self, gui: str) -> List[str]:
         trnReferences = []
@@ -432,11 +436,11 @@ if __name__ == "__main__":
     configureLogger(args.verbose)
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
-    responses = StreamingClient()._process(args)
+    trnHypothesis, responses = StreamingClient()._process(args)
     logger.debug(f"Returned responses: {StreamingClient()._repr(responses)}")
 
     if args.metrics:
-        StreamingClient()._getMetrics(args)
+        StreamingClient()._getMetrics(args, trnHypothesis)
 
     if args.json:
         print("> Messages:")
