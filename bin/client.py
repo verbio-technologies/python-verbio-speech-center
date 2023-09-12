@@ -43,13 +43,14 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 _ENCODING = "utf-8"
-_DEFAULT_CHUNK_SIZE = 20_000
+_DEFAULT_CHUNK_SIZE = 2_000
 
 
 class StreamingClient:
     def __init__(self):
         self.listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
         self.trnHypothesis = []
+        self.grpcResponseStream = None
 
     def _repr(self, responses: List[StreamingRecognizeRequest]) -> List[str]:
         return [
@@ -58,10 +59,10 @@ class StreamingClient:
             if len(r.results.alternatives) > 0
         ]
 
-    def _process(
+    async def _process(
         self, args: argparse.Namespace
     ) -> tuple[List[str], List[StreamingRecognizeResponse]]:
-        self._inferenceProcess(args)
+        await self._inferenceProcess(args)
         logger.debug(
             "[+] Generating Responses from %d candidates"
             % len(self.listStreamingRecognizeResponses)
@@ -143,33 +144,34 @@ class StreamingClient:
         trnReferences.append("")
         return trnReferences
 
-    def _inferenceProcess(
+    async def _inferenceProcess(
         self, args: argparse.Namespace
     ) -> List[StreamingRecognizeResponse]:
 
         audios = self._getAudios(args)
         logger.debug("- Read %d files from GUI." % len(audios))
 
-        workerPool = multiprocessing.Pool(
-            processes=args.jobs,
-            initializer=self._initializeWorker,
-            initargs=(args.host,),
-        )
+        self._initializeWorker(args.host)
+
+        #workerPool = multiprocessing.Pool(
+        #    processes=args.jobs,
+        #    initializer=self._initializeWorker,
+        #    initargs=(args.host,),
+        #)
 
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self._getAudio(audioPath)
-            response = workerPool.apply(
-                self._runWorkerQuery,
-                (
-                    audio,
-                    sampleRateHz,
-                    sampleWidth,
-                    Language.parse(args.language),
-                    args.format,
-                    f"{n}/{len(audios)}",
-                    args.batch,
+            response = await asyncio.gather(
+                self._runWorkerQuery(audio,
+                                     sampleRateHz,
+                                     sampleWidth,
+                                     Language.parse(args.language),
+                                     args.format, f"{n}/{len(audios)}",
+                                     args.batch
                 ),
+                self._readResponse()
             )
+            print("Response:",response)
             self.listStreamingRecognizeResponses.append(response)
             self.trnHypothesis.append(self._getTrnHypothesis(response, audioPath))
 
@@ -238,8 +240,8 @@ class StreamingClient:
 
     def _shutdownWorker(self):
         logger.info("Shutting worker process down.")
-        if _workerChannelSingleton is not None:
-            _workerStubSingleton.stop()
+        # if _workerChannelSingleton is not None:
+        #    _workerStubSingleton.stop()
 
     def _createStreamingRequests(
         self,
@@ -288,7 +290,7 @@ class StreamingClient:
                 request.append(StreamingRecognizeRequest(audio=chunk))
         return request
 
-    def _runWorkerQuery(
+    async def _runWorkerQuery(
         self,
         audio: bytes,
         sampleRateHz: int,
@@ -297,7 +299,7 @@ class StreamingClient:
         useFormat: bool,
         queryID: int,
         batchMode: bool,
-    ) -> bytes:
+    ):
         audioDuration = self._calculateTotalDuration(audio, sampleRateHz, sampleWidth)
         request = self._createStreamingRequests(
             audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
@@ -306,22 +308,23 @@ class StreamingClient:
             f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
         )
         try:
-            responses = list(
-                _workerStubSingleton.StreamingRecognize(
+            self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
                     iter(request),
                     metadata=(("accept-language", language.value),),
                     timeout=5 * audioDuration,
                 )
-            )
-
         except Exception as e:
+            print(e)
             logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
-            return b""
-        for response in responses[1:]:
-            responses[0].results.alternatives[0].transcript += (
-                " " + response.results.alternatives[0].transcript
-            )
-        return responses[0].SerializeToString()
+
+    async def _readResponse(self) -> str:
+        response = []
+        for chunk in self.grpcResponseStream:
+            logger.debug(" - Read a grpc response")
+            if chunk == grpc.aio.EOF:
+                break
+            response.append(chunk.results.alternatives[0].transcript)
+        return " ".join(response)
 
     def _calculateTotalDuration(
         self, audio: bytes, sampleRateHz: int, sampleWidth: int
@@ -436,7 +439,7 @@ if __name__ == "__main__":
     configureLogger(args.verbose)
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
-    trnHypothesis, responses = StreamingClient()._process(args)
+    trnHypothesis, responses = asyncio.run(StreamingClient()._process(args))
     logger.debug(f"Returned responses: {StreamingClient()._repr(responses)}")
 
     if args.metrics:
