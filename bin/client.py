@@ -100,9 +100,8 @@ class StreamingClient:
         logger.info("You can find the files of results in path: " + args.output)
 
     def _generateTrnReferencesFile(self, args: argparse.Namespace) -> str:
-        trnReferences = []
         if args.gui:
-            self._getTrnReferences(args.gui)
+            trnReferences = self._getTrnReferences(args.gui)
         else:
             referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
             trnReferences.append(
@@ -122,7 +121,8 @@ class StreamingClient:
         with open(trnHypothesisFile, "w") as h:
             h.write("\n".join(self.trnHypothesis))
 
-    def _getTrnReferences(self, gui: str):
+    def _getTrnReferences(self, gui: str) -> List[str]:
+        trnReferences = []
         for line in open(gui).read().split("\n"):
             referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", line)
             if line != "":
@@ -130,10 +130,11 @@ class StreamingClient:
                     reference = open(referenceFile, "r").read().replace("\n", " ")
                 except:
                     raise FileNotFoundError(f"Reference file not found.")
-                self.trnReferences.append(
+                trnReferences.append(
                     reference + " (" + referenceFile.replace(".txt", "") + ")"
                 )
-        self.trnReferences.append("")
+        trnReferences.append("")
+        return trnReferences
 
     def _inferenceProcess(
         self, args: argparse.Namespace
