@@ -76,21 +76,21 @@ class StreamingClient:
         if not os.path.exists(args.output):
             os.makedirs(args.output)
         popenArgs = [
-                "python3",
-                (run_evaluator.__file__),
-                "--hypothesis",
-                self._generateTrnHypothesisFile(args),
-                "--reference",
-                self._generateTrnReferencesFile(args),
-                "--output",
-                args.output,
-                "--language",
-                args.language,
-                "--encoding",
-                _ENCODING,
-                "--test_id",
-                "test_" + args.language,
-            ]
+            "python3",
+            (run_evaluator.__file__),
+            "--hypothesis",
+            self._generateTrnHypothesisFile(args),
+            "--reference",
+            self._generateTrnReferencesFile(args),
+            "--output",
+            args.output,
+            "--language",
+            args.language,
+            "--encoding",
+            _ENCODING,
+            "--test_id",
+            "test_" + args.language,
+        ]
         Popen(
             popenArgs,
             stdout=sys.stdout,
@@ -122,7 +122,7 @@ class StreamingClient:
         trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
         with open(trnHypothesisFile, "w") as h:
             h.write("\n".join(self.trnHypothesis))
-        return(trnHypothesisFile)
+        return trnHypothesisFile
 
     def _getTrnReferences(self, gui: str) -> List[str]:
         trnReferences = []
