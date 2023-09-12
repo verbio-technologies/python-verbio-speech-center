@@ -243,7 +243,6 @@ class RecognizerServiceTestCase(unittest.IsolatedAsyncioTestCase):
                 )
         if responseLatency:
             responseLatency /= len(response.results.alternatives[0].words)
-        print(responseLatency)
         self.assertLessEqual(responseLatency, expectedLatency)
 
     def request(
