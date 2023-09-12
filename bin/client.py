@@ -432,7 +432,7 @@ if __name__ == "__main__":
     logger.debug(f"Returned responses: {StreamingClient()._repr(responses)}")
 
     if args.metrics:
-        StreamingClient()._getMetrics()
+        StreamingClient()._getMetrics(args)
 
     if args.json:
         print("> Messages:")
