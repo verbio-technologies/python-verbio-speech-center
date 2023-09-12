@@ -75,8 +75,7 @@ class StreamingClient:
         logger.info("Running evaluation.")
         if not os.path.exists(args.output):
             os.makedirs(args.output)
-        Popen(
-            [
+        popenArgs = [
                 "python3",
                 (run_evaluator.__file__),
                 "--hypothesis",
@@ -90,8 +89,10 @@ class StreamingClient:
                 "--encoding",
                 _ENCODING,
                 "--test_id",
-                id,
-            ],
+                "test_" + args.language,
+            ]
+        Popen(
+            popenArgs,
             stdout=sys.stdout,
             stderr=sys.stderr,
             universal_newlines=True,
@@ -103,6 +104,7 @@ class StreamingClient:
         if args.gui:
             trnReferences = self._getTrnReferences(args.gui)
         else:
+            trnReferences = []
             referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
             trnReferences.append(
                 open(referenceFile, "r").read().replace("\n", " ")
@@ -113,13 +115,14 @@ class StreamingClient:
             trnReferences.append("")
         trnReferencesFile = os.path.join(args.output, "trnReferences.trn")
         with open(trnReferencesFile, "w") as r:
-            r.write("\n".join(self.trnReferences))
+            r.write("\n".join(trnReferences))
         return trnReferencesFile
 
     def _generateTrnHypothesisFile(self, args) -> str:
         trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
         with open(trnHypothesisFile, "w") as h:
             h.write("\n".join(self.trnHypothesis))
+        return(trnHypothesisFile)
 
     def _getTrnReferences(self, gui: str) -> List[str]:
         trnReferences = []
