@@ -58,7 +58,7 @@ class StreamingClient:
             if len(r.results.alternatives) > 0
         ]
 
-    def _process(self, args: argparse.Namespace) -> None:
+    def _process(self, args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
         self._inferenceProcess(args)
         if args.metrics:
             if args.gui:
@@ -433,10 +433,8 @@ if __name__ == "__main__":
     configureLogger(args.verbose)
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
-    StreamingClient()._process(args)
-    logger.debug(
-        f"Returned responses: {StreamingClient()._repr(StreamingClient().listStreamingRecognizeResponses)}"
-    )
+    responses = StreamingClient()._process(args)
+    logger.debug(f"Returned responses: {StreamingClient()._repr(responses)}")
 
     if args.json:
         print("> Messages:")
