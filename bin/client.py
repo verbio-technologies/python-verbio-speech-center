@@ -49,7 +49,7 @@ _DEFAULT_CHUNK_SIZE = 20_000
 class StreamingClient:
     def __init__(self):
         self.listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
-        self.trnHypothesis = []
+        self.trnHypothesis: List[str] = []
 
     def _repr(self, responses: List[StreamingRecognizeRequest]) -> List[str]:
         return [
@@ -107,7 +107,7 @@ class StreamingClient:
         logger.debug(f'[-] TRN Hypothesis: "{self.trnHypothesis}')
         return
 
-    def _getAudios(self, args):
+    def _getAudios(self, args: argparse.Namespace):
         audios = []
         if args.gui:
             audios = self._getAudiosList(args.gui)
@@ -198,7 +198,13 @@ class StreamingClient:
             request, audio, chunkSize, chunkDuration
         )
 
-    def _yieldAudioSegmentsInStream(self, request, audio, chunkSize, chunkDuration):
+    def _yieldAudioSegmentsInStream(
+        self,
+        request: StreamingRecognizeRequest,
+        audio: bytes,
+        chunkSize: int,
+        chunkDuration: float,
+    ):
         messages = self._addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
         for n, message in enumerate(messages):
             getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
@@ -212,7 +218,9 @@ class StreamingClient:
         else:
             return _DEFAULT_CHUNK_SIZE
 
-    def _addAudioSegmentsToStreamingRequest(self, request, audio, chunkSize):
+    def _addAudioSegmentsToStreamingRequest(
+        self, request: StreamingRecognizeRequest, audio: bytes, chunkSize: int
+    ):
         for chunk in self._chunk_audio(audio=audio, chunkSize=chunkSize):
             if chunk != []:
                 request.append(StreamingRecognizeRequest(audio=chunk))
