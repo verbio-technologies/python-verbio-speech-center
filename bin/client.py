@@ -438,6 +438,6 @@ if __name__ == "__main__":
 
     if args.json:
         print("> Messages:")
-        for r in StreamingClient().listStreamingRecognizeResponses:
+        for r in responses:
             print(MessageToJson(r))
         print("< messages finished")
