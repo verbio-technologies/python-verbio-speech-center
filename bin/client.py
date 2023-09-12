@@ -67,12 +67,13 @@ class StreamingClient:
             "[+] Generating Responses from %d candidates"
             % len(self.listStreamingRecognizeResponses)
         )
-        return self.trnHypothesis, list(
-            map(
-                StreamingRecognizeResponse.FromString,
-                self.listStreamingRecognizeResponses,
-            )
-        )
+        # return self.trnHypothesis, list(
+        #     map(
+        #         StreamingRecognizeResponse.FromString,
+        #         self.listStreamingRecognizeResponses,
+        #     )
+        # )
+        return self.trnHypothesis, self.listStreamingRecognizeResponses,
 
     def _getMetrics(self, args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
         logger.info("Running evaluation.")
@@ -147,7 +148,7 @@ class StreamingClient:
     async def _inferenceProcess(
         self, args: argparse.Namespace
     ) -> List[StreamingRecognizeResponse]:
-
+        responses = []
         audios = self._getAudios(args)
         logger.debug("- Read %d files from GUI." % len(audios))
 
@@ -165,13 +166,14 @@ class StreamingClient:
                 ),
                 self._readResponse()
             )
-            print("Response:",response)
+            print("Response:",type(response), response)
             self.listStreamingRecognizeResponses.append(response)
             self.trnHypothesis.append(self._getTrnHypothesis(response, audioPath))
+            responses.append(response)
 
-        self.trnHypothesis.append("")
+        # self.trnHypothesis.append("")
         logger.debug(f'[-] TRN Hypothesis: "{self.trnHypothesis}')
-        return
+        return responses
 
     def _getAudios(self, args):
         audios = []
@@ -197,7 +199,8 @@ class StreamingClient:
 
     def _getTrnHypothesis(self, response: bytes, audioPath: str) -> str:
         filename = re.sub(r"(.*)\.wav$", r"\1", audioPath)
-        recognizeResponse = StreamingRecognizeResponse.FromString(response)
+        # recognizeResponse = StreamingRecognizeResponse.FromString(response)
+        recognizeResponse = response
         if len(recognizeResponse.results.alternatives) > 0:
             return f"{recognizeResponse.results.alternatives[0].transcript.strip()} ({filename})"
         else:
@@ -311,14 +314,15 @@ class StreamingClient:
             print(e)
             logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
 
-    async def _readResponse(self) -> str:
+    async def _readResponse(self) -> bytes:
         response = []
         async for chunk in self.grpcResponseStream:
             logger.debug(" - Read a grpc response")
             if chunk == grpc.aio.EOF:
                 break
+            response.append(chunk)
             response.append(chunk.results.alternatives[0].transcript)
-        return " ".join(response)
+        return response[0]
 
     def _calculateTotalDuration(
         self, audio: bytes, sampleRateHz: int, sampleWidth: int
