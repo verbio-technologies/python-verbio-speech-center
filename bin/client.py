@@ -322,6 +322,7 @@ class StreamingClient:
                 break
             response.append(chunk)
             response.append(chunk.results.alternatives[0].transcript)
+            logger.debug("  > ",chunk)
         return response[0]
 
     def _calculateTotalDuration(
