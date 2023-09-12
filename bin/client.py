@@ -6,12 +6,13 @@ import argparse, pause, re, os, sys, time
 from datetime import datetime, timedelta
 import multiprocessing
 import numpy as np
+import asyncio
 
 from google.protobuf.json_format import MessageToJson
 from subprocess import Popen, PIPE
 from examples import run_evaluator
 
-from typing import List
+from typing import List, AsyncIterator
 
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import StreamingRecognizeRequest
@@ -48,8 +49,7 @@ _DEFAULT_CHUNK_SIZE = 20_000
 class StreamingClient:
     def __init__(self):
         self.listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
-        self.trnHypothesis: List[str] = []
-        self.trnReferences: List[str] = []
+        self.trnHypothesis = []
 
     def _repr(self, responses: List[StreamingRecognizeRequest]) -> List[str]:
         return [
@@ -60,25 +60,6 @@ class StreamingClient:
 
     def _process(self, args: argparse.Namespace) -> List[StreamingRecognizeResponse]:
         self._inferenceProcess(args)
-        if args.metrics:
-            if args.gui:
-                self._getTrnReferences(args.gui)
-            else:
-                referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
-                self.trnReferences.append(
-                    open(referenceFile, "r").read().replace("\n", " ")
-                    + " ("
-                    + referenceFile.replace(".txt", "")
-                    + ")"
-                )
-                self.trnReferences.append("")
-            self._getMetrics(
-                args.output,
-                "test_" + args.language,
-                _ENCODING,
-                args.language,
-            )
-
         logger.debug(
             "[+] Generating Responses from %d candidates"
             % len(self.listStreamingRecognizeResponses)
@@ -90,38 +71,24 @@ class StreamingClient:
             )
         )
 
-    def _getMetrics(
-        self,
-        outputDir: str,
-        id: str,
-        encoding: str,
-        language: str,
-    ) -> Popen:
+    def _getMetrics(self, args) -> Popen:
         logger.info("Running evaluation.")
-
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-        trnHypothesisFile = os.path.join(outputDir, "trnHypothesis.trn")
-        trnReferencesFile = os.path.join(outputDir, "trnReferences.trn")
-        with open(trnHypothesisFile, "w") as h:
-            h.write("\n".join(self.trnHypothesis))
-        with open(trnReferencesFile, "w") as r:
-            r.write("\n".join(self.trnReferences))
-
+        if not os.path.exists(args.output):
+            os.makedirs(args.output)
         Popen(
             [
                 "python3",
                 (run_evaluator.__file__),
                 "--hypothesis",
-                trnHypothesisFile,
+                self._generateTrnHypothesisFile(args),
                 "--reference",
-                trnReferencesFile,
+                self._generateTrnReferencesFile(args),
                 "--output",
-                outputDir,
+                args.output,
                 "--language",
-                language,
+                args.language,
                 "--encoding",
-                encoding,
+                _ENCODING,
                 "--test_id",
                 id,
             ],
@@ -130,7 +97,30 @@ class StreamingClient:
             universal_newlines=True,
         )
 
-        logger.info("You can find the files of results in path: " + outputDir)
+        logger.info("You can find the files of results in path: " + args.output)
+
+    def _generateTrnReferencesFile(self, args: argparse.Namespace) -> str:
+        trnReferences = []
+        if args.gui:
+            self._getTrnReferences(args.gui)
+        else:
+            referenceFile = re.sub(r"(.*)\.wav$", r"\1.txt", args.audio)
+            trnReferences.append(
+                open(referenceFile, "r").read().replace("\n", " ")
+                + " ("
+                + referenceFile.replace(".txt", "")
+                + ")"
+            )
+            trnReferences.append("")
+        trnReferencesFile = os.path.join(args.output, "trnReferences.trn")
+        with open(trnReferencesFile, "w") as r:
+            r.write("\n".join(self.trnReferences))
+        return trnReferencesFile
+
+    def _generateTrnHypothesisFile(self, args) -> str:
+        trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
+        with open(trnHypothesisFile, "w") as h:
+            h.write("\n".join(self.trnHypothesis))
 
     def _getTrnReferences(self, gui: str):
         for line in open(gui).read().split("\n"):
@@ -148,12 +138,8 @@ class StreamingClient:
     def _inferenceProcess(
         self, args: argparse.Namespace
     ) -> List[StreamingRecognizeResponse]:
-        audios = []
 
-        if args.gui:
-            audios = self._getAudiosList(args.gui)
-        else:
-            audios.append(args.audio)
+        audios = self._getAudios(args)
         logger.debug("- Read %d files from GUI." % len(audios))
 
         workerPool = multiprocessing.Pool(
@@ -161,7 +147,7 @@ class StreamingClient:
             initializer=self._initializeWorker,
             initargs=(args.host,),
         )
-        length = len(audios)
+
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self._getAudio(audioPath)
             response = workerPool.apply(
@@ -172,7 +158,7 @@ class StreamingClient:
                     sampleWidth,
                     Language.parse(args.language),
                     args.format,
-                    f"{n}/{length}",
+                    f"{n}/{len(audios)}",
                     args.batch,
                 ),
             )
@@ -181,6 +167,15 @@ class StreamingClient:
 
         self.trnHypothesis.append("")
         logger.debug(f'[-] TRN Hypothesis: "{self.trnHypothesis}')
+        return
+
+    def _getAudios(self, args):
+        audios = []
+        if args.gui:
+            audios = self._getAudiosList(args.gui)
+        else:
+            audios.append(args.audio)
+        return audios
 
     def _chunk_audio(self, audio: bytes, chunkSize: int):
         if not audio:
@@ -435,6 +430,9 @@ if __name__ == "__main__":
         raise ValueError(f"Invalid language '{args.language}'")
     responses = StreamingClient()._process(args)
     logger.debug(f"Returned responses: {StreamingClient()._repr(responses)}")
+
+    if args.metrics:
+        StreamingClient()._getMetrics()
 
     if args.json:
         print("> Messages:")
