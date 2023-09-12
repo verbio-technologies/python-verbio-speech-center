@@ -4,6 +4,7 @@ import wave
 import time
 import toml
 import jiwer
+import pause
 import random
 import logging
 import pytest
@@ -13,7 +14,8 @@ import tempfile
 import multiprocessing
 from grpc import _channel
 from concurrent import futures
-from typing import Optional, Iterator
+from datetime import datetime, timedelta
+from typing import Optional, Iterator, Tuple, List, AsyncIterator
 
 from asr4_streaming.recognizer import Server
 from asr4_streaming.recognizer import RecognizerStub
@@ -30,6 +32,7 @@ from grpc_health.v1.health_pb2 import HealthCheckRequest
 from grpc_health.v1.health_pb2 import HealthCheckResponse
 
 from tests.unit.test_event_handler import streamingRequestIterator
+from tests.unit.test_event_handler import asyncStreamingRequestIterator
 
 
 def initializeTomlConfig(tomlPath: str, **kwargs) -> str:
@@ -45,7 +48,7 @@ def initializeTomlConfig(tomlPath: str, **kwargs) -> str:
 
 
 @pytest.mark.usefixtures("datadir")
-class RecognizerServiceTestCase(unittest.TestCase):
+class RecognizerServiceTestCase(unittest.IsolatedAsyncioTestCase):
     _serverAddress = "localhost:8000"
     _language = "en-us"
     _kwargs = {}
@@ -69,6 +72,8 @@ class RecognizerServiceTestCase(unittest.TestCase):
             daemon=True,
         )
         cls._server.start()
+        cls._audioChunksIndex = 0.0
+        cls._audioChunksLatency = []
 
     @staticmethod
     def runServer(
@@ -116,11 +121,18 @@ class RecognizerServiceTestCase(unittest.TestCase):
         cls._server.join()
         cls._server.close()
         del cls._server
+        del cls._audioChunksIndex
+        del cls._audioChunksLatency
 
     def expectStatus(
         self, response: _channel._MultiThreadedRendezvous, statusCode: grpc.StatusCode
     ):
         self.assertEqual(response.code(), statusCode)
+
+    async def expectAsyncStatus(
+        self, response: _channel._MultiThreadedRendezvous, statusCode: grpc.StatusCode
+    ):
+        self.assertEqual(await response.code(), statusCode)
 
     def expectDetails(self, response: _channel._MultiThreadedRendezvous, details: str):
         self.assertEqual(response.details(), details)
@@ -210,6 +222,30 @@ class RecognizerServiceTestCase(unittest.TestCase):
             self.assertGreater(endTime, startTime)
             self.assertGreaterEqual(audioDuration, endTime)
 
+    def expectLatency(
+        self,
+        response: StreamingRecognizeResponse,
+        responseTime: float,
+        expectedLatency: float,
+    ):
+        responseLatency = 0.0
+        for word in response.results.alternatives[0].words:
+            foundAudioChunk = False
+            endTime = word.end_time.ToTimedelta().total_seconds()
+            for chunk in self._audioChunksLatency:
+                if endTime >= chunk["start"] and endTime <= chunk["end"]:
+                    responseLatency += responseTime - chunk["epoch"]
+                    foundAudioChunk = True
+                    break
+            if not foundAudioChunk:
+                self.fail(
+                    f"Could not relate a word with any audio chunk. [word={word}] [audioChunks={self._audioChunksLatency}]"
+                )
+        if responseLatency:
+            responseLatency /= len(response.results.alternatives[0].words)
+        print(responseLatency)
+        self.assertLessEqual(responseLatency, expectedLatency)
+
     def request(
         self,
         audioPath: str,
@@ -229,6 +265,75 @@ class RecognizerServiceTestCase(unittest.TestCase):
             )
         except Exception as e:
             self.fail(str(e))
+
+    async def requestAsync(
+        self,
+        audioPath: str,
+        language: str,
+    ) -> AsyncIterator[StreamingRecognizeResponse]:
+        self._waitForServer()
+        try:
+            channel = grpc.aio.insecure_channel(self._serverAddress)
+            audioFile = os.path.join(self.datadir, audioPath)
+            responseIterator = RecognizerStub(channel).StreamingRecognize(
+                self.__streamingAsyncRequestIteratorFromAudio(audioFile, language),
+            )
+            async for response in responseIterator:
+                yield response
+            await self.expectAsyncStatus(responseIterator, grpc.StatusCode.OK)
+        except Exception as e:
+            self.fail(str(e))
+
+    @staticmethod
+    def streamingRequestIteratorFromAudio(
+        audioFile: str, language: str, alternativeSampleRate: Optional[int] = None
+    ) -> Iterator[StreamingRecognizeRequest]:
+        audioChunks, sampleRate = RecognizerServiceTestCase.requestsFromAudio(audioFile)
+        yield from streamingRequestIterator(
+            language=language,
+            sampleRate=alternativeSampleRate or sampleRate,
+            audio=audioChunks,
+        )
+
+    async def __streamingAsyncRequestIteratorFromAudio(
+        self,
+        audioFile: str,
+        language: str,
+    ) -> AsyncIterator[StreamingRecognizeRequest]:
+        audioChunks, sampleRate = RecognizerServiceTestCase.requestsFromAudio(audioFile)
+        async for request in asyncStreamingRequestIterator(
+            language=language,
+            sampleRate=sampleRate,
+            audio=audioChunks,
+        ):
+            if request.HasField("audio"):
+                chunkDuration = len(request.audio) / 2 / sampleRate
+                getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
+                self._audioChunksLatency.append(
+                    {
+                        "start": self._audioChunksIndex,
+                        "end": self._audioChunksIndex + chunkDuration,
+                        "epoch": time.time(),
+                    }
+                )
+                self._audioChunksIndex += chunkDuration
+            yield request
+            if request.HasField("audio"):
+                pause.until(getUpTime)
+
+    @staticmethod
+    def requestsFromAudio(audioFile: str) -> Tuple[List[bytes], int]:
+        audioChunks = []
+        with wave.open(audioFile, "rb") as wav:
+            frames = wav.getnframes()
+            sampleRate = wav.getframerate()
+            ms100, ms500 = 0.1 * sampleRate, 0.5 * sampleRate
+            totalRead = 0
+            while totalRead < frames:
+                framesToRead = random.randint(ms100, ms500)
+                audioChunks.append(wav.readframes(framesToRead))
+                totalRead += framesToRead
+            return (audioChunks, sampleRate)
 
     @staticmethod
     def mergeAllResponsesIntoOne(
@@ -257,25 +362,22 @@ class RecognizerServiceTestCase(unittest.TestCase):
         )
 
     @staticmethod
-    def streamingRequestIteratorFromAudio(
-        audioFile: str, language: str, alternativeSampleRate: Optional[int] = None
-    ) -> Iterator[StreamingRecognizeRequest]:
-        audioChunks = []
-        with wave.open(audioFile, "rb") as wav:
-            frames = wav.getnframes()
-            sampleRate = wav.getframerate()
-            ms100, ms500 = 0.1 * sampleRate, 0.5 * sampleRate
-            totalRead = 0
-            while totalRead < frames:
-                framesToRead = random.randint(ms100, ms500)
-                audioChunks.append(wav.readframes(framesToRead))
-                totalRead += framesToRead
-
-            yield from streamingRequestIterator(
-                language=language,
-                sampleRate=alternativeSampleRate or sampleRate,
-                audio=audioChunks,
+    def mergeResponsesIntoOne(
+        mergedResponse: Optional[StreamingRecognizeResponse],
+        response: StreamingRecognizeResponse,
+    ) -> StreamingRecognizeResponse:
+        if not mergedResponse:
+            return response
+        else:
+            mergedResponse.results.end_time.CopyFrom(response.results.end_time)
+            mergedResponse.results.duration.CopyFrom(response.results.end_time)
+            mergedResponse.results.alternatives[0].transcript += (
+                " " + response.results.alternatives[0].transcript
             )
+            mergedResponse.results.alternatives[0].words.extend(
+                response.results.alternatives[0].words
+            )
+            return mergedResponse
 
     def _waitForServer(self):
         response = None
