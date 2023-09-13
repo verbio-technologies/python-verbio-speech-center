@@ -87,7 +87,7 @@ class StreamingClient:
                     audio,
                     sampleRateHz,
                     sampleWidth,
-                    self._language,
+                    Language.parse(self._language),
                     self._format,
                     f"{n}/{len(audios)}",
                     self._batch,
@@ -266,11 +266,11 @@ def getMetrics(args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
         "--output",
         args.output,
         "--language",
-        args.language.value,
+        args.language,
         "--encoding",
         _ENCODING,
         "--test_id",
-        "test_" + args.language.value,
+        "test_" + args.language,
     ]
     Popen(
         popenArgs,
@@ -347,9 +347,9 @@ def parseArguments() -> argparse.Namespace:
         "-l",
         "--language",
         dest="language",
-        default=Language.EN_US,
+        default=Language.EN_US.value,
         choices=[l.value.lower() for l in Language],
-        type=Language.parse,
+        type=str.lower,
         help="Language of the recognizer service.",
     )
     parser.add_argument(
@@ -424,8 +424,8 @@ def repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
 if __name__ == "__main__":
     args = parseArguments()
     configureLogger(args.verbose)
-    if not args.language:
-        raise ValueError(f"Invalid language")
+    if not Language.check(args.language):
+        raise ValueError(f"Invalid language '{args.language}'")
     trnHypothesis, responses = StreamingClient(args).process()
     logger.debug(f"Returned responses: {repr(responses)}")
 
