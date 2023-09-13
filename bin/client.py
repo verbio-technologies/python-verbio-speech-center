@@ -3,6 +3,7 @@ import re
 import sys
 import grpc
 import wave
+import math
 import pause
 import atexit
 import argparse
@@ -41,6 +42,9 @@ CHANNEL_OPTIONS = [
     ("grpc.keepalive_timeout_ms", 10000),
 ]
 
+_workerChannelSingleton = None
+_workerStubSingleton = None
+
 _ENCODING = "utf-8"
 _DEFAULT_CHUNK_SIZE = 20_000
 
@@ -54,8 +58,6 @@ class StreamingClient:
         self._audio = args.audio
         self._format = args.format
         self._language = args.language
-        self._workerStubSingleton: Optional[RecognizerStub] = None
-        self._workerChannelSingleton: Optional[grpc._channel.Channel] = None
         self._trnHypothesis: List[str] = []
         self._listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
 
@@ -82,7 +84,7 @@ class StreamingClient:
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self.__getAudio(audioPath)
             response = workerPool.apply(
-                self.__runWorkerQuery,
+                self._runWorkerQuery,
                 (
                     audio,
                     sampleRateHz,
@@ -123,19 +125,21 @@ class StreamingClient:
             )
 
     def __initializeWorker(self, serverAddress: str):
+        global _workerChannelSingleton  # pylint: disable=global-statement
+        global _workerStubSingleton  # pylint: disable=global-statement
         logger.trace("Initializing worker process.")
-        self._workerChannelSingleton = grpc.insecure_channel(
+        _workerChannelSingleton = grpc.insecure_channel(
             serverAddress, options=CHANNEL_OPTIONS
         )
-        self._workerStubSingleton = RecognizerStub(self._workerChannelSingleton)
+        _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
         atexit.register(self.__shutdownWorker)
 
     def __shutdownWorker(self):
         logger.info("Shutting worker process down.")
-        if self._workerChannelSingleton is not None:
-            self._workerStubSingleton.stop()
+        if _workerChannelSingleton is not None:
+            _workerStubSingleton.stop()
 
-    def __runWorkerQuery(
+    def _runWorkerQuery(
         self,
         audio: bytes,
         sampleRateHz: int,
@@ -154,16 +158,19 @@ class StreamingClient:
         )
         try:
             responses = list(
-                self._workerStubSingleton.StreamingRecognize(
+                _workerStubSingleton.StreamingRecognize(
                     request,
                     metadata=(("accept-language", language.value),),
                     timeout=20 * audioDuration,
                 )
             )
             response = self.__mergeAllStreamResponsesIntoOne(responses)
-            response.SerializeToString() if response else b""
-        except Exception as e:
+            return response.SerializeToString() if response else b""
+        except grpc.RpcError as e:
             logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
+            return b""
+        except Exception as e:
+            logger.error(f"Error in gRPC Call: {e}")
             return b""
 
     def __createStreamingRequests(
@@ -196,9 +203,10 @@ class StreamingClient:
         chunkDuration: float,
     ) -> Iterator[StreamingRecognizeRequest]:
         messages = self.__getAudioStreamingRequests(audio, chunkSize)
-        for n, message in enumerate(messages):
+        messageNum = math.ceil(len(audio) / chunkSize) if chunkSize else 1
+        for n, message in enumerate(messages, start=1):
             getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
-            logger.debug(f"Sending stream message {n} of {len(messages)-1}")
+            logger.debug(f"Sending stream message {n} of {messageNum}")
             yield message
             pause.until(getUpTime)
 
@@ -397,7 +405,7 @@ def configureLogger(logLevel: str) -> None:
     logger.add(
         sys.stdout,
         level=logLevel,
-        format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
+        format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>] "
         "<level>{message}</level>",
         enqueue=True,
     )
