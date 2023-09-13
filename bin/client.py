@@ -61,7 +61,10 @@ class StreamingClient:
             "[+] Generated Responses for %d audios"
             % len(self.listStreamingRecognizeResponses)
         )
-        return self.trnHypothesis, self.listStreamingRecognizeResponses,
+        return (
+            self.trnHypothesis,
+            self.listStreamingRecognizeResponses,
+        )
 
     def _getMetrics(self, args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
         logger.info("Running evaluation.")
@@ -145,14 +148,16 @@ class StreamingClient:
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self._getAudio(audioPath)
             _, responses = await asyncio.gather(
-                self._runWorkerQuery(audio,
-                                     sampleRateHz,
-                                     sampleWidth,
-                                     Language.parse(args.language),
-                                     args.format, f"{n}/{len(audios)}",
-                                     args.batch
+                self._runWorkerQuery(
+                    audio,
+                    sampleRateHz,
+                    sampleWidth,
+                    Language.parse(args.language),
+                    args.format,
+                    f"{n}/{len(audios)}",
+                    args.batch,
                 ),
-                self._readResponseFromStream()
+                self._readResponseFromStream(),
             )
             response = self.mergeStreamingResults(responses)
             self.listStreamingRecognizeResponses.append(response)
@@ -161,16 +166,20 @@ class StreamingClient:
         logger.debug(f'[-] TRN Hypothesis: "{self.trnHypothesis}')
         return responses
 
-    def mergeStreamingResults(self, chunks: List[StreamingRecognizeResponse]) -> StreamingRecognizeResponse:
-        logger.debug(f'Joining {len(chunks)} partial responses')
+    def mergeStreamingResults(
+        self, chunks: List[StreamingRecognizeResponse]
+    ) -> StreamingRecognizeResponse:
+        logger.debug(f"Joining {len(chunks)} partial responses")
         merged = chunks.pop(0).results
         for chunk in chunks:
-            merged.alternatives[0].transcript += " "+chunk.results.alternatives[0].transcript
+            merged.alternatives[0].transcript += (
+                " " + chunk.results.alternatives[0].transcript
+            )
             for word in chunk.results.alternatives[0].words:
                 merged.alternatives[0].words.append(word)
             merged.end_time.CopyFrom(chunk.results.end_time)
         return merged
-    
+
     def _getAudios(self, args):
         audios = []
         if args.gui:
@@ -193,7 +202,9 @@ class StreamingClient:
                 for i in range(0, len(audio), chunkSize):
                     yield audio[i : i + chunkSize]
 
-    def _getTrnHypothesis(self, response: StreamingRecognitionResult, audioPath: str) -> str:
+    def _getTrnHypothesis(
+        self, response: StreamingRecognitionResult, audioPath: str
+    ) -> str:
         filename = re.sub(r"(.*)\.wav$", r"\1", audioPath)
         if len(response.alternatives) > 0:
             return f"{response.alternatives[0].transcript.strip()} ({filename})"
@@ -298,10 +309,10 @@ class StreamingClient:
         )
         try:
             self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
-                    iter(request),
-                    metadata=(("accept-language", language.value),),
-                    timeout=5 * audioDuration,
-                )
+                iter(request),
+                metadata=(("accept-language", language.value),),
+                timeout=5 * audioDuration,
+            )
         except Exception as e:
             print(e)
             logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
@@ -310,7 +321,9 @@ class StreamingClient:
         response = []
         n = 0
         async for chunk in self.grpcResponseStream:
-            logger.debug(f" - Got stream response {n} > {chunk.results.alternatives[0].transcript}")
+            logger.debug(
+                f" - Got stream response {n} > {chunk.results.alternatives[0].transcript}"
+            )
             response.append(chunk)
             n += 1
         return response
@@ -427,12 +440,14 @@ def configureLogger(logLevel: str) -> None:
         enqueue=True,
     )
 
+
 def _repr(responses: List[StreamingRecognitionResult]) -> List[str]:
     return [
         f'<StreamingRecognitionResult first alternative: "{r.alternatives[0].transcript}">'
         for r in responses
         if len(r.alternatives) > 0
     ]
+
 
 if __name__ == "__main__":
     args = _parseArguments()
@@ -447,7 +462,6 @@ if __name__ == "__main__":
 
     if args.metrics:
         StreamingClient()._getMetrics(args, trnHypothesis)
-
 
     if args.json:
         print("> Messages:")
