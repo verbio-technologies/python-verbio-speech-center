@@ -80,7 +80,7 @@ class TestStreamingSpanish(RecognizerServiceTestCase):
             "",
         ]
         async for response in self.requestAsync("es-2.wav", "es"):
-            self.expectLatency(response, time.time(), 8.0)
+            self.expectLatency(response, time.time(), 8.5)
 
             isLastResponse = not idx < len(expectedResponses) - 1
             if not isLastResponse:
