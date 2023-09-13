@@ -85,7 +85,6 @@ class TestStreamingClient(unittest.TestCase):
             self._client._StreamingClient__getAudio(
                 os.path.join(self.datapath, "en-us.24b.wav")
             )
-        print(context.exception)
         self.assertTrue(
             "en-us.24b.wav should have 2-byte samples instead of 3-byte samples."
             in str(context.exception)
