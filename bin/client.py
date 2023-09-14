@@ -1,30 +1,28 @@
-import argparse
-import asyncio
-import atexit
-import grpc
-import math
-import numpy as np
 import os
 import pause
 import re
 import sys
+import grpc
 import wave
+import pause
+import atexit
+import argparse
+import numpy as np
 from loguru import logger
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Iterator
+from typing import List, Optional, Tuple
 
-import multiprocessing
+import asyncio
 from subprocess import Popen
 from examples import run_evaluator
 from google.protobuf.json_format import MessageToJson
 
 from asr4_streaming.recognizer import RecognizerStub
+from asr4_streaming.recognizer import RecognitionConfig
+from asr4_streaming.recognizer import RecognitionResource
+from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 from asr4_streaming.recognizer import StreamingRecognizeResponse
-from asr4_streaming.recognizer import StreamingRecognitionResult
-from asr4_streaming.recognizer import RecognitionConfig
-from asr4_streaming.recognizer import RecognitionParameters
-from asr4_streaming.recognizer import RecognitionResource
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 
@@ -104,15 +102,15 @@ class StreamingClient:
         self, chunks: List[StreamingRecognizeResponse]
     ) -> StreamingRecognizeResponse:
         logger.debug(f"Joining {len(chunks)} partial responses")
-        merged = chunks.pop(0).results
+        merged = chunks.pop(0)
         for chunk in chunks:
-            merged.alternatives[0].transcript += (
+            merged.results.alternatives[0].transcript += (
                 " " + chunk.results.alternatives[0].transcript
             )
             for word in chunk.results.alternatives[0].words:
-                merged.alternatives[0].words.append(word)
-            merged.end_time.CopyFrom(chunk.results.end_time)
-            merged.duration.CopyFrom(chunk.results.end_time)
+                merged.results.alternatives[0].words.append(word)
+            merged.results.end_time.CopyFrom(chunk.results.end_time)
+            merged.results.duration.CopyFrom(chunk.results.end_time)
         return merged
 
     def __getAudios(self):
@@ -287,11 +285,11 @@ class StreamingClient:
         return None
 
     def __getTrnHypothesis(
-        self, response: StreamingRecognitionResult, audioPath: str
+        self, response: StreamingRecognizeRequest, audioPath: str
     ) -> str:
         filename = re.sub(r"(.*)\.wav$", r"\1", audioPath)
-        if len(response.alternatives) > 0:
-            return f"{response.alternatives[0].transcript.strip()} ({filename})"
+        if len(response.results.alternatives) > 0:
+            return f"{response.results.alternatives[0].transcript.strip()} ({filename})"
         else:
             return f" ({filename})"
 
@@ -473,11 +471,11 @@ def validateLogLevel(logLevel: str) -> str:
     return logLevel
 
 
-def repr(responses: List[StreamingRecognitionResult]) -> List[str]:
+def repr(responses: List[StreamingRecognizeRequest]) -> List[str]:
     return [
-        f'<StreamingRecognitionResult first alternative: "{r.alternatives[0].transcript}">'
+        f'<StreamingRecognizeRequest first alternative: "{r.results.alternatives[0].transcript}">'
         for r in responses
-        if len(r.alternatives) > 0
+        if len(r.results.alternatives) > 0
     ]
 
 
