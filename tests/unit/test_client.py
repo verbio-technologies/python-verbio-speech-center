@@ -34,31 +34,41 @@ class TestStreamingClient(unittest.TestCase):
 
     def testAudioChunking(self):
         audioBytes = b"0123456789"
-        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 3)
+        chunkIterator = self._client._StreamingClient__getAudioStreamingRequests(
+            audioBytes, 3
+        )
         self.assertEqual(
             list(chunkIterator),
             [
-                b"012",
-                b"345",
-                b"678",
-                b"9",
+                StreamingRecognizeRequest(audio=b"012"),
+                StreamingRecognizeRequest(audio=b"345"),
+                StreamingRecognizeRequest(audio=b"678"),
+                StreamingRecognizeRequest(audio=b"9"),
             ],
         )
 
     def testAudioChunking0(self):
         audioBytes = b"0123456789"
-        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 0)
-        self.assertEqual(list(chunkIterator), [audioBytes])
+        chunkIterator = self._client._StreamingClient__getAudioStreamingRequests(
+            audioBytes, 0
+        )
+        self.assertEqual(
+            list(chunkIterator), [StreamingRecognizeRequest(audio=audioBytes)]
+        )
 
     def testAudioChunkingEmpty(self):
         audioBytes = b""
-        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 3)
-        self.assertEqual(list(chunkIterator), [audioBytes])
+        chunkIterator = self._client._StreamingClient__getAudioStreamingRequests(
+            audioBytes, 3
+        )
+        self.assertEqual(list(chunkIterator), [])
 
     def testAudioChunking0EmptyAudio(self):
         audioBytes = b""
-        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 0)
-        self.assertEqual(list(chunkIterator), [audioBytes])
+        chunkIterator = self._client._StreamingClient__getAudioStreamingRequests(
+            audioBytes, 0
+        )
+        self.assertEqual(list(chunkIterator), [])
 
     def testGetAudio(self):
         _audioBytes, rate, width = self._client._StreamingClient__getAudio(

@@ -3,13 +3,13 @@ import re
 import sys
 import grpc
 import wave
+import math
 import pause
-import atexit
 import argparse
 import numpy as np
 from loguru import logger
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Tuple, Iterator
 
 import asyncio
 from subprocess import Popen
@@ -73,7 +73,6 @@ class StreamingClient:
 
     async def __inferenceProcess(self):
         audios = self.__getAudios()
-        logger.debug("- Read %d files from GUI." % len(audios))
         self.__initializeWorker(self._host)
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self.__getAudio(audioPath)
@@ -89,35 +88,14 @@ class StreamingClient:
                 ),
                 self._readResponseFromStream(),
             )
-            response = self.mergeStreamingResults(responses)
+            response = self.__mergeAllStreamResponsesIntoOne(responses)
             self._listStreamingRecognizeResponses.append(response)
             self._trnHypothesis.append(self.__getTrnHypothesis(response, audioPath))
         logger.debug(f'[-] TRN Hypothesis: "{self._trnHypothesis}')
 
-    def mergeStreamingResults(
-        self, chunks: List[StreamingRecognizeResponse]
-    ) -> StreamingRecognizeResponse:
-        if chunks:
-            logger.debug(f"Joining {len(chunks)} partial responses")
-            merged = chunks.pop(0)
-            for chunk in chunks:
-                merged.results.alternatives[0].transcript += (
-                    " " + chunk.results.alternatives[0].transcript
-                )
-                for word in chunk.results.alternatives[0].words:
-                    merged.results.alternatives[0].words.append(word)
-                merged.results.end_time.CopyFrom(chunk.results.end_time)
-                merged.results.duration.CopyFrom(chunk.results.end_time)
-            return merged
-        return StreamingRecognizeResponse()
-
-    def __getAudios(self):
-        audios = []
-        if self._gui:
-            audios = self.__getAudiosListFromGUI(self._gui)
-        else:
-            audios.append(self._audio)
-        return audios
+    def __getAudios(self) -> List[str]:
+        audios = self.__getAudiosListFromGUI(self._gui) if self._gui else [self._audio]
+        logger.debug(f"- Read {len(audios)} files from GUI.")
 
     def __getAudiosListFromGUI(self, gui: str) -> List[str]:
         return [audio for audio in open(gui, "r").read().split("\n") if audio != ""]
@@ -146,71 +124,6 @@ class StreamingClient:
             serverAddress, options=CHANNEL_OPTIONS
         )
         _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
-        atexit.register(self.__shutdownWorker)
-
-    def __shutdownWorker(self):
-        logger.info("Shutting worker process down.")
-
-    def __createStreamingRequests(
-        self,
-        audio: bytes,
-        sampleRateHz: int,
-        sampleWidth: int,
-        language: Language,
-        useFormat: bool,
-        batchMode: bool,
-    ) -> List[StreamingRecognizeRequest]:
-        request = [
-            StreamingRecognizeRequest(
-                config=RecognitionConfig(
-                    parameters=RecognitionParameters(
-                        language=language.value,
-                        sample_rate_hz=sampleRateHz,
-                        enable_formatting=useFormat,
-                    ),
-                    resource=RecognitionResource(topic="GENERIC"),
-                )
-            )
-        ]
-        chunkSize = self.__setChunkSize(batchMode)
-        chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
-        yield from self._yieldAudioSegmentsInStream(
-            request, audio, chunkSize, chunkDuration
-        )
-
-    def _yieldAudioSegmentsInStream(
-        self,
-        request: List[StreamingRecognizeRequest],
-        audio: bytes,
-        chunkSize: int,
-        chunkDuration: float,
-    ):
-        messages = self._addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
-        for n, message in enumerate(messages):
-            getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
-            logger.debug(f"Sending stream message {n} of {len(messages)-1}")
-            yield message
-            pause.until(getUpTime)
-
-    def _addAudioSegmentsToStreamingRequest(self, request, audio, chunkSize):
-        for chunk in self.__chunk_audio(audio=audio, chunkSize=chunkSize):
-            if chunk != []:
-                request.append(StreamingRecognizeRequest(audio=chunk))
-        return request
-
-    def __chunk_audio(self, audio: bytes, chunkSize: int):
-        if not audio:
-            logger.error(f"Empty audio content: {audio}")
-            yield audio
-        else:
-            if chunkSize == 0:
-                logger.info(
-                    "Audio chunk size for gRPC channel set to 0. Uploading all the audio at once"
-                )
-                yield audio
-            else:
-                for i in range(0, len(audio), chunkSize):
-                    yield audio[i : i + chunkSize]
 
     async def _runWorkerQuery(
         self,
@@ -231,7 +144,7 @@ class StreamingClient:
         )
         try:
             self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
-                iter(request),
+                request,
                 metadata=(("accept-language", language.value),),
                 timeout=20 * audioDuration,
             )
@@ -254,6 +167,53 @@ class StreamingClient:
             logger.error(f"Error in gRPC Call: {e}")
         return response
 
+    def __createStreamingRequests(
+        self,
+        audio: bytes,
+        sampleRateHz: int,
+        sampleWidth: int,
+        language: Language,
+        useFormat: bool,
+        batchMode: bool,
+    ) -> Iterator[StreamingRecognizeRequest]:
+        chunkSize = self.__setChunkSize(batchMode)
+        chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
+        yield StreamingRecognizeRequest(
+            config=RecognitionConfig(
+                parameters=RecognitionParameters(
+                    language=language.value,
+                    sample_rate_hz=sampleRateHz,
+                    enable_formatting=useFormat,
+                ),
+                resource=RecognitionResource(topic="GENERIC"),
+            )
+        )
+        yield from self.__yieldAudioSegmentsInStream(audio, chunkSize, chunkDuration)
+
+    def __yieldAudioSegmentsInStream(
+        self,
+        audio: bytes,
+        chunkSize: int,
+        chunkDuration: float,
+    ) -> Iterator[StreamingRecognizeRequest]:
+        messages = self.__getAudioStreamingRequests(audio, chunkSize)
+        messageNum = math.ceil(len(audio) / chunkSize) if chunkSize else 1
+        for n, message in enumerate(messages, start=1):
+            getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
+            logger.debug(f"Sending stream message {n} of {messageNum}")
+            yield message
+            pause.until(getUpTime)
+
+    def __getAudioStreamingRequests(
+        self, audio: bytes, chunkSize: int
+    ) -> Iterator[StreamingRecognizeRequest]:
+        if not audio:
+            logger.error(f"Empty audio content: {audio}")
+        else:
+            chunkSize = chunkSize or len(audio)
+            for i in range(0, len(audio), chunkSize):
+                yield StreamingRecognizeRequest(audio=audio[i : i + chunkSize])
+
     def __setChunkSize(self, batchMode: bool) -> int:
         if batchMode:
             logger.info(
@@ -271,8 +231,9 @@ class StreamingClient:
 
     def __mergeAllStreamResponsesIntoOne(
         self, responses: List[StreamingRecognizeResponse]
-    ) -> Optional[StreamingRecognizeResponse]:
+    ) -> StreamingRecognizeResponse:
         if responses:
+            logger.debug(f"Joining {len(responses)} partial responses")
             for response in responses[1:]:
                 responses[0].results.alternatives[0].transcript += (
                     " " + response.results.alternatives[0].transcript
@@ -283,7 +244,7 @@ class StreamingClient:
             responses[0].results.duration.CopyFrom(responses[-1].results.end_time)
             responses[0].results.end_time.CopyFrom(responses[-1].results.end_time)
             return responses[0]
-        return None
+        return StreamingRecognizeResponse()
 
     def __getTrnHypothesis(
         self, response: StreamingRecognizeRequest, audioPath: str
@@ -322,15 +283,6 @@ def getMetrics(args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
         universal_newlines=True,
     )
     logger.info("You can find the files of results in path: " + args.output)
-
-
-def _generateTrnHypothesisFile(
-    self, args: argparse.Namespace, trnHypothesis: List[str]
-) -> str:
-    trnHypothesisFile = os.path.join(args.output, "trnHypothesis.trn")
-    with open(trnHypothesisFile, "w") as h:
-        h.write("\n".join(trnHypothesis))
-    return trnHypothesisFile
 
 
 def generateTrnFile(
