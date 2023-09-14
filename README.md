@@ -95,7 +95,11 @@ Verbio's Speech Center text-to-speech is still in beta version, therefore having
 
 **Example for text to speech**
 ```
-python3 synthesizer_grpc.py --text "Hello, my friend" --voice tommy --sample-rate 16000 --language en-us --audio-file out.wav --host "tts.speechcenter.verbio.com" --token ./my.token
+python3 synthesizer.py --text "Hello, my friend!" --voice tommy_en_us --language en-us --audio-file out.wav --host your_speechcenter_hostname --token ./my.token
+```
+With your client credentials it would be:
+```
+python synthesizer.py --text "Hello my friend!" --voice tommy_en_us --audio-file out.waw --host your_speechcenter_ hostname --client-id your_client_id --client-secret your_client_secret --token token.file
 ```
 
 Please check out documentation at speechcenter.verbio.com/documentation for current TTS limitations.
