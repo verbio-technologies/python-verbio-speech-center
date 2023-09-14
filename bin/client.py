@@ -73,7 +73,6 @@ class StreamingClient:
         )
 
     async def __inferenceProcess(self):
-        responses = []
         audios = self.__getAudios()
         logger.debug("- Read %d files from GUI." % len(audios))
         self.__initializeWorker(self._host)
@@ -94,24 +93,24 @@ class StreamingClient:
             response = self.mergeStreamingResults(responses)
             self._listStreamingRecognizeResponses.append(response)
             self._trnHypothesis.append(self.__getTrnHypothesis(response, audioPath))
-            responses.append(response)
         logger.debug(f'[-] TRN Hypothesis: "{self._trnHypothesis}')
-        return responses
 
     def mergeStreamingResults(
         self, chunks: List[StreamingRecognizeResponse]
     ) -> StreamingRecognizeResponse:
-        logger.debug(f"Joining {len(chunks)} partial responses")
-        merged = chunks.pop(0)
-        for chunk in chunks:
-            merged.results.alternatives[0].transcript += (
-                " " + chunk.results.alternatives[0].transcript
-            )
-            for word in chunk.results.alternatives[0].words:
-                merged.results.alternatives[0].words.append(word)
-            merged.results.end_time.CopyFrom(chunk.results.end_time)
-            merged.results.duration.CopyFrom(chunk.results.end_time)
-        return merged
+        if chunks:
+            logger.debug(f"Joining {len(chunks)} partial responses")
+            merged = chunks.pop(0)
+            for chunk in chunks:
+                merged.results.alternatives[0].transcript += (
+                    " " + chunk.results.alternatives[0].transcript
+                )
+                for word in chunk.results.alternatives[0].words:
+                    merged.results.alternatives[0].words.append(word)
+                merged.results.end_time.CopyFrom(chunk.results.end_time)
+                merged.results.duration.CopyFrom(chunk.results.end_time)
+            return merged
+        return StreamingRecognizeResponse()
 
     def __getAudios(self):
         audios = []
@@ -244,13 +243,16 @@ class StreamingClient:
 
     async def _readResponseFromStream(self) -> List[StreamingRecognizeResponse]:
         response = []
-        n = 0
-        async for chunk in self.grpcResponseStream:
-            logger.debug(
-                f" - Got stream response {n} > {chunk.results.alternatives[0].transcript}"
-            )
-            response.append(chunk)
-            n += 1
+        try:
+            async for chunk in self.grpcResponseStream:
+                logger.debug(
+                    f" - Got stream response {len(response)} > {chunk.results.alternatives[0].transcript}"
+                )
+                response.append(chunk)
+        except grpc.RpcError as e:
+            logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
+        except Exception as e:
+            logger.error(f"Error in gRPC Call: {e}")
         return response
 
     def __setChunkSize(self, batchMode: bool) -> int:
