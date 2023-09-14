@@ -1,5 +1,4 @@
 import os
-import pause
 import re
 import sys
 import grpc
