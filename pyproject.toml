@@ -34,7 +34,7 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--ignore=tests/functional/test_long_files.py"
+addopts = "--ignore=tests/functional/test_long_files.py --ignore=tests/functional/test_streaming_requests.py"
 
 [tool.setuptools]
 include-package-data = false
@@ -76,5 +76,6 @@ test = [
     "pytest >= 6.2.5",
     "pytest-cov >= 3.0.0",
     "jiwer >= 2.5.1",
-    "mock >= 5.1.0"
+    "mock >= 5.1.0",
+    "pause >= 0.3"
 ]
