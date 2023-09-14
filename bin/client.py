@@ -45,7 +45,7 @@ _workerChannelSingleton = None
 _workerStubSingleton = None
 
 _ENCODING = "utf-8"
-_DEFAULT_CHUNK_SIZE = 20_000
+_DEFAULT_CHUNK_SIZE = 4000
 
 
 class StreamingClient:
@@ -58,6 +58,7 @@ class StreamingClient:
         self._format = args.format
         self._language = args.language
         self._trnHypothesis: List[str] = []
+        self._grpcChunkSize = args.chunkSize
         self._listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
         self.grpcResponseStream = None
 
@@ -222,7 +223,7 @@ class StreamingClient:
             )
             return 0
         else:
-            return _DEFAULT_CHUNK_SIZE
+            return self._grpcChunkSize
 
     def __calculateTotalDuration(
         self, audio: bytes, sampleRateHz: int, sampleWidth: int
@@ -399,7 +400,7 @@ def parseArguments() -> argparse.Namespace:
         type=int,
         dest="chunkSize",
         default=_DEFAULT_CHUNK_SIZE,
-        help="Size (in bytes) of the ",
+        help="Size (in bytes) of the data chunks send in gRPC communication.",
     )
     return parser.parse_args()
 
