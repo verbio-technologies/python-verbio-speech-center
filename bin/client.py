@@ -182,11 +182,13 @@ class StreamingClient:
             request, audio, chunkSize, chunkDuration
         )
 
-    def _yieldAudioSegmentsInStream(self,
-                                    request: List[StreamingRecognizeRequest],
-                                    audio: bytes,
-                                    chunkSize: int,
-                                    chunkDuration: float ):
+    def _yieldAudioSegmentsInStream(
+        self,
+        request: List[StreamingRecognizeRequest],
+        audio: bytes,
+        chunkSize: int,
+        chunkDuration: float,
+    ):
         messages = self._addAudioSegmentsToStreamingRequest(request, audio, chunkSize)
         for n, message in enumerate(messages):
             getUpTime = datetime.now() + timedelta(seconds=chunkDuration)
@@ -293,6 +295,7 @@ class StreamingClient:
         else:
             return f" ({filename})"
 
+
 def getMetrics(args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
     logger.trace("Running evaluation.")
     if not os.path.exists(args.output):
@@ -330,6 +333,7 @@ def _generateTrnHypothesisFile(
         h.write("\n".join(trnHypothesis))
     return trnHypothesisFile
 
+
 def generateTrnFile(
     args: argparse.Namespace, trnHypothesis: List[str], filename: str
 ) -> str:
@@ -347,6 +351,7 @@ def generateTrnReferencesFile(args: argparse.Namespace) -> str:
     )
     return generateTrnFile(args, trnReferences, "trnReferences.trn")
 
+
 def getTrnReferences(references: List[str]) -> List[str]:
     trnReferences = []
     for line in references:
@@ -360,7 +365,6 @@ def getTrnReferences(references: List[str]) -> List[str]:
     trnReferences.append("")
     return trnReferences
 
-            
 
 def parseArguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A Speech Recognition client.")
@@ -458,6 +462,7 @@ def configureLogger(logLevel: str) -> None:
         enqueue=True,
     )
 
+
 def validateLogLevel(logLevel: str) -> str:
     if logLevel not in _LOG_LEVELS:
         offender = logLevel
@@ -466,6 +471,7 @@ def validateLogLevel(logLevel: str) -> str:
             f"Level [{offender}] is not valid log level. Will use {logLevel} instead."
         )
     return logLevel
+
 
 def repr(responses: List[StreamingRecognitionResult]) -> List[str]:
     return [

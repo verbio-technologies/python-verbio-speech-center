@@ -34,9 +34,7 @@ class TestStreamingClient(unittest.TestCase):
 
     def testAudioChunking(self):
         audioBytes = b"0123456789"
-        chunkIterator = self._client._StreamingClient__chunk_audio(
-            audioBytes, 3
-        )
+        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 3)
         self.assertEqual(
             list(chunkIterator),
             [
@@ -49,25 +47,17 @@ class TestStreamingClient(unittest.TestCase):
 
     def testAudioChunking0(self):
         audioBytes = b"0123456789"
-        chunkIterator = self._client._StreamingClient__chunk_audio(
-            audioBytes, 0
-        )
-        self.assertEqual(
-            list(chunkIterator), [audioBytes]
-        )
+        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 0)
+        self.assertEqual(list(chunkIterator), [audioBytes])
 
     def testAudioChunkingEmpty(self):
         audioBytes = b""
-        chunkIterator = self._client._StreamingClient__chunk_audio(
-            audioBytes, 3
-        )
+        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 3)
         self.assertEqual(list(chunkIterator), [audioBytes])
 
     def testAudioChunking0EmptyAudio(self):
         audioBytes = b""
-        chunkIterator = self._client._StreamingClient__chunk_audio(
-            audioBytes, 0
-        )
+        chunkIterator = self._client._StreamingClient__chunk_audio(audioBytes, 0)
         self.assertEqual(list(chunkIterator), [audioBytes])
 
     def testGetAudio(self):
