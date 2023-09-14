@@ -6,7 +6,7 @@ sys.path.insert(1, '../proto/generated')
 import logging
 import wave
 import grpc
-from common import TTSOptions, parse_tts_command_line
+from common import SynthesizerOptions, parse_tts_command_line
 from speechcenterauth import SpeechCenterCredentials
 import verbio_speech_center_synthesizer_pb2, verbio_speech_center_synthesizer_pb2_grpc
 from google.protobuf.json_format import MessageToJson
@@ -24,7 +24,7 @@ class GrpcChannelCredentials:
 
 
 class Audio:
-    def __init__(self, options: TTSOptions):
+    def __init__(self, options: SynthesizerOptions):
         self.frame_rate = options.sample_rate
         self.audio_format = options.audio_format
         self.voice = options.voice
@@ -69,7 +69,7 @@ class Audio:
 
 
 class SpeechCenterGRPCClient:
-    def __init__(self, channel: grpc.Channel, options: TTSOptions, token: str):
+    def __init__(self, channel: grpc.Channel, options: SynthesizerOptions, token: str):
         self._channel = channel
         self._stub = verbio_speech_center_synthesizer_pb2_grpc.TextToSpeechStub(self._channel)
         self.audio = Audio(options)
@@ -133,13 +133,13 @@ class SpeechCenterTTSClient(SpeechCenterGRPCClient):
         logging.info("Stored resulting audio at %s", self._audio_file)
 
 
-def retrieve_token(options: TTSOptions):
+def retrieve_token(options: SynthesizerOptions):
     if options.client_id:
         return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
     else:
         return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
-def run(command_line_options: TTSOptions):
+def run(command_line_options: SynthesizerOptions):
     host = command_line_options.host
     token = retrieve_token(command_line_options)
 

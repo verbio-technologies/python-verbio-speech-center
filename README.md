@@ -14,7 +14,7 @@ Before you start you will need:
 2. Speech center CSR endpoint, or Speech center TTS endpoint
 3. Speech Center proto files (provided under proto directory)
 
-Speech center CSR endpoint: us.speechcenter.verbio.com
+Speech center CSR & TTS endpoint: us.speechcenter.verbio.com
 
 
 ##  Step by step
