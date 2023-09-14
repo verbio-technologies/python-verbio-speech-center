@@ -1,4 +1,6 @@
 import argparse
+import logging
+
 
 class TTSOptions:
     def __init__(self):
