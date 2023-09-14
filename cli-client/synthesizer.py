@@ -1,46 +1,18 @@
 #!/usr/bin/env python3
-# Used to make sure python find proto files
+# Used to make sure python finds proto files
 import sys
-
 sys.path.insert(1, '../proto/generated')
 
-
-import wave
 import logging
-import argparse
-
+import wave
 import grpc
-import texttospeech_test_pb2
-import texttospeech_test_pb2_grpc
+from common import SynthesizerOptions, parse_tts_command_line
+from speechcenterauth import SpeechCenterCredentials
+import verbio_speech_center_synthesizer_pb2, verbio_speech_center_synthesizer_pb2_grpc
+from google.protobuf.json_format import MessageToJson
 
 
-class Options:
-    def __init__(self):
-        self.token_file = None
-        self.host = 'tts.verbiospeechcenter.com'
-        self.text = None
-        self.voice = None
-        self.sample_rate = 16000
-        self.encoding = 'PCM'
-        self.header = 'wav'
-        self.language = 'en-us'
-
-    def check(self):
-        Options.__check_voice(self.voice, self.language)
-        Options.__check_audio_format(self.header, self.encoding)
-
-    def __check_voice(voice: str, language: str) -> str:
-        if language == "en-us" and voice not in ["tommy"]:
-            raise Exception("Only tommy is available for en-US.")
-        elif language == "es-pe" and voice not in ["miguel"]:
-            raise Exception("Only miguel is available for es-pe.")
-
-    def __check_audio_format(header: str, encoding: str) -> str:
-        if encoding == "PCM" and header not in ["wav", "raw"]:
-            raise Exception("Only wav and raw headers are available for PCM audio encoding.")
-
-
-class Credentials:
+class GrpcChannelCredentials:
     def __init__(self, token):
         # Set JWT token for service access.
         self.call_credentials = grpc.access_token_call_credentials(token)
@@ -52,32 +24,31 @@ class Credentials:
 
 
 class Audio:
-    def __init__(self, options: Options):
+    def __init__(self, options: SynthesizerOptions):
         self.frame_rate = options.sample_rate
-        self.header = options.header
-        self.speaker = self.__get_speaker(options.voice, options.language)
-        self.sample_rate = self.__get_sample_rate(options.sample_rate)
-        self.audio_format = self.__get_audio_format(options.header, options.encoding)
+        self.audio_format = options.audio_format
+        self.voice = options.voice
+        self.sample_rate = options.sample_rate
+        self.format_value = self.__get_format(options.audio_format)
+
+    FORMATS = {
+        "wav": 0,  # AUDIO_FORMAT_WAV_LPCM_S16LE
+        "raw": 1   # AUDIO_FORMAT_RAW_LPCM_S16LE
+    }
 
     @staticmethod
-    def __get_speaker(voice: str, language: str) -> str:
-        return f"{language.replace('-', '_').upper()}_{voice.upper()}"
-
-    @staticmethod
-    def __get_sample_rate(_sample_rate: int) -> int:
-        return 16000
-
-    @staticmethod
-    def __get_audio_format(header: str, _encoding: str) -> int:
-        return 1
+    def __get_format(audio_format: str) -> str:
+        if audio_format not in Audio.FORMATS:
+            raise Exception(f"Format {audio_format} not supported.")
+        return Audio.FORMATS[audio_format]
 
     def save_audio(self, audio: bytes, filename: str):
-        if self.header == "raw":
+        if self.audio_format == "raw":
             Audio.__save_audio_raw(audio, filename)
-        elif self.header == "wav":
+        elif self.audio_format == "wav":
             Audio.__save_audio_wav(audio, filename, self.frame_rate)
         else:
-            raise Exception("Could not save resulting audio using provided header.")
+            raise Exception("Could not save resulting audio using provided format.")
 
     @staticmethod
     def __save_audio_wav(audio: bytes, filename: str, sample_rate: int):
@@ -96,82 +67,97 @@ class Audio:
         with open(filename, 'wb') as f:
             f.write(audio)
 
-class SpeechCenterSynthesisClient:
-    def __init__(self, options: Options):
-        options.check()
-        self.options = options
+
+class SpeechCenterGRPCClient:
+    def __init__(self, channel: grpc.Channel, options: SynthesizerOptions, token: str):
+        self._channel = channel
+        self._stub = verbio_speech_center_synthesizer_pb2_grpc.TextToSpeechStub(self._channel)
         self.audio = Audio(options)
-        self.host = options.host
+        self._host = options.host
+        self._secure_channel = options.secure_channel
+        self._audio_format = options.audio_format
         self.text = options.text
-        self.audio_file = options.audio_file
+        self._audio_file = options.audio_file
+        self.token = token
+    
+    def log_response(self, call):
+        # Print out inference response and call status
+        logging.info("Synthesis response [status=%s]", str(call.code()))
+    
+    def print_response(response):
+        json = MessageToJson(response)
+        logging.info("New incoming response: '%s'", json)
 
-    def run(self):
-        logging.info("Running Synthesizer inference example...")
-        # Open connection to grpc channel to provided host.
-        with grpc.secure_channel(self.host, credentials=grpc.ssl_channel_credentials()) as channel:
-            # Instantiate a speech_synthesizer to manage grpc calls to backend.
-            speech_synthesizer = texttospeech_test_pb2_grpc.TextToSpeechStub(channel)
-            try:
-                # Send inference requests for the text.
-                response, call = speech_synthesizer.SynthesizeSpeech.with_call(
-                        self.__generate_inferences(text=self.text, voice=self.options.voice, language=self.options.language))
-                # Print out inference response and call status
-                logging.info("Synthesis response [status=%s]", str(call.code()))
-                # Store the inference response audio into an audio file
-                self.audio.save_audio(response.audio_samples, self.audio_file)
-                logging.info("Stored resulting audio at %s", self.audio_file)
 
-            except Exception as ex:
-                logging.critical(ex)
-
+class SpeechCenterTTSClient(SpeechCenterGRPCClient):
     @staticmethod
-    def __generate_inferences(
+    def __send_synthesis_request(
         text: str,
         voice: str,
-        language: str,
-    ) -> texttospeech_test_pb2.SynthesizeSpeechRequest:
-        message = texttospeech_test_pb2.SynthesizeSpeechRequest(
-            text=text,
-            language=language,
-            speaker=voice
-        )
+        sampling_rate: str,
+        audio_format: str,
+    ) -> verbio_speech_center_synthesizer_pb2.SynthesisRequest:
         logging.info("Sending message SynthesisRequest")
+        message = verbio_speech_center_synthesizer_pb2.SynthesisRequest(
+            text=text,
+            voice=voice,
+            sampling_rate=sampling_rate,
+            format=audio_format
+        )
+
         return message
 
-    @staticmethod
-    def __read_token(toke_file: str) -> str:
-        with open(toke_file) as token_hdl:
-            return ''.join(token_hdl.read().splitlines())
+    def run(self):
+        if self._secure_channel:
+            response, call = self._stub.SynthesizeSpeech.with_call(
+                self.__send_synthesis_request(
+                        text=self.text,
+                        voice=self.audio.speaker,
+                        sampling_rate=self.audio.sample_rate,
+                        audio_format=self.audio.format_value
+                    )
+                )
+        else:
+            metadata = [('authorization', "Bearer " + self.token)]
+            response, call = self._stub.SynthesizeSpeech.with_call(
+                self.__send_synthesis_request(
+                        text=self.text,
+                        voice=self.audio.voice,
+                        sampling_rate=self.audio.sample_rate,
+                        audio_format=self.audio.format_value
+                    ), metadata=metadata
+                )
+
+        logging.info("Synthesis response [status=%s]", str(call.code()))
+        self.audio.save_audio(response.audio_samples, self._audio_file)
+        logging.info("Stored resulting audio at %s", self._audio_file)
 
 
-def parse_command_line() -> Options:
-    options = Options()
-    parser = argparse.ArgumentParser(description='Perform speech synthesis on a sample text')
-    parser.add_argument('--text', '-T', help='Text to synthesize to audio', required=True)
-    parser.add_argument('--voice', '-v', choices=['tommy', 'miguel', 'anna', 'david_es', 'bel'], help='Voice to use for the synthesis', required=True)
-    parser.add_argument('--sample-rate', '-s', type=int, choices=[16000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
-    parser.add_argument('--encoding', '-e', choices=['PCM'], help='Output audio encoding algorithm (default: ' + options.encoding + ' [Signed 16-bit little endian PCM])', default=options.encoding)
-    parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio header (default: ' + options.header + ')', default=options.header)
-    parser.add_argument('--language', '-l', choices=['en-us', 'es-pe', 'ca', 'pt-br', 'es', ], help='A Language ID (default: ' + options.language + ')', default=options.language)
-    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
-                        default=options.host)
-    parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)
-    args = parser.parse_args()
-    options.audio_file = args.audio_file
-    options.host = args.host
-    options.text = args.text
-    options.voice = args.voice
-    options.language = args.language
-    print(args.language, options.language)
-    options.sample_rate = args.sample_rate
-    options.encoding = args.encoding
-    options.header = args.format
+def retrieve_token(options: SynthesizerOptions):
+    if options.client_id:
+        return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
+    else:
+        return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
-    return options
+def run(command_line_options: SynthesizerOptions):
+    host = command_line_options.host
+    token = retrieve_token(command_line_options)
+
+    if command_line_options.secure_channel:
+        logging.info("Connecting to %s using a secure channel...", host)
+        credentials = GrpcChannelCredentials(token)
+        with grpc.secure_channel(command_line_options.host, credentials=credentials.get_channel_credentials()) as channel:
+            client = SpeechCenterTTSClient(channel, command_line_options, token)
+            client.run()
+    else:
+        logging.info("Connecting to %s using a insecure channel...", host)
+        with grpc.insecure_channel(command_line_options.host) as channel:
+            client = SpeechCenterTTSClient(channel, command_line_options, token)
+            client.run()
 
 
 if __name__ == '__main__':
-    print("This module is only intended for demo purposes")
-    # Setup minimal logger and run example.
-    logging.basicConfig(level=logging.INFO)
-    SpeechCenterSynthesisClient(parse_command_line()).run()
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s]:%(message)s')
+    logging.info("Running speechcenter TTS synthesis...")
+    command_line_options = parse_tts_command_line()
+    run(command_line_options)
