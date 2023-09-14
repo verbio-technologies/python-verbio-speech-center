@@ -5,24 +5,23 @@ import grpc
 import wave
 import math
 import pause
-import atexit
 import argparse
 import numpy as np
 from loguru import logger
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Iterator
+from typing import List, Tuple, Iterator
 
-import multiprocessing
+import asyncio
 from subprocess import Popen
 from examples import run_evaluator
 from google.protobuf.json_format import MessageToJson
 
 from asr4_streaming.recognizer import RecognizerStub
+from asr4_streaming.recognizer import RecognitionConfig
+from asr4_streaming.recognizer import RecognitionResource
+from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 from asr4_streaming.recognizer import StreamingRecognizeResponse
-from asr4_streaming.recognizer import RecognitionConfig
-from asr4_streaming.recognizer import RecognitionParameters
-from asr4_streaming.recognizer import RecognitionResource
 
 from asr4.engines.wav2vec.v1.engine_types import Language
 
@@ -60,32 +59,25 @@ class StreamingClient:
         self._language = args.language
         self._trnHypothesis: List[str] = []
         self._listStreamingRecognizeResponses: List[StreamingRecognizeResponse] = []
+        self.grpcResponseStream = None
 
-    def process(self) -> Tuple[List[str], List[StreamingRecognizeResponse]]:
-        self.__inferenceProcess()
+    async def process(self) -> Tuple[List[str], List[StreamingRecognizeResponse]]:
+        await self.__inferenceProcess()
         logger.debug(
             f"[+] Generating Responses from {len(self._listStreamingRecognizeResponses)} candidates"
         )
-        return self._trnHypothesis, list(
-            map(
-                StreamingRecognizeResponse.FromString,
-                self._listStreamingRecognizeResponses,
-            )
+        return (
+            self._trnHypothesis,
+            self._listStreamingRecognizeResponses,
         )
 
-    def __inferenceProcess(self):
+    async def __inferenceProcess(self):
         audios = self.__getAudios()
-        workerPool = multiprocessing.Pool(
-            processes=self._jobs,
-            initializer=self.__initializeWorker,
-            initargs=(self._host,),
-        )
-
+        self.__initializeWorker(self._host)
         for n, audioPath in enumerate(audios):
             audio, sampleRateHz, sampleWidth = self.__getAudio(audioPath)
-            response = workerPool.apply(
-                self._runWorkerQuery,
-                (
+            _, responses = await asyncio.gather(
+                self._runWorkerQuery(
                     audio,
                     sampleRateHz,
                     sampleWidth,
@@ -94,10 +86,11 @@ class StreamingClient:
                     f"{n}/{len(audios)}",
                     self._batch,
                 ),
+                self._readResponseFromStream(),
             )
+            response = self.__mergeAllStreamResponsesIntoOne(responses)
             self._listStreamingRecognizeResponses.append(response)
             self._trnHypothesis.append(self.__getTrnHypothesis(response, audioPath))
-        self._trnHypothesis.append("")
         logger.debug(f'[-] TRN Hypothesis: "{self._trnHypothesis}')
 
     def __getAudios(self) -> List[str]:
@@ -127,19 +120,13 @@ class StreamingClient:
     def __initializeWorker(self, serverAddress: str):
         global _workerChannelSingleton  # pylint: disable=global-statement
         global _workerStubSingleton  # pylint: disable=global-statement
-        logger.trace("Initializing worker process.")
-        _workerChannelSingleton = grpc.insecure_channel(
+        logger.info("Initializing worker process.")
+        _workerChannelSingleton = grpc.aio.insecure_channel(
             serverAddress, options=CHANNEL_OPTIONS
         )
         _workerStubSingleton = RecognizerStub(_workerChannelSingleton)
-        atexit.register(self.__shutdownWorker)
 
-    def __shutdownWorker(self):
-        logger.info("Shutting worker process down.")
-        if _workerChannelSingleton is not None:
-            _workerStubSingleton.stop()
-
-    def _runWorkerQuery(
+    async def _runWorkerQuery(
         self,
         audio: bytes,
         sampleRateHz: int,
@@ -148,7 +135,7 @@ class StreamingClient:
         useFormat: bool,
         queryID: int,
         batchMode: bool,
-    ) -> bytes:
+    ):
         audioDuration = self.__calculateTotalDuration(audio, sampleRateHz, sampleWidth)
         request = self.__createStreamingRequests(
             audio, sampleRateHz, sampleWidth, language, useFormat, batchMode
@@ -157,21 +144,29 @@ class StreamingClient:
             f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
         )
         try:
-            responses = list(
-                _workerStubSingleton.StreamingRecognize(
-                    request,
-                    metadata=(("accept-language", language.value),),
-                    timeout=20 * audioDuration,
-                )
+            self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
+                request,
+                metadata=(("accept-language", language.value),),
+                timeout=20 * audioDuration,
             )
-            response = self.__mergeAllStreamResponsesIntoOne(responses)
-            return response.SerializeToString() if response else b""
         except grpc.RpcError as e:
             logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
-            return b""
         except Exception as e:
             logger.error(f"Error in gRPC Call: {e}")
-            return b""
+
+    async def _readResponseFromStream(self) -> List[StreamingRecognizeResponse]:
+        response = []
+        try:
+            async for chunk in self.grpcResponseStream:
+                logger.debug(
+                    f" - Got stream response {len(response)} > {chunk.results.alternatives[0].transcript}"
+                )
+                response.append(chunk)
+        except grpc.RpcError as e:
+            logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
+        except Exception as e:
+            logger.error(f"Error in gRPC Call: {e}")
+        return response
 
     def __createStreamingRequests(
         self,
@@ -237,8 +232,9 @@ class StreamingClient:
 
     def __mergeAllStreamResponsesIntoOne(
         self, responses: List[StreamingRecognizeResponse]
-    ) -> Optional[StreamingRecognizeResponse]:
+    ) -> StreamingRecognizeResponse:
         if responses:
+            logger.debug(f"Joining {len(responses)} partial responses")
             for response in responses[1:]:
                 responses[0].results.alternatives[0].transcript += (
                     " " + response.results.alternatives[0].transcript
@@ -249,13 +245,14 @@ class StreamingClient:
             responses[0].results.duration.CopyFrom(responses[-1].results.end_time)
             responses[0].results.end_time.CopyFrom(responses[-1].results.end_time)
             return responses[0]
-        return None
+        return StreamingRecognizeResponse()
 
-    def __getTrnHypothesis(self, response: bytes, audioPath: str) -> str:
+    def __getTrnHypothesis(
+        self, response: StreamingRecognizeRequest, audioPath: str
+    ) -> str:
         filename = re.sub(r"(.*)\.wav$", r"\1", audioPath)
-        recognizeResponse = StreamingRecognizeResponse.FromString(response)
-        if len(recognizeResponse.results.alternatives) > 0:
-            return f"{recognizeResponse.results.alternatives[0].transcript.strip()} ({filename})"
+        if len(response.results.alternatives) > 0:
+            return f"{response.results.alternatives[0].transcript.strip()} ({filename})"
         else:
             return f" ({filename})"
 
@@ -396,6 +393,14 @@ def parseArguments() -> argparse.Namespace:
         default=os.environ.get("LOG_LEVEL", _LOG_LEVEL),
         help="Log levels. Options: CRITICAL, ERROR, WARNING, INFO and DEBUG. By default reads env variable LOG_LEVEL.",
     )
+    parser.add_argument(
+        "-c",
+        "--chuk-size",
+        type=int,
+        dest="chunkSize",
+        default=_DEFAULT_CHUNK_SIZE,
+        help="Size (in bytes) of the ",
+    )
     return parser.parse_args()
 
 
@@ -434,7 +439,7 @@ if __name__ == "__main__":
     configureLogger(args.verbose)
     if not Language.check(args.language):
         raise ValueError(f"Invalid language '{args.language}'")
-    trnHypothesis, responses = StreamingClient(args).process()
+    trnHypothesis, responses = asyncio.run(StreamingClient(args).process())
     logger.debug(f"Returned responses: {repr(responses)}")
 
     if args.metrics:
@@ -443,5 +448,6 @@ if __name__ == "__main__":
     if args.json:
         print("> Messages:")
         for r in responses:
-            print(MessageToJson(r))
+            j = MessageToJson(r)
+            print(j)
         print("< messages finished")
