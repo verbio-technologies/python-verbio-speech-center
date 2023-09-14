@@ -26,6 +26,7 @@ class TestStreamingClient(unittest.TestCase):
                 audio=None,
                 format=None,
                 language=None,
+                chunkSize=20_000,
             )
         )
 
