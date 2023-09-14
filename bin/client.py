@@ -96,6 +96,7 @@ class StreamingClient:
     def __getAudios(self) -> List[str]:
         audios = self.__getAudiosListFromGUI(self._gui) if self._gui else [self._audio]
         logger.debug(f"- Read {len(audios)} files from GUI.")
+        return audios
 
     def __getAudiosListFromGUI(self, gui: str) -> List[str]:
         return [audio for audio in open(gui, "r").read().split("\n") if audio != ""]
@@ -282,6 +283,7 @@ def getMetrics(args: argparse.Namespace, trnHypothesis: List[str]) -> Popen:
         stderr=sys.stderr,
         universal_newlines=True,
     )
+
     logger.info("You can find the files of results in path: " + args.output)
 
 
