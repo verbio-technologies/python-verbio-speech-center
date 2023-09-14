@@ -39,7 +39,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio format', default='wav')
     parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
-    parser.add_argument('--host', '-H', help='The URL of the host trying to reach', default='us.speechcenter.verbio.com', required=True)
+    parser.add_argument('--host', '-H', help='The URL of the host trying to reach', required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.', required=False, default=True, dest='secure', action='store_false')
 
     credentialGroup = parser.add_argument_group('credentials', '[OPTIONAL] Client authentication credentials used to refresh the token. You can find your credentials on the dashboard at https://dashboard.speechcenter.verbio.com/access-token')

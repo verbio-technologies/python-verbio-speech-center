@@ -91,12 +91,13 @@ class SpeechCenterGRPCClient:
 
 class SpeechCenterTTSClient(SpeechCenterGRPCClient):
     @staticmethod
-    def __generate_inferences(
+    def __send_synthesis_request(
         text: str,
         voice: str,
         sampling_rate: str,
         audio_format: str,
     ) -> verbio_speech_center_synthesizer_pb2.SynthesisRequest:
+        logging.info("Sending message SynthesisRequest")
         message = verbio_speech_center_synthesizer_pb2.SynthesisRequest(
             text=text,
             voice=voice,
@@ -104,13 +105,12 @@ class SpeechCenterTTSClient(SpeechCenterGRPCClient):
             format=audio_format
         )
 
-        logging.info("Sending message SynthesisRequest")
         return message
 
     def run(self):
         if self._secure_channel:
             response, call = self._stub.SynthesizeSpeech.with_call(
-                self.__generate_inferences(
+                self.__send_synthesis_request(
                         text=self.text,
                         voice=self.audio.speaker,
                         sampling_rate=self.audio.sample_rate,
@@ -120,7 +120,7 @@ class SpeechCenterTTSClient(SpeechCenterGRPCClient):
         else:
             metadata = [('authorization', "Bearer " + self.token)]
             response, call = self._stub.SynthesizeSpeech.with_call(
-                self.__generate_inferences(
+                self.__send_synthesis_request(
                         text=self.text,
                         voice=self.audio.voice,
                         sampling_rate=self.audio.sample_rate,
@@ -128,7 +128,7 @@ class SpeechCenterTTSClient(SpeechCenterGRPCClient):
                     ), metadata=metadata
                 )
 
-        self.log_response(call)
+        logging.info("Synthesis response [status=%s]", str(call.code()))
         self.audio.save_audio(response.audio_samples, self._audio_file)
         logging.info("Stored resulting audio at %s", self._audio_file)
 
