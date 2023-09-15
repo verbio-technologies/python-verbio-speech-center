@@ -6,6 +6,22 @@
 
 ### Removed :no_entry:
 
+## 1.0.0 (2023-09-15)
+
+### Major (1 change)
+
+- [[EEE-868] Feature/ Use asr4-engine Online Decoding API](csr/asr4@cebae65a774902bbcff830a37287294b7c571c4c) ([merge request](csr/asr4!302))
+
+### Patch (7 changes)
+
+- [release/1.0.0](csr/asr4@51f047a7d38605f4749496418f43c0d4a811ce60) ([merge request](csr/asr4!328))
+- [[EEE-1085] Make client.py a bidirectional sender/reader](csr/asr4@7bc1f0adc1e064f782ffffbb64ea0292dc5e164c) ([merge request](csr/asr4!327))
+- [Fix/ Streaming Functional Testing Latency Limit](csr/asr4@69eadc1761a292971d95ed14ceed389651a55079) ([merge request](csr/asr4!329))
+- [[EEE-1049] Add loguru](csr/asr4@f086a3eefd6ff7aa40a0aea703ad1a8081904700) ([merge request](csr/asr4!324))
+- [[EEE-945] Refactor/ gRPC Streaming API](csr/asr4@d758f34d21109f78cec24dcbe1101a1450de176f) ([merge request](csr/asr4!323))
+- [Fix/ Code Coverage](csr/asr4@af243bd1a391dd780189c3bb19b34c3f65ea0ee2) ([merge request](csr/asr4!325))
+- [[EEE-945] Refactor/ Remove gRPC Batch API](csr/asr4@ebb183ebea4c3fe5adfd6b1cfbe8ff9b6b10c165) ([merge request](csr/asr4!322))
+
 ## 0.7.8 (2023-09-04)
 
 ### Patch (9 changes)
