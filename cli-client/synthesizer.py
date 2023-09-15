@@ -112,7 +112,7 @@ class SpeechCenterTTSClient(SpeechCenterGRPCClient):
             response, call = self._stub.SynthesizeSpeech.with_call(
                 self.__send_synthesis_request(
                         text=self.text,
-                        voice=self.audio.speaker,
+                        voice=self.audio.voice,
                         sampling_rate=self.audio.sample_rate,
                         audio_format=self.audio.format_value
                     )
