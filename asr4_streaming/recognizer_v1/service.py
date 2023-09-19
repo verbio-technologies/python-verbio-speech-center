@@ -44,7 +44,19 @@ class RecognizerService(RecognizerServicer):
         handler = EventHandler(self._language, self._engine, context)
         listenerTask = asyncio.create_task(handler.listenForTranscription())
         async for request in request_iterator:
-            await handler.processStreamingRequest(request)
+            metadataDict = self.__getContextMetadata(context)
+            with logger.contextualize(
+                user_id=metadataDict["user-id"],
+                request_id=metadataDict["request-id"],
+            ):
+                await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
         await listenerTask
         return
+
+    def __getContextMetadata(self, context: grpc.aio.ServicerContext) -> dict:
+        metadata = context.invocation_metadata()
+        metadataDict = {}
+        for c in metadata:
+            metadataDict[c.key] = c.value
+        return metadataDict
