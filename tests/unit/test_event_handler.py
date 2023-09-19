@@ -66,6 +66,10 @@ def initializeMockContext(mock: Mock):
     async def abort(_statusCode, message):
         raise Exception(message)
 
+    mock.metadata = (
+        ("user-id", "testUser"),
+        ("request-id", "testRequest"),
+    )
     mock.abort = abort
     return mock
 
