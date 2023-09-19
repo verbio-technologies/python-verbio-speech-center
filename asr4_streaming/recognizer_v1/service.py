@@ -9,6 +9,7 @@ from .handler import EventHandler
 from .types import RecognizerServicer
 from .types import StreamingRecognizeRequest
 from .types import StreamingRecognizeResponse
+from .loggerService import Logger
 
 from asr4.engines.wav2vec import Wav2VecEngineFactory
 from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
@@ -44,10 +45,10 @@ class RecognizerService(RecognizerServicer):
         handler = EventHandler(self._language, self._engine, context)
         listenerTask = asyncio.create_task(handler.listenForTranscription())
         async for request in request_iterator:
-            metadataDict = self.__getContextMetadata(context)
+            metadata = self.__getContextMetadata(context)
             with logger.contextualize(
-                user_id=metadataDict["user-id"],
-                request_id=metadataDict["request-id"],
+                user_id=metadata["user-id"],
+                request_id=metadata["request-id"],
             ):
                 await handler.processStreamingRequest(request)
         await handler.notifyEndOfAudio()
@@ -55,8 +56,4 @@ class RecognizerService(RecognizerServicer):
         return
 
     def __getContextMetadata(self, context: grpc.aio.ServicerContext) -> dict:
-        metadata = context.invocation_metadata()
-        metadataDict = {}
-        for c in metadata:
-            metadataDict[c.key] = c.value
-        return metadataDict
+        return dict(map(lambda e: (e.key, e.value), context.invocation_metadata()))
