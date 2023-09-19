@@ -9,7 +9,6 @@ from .handler import EventHandler
 from .types import RecognizerServicer
 from .types import StreamingRecognizeRequest
 from .types import StreamingRecognizeResponse
-from .loggerService import Logger
 
 from asr4.engines.wav2vec import Wav2VecEngineFactory
 from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
@@ -42,17 +41,18 @@ class RecognizerService(RecognizerServicer):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        handler = EventHandler(self._language, self._engine, context)
-        listenerTask = asyncio.create_task(handler.listenForTranscription())
-        async for request in request_iterator:
-            metadata = self.__getContextMetadata(context)
-            with logger.contextualize(
-                user_id=metadata["user-id"],
-                request_id=metadata["request-id"],
-            ):
+        metadata = self.__getContextMetadata(context)
+        with logger.contextualize(
+            user_id=metadata["user-id"],
+            request_id=metadata["request-id"],
+        ):
+            handler = EventHandler(self._language, self._engine, context)
+            listenerTask = asyncio.create_task(handler.listenForTranscription())
+            async for request in request_iterator:
                 await handler.processStreamingRequest(request)
-        await handler.notifyEndOfAudio()
-        await listenerTask
+            await handler.notifyEndOfAudio()
+            await listenerTask
+
         return
 
     def __getContextMetadata(self, context: grpc.aio.ServicerContext) -> dict:
