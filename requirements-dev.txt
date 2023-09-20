@@ -1,0 +1,4 @@
+-r requirements.txt
+flake8==6.0.0
+autopep8==2.0.2
+pytest==7.3.1
