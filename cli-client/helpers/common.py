@@ -1,5 +1,6 @@
 import argparse
 import logging
+from speechcenterauth import SpeechCenterCredentials
 
 
 class SynthesizerOptions:
@@ -60,5 +61,12 @@ def parse_tts_command_line() -> SynthesizerOptions:
     options.sample_rate = args.sample_rate
 
     return options
+
+
+def retrieve_token(options: SynthesizerOptions) -> str:
+    if options.client_id:
+        return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
+    else:
+        return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
 
