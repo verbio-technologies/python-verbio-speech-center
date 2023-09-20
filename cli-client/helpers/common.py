@@ -16,6 +16,7 @@ class SynthesizerOptions:
         self.client_id = None
         self.client_secret = None
 
+
 def parse_credential_args(args, options):
     if args.client_id and not args.client_secret:
         raise argparse.ArgumentError(None, "If --client-id is specified, then --client-secret must also be specified.")

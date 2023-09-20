@@ -6,18 +6,16 @@ import logging
 from helpers.common import SynthesizerOptions
 from helpers.audio_exporter import AudioExporter
 import verbio_speech_center_synthesizer_pb2
-import verbio_speech_center_synthesizer_pb2_grpc
 
 
 class TTSClient:
-    def __init__(self, channel: grpc.Channel, options: SynthesizerOptions, token: str):
-        self._channel = channel
+    def __init__(self, stub, options: SynthesizerOptions, token: str):
         self._secure_channel = options.secure_channel
         self._audio_format = AudioExporter.SUPPORTED_FORMATS[options.audio_format]
         self._audio_file = options.audio_file
         self._audio_sample_rate = options.sample_rate
         self._token = token
-        self._stub = verbio_speech_center_synthesizer_pb2_grpc.TextToSpeechStub(self._channel)
+        self._stub = stub
 
     def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int):
         message = verbio_speech_center_synthesizer_pb2.SynthesisRequest(

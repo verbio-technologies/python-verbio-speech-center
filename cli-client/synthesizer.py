@@ -6,6 +6,7 @@ from helpers.tts_client import TTSClient
 from helpers.audio_exporter import AudioExporter
 from helpers.grpc_connection import GrpcConnection
 from helpers.common import SynthesizerOptions, parse_tts_command_line, retrieve_token
+import verbio_speech_center_synthesizer_pb2_grpc
 
 
 def run(options: SynthesizerOptions):
@@ -13,7 +14,8 @@ def run(options: SynthesizerOptions):
     grpc_connection = GrpcConnection(options.secure_channel, options.client_id, options.client_secret, access_token)
 
     with grpc_connection.open(options.host) as grpc_channel:
-        client = TTSClient(grpc_channel, options, access_token)
+        grpc_stub = verbio_speech_center_synthesizer_pb2_grpc.TextToSpeechStub(grpc_channel)
+        client = TTSClient(grpc_stub, options, access_token)
         audio_samples = client.synthesize(options.text, options.voice)
         logging.info("Received response with %s bytes of audio data", len(audio_samples))
 
