@@ -41,7 +41,7 @@ class RecognizerService(RecognizerServicer):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        metadata = self.__getContextMetadata(context)
+        metadata = self.getContextMetadata(context)
         with logger.contextualize(
             user_id=metadata["user-id"],
             request_id=metadata["request-id"],
@@ -55,5 +55,5 @@ class RecognizerService(RecognizerServicer):
 
         return
 
-    def __getContextMetadata(self, context: grpc.aio.ServicerContext) -> dict:
+    def getContextMetadata(self, context: grpc.aio.ServicerContext) -> dict:
         return dict(map(lambda e: (e.key, e.value), context.invocation_metadata()))
