@@ -42,6 +42,20 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(str(context.exception), "Empty request")
 
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
+    async def testNoUserAndRequestId(self, mock):
+        async def requestIterator() -> AsyncIterator[StreamingRecognizeRequest]:
+            yield StreamingRecognizeRequest()
+            return
+
+        mock.return_value = initializeMockEngine(Mock(Wav2VecEngine), language="en-US")
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
+        with self.assertRaises(Exception) as context:
+            await service.StreamingRecognize(requestIterator())
+        self.assertEqual(str(context.exception), "Empty request")
+
+    @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testInvalidAudio(self, mock):
         mock.return_value = initializeMockEngine(Mock(Wav2VecEngine), language="en-US")
         mockContext = initializeMockContext(Mock(ServicerContext))
