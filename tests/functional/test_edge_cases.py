@@ -18,7 +18,13 @@ class TestEdgeCases(RecognizerServiceTestCase):
 
         self._waitForServer()
         channel = grpc.insecure_channel(TestEdgeCases._serverAddress)
-        response = RecognizerStub(channel).StreamingRecognize(requestIterator())
+        response = RecognizerStub(channel).StreamingRecognize(
+            requestIterator(),
+            metadata=(
+                ("user-id", "testUser"),
+                ("request-id", "testRequest"),
+            ),
+        )
         self.expectStatus(response, grpc.StatusCode.INVALID_ARGUMENT)
         self.expectDetails(response, "Empty request")
         with self.assertRaises(grpc.RpcError):
@@ -91,7 +97,13 @@ class TestEdgeCases(RecognizerServiceTestCase):
         )
         self._waitForServer()
         channel = grpc.insecure_channel(TestEdgeCases._serverAddress)
-        responseIterator = RecognizerStub(channel).StreamingRecognize(requestIterator)
+        responseIterator = RecognizerStub(channel).StreamingRecognize(
+            requestIterator,
+            metadata=(
+                ("user-id", "testUser"),
+                ("request-id", "testRequest"),
+            ),
+        )
         response = RecognizerServiceTestCase.mergeAllResponsesIntoOne(responseIterator)
         self.expectStatus(responseIterator, grpc.StatusCode.OK)
         expectedResponse = (
