@@ -3,7 +3,7 @@ import string
 import asyncio
 import unittest
 from dataclasses import dataclass
-from grpc.aio import ServicerContext, Metadata
+from grpc.aio import ServicerContext
 from unittest.mock import Mock, AsyncMock
 from typing import List, Optional, Union, Iterator, AsyncIterator
 
