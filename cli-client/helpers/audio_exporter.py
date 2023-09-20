@@ -30,4 +30,3 @@ class AudioExporter:
     def __save_audio_raw(audio: bytes, filename: str):
         with open(filename, 'wb') as f:
             f.write(audio)
-

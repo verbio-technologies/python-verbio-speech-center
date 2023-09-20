@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 # Used to make sure python find proto files
+import texttospeech_test_pb2_grpc
+import texttospeech_test_pb2
+import grpc
+import argparse
+import logging
+import wave
 import sys
 
 sys.path.insert(1, '../proto/generated')
-
-
-import wave
-import logging
-import argparse
-
-import grpc
-import texttospeech_test_pb2
-import texttospeech_test_pb2_grpc
 
 
 class Options:
@@ -96,6 +93,7 @@ class Audio:
         with open(filename, 'wb') as f:
             f.write(audio)
 
+
 class SpeechCenterSynthesisClient:
     def __init__(self, options: Options):
         options.check()
@@ -114,7 +112,7 @@ class SpeechCenterSynthesisClient:
             try:
                 # Send inference requests for the text.
                 response, call = speech_synthesizer.SynthesizeSpeech.with_call(
-                        self.__generate_inferences(text=self.text, voice=self.options.voice, language=self.options.language))
+                    self.__generate_inferences(text=self.text, voice=self.options.voice, language=self.options.language))
                 # Print out inference response and call status
                 logging.info("Synthesis response [status=%s]", str(call.code()))
                 # Store the inference response audio into an audio file
@@ -149,10 +147,23 @@ def parse_command_line() -> Options:
     parser = argparse.ArgumentParser(description='Perform speech synthesis on a sample text')
     parser.add_argument('--text', '-T', help='Text to synthesize to audio', required=True)
     parser.add_argument('--voice', '-v', choices=['tommy', 'miguel', 'anna', 'david_es', 'bel'], help='Voice to use for the synthesis', required=True)
-    parser.add_argument('--sample-rate', '-s', type=int, choices=[16000], help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')', default=options.sample_rate)
-    parser.add_argument('--encoding', '-e', choices=['PCM'], help='Output audio encoding algorithm (default: ' + options.encoding + ' [Signed 16-bit little endian PCM])', default=options.encoding)
+    parser.add_argument('--sample-rate',
+                        '-s',
+                        type=int,
+                        choices=[16000],
+                        help='Output audio sample rate in Hz (default: ' + str(options.sample_rate) + ')',
+                        default=options.sample_rate)
+    parser.add_argument(
+        '--encoding',
+        '-e',
+        choices=['PCM'],
+        help='Output audio encoding algorithm (default: ' +
+        options.encoding +
+        ' [Signed 16-bit little endian PCM])',
+        default=options.encoding)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio header (default: ' + options.header + ')', default=options.header)
-    parser.add_argument('--language', '-l', choices=['en-us', 'es-pe', 'ca', 'pt-br', 'es', ], help='A Language ID (default: ' + options.language + ')', default=options.language)
+    parser.add_argument('--language', '-l', choices=['en-us', 'es-pe', 'ca', 'pt-br', 'es', ],
+                        help='A Language ID (default: ' + options.language + ')', default=options.language)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
                         default=options.host)
     parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)

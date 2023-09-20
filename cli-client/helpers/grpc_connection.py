@@ -26,4 +26,3 @@ class GrpcConnection:
         else:
             logging.info("Connecting to %s using a insecure channel...", host)
             return grpc.insecure_channel(host)
-

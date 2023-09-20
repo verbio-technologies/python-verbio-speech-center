@@ -1,11 +1,9 @@
+import verbio_speech_center_synthesizer_pb2
+from helpers.audio_exporter import AudioExporter
+from helpers.common import SynthesizerOptions
+import logging
 import sys
 sys.path.insert(1, '../proto/generated')
-
-import grpc
-import logging
-from helpers.common import SynthesizerOptions
-from helpers.audio_exporter import AudioExporter
-import verbio_speech_center_synthesizer_pb2
 
 
 class TTSClient:
@@ -33,12 +31,12 @@ class TTSClient:
         metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
         response, call = self._stub.SynthesizeSpeech.with_call(
             self._compose_synthesis_request(
-                    text=text,
-                    voice=voice,
-                    sampling_rate=self._audio_sample_rate,
-                    audio_format=self._audio_format
-                ), metadata=metadata
-            )
+                text=text,
+                voice=voice,
+                sampling_rate=self._audio_sample_rate,
+                audio_format=self._audio_format
+            ), metadata=metadata
+        )
 
         logging.info("Synthesis response [status=%s]", str(call.code()))
         return response.audio_samples
