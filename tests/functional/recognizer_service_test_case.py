@@ -260,6 +260,10 @@ class RecognizerServiceTestCase(unittest.IsolatedAsyncioTestCase):
                 RecognizerServiceTestCase.streamingRequestIteratorFromAudio(
                     audioFile, language, alternativeSampleRate
                 ),
+                metadata=(
+                    ("user-id", "testUser"),
+                    ("request-id", "testRequest"),
+                ),
                 timeout=timeout,
             )
         except Exception as e:
@@ -276,6 +280,10 @@ class RecognizerServiceTestCase(unittest.IsolatedAsyncioTestCase):
             audioFile = os.path.join(self.datadir, audioPath)
             responseIterator = RecognizerStub(channel).StreamingRecognize(
                 self.__streamingAsyncRequestIteratorFromAudio(audioFile, language),
+                metadata=(
+                    ("user-id", "testUser"),
+                    ("request-id", "testRequest"),
+                ),
             )
             async for response in responseIterator:
                 yield response
