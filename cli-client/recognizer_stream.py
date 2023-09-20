@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Used to make sure python find proto files
+import sys
+sys.path.insert(1, '../proto/generated')
 import recognition_streaming_response_pb2
 import recognition_streaming_request_pb2
 import recognition_pb2_grpc
@@ -14,9 +14,6 @@ from typing import Iterator, Iterable
 from threading import Timer
 import threading
 from concurrent.futures import ThreadPoolExecutor
-import sys
-
-sys.path.insert(1, '../proto/generated')
 
 
 class Options:

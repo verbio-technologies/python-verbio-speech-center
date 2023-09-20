@@ -1,11 +1,11 @@
+import sys
+sys.path.insert(1, '../proto/generated')
 import verbio_speech_center_synthesizer_pb2_grpc
 from helpers.common import SynthesizerOptions, parse_tts_command_line, retrieve_token
 from helpers.grpc_connection import GrpcConnection
 from helpers.audio_exporter import AudioExporter
 from helpers.tts_client import TTSClient
 import logging
-import sys
-sys.path.insert(1, '../proto/generated')
 
 
 def run(options: SynthesizerOptions):
