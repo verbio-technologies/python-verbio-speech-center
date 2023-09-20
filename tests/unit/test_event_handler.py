@@ -35,6 +35,12 @@ FORMATTED_SPANISH_MESSAGE: str = (
 DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
 
 
+class MockMetadata:
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+
 def initializeMockEngine(mock: Mock, language: str):
     onlineHandlerMock = AsyncMock(Wav2VecASR4EngineOnlineHandler)
 
@@ -66,7 +72,14 @@ def initializeMockContext(mock: Mock):
     async def abort(_statusCode, message):
         raise Exception(message)
 
+    def invocation_metadata():
+        return (
+            MockMetadata(key="user-id", value="testUser"),
+            MockMetadata(key="request-id", value="testRequest"),
+        )
+
     mock.abort = abort
+    mock.invocation_metadata = invocation_metadata
     return mock
 
 

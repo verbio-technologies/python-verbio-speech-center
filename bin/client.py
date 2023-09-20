@@ -147,7 +147,11 @@ class StreamingClient:
         try:
             self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
                 request,
-                metadata=(("accept-language", language.value),),
+                metadata=(
+                    ("accept-language", language.value),
+                    ("user-id", "testUser"),
+                    ("request-id", "testRequest"),
+                ),
                 timeout=20 * audioDuration,
             )
         except grpc.RpcError as e:

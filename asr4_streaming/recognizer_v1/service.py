@@ -41,10 +41,19 @@ class RecognizerService(RecognizerServicer):
         """
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
-        handler = EventHandler(self._language, self._engine, context)
-        listenerTask = asyncio.create_task(handler.listenForTranscription())
-        async for request in request_iterator:
-            await handler.processStreamingRequest(request)
-        await handler.notifyEndOfAudio()
-        await listenerTask
+        metadata = self.getContextMetadata(context)
+        with logger.contextualize(
+            user_id=metadata["user-id"],
+            request_id=metadata["request-id"],
+        ):
+            handler = EventHandler(self._language, self._engine, context)
+            listenerTask = asyncio.create_task(handler.listenForTranscription())
+            async for request in request_iterator:
+                await handler.processStreamingRequest(request)
+            await handler.notifyEndOfAudio()
+            await listenerTask
+
         return
+
+    def getContextMetadata(self, context: grpc.aio.ServicerContext) -> dict:
+        return dict(map(lambda e: (e.key, e.value), context.invocation_metadata()))

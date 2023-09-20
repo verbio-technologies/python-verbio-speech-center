@@ -30,12 +30,12 @@ class Logger:
 
     def __configureLogger(self, logLevel: str) -> None:
         logger.remove()
-        logger.configure(extra={"user_id": "unknown", "transcription_id": "unknown"})
+        logger.configure(extra={"user_id": "unknown", "request_id": "unknown"})
         logger.add(
             sys.stdout,
             level=logLevel,
             format="[{time:YYYY-MM-DDTHH:mm:ss.SSS}Z <level>{level}</level> <magenta>{module}</magenta>::<magenta>{function}</magenta>]"
-            "[{extra[user_id]}][{extra[transcription_id]}] "
+            "[{extra[user_id]}][{extra[request_id]}] "
             "<level>{message}</level>",
             enqueue=True,
             filter=self._FILTERS,
