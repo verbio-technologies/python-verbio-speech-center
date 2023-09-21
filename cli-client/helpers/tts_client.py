@@ -1,9 +1,9 @@
+import sys
+sys.path.insert(1, '../proto/generated')
 import verbio_speech_center_synthesizer_pb2
 from helpers.audio_exporter import AudioExporter
 from helpers.common import SynthesizerOptions
 import logging
-import sys
-sys.path.insert(1, '../proto/generated')
 
 
 class TTSClient:

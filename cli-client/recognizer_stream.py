@@ -4,7 +4,7 @@ import recognition_streaming_response_pb2
 import recognition_streaming_request_pb2
 import recognition_pb2_grpc
 from google.protobuf.json_format import MessageToJson
-from speechcenterauth import SpeechCenterCredentials
+from helpers.speechcenterauth import SpeechCenterCredentials
 import grpc
 import wave
 import math
@@ -14,6 +14,7 @@ from typing import Iterator, Iterable
 from threading import Timer
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from helpers.common import retrieve_token
 
 
 class Options:
@@ -218,12 +219,12 @@ class SpeechCenterStreamingASRClient:
     def divide_audio(audio: bytes, chunk_size: int = 20000):
         audio_length = len(audio)
         chunk_count = math.ceil(audio_length / chunk_size)
-        logging.debug("Dividing audio of length " + str(audio_length) + " into " + str(chunk_count) + " of size " + str(chunk_size) + "...")
+        logging.info("Dividing audio of length " + str(audio_length) + " into " + str(chunk_count) + " of size " + str(chunk_size) + "...")
         if chunk_count > 1:
-            for i in range(chunk_count - 1):
+            for i in range(chunk_count):
                 start = i * chunk_size
                 end = min((i + 1) * chunk_size, audio_length)
-                logging.debug("Audio chunk #" + str(i) + " sliced as " + str(start) + ":" + str(end))
+                logging.info("Audio chunk #" + str(i) + " sliced as " + str(start) + ":" + str(end))
                 yield audio[start:end]
         else:
             yield audio
@@ -292,13 +293,6 @@ def run_executor(command_line_options, executor, channel):
     logging.info("Running executor...")
     future = executor.submit(process_recognition, executor, channel, command_line_options)
     future.result()
-
-
-def retrieve_token(options):
-    if options.client_id:
-        return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
-    else:
-        return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
 
 def run(command_line_options):

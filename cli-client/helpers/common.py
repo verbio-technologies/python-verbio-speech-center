@@ -1,6 +1,6 @@
 import argparse
 import logging
-from speechcenterauth import SpeechCenterCredentials
+from helpers.speechcenterauth import SpeechCenterCredentials
 
 
 class SynthesizerOptions:
