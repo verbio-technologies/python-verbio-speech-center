@@ -14,6 +14,8 @@ from asr4.engines.wav2vec import Wav2VecEngineFactory
 from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
 from asr4.engines.wav2vec.v1.engine_types import Language
 
+_DEFAULT_ID = "unknown"
+
 
 class RecognizerService(RecognizerServicer):
     def __init__(self, config: str) -> None:
@@ -43,8 +45,8 @@ class RecognizerService(RecognizerServicer):
         """
         metadata = self.getContextMetadata(context)
         with logger.contextualize(
-            user_id=metadata.get("user-id", "unknown"),
-            request_id=metadata.get("request-id", "unknown"),
+            user_id=metadata.get("user-id", _DEFAULT_ID),
+            request_id=metadata.get("request-id", _DEFAULT_ID),
         ):
             handler = EventHandler(self._language, self._engine, context)
             listenerTask = asyncio.create_task(handler.listenForTranscription())
