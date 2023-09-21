@@ -83,6 +83,18 @@ def initializeMockContext(mock: Mock):
     return mock
 
 
+def initializeMockContextNoIds(mock: Mock):
+    async def abort(_statusCode, message):
+        raise Exception(message)
+
+    def invocation_metadata():
+        return {}
+
+    mock.abort = abort
+    mock.invocation_metadata = invocation_metadata
+    return mock
+
+
 async def asyncStreamingRequestIterator(
     language: Optional[str] = None,
     sampleRate: Optional[int] = None,
