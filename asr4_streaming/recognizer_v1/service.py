@@ -42,11 +42,9 @@ class RecognizerService(RecognizerServicer):
         Send audio as a stream of bytes and receive the transcription of the audio through another stream.
         """
         metadata = self.getContextMetadata(context)
-        userId = metadata["user-id"] if "user-id" in metadata else "unknown"
-        requestId = metadata["request-id"] if "request-id" in metadata else "unknown"
         with logger.contextualize(
-            user_id=userId,
-            request_id=requestId,
+            user_id=metadata.get("user-id", "unknown"),
+            request_id=metadata.get("request-id", "unknown"),
         ):
             handler = EventHandler(self._language, self._engine, context)
             listenerTask = asyncio.create_task(handler.listenForTranscription())
