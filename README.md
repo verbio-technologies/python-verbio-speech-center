@@ -5,11 +5,10 @@ This repository contains a python example of how to use the Verbio Technologies 
 ## Requirements
 
 ### Starting requirements 
-Currently, we support Python 3.6+.
+Currently, we support Python 3.6+, you also will need protobuf package to 3.20.x or lower or set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python (but this will use pure-Python parsing and will be much slower).
 
 Before to start you will need:
 
-Before you start you will need:
 1. Dashboard user account (provided to you by Verbio Technologies), please contact our sales team at info@verbio.com to get one.
 2. Speech center CSR endpoint, or Speech center TTS endpoint
 3. Speech Center proto files (provided under proto directory)
