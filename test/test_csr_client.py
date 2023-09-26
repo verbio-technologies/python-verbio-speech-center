@@ -12,8 +12,18 @@ def test_recognition_full_flow():
     mock_stub = Mock()
     options = RecognizerOptions()
     options.inactivity_timeout = 0.1
-    executor = ThreadPoolExecutor()
+    options.asr_version = "V2"
+    options.topic = "GENERIC"
+    options.language = "en-US"
+    options.label = "label"
+    options.formatting = False
+    options.diarization = False
+
     audio_resource = Mock()
+    audio_resource.sample_rate = 16000
+    audio_resource.audio = b'0000000000000000'
+
+    executor = ThreadPoolExecutor()
     recognition_result = response.RecognitionResult(is_final=True)
     mock_response = response.RecognitionStreamingResponse(result=recognition_result)
     mock_stub.StreamingRecognize.return_value = [mock_response, mock_response]
@@ -26,8 +36,10 @@ def test_recognition_full_flow_exception():
     mock_stub = Mock()
     options = RecognizerOptions()
     options.inactivity_timeout = 0.1
+    options.asr_version = "V1"
     executor = ThreadPoolExecutor()
     audio_resource = Mock()
+    audio_resource.sample_rate = 8000
     mock_stub.StreamingRecognize.side_effect = Exception("Exception while sending audio")
     client = CSRClient(executor, mock_stub, options, audio_resource, "token")
     with pytest.raises(Exception):

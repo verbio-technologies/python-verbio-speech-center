@@ -28,6 +28,7 @@ class CSRClient:
         self._formatting = options.formatting
         self._diarization = options.diarization
         self._label = options.label
+        self._messages = None
 
     def _close_stream_by_inactivity(self):
         logging.info("Stream inactivity detected, closing stream...")
@@ -63,8 +64,7 @@ class CSRClient:
 
     def send_audio(self) -> None:
         metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
-        response_iterator = self._stub.StreamingRecognize(
-            self.__generate_messages(
+        self.__generate_messages(
                 topic=self._topic,
                 asr_version=self._asr_version,
                 wav_audio=self._resources.audio,
@@ -72,8 +72,8 @@ class CSRClient:
                 sample_rate=self._resources.sample_rate,
                 formatting=self._formatting,
                 diarization=self._diarization,
-                label=self._label), metadata=metadata)
-
+                label=self._label),
+        response_iterator = self._stub.StreamingRecognize(self.__message_iterator(), metadata=metadata)
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
 
     def wait_for_response(self) -> bool:
@@ -84,6 +84,11 @@ class CSRClient:
 
         return True
 
+    def __message_iterator(self):
+        for message_type, message in self._messages:
+            logging.info("Sending streaming message " + message_type)
+            yield message
+        logging.info("All audio messages sent")
 
     def __generate_messages(
         self,
@@ -100,10 +105,7 @@ class CSRClient:
         asr_versions = {"V1": 0, "V2": 1}
         selected_asr_version = asr_versions[asr_version]
 
-        messages = [
-            ("config",
-                recognition_streaming_request_pb2.RecognitionStreamingRequest(
-                    config=recognition_streaming_request_pb2.RecognitionConfig(
+        recognition_config = recognition_streaming_request_pb2.RecognitionConfig(
                         parameters=recognition_streaming_request_pb2.RecognitionParameters(
                             language=language,
                             pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate),
@@ -114,16 +116,15 @@ class CSRClient:
                         label=[label],
                         version=selected_asr_version
                     )
+
+        self._messages = [
+            ("config",
+                recognition_streaming_request_pb2.RecognitionStreamingRequest(
+                    config=recognition_config
                 )
              ),
         ]
 
         for chunk in split_audio(wav_audio):
             logging.debug("Appending chunk as message: " + repr(chunk)[0:20] + "...")
-            messages.append(("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=chunk)))
-
-        for message_type, message in messages:
-            logging.info("Sending streaming message " + message_type)
-            yield message
-        logging.info("All audio messages sent")
-
+            self._messages.append(("audio", recognition_streaming_request_pb2.RecognitionStreamingRequest(audio=chunk)))
