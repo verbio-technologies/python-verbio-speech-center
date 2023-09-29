@@ -1,4 +1,9 @@
 [flake8]
+max-line-length = 160
+max-complexity = 10
+per-file-ignores =
+    cli-client/synthesizer.py:E402
+    cli-client/recognizer_stream.py:E402
 exclude =
     env
     proto

@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flake8 pytest
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -35,13 +35,12 @@ jobs:
       - name: Unit tests
         run: |
           cd test
-          python3 -m unittest -v test_speech_center_client.py
+          python3 -m pytest
           cd ..
       - name: Execute client help
         run: |
           cd scripts
           ./generate_grpc_code.sh
           cd ../cli-client
-          ./recognizer.py --help
           ./recognizer_stream.py --help
           ./synthesizer.py --help

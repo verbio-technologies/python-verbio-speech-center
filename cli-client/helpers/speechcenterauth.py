@@ -7,7 +7,7 @@ import logging
 
 
 class SpeechCenterCredentials:
-        
+
     @staticmethod
     def read_token(token_file: str) -> str:
         with open(token_file) as token_hdl:
@@ -32,7 +32,7 @@ class SpeechCenterCredentials:
         else:
             logging.info("Provided token is still valid, skipping refresh")
             return currentToken
-    
+
     @staticmethod
     def _refresh_token(client_id, client_secret):
 
@@ -51,7 +51,6 @@ class SpeechCenterCredentials:
         else:
             logging.info("Succesfully updated service token:\n" + parsedResponse['access_token'])
             logging.info("New expiration time is:\n" + str(parsedResponse['expiration_time']))
-        
 
         return parsedResponse['access_token']
 
