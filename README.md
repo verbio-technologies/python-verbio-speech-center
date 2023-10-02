@@ -1,6 +1,6 @@
-# asr4
+# asr4-streaming
 
-ASR based on Transformer DNNs, with multilingual and unsupervised information.
+ASR4 streaming product based on Transformer DNNs, with multilingual and unsupervised information.
 
 ## How to Install
 
@@ -31,7 +31,7 @@ Python version 3.7+ is required to run the client. It is recommended to update t
 pip install --upgrade pip
 ```
 
-To install the client's requirements, run the following command from the root of the `asr4` repository:
+To install the client's requirements, run the following command from the root of the `asr4-streaming` repository:
 
 ```sh
 pip install .[client]
@@ -40,13 +40,13 @@ pip install .[client]
 Check if asr4 is correctly installed by printing its version.
 
 ```sh
-python -c 'import asr4; print(asr4.__version__)'
+python -c 'import asr4_streaming; print(asr4_streaming.__version__)'
 ```
 
 ### Server installation
 
 Python version 3.7+ is required to run the server. 
-To install the server's requirements, run the following command from the root of the `asr4` repository:
+To install the server's requirements, run the following command from the root of the `asr4-streaming` repository:
 
 ```sh
 pip install torch==1.12.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
@@ -55,9 +55,9 @@ pip install .[server]
 
 ### Uninstall asr4
 
-First remove the folder "asr4.egg-info" from the asr4 repository root and then run:
+First remove the folder "asr4_streaming.egg-info" from the asr4 repository root and then run:
 ```sh
-pip uninstall asr4
+pip uninstall asr4_streaming
 ```
 
 ## How to Run
@@ -67,7 +67,7 @@ Again, separated instructions are provided to either run the client or the serve
 ### Client (HTTP)
 
 
-Once its dependencies are installed, the client can connect to a running `asr4` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
+Once its dependencies are installed, the client can connect to a running `asr4_streaming` server to obtain transcriptions. This simple command will return the transcription through the standard output channel:
 
 ```sh
 base64 <WAV_FILE_PATH> -w 0 | jq -Rs '{audio: .}' | curl -d @- \
@@ -153,7 +153,7 @@ Find supported configuration options in the table below:
 
 ### Server
 
-Once its dependencies are installed, the `asr4` can be executed to accept connections from the clients. This simple command will return the transcription through the standard output channel:
+Once its dependencies are installed, the `asr4_streaming` can be executed to accept connections from the clients. This simple command will return the transcription through the standard output channel:
 
 ```sh
 # Run a single-threaded asr4 server that serves an ONNX model.
