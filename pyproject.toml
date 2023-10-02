@@ -58,6 +58,7 @@ client = [
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/734c88c08f37f4bcc0d85121fd6bbb1badc2bcd54b24f5d7d9ffe8dbecffa1bd/csr_evaluation_tools-0.0.22-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/80e98be34e5798c3c2ac410b1f9696216aaed413cda01213c5a207b286317d6b/csr_evaluation_tools-0.0.22-py39-none-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/0f6bbb9642c692941c7e6e4de52c9d356bcf090f2d4eb17a6c3e63f09c9a1396/csr_evaluation_tools-0.0.22-py310-none-linux_x86_64.whl ; python_version=='3.10' and platform_system=='Linux'",
+    "asr4-engine @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/ec76002b6a53e63cde698eb6c99d06930726a5e5f7e15507ed3895a4f1380827/asr4_engine-0.1.0-py3-none-any.whl"
 ]
 server = [
     "toml >= 0.10.2",
@@ -67,10 +68,10 @@ server = [
     "grpcio-health-checking >= 1.47.0",
 ]
 cpu = [
-    "asr4-engine-wav2vec[cpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/b1752572720301ff63c4c650cc88eb472cb2a8911b23adf394f618cd09dcfe4c/asr4_engine_wav2vec-0.7.5-py3-none-any.whl"
+    "asr4-engine-wav2vec[cpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/e28a9138ff4a52255a34105ce741d038a36ac836f812efcf684d012a7b08d115/asr4_engine_wav2vec-0.9.0-py3-none-any.whl"
 ]
 gpu = [
-    "asr4-engine-wav2vec[gpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/b1752572720301ff63c4c650cc88eb472cb2a8911b23adf394f618cd09dcfe4c/asr4_engine_wav2vec-0.7.5-py3-none-any.whl"
+    "asr4-engine-wav2vec[gpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/e28a9138ff4a52255a34105ce741d038a36ac836f812efcf684d012a7b08d115/asr4_engine_wav2vec-0.9.0-py3-none-any.whl"
 ]
 test = [
     "pytest >= 6.2.5",
