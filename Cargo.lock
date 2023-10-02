@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "asr4"
+name = "asr4_streaming"
 version = "0.6.5"
