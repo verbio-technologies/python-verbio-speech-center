@@ -1,3 +1,3 @@
 Verbio CSR
 
-ASR based on Transformer DNNs, with multilingual and unsupervised information.
+ASR4 streaming product based on Transformer DNNs, with multilingual and unsupervised information.
