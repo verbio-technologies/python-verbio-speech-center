@@ -184,7 +184,10 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                     f"Invalid language '{otherLanguage.value}'. Only '{currentLanguage.value}' is supported.",
                     output,
                 )
-                self.assertIsNotNone(match, f"Failed on language {otherLanguage} when server is {currentLanguage}. Output: {output}")
+                self.assertIsNotNone(
+                    match,
+                    f"Failed on language {otherLanguage} when server is {currentLanguage}. Output: {output}",
+                )
 
     def testEmptyRecognizeRequest(self):
         process = self.launchRecognitionProcess(
