@@ -68,10 +68,10 @@ server = [
     "grpcio-health-checking >= 1.47.0",
 ]
 cpu = [
-    "asr4-engine-wav2vec[cpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/e28a9138ff4a52255a34105ce741d038a36ac836f812efcf684d012a7b08d115/asr4_engine_wav2vec-0.9.0-py3-none-any.whl"
+    "asr4-engine-wav2vec[cpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/53f1c1c882332473ea80eeefeda7bab5e2b5fd04680e9b1ae9e5ae8ab8fc119a/asr4_engine_wav2vec-0.10.0-py3-none-any.whl"
 ]
 gpu = [
-    "asr4-engine-wav2vec[gpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/e28a9138ff4a52255a34105ce741d038a36ac836f812efcf684d012a7b08d115/asr4_engine_wav2vec-0.9.0-py3-none-any.whl"
+    "asr4-engine-wav2vec[gpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/53f1c1c882332473ea80eeefeda7bab5e2b5fd04680e9b1ae9e5ae8ab8fc119a/asr4_engine_wav2vec-0.10.0-py3-none-any.whl"
 ]
 test = [
     "pytest >= 6.2.5",
