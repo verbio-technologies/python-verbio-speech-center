@@ -17,8 +17,7 @@ from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer_v1.handler import EventHandler
 from asr4_streaming.recognizer_v1.handler import TranscriptionResult
 
-from asr4_engine.data_classes import Transcription
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Language, Transcription
 from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec.wav2vec_engine import (
     Wav2VecEngine,
