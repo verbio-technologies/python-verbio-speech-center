@@ -100,9 +100,10 @@ async def asyncStreamingRequestIterator(
     audioEncoding: Optional[Union[int, str]] = None,
     topic: Optional[Union[int, str]] = None,
     audio: List[bytes] = [],
+    enable_formatting = False,
 ) -> AsyncIterator[StreamingRecognizeRequest]:
     for message in streamingRequestIterator(
-        language, sampleRate, audioEncoding, topic, audio
+        language, sampleRate, audioEncoding, topic, audio, enable_formatting
     ):
         yield message
     return
@@ -114,6 +115,7 @@ def streamingRequestIterator(
     audioEncoding: Optional[Union[int, str]] = None,
     topic: Optional[Union[int, str]] = None,
     audio: List[bytes] = [],
+    enable_formatting = False,
 ) -> Iterator[StreamingRecognizeRequest]:
     config = RecognitionConfig()
     if topic:
@@ -124,6 +126,7 @@ def streamingRequestIterator(
             language=language or "",
             sample_rate_hz=sampleRate or 0,
             audio_encoding=audioEncoding or "PCM",
+            enable_formatting=enable_formatting,
         )
         config.parameters.CopyFrom(parameters)
     yield StreamingRecognizeRequest(config=config)
