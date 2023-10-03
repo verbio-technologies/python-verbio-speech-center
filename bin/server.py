@@ -5,7 +5,7 @@ import multiprocessing
 from asr4_streaming.recognizer import Server, ServerConfiguration
 from asr4_streaming.recognizer import Logger
 
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Language
 from asr4.engines.wav2vec.v1.runtime.onnx import DecodingType
 
 

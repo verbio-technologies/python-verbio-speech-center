@@ -19,8 +19,7 @@ from .types import StreamingRecognizeRequest
 from .types import StreamingRecognizeResponse
 from .types import StreamingRecognitionResult
 
-from asr4_engine.data_classes import Signal
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Signal, Language
 from asr4_engine.data_classes.transcription import Segment, WordTiming
 from asr4.engines.wav2vec.wav2vec_engine import (
     Wav2VecEngine,

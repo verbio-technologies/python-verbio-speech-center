@@ -9,7 +9,7 @@ from shutil import rmtree
 from typing import Optional
 from subprocess import Popen, PIPE
 
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Language
 
 
 def parseSeconds(text: str) -> float:
@@ -184,7 +184,10 @@ class TestRecognizerService(unittest.TestCase, TestRecognizerUtils):
                     f"Invalid language '{otherLanguage.value}'. Only '{currentLanguage.value}' is supported.",
                     output,
                 )
-                self.assertIsNotNone(match)
+                self.assertIsNotNone(
+                    match,
+                    f"Failed on language {otherLanguage} when server is {currentLanguage}. Output: {output}",
+                )
 
     def testEmptyRecognizeRequest(self):
         process = self.launchRecognitionProcess(

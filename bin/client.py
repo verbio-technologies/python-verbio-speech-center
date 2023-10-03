@@ -23,7 +23,7 @@ from asr4_streaming.recognizer import RecognitionParameters
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 from asr4_streaming.recognizer import StreamingRecognizeResponse
 
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Language
 
 _PROCESS_COUNT = 8
 
