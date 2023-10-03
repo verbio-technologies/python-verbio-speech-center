@@ -28,7 +28,7 @@ dependencies = [
     "protobuf >= 3.20.1",
     "google >= 3.0.0",
     "google-api-core >= 2.10.2",
-    "grpcio >= 1.47.0",
+    "grpcio == 1.59.0",
     "typing_extensions >= 4.3.0",
     "loguru >= 0.7.0",
 ]
@@ -54,6 +54,7 @@ version = {file = ["VERSION"]}
 client = [
     "numpy >= 1.21.4",
     "pause >= 0.3",
+    "grpcio-status == 1.59.0",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/f8d8063889d24bdd07edfae5e5c189f5dbb26c38f3c8ab2d76c4268d149f6cc7/csr_evaluation_tools-0.0.22-py37-none-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/734c88c08f37f4bcc0d85121fd6bbb1badc2bcd54b24f5d7d9ffe8dbecffa1bd/csr_evaluation_tools-0.0.22-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/80e98be34e5798c3c2ac410b1f9696216aaed413cda01213c5a207b286317d6b/csr_evaluation_tools-0.0.22-py39-none-linux_x86_64.whl ; python_version=='3.9' and platform_system=='Linux'",
@@ -65,7 +66,7 @@ server = [
     "soxr >= 0.3.3",
     "sox >= 1.4.1",
     "scipy >= 1.10.0",
-    "grpcio-health-checking >= 1.47.0",
+    "grpcio-health-checking == 1.59.0",
 ]
 cpu = [
     "asr4-engine-wav2vec[cpu,decoder,formatter] @ https://__token__:glpat-REETc2aBAZBgzuD5hu2j@gitlab.lan.verbio.com/api/v4/projects/1560/packages/pypi/files/53f1c1c882332473ea80eeefeda7bab5e2b5fd04680e9b1ae9e5ae8ab8fc119a/asr4_engine_wav2vec-0.10.0-py3-none-any.whl"
