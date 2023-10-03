@@ -2,8 +2,8 @@ import os
 import pytest
 import unittest
 from typing import AsyncIterator
-from grpc.aio import ServicerContext
 from unittest.mock import patch, Mock
+from grpc.aio import ServicerContext, Metadata
 
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer_v1.types import SampleRate
@@ -13,7 +13,6 @@ from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
 from tests.unit.test_event_handler import (
     initializeMockEngine,
     initializeMockContext,
-    initializeMockContextNoIds,
     asyncStreamingRequestIterator,
     DEFAULT_ENGLISH_MESSAGE,
     DEFAULT_SPANISH_MESSAGE,
@@ -49,7 +48,7 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
             return
 
         mock.return_value = initializeMockEngine(Mock(Wav2VecEngine), language="en-US")
-        mockContext = initializeMockContextNoIds(Mock(ServicerContext))
+        mockContext = initializeMockContext(Mock(ServicerContext), metadata=Metadata())
         service = RecognizerService(
             os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
         )

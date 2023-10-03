@@ -3,9 +3,10 @@ import string
 import asyncio
 import unittest
 from dataclasses import dataclass
-from grpc.aio import ServicerContext
 from unittest.mock import Mock, AsyncMock
-from typing import List, Optional, Union, Iterator, AsyncIterator
+from grpc.aio import ServicerContext, Metadata
+from grpc.beta._metadata import _metadatum, _Metadatum
+from typing import List, Optional, Union, Iterator, AsyncIterator, Tuple
 
 from asr4_streaming.recognizer import RecognitionConfig
 from asr4_streaming.recognizer import RecognitionParameters
@@ -32,12 +33,6 @@ FORMATTED_SPANISH_MESSAGE: str = (
     "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
 )
 DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
-
-
-class MockMetadata:
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
 
 
 def initializeMockEngine(mock: Mock, language: str):
@@ -67,27 +62,17 @@ def initializeMockEngine(mock: Mock, language: str):
     return mock
 
 
-def initializeMockContext(mock: Mock):
+def initializeMockContext(
+    mock: Mock,
+    metadata: Metadata = Metadata(
+        ("user-id", "testUser"), ("request-id", "testRequest")
+    ),
+):
     async def abort(_statusCode, message):
         raise Exception(message)
 
-    def invocation_metadata():
-        return (
-            MockMetadata(key="user-id", value="testUser"),
-            MockMetadata(key="request-id", value="testRequest"),
-        )
-
-    mock.abort = abort
-    mock.invocation_metadata = invocation_metadata
-    return mock
-
-
-def initializeMockContextNoIds(mock: Mock):
-    async def abort(_statusCode, message):
-        raise Exception(message)
-
-    def invocation_metadata():
-        return {}
+    def invocation_metadata() -> Tuple[_Metadatum]:
+        return (_metadatum(k, v) for k, v in metadata)
 
     mock.abort = abort
     mock.invocation_metadata = invocation_metadata
