@@ -12,7 +12,7 @@ from .types import StreamingRecognizeResponse
 
 from asr4.engines.wav2vec import Wav2VecEngineFactory
 from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Language
 
 _DEFAULT_ID = "unknown"
 

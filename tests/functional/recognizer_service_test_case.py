@@ -300,6 +300,7 @@ class RecognizerServiceTestCase(unittest.IsolatedAsyncioTestCase):
             language=language,
             sampleRate=alternativeSampleRate or sampleRate,
             audio=audioChunks,
+            enable_formatting=True,
         )
 
     async def __streamingAsyncRequestIteratorFromAudio(

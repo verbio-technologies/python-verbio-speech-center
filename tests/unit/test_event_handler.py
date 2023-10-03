@@ -17,8 +17,7 @@ from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer_v1.handler import EventHandler
 from asr4_streaming.recognizer_v1.handler import TranscriptionResult
 
-from asr4_engine.data_classes import Transcription
-from asr4.engines.wav2vec.v1.engine_types import Language
+from asr4_engine.data_classes import Language, Transcription
 from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec.wav2vec_engine import (
     Wav2VecEngine,
@@ -101,9 +100,10 @@ async def asyncStreamingRequestIterator(
     audioEncoding: Optional[Union[int, str]] = None,
     topic: Optional[Union[int, str]] = None,
     audio: List[bytes] = [],
+    enable_formatting=False,
 ) -> AsyncIterator[StreamingRecognizeRequest]:
     for message in streamingRequestIterator(
-        language, sampleRate, audioEncoding, topic, audio
+        language, sampleRate, audioEncoding, topic, audio, enable_formatting
     ):
         yield message
     return
@@ -115,6 +115,7 @@ def streamingRequestIterator(
     audioEncoding: Optional[Union[int, str]] = None,
     topic: Optional[Union[int, str]] = None,
     audio: List[bytes] = [],
+    enable_formatting=False,
 ) -> Iterator[StreamingRecognizeRequest]:
     config = RecognitionConfig()
     if topic:
@@ -125,6 +126,7 @@ def streamingRequestIterator(
             language=language or "",
             sample_rate_hz=sampleRate or 0,
             audio_encoding=audioEncoding or "PCM",
+            enable_formatting=enable_formatting,
         )
         config.parameters.CopyFrom(parameters)
     yield StreamingRecognizeRequest(config=config)
