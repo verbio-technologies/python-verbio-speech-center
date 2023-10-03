@@ -7,6 +7,9 @@ from datetime import timedelta
 from dataclasses import dataclass
 from typing import List, Optional
 
+from google.rpc import code_pb2
+from google.rpc.status_pb2 import Status
+
 from .types import Duration
 from .types import WordInfo
 from .types import SampleRate
@@ -193,4 +196,12 @@ class EventHandler:
 
     async def __logError(self, message: str, statusCode: grpc.StatusCode):
         logger.error(message)
+        await self._context.write(
+            StreamingRecognizeResponse(
+                error=Status(
+                    code=code_pb2.Code.Value(statusCode.name),
+                    message=message,
+                )
+            )
+        )
         await self._context.abort(statusCode, message)
