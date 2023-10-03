@@ -100,7 +100,7 @@ async def asyncStreamingRequestIterator(
     audioEncoding: Optional[Union[int, str]] = None,
     topic: Optional[Union[int, str]] = None,
     audio: List[bytes] = [],
-    enable_formatting = False,
+    enable_formatting=False,
 ) -> AsyncIterator[StreamingRecognizeRequest]:
     for message in streamingRequestIterator(
         language, sampleRate, audioEncoding, topic, audio, enable_formatting
@@ -115,7 +115,7 @@ def streamingRequestIterator(
     audioEncoding: Optional[Union[int, str]] = None,
     topic: Optional[Union[int, str]] = None,
     audio: List[bytes] = [],
-    enable_formatting = False,
+    enable_formatting=False,
 ) -> Iterator[StreamingRecognizeRequest]:
     config = RecognitionConfig()
     if topic:
