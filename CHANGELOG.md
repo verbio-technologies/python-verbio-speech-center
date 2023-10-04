@@ -6,6 +6,14 @@
 
 ### Removed :no_entry:
 
+## 1.0.3 (2023-10-04)
+
+### Patch (3 changes)
+
+- [release/1.0.3](csr/asr4-streaming@66232d393766bedd6fceed61588d6024cf45693f) ([merge request](csr/asr4-streaming!337))
+- [Fix/ Send Error Status Message before aborting a gRPC Channel](csr/asr4-streaming@fee6d15a950b8f44d716c5d9540466be8d94a421) ([merge request](csr/asr4-streaming!339))
+- [[EEE-1050] Remove dependencies from W2V engine in client.py](csr/asr4-streaming@34904d10c9b04d38b796b6bba3cdddbebcbba4bf) ([merge request](csr/asr4-streaming!336))
+
 ## 1.0.0 (2023-09-15)
 
 ### Major (1 change)
