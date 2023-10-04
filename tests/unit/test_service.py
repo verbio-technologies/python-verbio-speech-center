@@ -23,6 +23,6 @@ class TestService(unittest.TestCase):
             os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
         )
         self.assertEqual(
-            service.getContextMetadata(mockContext),
+            service._RecognizerService__getContextMetadata(mockContext),
             {"user-id": "testUser", "request-id": "testRequest"},
         )

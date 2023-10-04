@@ -3,6 +3,8 @@ import grpc
 from functools import partial
 from typing import Iterator
 
+from google.rpc import code_pb2
+
 from asr4_streaming.recognizer import RecognizerStub
 from asr4_streaming.recognizer import StreamingRecognizeRequest
 
@@ -18,17 +20,24 @@ class TestEdgeCases(RecognizerServiceTestCase):
 
         self._waitForServer()
         channel = grpc.insecure_channel(TestEdgeCases._serverAddress)
-        response = RecognizerStub(channel).StreamingRecognize(
+        responseIterator = RecognizerStub(channel).StreamingRecognize(
             requestIterator(),
             metadata=(
                 ("user-id", "testUser"),
                 ("request-id", "testRequest"),
             ),
         )
-        self.expectStatus(response, grpc.StatusCode.INVALID_ARGUMENT)
-        self.expectDetails(response, "Empty request")
+        response = next(responseIterator)
+        self.expectStatus(responseIterator, grpc.StatusCode.INVALID_ARGUMENT)
+        self.expectDetails(responseIterator, "Empty request")
+        self.assertTrue(response.HasField("error"))
+        self.assertEqual(
+            response.error.code,
+            code_pb2.Code.Value(grpc.StatusCode.INVALID_ARGUMENT.name),
+        )
+        self.assertEqual(response.error.message, "Empty request")
         with self.assertRaises(grpc.RpcError):
-            next(response)
+            next(responseIterator)
 
     def testRecognitionWithMultipleSampleRates(self):
         for audioFile in [
