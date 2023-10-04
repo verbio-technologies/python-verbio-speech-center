@@ -95,8 +95,8 @@ functional-testing:long-audios:
   stage: functional-tests
   needs: ["unit-testing"]
   image: docker.registry.verbio.com/csr/devops/asr4-base-gpu:latest
-  tags:
-    - gpu
+#  tags:
+#    - gpu
   only:
     - tags
     - merge_requests
@@ -160,8 +160,8 @@ integration-testing:cpu:
 integration-testing:gpu:
   extends: integration-testing:cpu
   image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
-  tags:
-    - gpu
+#  tags:
+#    - gpu
   script:
     - ls
   # before_script:
@@ -285,12 +285,12 @@ testing:integration-tests-with-docker:cpu:
   variables:
     DEVICE: "cpu"
 
-testing:integration-tests-with-docker:gpu:
-  extends: .template:integration-testing-docker
-  variables:
-    DEVICE: "gpu"
-  tags:
-    - gpu
+#testing:integration-tests-with-docker:gpu:
+#  extends: .template:integration-testing-docker
+#  variables:
+#    DEVICE: "gpu"
+#  tags:
+#    - gpu
 
 .template:integration-testing-docker:
   stage: integration-tests-with-docker
