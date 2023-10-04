@@ -83,8 +83,6 @@ functional-testing:
     - merge_requests
     - master
     - web
-  script:
-    - ls
   before_script:
     - pip install .[server,cpu,test]
   script:
@@ -102,8 +100,6 @@ functional-testing:long-audios:
     - merge_requests
     - master
     - web
-  script:
-    - ls
   before_script:
     - pip install .[server,gpu,test]
   script:
@@ -120,8 +116,6 @@ functional-testing:e2e:
     - merge_requests
     - master
     - web
-  script:
-    - ls
   before_script:
     - python -m venv venv-server
     - . ./venv-server/bin/activate
@@ -147,8 +141,6 @@ integration-testing:cpu:
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - ls
   before_script:
     - pip install .[client,server,cpu,test]
     - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 0
@@ -162,8 +154,6 @@ integration-testing:gpu:
   image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
   tags:
     - gpu
-  script:
-    - ls
   before_script:
     - . /opt/intel/oneapi/setvars.sh
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
