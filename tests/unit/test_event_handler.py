@@ -1,3 +1,4 @@
+import grpc
 import random
 import string
 import asyncio
@@ -69,7 +70,7 @@ def initializeMockContext(
     ),
 ):
     async def abort(_statusCode, message):
-        raise Exception(message)
+        raise grpc.aio.AbortError(message)
 
     def invocation_metadata() -> Tuple[_Metadatum]:
         return (_metadatum(k, v) for k, v in metadata)
