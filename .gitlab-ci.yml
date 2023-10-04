@@ -85,18 +85,18 @@ functional-testing:
     - web
   script:
     - ls
-#  before_script:
-#    - pip install .[server,cpu,test]
-#  script:
-#    - pytest tests/functional --junit-xml=report.xml --verbose
+  before_script:
+    - pip install .[server,cpu,test]
+  script:
+    - pytest tests/functional --junit-xml=report.xml --verbose
 
 
 functional-testing:long-audios:
   stage: functional-tests
   needs: ["unit-testing"]
   image: docker.registry.verbio.com/csr/devops/asr4-base-gpu:latest
-#  tags:
-#    - gpu
+  tags:
+    - gpu
   only:
     - tags
     - merge_requests
@@ -104,12 +104,12 @@ functional-testing:long-audios:
     - web
   script:
     - ls
-  # before_script:
-  #   - pip install .[server,gpu,test]
-  # script:
-  #   - export W2V_GPU=true
-  #   - pytest tests/functional/test_streaming_requests.py --verbose
-  #   - pytest tests/functional/test_long_files.py --verbose
+  before_script:
+    - pip install .[server,gpu,test]
+  script:
+    - export W2V_GPU=true
+    - pytest tests/functional/test_streaming_requests.py --verbose
+    - pytest tests/functional/test_long_files.py --verbose
 
 
 functional-testing:e2e:
@@ -122,18 +122,18 @@ functional-testing:e2e:
     - web
   script:
     - ls
-  # before_script:
-  #   - python -m venv venv-server
-  #   - . ./venv-server/bin/activate
-  #   - pip install .[server,cpu]
-  #   - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_en-us.toml
-  # script:
-  #   - apt-get -y -q update && apt-get install -y asrtest-eval
-  #   - deactivate
-  #   - python -m venv venv-client
-  #   - . ./venv-client/bin/activate
-  #   - pip install .[client]
-  #   - ./tests/e2e/run_metrics.sh en-us 0.0.0.0:50051 tests/e2e/data/test_en-us_upgraded-small.gui tests/e2e/data/expected_metrics_functional_testing.json
+  before_script:
+    - python -m venv venv-server
+    - . ./venv-server/bin/activate
+    - pip install .[server,cpu]
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_en-us.toml
+  script:
+    - apt-get -y -q update && apt-get install -y asrtest-eval
+    - deactivate
+    - python -m venv venv-client
+    - . ./venv-client/bin/activate
+    - pip install .[client]
+    - ./tests/e2e/run_metrics.sh en-us 0.0.0.0:50051 tests/e2e/data/test_en-us_upgraded-small.gui tests/e2e/data/expected_metrics_functional_testing.json
 
 
 integration-testing:cpu:
@@ -149,30 +149,30 @@ integration-testing:cpu:
       - LANGUAGE: [en-us, es, pt-br]
   script:
     - ls
-#  before_script:
-#    - pip install .[client,server,cpu,test]
-#    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 0
-#    - apt-get update && apt-get install -y asrtest-eval libffi-dev
-#  script:
-#    - pytest tests/integration -rA --junit-xml=report.xml --verbose --capture=no
+  before_script:
+    - pip install .[client,server,cpu,test]
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 0
+    - apt-get update && apt-get install -y asrtest-eval libffi-dev
+  script:
+    - pytest tests/integration -rA --junit-xml=report.xml --verbose --capture=no
 
 
 integration-testing:gpu:
   extends: integration-testing:cpu
   image: docker.registry.verbio.com/engineering/devops/debian10-intel-oneapi-python-cuda-tensorrt:3.9
-#  tags:
-#    - gpu
+  tags:
+    - gpu
   script:
     - ls
-  # before_script:
-  #   - . /opt/intel/oneapi/setvars.sh
-  #   - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
-  #   - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 1
-  #   - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
-  #   - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
-  #   - apt-get update && apt-get install -y asrtest-eval libffi-dev
-  # script:
-  #   - pytest tests/integration -rA --junit-xml=report.xml --verbose --capture=no
+  before_script:
+    - . /opt/intel/oneapi/setvars.sh
+    - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
+    - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 1
+    - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
+    - echo 'deb https://pkg-repos.lan.verbio.com/deb/internal jessie stable' | tee /etc/apt/sources.list.d/verbio-internal.list
+    - apt-get update && apt-get install -y asrtest-eval libffi-dev
+  script:
+    - pytest tests/integration -rA --junit-xml=report.xml --verbose --capture=no
 
 
 build-package:python:
@@ -285,12 +285,12 @@ testing:integration-tests-with-docker:cpu:
   variables:
     DEVICE: "cpu"
 
-#testing:integration-tests-with-docker:gpu:
-#  extends: .template:integration-testing-docker
-#  variables:
-#    DEVICE: "gpu"
-#  tags:
-#    - gpu
+testing:integration-tests-with-docker:gpu:
+  extends: .template:integration-testing-docker
+  variables:
+    DEVICE: "gpu"
+  tags:
+    - gpu
 
 .template:integration-testing-docker:
   stage: integration-tests-with-docker
@@ -347,7 +347,6 @@ staging:promote:
   image: docker:24
   only:
     - tags
-    - web
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
