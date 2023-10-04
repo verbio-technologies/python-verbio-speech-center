@@ -8,8 +8,9 @@ import pause
 import argparse
 import numpy as np
 from loguru import logger
+from grpc_status import rpc_status
 from datetime import datetime, timedelta
-from typing import List, Tuple, Iterator
+from typing import List, Tuple, AsyncIterator
 
 import asyncio
 from subprocess import Popen
@@ -144,36 +145,41 @@ class StreamingClient:
         logger.info(
             f"Running recognition {queryID}. May take several seconds for audios longer that one minute."
         )
-        try:
-            self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
-                request,
-                metadata=(
-                    ("accept-language", language.value),
-                    ("user-id", "testUser"),
-                    ("request-id", "testRequest"),
-                ),
-                timeout=20 * audioDuration,
-            )
-        except grpc.RpcError as e:
-            logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
-        except Exception as e:
-            logger.error(f"Error in gRPC Call: {e}")
+        self.grpcResponseStream = _workerStubSingleton.StreamingRecognize(
+            request,
+            metadata=(
+                ("accept-language", language.value),
+                ("user-id", "testUser"),
+                ("request-id", "testRequest"),
+            ),
+            timeout=20 * audioDuration,
+        )
+        await self.grpcResponseStream._initializer
 
     async def _readResponseFromStream(self) -> List[StreamingRecognizeResponse]:
         response = []
         try:
             async for chunk in self.grpcResponseStream:
-                logger.debug(
-                    f" - Got stream response {len(response)} > {chunk.results.alternatives[0].transcript}"
-                )
-                response.append(chunk)
+                if chunk.HasField("results"):
+                    logger.debug(
+                        f" - Got stream response {len(response)} > {chunk.results.alternatives[0].transcript}"
+                    )
+                    response.append(chunk)
+                else:
+                    status = rpc_status.to_status(chunk.error)
+                    raise grpc.aio.AioRpcError(
+                        status.code,
+                        status.trailing_metadata,
+                        status.trailing_metadata,
+                        details=status.details,
+                    )
         except grpc.RpcError as e:
             logger.error(f"Error in gRPC Call: {e.details()} [status={e.code()}]")
         except Exception as e:
             logger.error(f"Error in gRPC Call: {e}")
         return response
 
-    def __createStreamingRequests(
+    async def __createStreamingRequests(
         self,
         audio: bytes,
         sampleRateHz: int,
@@ -181,7 +187,7 @@ class StreamingClient:
         language: Language,
         useFormat: bool,
         batchMode: bool,
-    ) -> Iterator[StreamingRecognizeRequest]:
+    ) -> AsyncIterator[StreamingRecognizeRequest]:
         chunkSize = self.__setChunkSize(batchMode)
         chunkDuration = chunkSize / (sampleWidth * sampleRateHz)
         yield StreamingRecognizeRequest(
@@ -194,14 +200,17 @@ class StreamingClient:
                 resource=RecognitionResource(topic="GENERIC"),
             )
         )
-        yield from self.__yieldAudioSegmentsInStream(audio, chunkSize, chunkDuration)
+        for audioSegment in self.__yieldAudioSegmentsInStream(
+            audio, chunkSize, chunkDuration
+        ):
+            yield audioSegment
 
     def __yieldAudioSegmentsInStream(
         self,
         audio: bytes,
         chunkSize: int,
         chunkDuration: float,
-    ) -> Iterator[StreamingRecognizeRequest]:
+    ) -> AsyncIterator[StreamingRecognizeRequest]:
         messages = self.__getAudioStreamingRequests(audio, chunkSize)
         messageNum = math.ceil(len(audio) / chunkSize) if chunkSize else 1
         for n, message in enumerate(messages, start=1):
@@ -212,7 +221,7 @@ class StreamingClient:
 
     def __getAudioStreamingRequests(
         self, audio: bytes, chunkSize: int
-    ) -> Iterator[StreamingRecognizeRequest]:
+    ) -> AsyncIterator[StreamingRecognizeRequest]:
         if not audio:
             logger.error(f"Empty audio content: {audio}")
         else:
