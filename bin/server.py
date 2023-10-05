@@ -102,8 +102,12 @@ class Asr4ArgParser:
         args.sil_score = float(args.sil_score) if "sil_score" in args else 0
         args.overlap = int(args.overlap) if "overlap" in args else 0
         args.subwords = bool(args.subwords) if "subwords" in args else False
-        args.local_formatting = bool(args.local_formatting) if "local_formatting" in args else False
-        args.maxChunksForDecoding = int(args.maxChunksForDecoding) if "maxChunksForDecoding" in args else 1
+        args.local_formatting = (
+            bool(args.local_formatting) if "local_formatting" in args else False
+        )
+        args.maxChunksForDecoding = (
+            int(args.maxChunksForDecoding) if "maxChunksForDecoding" in args else 1
+        )
         return args
 
     def fixNumberOfJobs(args):
