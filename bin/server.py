@@ -52,6 +52,11 @@ class Asr4ArgParser:
             help="Log levels. By default reads env variable LOG_LEVEL.",
         )
         parser.add_argument(
+            "--host",
+            dest="bindAddress",
+            help="Hostname address to bind the server to.",
+        )
+        parser.add_argument(
             "-C", "--config", dest="config", help="Path to the asr4 config file"
         )
         return parser.parse_args(args)
