@@ -176,15 +176,7 @@ class DefaultValuesTests(unittest.TestCase):
         args.servers = "3"
         args.verbose = "DEBUG"
         args.word_score = "-0.2"
-        args.config = None
-        args.gpu = None
-        args.language = None
-        args.listeners = None
-        args.sil_score = None
-        args.workers = None
-        args.overlap = None
         args.subwords = "1"
-        args.local_formatting = None
         args.maxChunksForDecoding = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)

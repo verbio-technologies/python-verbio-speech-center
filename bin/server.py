@@ -91,8 +91,8 @@ class Asr4ArgParser:
         args: argparse.Namespace,
     ) -> argparse.Namespace:
         args.bindAddress = args.bindAddress or "[::]:50051"
-        args.gpu = bool(args.gpu or False)
-        args.servers = int(args.server) if "server" in args else 1
+        args.gpu = bool(args.gpu) if "gpu" in args else False
+        args.servers = int(args.servers) if "servers" in args else 1
         args.listeners = int(args.listeners) if "listeners" in args else 1
         args.workers = int(args.workers) if "workers" in args else 2
         args.decoding_type = args.decoding_type if "decoding_type" in args else "GLOBAL"
