@@ -108,7 +108,7 @@ class EventHandler:
 
     async def __processRequestAudio(self, audio: bytes):
         await self.__validateAudio(audio)
-        logger.info(f"Received partial audio [length={len(audio)}]")
+        logger.debug(f"Received partial audio [length={len(audio)}]")
         if self._onlineHandler:
             await self._onlineHandler.sendAudioChunk(
                 self.__convertAudioToSignal(
@@ -136,7 +136,7 @@ class EventHandler:
         await self._startListening.wait()
         if self._onlineHandler:
             async for partialResult in self._onlineHandler.listenForCompleteAudio():
-                logger.info(f"Partial recognition result: '{partialResult.text}'")
+                logger.debug(f"Partial recognition result: '{partialResult.text}'")
                 partialTranscriptionResult = TranscriptionResult(
                     transcription=partialResult.text,
                     duration=partialResult.duration or 0.0,
