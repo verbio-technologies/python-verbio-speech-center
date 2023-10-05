@@ -46,7 +46,7 @@ class TestServerConfiguration(unittest.TestCase):
 
 class ArgumentParserTests(unittest.TestCase):
     def testParseArguments(self):
-        argv = ["-v","DEBUG","-C","config.toml"]
+        argv = ["-v", "DEBUG", "-C", "config.toml"]
         args = Asr4ArgParser.parseArguments(argv)
         self.assertIsInstance(args, argparse.Namespace)
         self.assertEqual(args.verbose, "DEBUG")
