@@ -1,5 +1,6 @@
 [global]
 language = "en-US"
+gpu = false
 model = "w2v-en-us-1.4.0.onnx"
 vocabulary = "w2v-en-us-1.4.0.dict.ltr.txt"
 lm_algorithm = "kenlm"
