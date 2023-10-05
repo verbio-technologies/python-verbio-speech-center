@@ -16,7 +16,7 @@ then
       export W2V_GPU=1
 fi
 
-python3 bin/server.py -C ${CONFIG} -s1 -L1 -w2 -v TRACE &
+python3 bin/server.py -C ${CONFIG} -v TRACE &
 
 
 
