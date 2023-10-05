@@ -35,10 +35,11 @@ class Asr4ArgParser:
         self.argv = argv
 
     def getArgs(self) -> argparse.Namespace:
+        args = Asr4ArgParser.parseArguments(self.argv)
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
-        args = Asr4ArgParser.fixNumberOfJobs()
+        args = Asr4ArgParser.fixNumberOfJobs(args)
         args = Asr4ArgParser.checkArgsRequired(args)
         return args
 
@@ -91,25 +92,25 @@ class Asr4ArgParser:
     ) -> argparse.Namespace:
         args.bindAddress = args.bindAddress or "[::]:50051"
         args.gpu = bool(args.gpu or False)
-        args.servers = int(args.servers or 1)
-        args.listeners = int(args.listeners or 1)
-        args.workers = int(args.workers or 2)
-        args.decoding_type = args.decoding_type or "GLOBAL"
-        args.lm_algorithm = args.lm_algorithm or "viterbi"
-        args.lm_weight = float(args.lm_weight or 0.2)
-        args.word_score = float(args.word_score or -1)
-        args.sil_score = float(args.sil_score or 0)
-        args.overlap = int(args.overlap or 0)
-        args.subwords = bool(args.subwords or False)
-        args.local_formatting = bool(args.local_formatting or False)
-        args.maxChunksForDecoding = int(args.maxChunksForDecoding or 1)
+        args.servers = int(args.server) if "server" in args else 1
+        args.listeners = int(args.listeners) if "listeners" in args else 1
+        args.workers = int(args.workers) if "workers" in args else 2
+        args.decoding_type = args.decoding_type if "decoding_type" in args else "GLOBAL"
+        args.lm_algorithm = args.lm_algorithm if "lm_algorithm" in args else "viterbi"
+        args.lm_weight = float(args.lm_weight) if "lm_weight" in args else 0.2
+        args.word_score = float(args.word_score) if "word_score" in args else -1
+        args.sil_score = float(args.sil_score) if "sil_score" in args else 0
+        args.overlap = int(args.overlap) if "overlap" in args else 0
+        args.subwords = bool(args.subwords) if "subwords" in args else False
+        args.local_formatting = bool(args.local_formatting) if "local_formatting" in args else False
+        args.maxChunksForDecoding = int(args.maxChunksForDecoding) if "maxChunksForDecoding" in args else 1
         return args
 
     def fixNumberOfJobs(args):
-        if self.jobs is not None:
-            self.servers = 1
-            self.workers = 0
-            self.listeners = args.jobs
+        if "jobs" in args:
+            args.servers = 1
+            args.workers = 0
+            args.listeners = args.jobs
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:
