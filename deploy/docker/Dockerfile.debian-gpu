@@ -18,6 +18,7 @@ ARG LM_VERSION
 COPY asr4-$LANGUAGE-lm-$LM_VERSION.bin /w2v-$LANGUAGE-lm-$LM_VERSION.bin
 COPY asr4-$LANGUAGE-lm-$LM_VERSION.lexicon.txt /w2v-$LANGUAGE-lm-$LM_VERSION.lexicon.txt
 COPY asr4_streaming_config_$LANGUAGE.toml /
+RUN sed -i s/workers\ =\ .\\+/workers\ =\ 0/ /asr4_streaming_config_$LANGUAGE.toml && sed -i s/listeners\ =\ .\\+/listeners\ =\ 1/ /asr4_streaming_config_$LANGUAGE.toml && sed -i s/servers\ =\ .\\+/servers\ =\ 3/ /asr4_streaming_config_$LANGUAGE.toml && sed -i s/gpu\ =\ false/gpu\ =\ true/ /asr4_streaming_config_$LANGUAGE.toml
 
 COPY server.py /server.py
 COPY init-gpu.sh /init.sh

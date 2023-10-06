@@ -35,89 +35,16 @@ class Asr4ArgParser:
         self.argv = argv
 
     def getArgs(self) -> argparse.Namespace:
-        args = Asr4ArgParser.fixNumberOfJobs(Asr4ArgParser.parseArguments(self.argv))
+        args = Asr4ArgParser.parseArguments(self.argv)
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
+        args = Asr4ArgParser.fixNumberOfJobs(args)
         args = Asr4ArgParser.checkArgsRequired(args)
         return args
 
     def parseArguments(args: list) -> argparse.Namespace:
         parser = argparse.ArgumentParser(description="Python ASR4 Server")
-        parser.add_argument(
-            "-m",
-            "--model-path",
-            dest="model",
-            help="Path to the model file.",
-        )
-        parser.add_argument(
-            "-d",
-            "--dictionary-path",
-            dest="vocabulary",
-            help="Path to the model's dictionary file, containing all the possible outputs from the model.",
-        )
-        parser.add_argument(
-            "-l",
-            "--language",
-            dest="language",
-            choices=[l.value.lower() for l in Language],
-            type=str.lower,
-            help="Language of the recognizer service.",
-        )
-        parser.add_argument(
-            "-f",
-            "--formatter-model-path",
-            dest="formatter",
-            help="Path to the formatter model file.",
-        )
-        parser.add_argument(
-            "-W",
-            "--subwords",
-            dest="subwords",
-            default=False,
-            action="store_true",
-            help="The final words have to be constructed from word-pieces",
-        )
-        parser.add_argument(
-            "-g",
-            "--gpu",
-            dest="gpu",
-            action="store_true",
-            help="Whether to use GPU instead of CPU",
-        )
-        parser.add_argument(
-            "--host",
-            dest="bindAddress",
-            help="Hostname address to bind the server to.",
-        )
-        parser.add_argument(
-            "-j",
-            "--jobs",
-            type=int,
-            dest="jobs",
-            help="Deprecated. Just for backcompatibility issues. Overrides -S, -L and -w and has the same effect as:  -S 1 -L {jobs} -w 0",
-        )
-        parser.add_argument(
-            "-s",
-            "--servers",
-            type=int,
-            dest="servers",
-            help="The number of inference servers to be run. Each server will load a whole new inference system.",
-        )
-        parser.add_argument(
-            "-L",
-            "--listeners",
-            type=int,
-            dest="listeners",
-            help="Number of gRPC listeners that a server will load. All listeners share the same inference server",
-        )
-        parser.add_argument(
-            "-w",
-            "--workers",
-            type=int,
-            dest="workers",
-            help="The number of workers that a single listener can use to resolve a single request.",
-        )
         parser.add_argument(
             "-v",
             "--verbose",
@@ -126,77 +53,14 @@ class Asr4ArgParser:
             help="Log levels. By default reads env variable LOG_LEVEL.",
         )
         parser.add_argument(
-            "-D",
-            "--decoding-type",
-            type=str,
-            dest="decoding_type",
-            choices=DecodingType._member_names_,
-            help="Perform Decoding for each chunk (Local) or for all chunks (Global)",
-        )
-        parser.add_argument(
-            "--lm-algorithm",
-            type=str,
-            dest="lm_algorithm",
-            choices=["viterbi", "kenlm"],
-            help="Type of algorithm for language model decoding.",
-        )
-        parser.add_argument(
-            "--lm-lexicon",
-            type=str,
-            dest="lexicon",
-            help="Lexicon for language model.",
-        )
-        parser.add_argument(
-            "--lm-model",
-            type=str,
-            dest="lm_model",
-            help="Path to the language model file.",
+            "--host",
+            dest="bindAddress",
+            help="Hostname address to bind the server to.",
         )
         parser.add_argument(
             "-C", "--config", dest="config", help="Path to the asr4 config file"
         )
-        parser.add_argument(
-            "--lm_weight",
-            dest="lm_weight",
-            type=float,
-            help="Language Model weight for KenLM",
-        )
-        parser.add_argument(
-            "--word_score",
-            dest="word_score",
-            type=float,
-            help="Word score (penalty) Weight for KenLM",
-        )
-        parser.add_argument(
-            "--sil_score", dest="sil_score", type=float, help="Silence weight for KenLM"
-        )
-        parser.add_argument(
-            "--overlap",
-            "-o",
-            dest="overlap",
-            type=int,
-            help="Size of overlapping windows when doing partial decoding",
-        )
-        parser.add_argument(
-            "-local-formatting",
-            dest="local_formatting",
-            action="store_true",
-            help="Perform local formatting when partial decoding",
-        )
-        parser.add_argument(
-            "--maxChunksForDecoding",
-            type=int,
-            dest="maxChunksForDecoding",
-            help="The number of chunks of audio until perform local decoding.",
-        )
         return parser.parse_args(args)
-
-    def fixNumberOfJobs(args):
-        if args.jobs is not None:
-            args.servers = 1
-            args.workers = 0
-            args.listeners = args.jobs
-        return args
 
     def replaceUndefinedWithEnvVariables(
         args: argparse.Namespace,
@@ -204,27 +68,11 @@ class Asr4ArgParser:
         args.verbose = args.verbose or os.environ.get(
             "LOG_LEVEL", Logger.getDefaultLevel()
         )
-        args.gpu = args.gpu or os.environ.get("ASR4_GPU")
-        args.servers = args.servers or os.environ.get("ASR4_SERVERS")
-        args.listeners = args.listeners or os.environ.get("ASR4_LISTENERS")
-        args.workers = args.workers or os.environ.get("ASR4_WORKERS")
-        args.decoding_type = args.decoding_type or os.environ.get("ASR4_DECODING_TYPE")
-        args.lm_algorithm = args.lm_algorithm or os.environ.get("ASR4_LM_ALGORITHM")
-        args.lm_weight = args.lm_weight or os.environ.get("ASR4_LM_WEIGHT")
-        args.word_score = args.word_score or os.environ.get("ASR4_WORD_SCORE")
-        args.sil_score = args.sil_score or os.environ.get("ASR4_SIL_SCORE")
-        args.overlap = args.overlap or os.environ.get("ASR4_OVERLAP")
-        args.subwords = args.subwords or os.environ.get("ASR4_SUBWORDS")
-        args.local_formatting = args.local_formatting or os.environ.get(
-            "ASR4_LOCAL_FORMATTING"
-        )
-        args.maxChunksForDecoding = args.maxChunksForDecoding or os.environ.get(
-            "ASR4_MAX_CHUNKS_FOR_DECODING"
-        )
         if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
             args.bindAddress = (
                 f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
             )
+
         return args
 
     def replaceUndefinedWithConfigFile(args: argparse.Namespace) -> argparse.Namespace:
@@ -236,15 +84,10 @@ class Asr4ArgParser:
         return args
 
     def fillArgsFromTomlFile(args: argparse.Namespace, config):
-        if not args.bindAddress:
-            if config["global"].setdefault("host") and config["global"].setdefault(
-                "port"
-            ):
-                args.bindAddress = (
-                    f"{config['global']['host']}:{config['global']['port']}"
-                )
-                del config["global"]["host"]
-                del config["global"]["port"]
+        if config["global"].setdefault("host") and config["global"].setdefault("port"):
+            args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
+            del config["global"]["host"]
+            del config["global"]["port"]
         for k, v in config["global"].items():
             setattr(args, k, getattr(args, k, None) or v)
         return args
@@ -253,19 +96,30 @@ class Asr4ArgParser:
         args: argparse.Namespace,
     ) -> argparse.Namespace:
         args.bindAddress = args.bindAddress or "[::]:50051"
-        args.gpu = bool(args.gpu or False)
-        args.servers = int(args.servers or 1)
-        args.listeners = int(args.listeners or 1)
-        args.workers = int(args.workers or 2)
-        args.decoding_type = args.decoding_type or "GLOBAL"
-        args.lm_algorithm = args.lm_algorithm or "viterbi"
-        args.lm_weight = float(args.lm_weight or 0.2)
-        args.word_score = float(args.word_score or -1)
-        args.sil_score = float(args.sil_score or 0)
-        args.overlap = int(args.overlap or 0)
-        args.subwords = bool(args.subwords or False)
-        args.local_formatting = bool(args.local_formatting or False)
-        args.maxChunksForDecoding = int(args.maxChunksForDecoding or 1)
+        args.gpu = bool(args.gpu) if "gpu" in args else False
+        args.servers = int(args.servers) if "servers" in args else 1
+        args.listeners = int(args.listeners) if "listeners" in args else 1
+        args.workers = int(args.workers) if "workers" in args else 2
+        args.decoding_type = args.decoding_type if "decoding_type" in args else "GLOBAL"
+        args.lm_algorithm = args.lm_algorithm if "lm_algorithm" in args else "viterbi"
+        args.lm_weight = float(args.lm_weight) if "lm_weight" in args else 0.2
+        args.word_score = float(args.word_score) if "word_score" in args else -1
+        args.sil_score = float(args.sil_score) if "sil_score" in args else 0
+        args.overlap = int(args.overlap) if "overlap" in args else 0
+        args.subwords = bool(args.subwords) if "subwords" in args else False
+        args.local_formatting = (
+            bool(args.local_formatting) if "local_formatting" in args else False
+        )
+        args.maxChunksForDecoding = (
+            int(args.maxChunksForDecoding) if "maxChunksForDecoding" in args else 1
+        )
+        return args
+
+    def fixNumberOfJobs(args):
+        if "jobs" in args:
+            args.servers = 1
+            args.workers = 0
+            args.listeners = args.jobs
         return args
 
     def checkArgsRequired(args: argparse.Namespace) -> argparse.Namespace:

@@ -1,13 +1,15 @@
 [global]
 language = "es"
+gpu = false
 model = "w2v-es-1.4.0.onnx"
 vocabulary = "w2v-es-1.4.0.dict.ltr.txt"
 lm_algorithm = "kenlm"
 lm_model = "w2v-es-lm-1.2.0.bin"
 lexicon = "w2v-es-lm-1.2.0.lexicon.txt"
 decoding_type = "LOCAL"
-listeners = 1
-workers = 0
+workers = 8
+listeners = 2
+servers = 1
 verbose = "INFO"
 host = "[::]"
 port = 50051
