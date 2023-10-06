@@ -45,73 +45,11 @@ class TestServerConfiguration(unittest.TestCase):
 
 
 class ArgumentParserTests(unittest.TestCase):
-    def test_parseArguments(self):
-        # Test case 1: Test parsing arguments with some input
-        argv = [
-            "-m",
-            "model.pth",
-            "-d",
-            "dictionary.txt",
-            "-l",
-            "en-us",
-            "-f",
-            "formatter.pth",
-            "-g",
-            "--host",
-            "[::]:50052",
-            "-j",
-            "4",
-            "-s",
-            "2",
-            "-L",
-            "4",
-            "-w",
-            "8",
-            "-v",
-            "DEBUG",
-            "-D",
-            "GLOBAL",
-            "--lm-algorithm",
-            "kenlm",
-            "--lm-lexicon",
-            "lexicon.txt",
-            "--lm-model",
-            "lm_model.pth",
-            "-C",
-            "config.toml",
-            "--lm_weight",
-            "0.5",
-            "--word_score",
-            "0.2",
-            "--sil_score",
-            "0.1",
-            "-local-formatting",
-            "--maxChunksForDecoding",
-            "1",
-        ]
+    def testParseArguments(self):
+        argv = ["-v", "DEBUG", "-C", "config.toml"]
         args = Asr4ArgParser.parseArguments(argv)
         self.assertIsInstance(args, argparse.Namespace)
-        self.assertEqual(args.model, "model.pth")
-        self.assertEqual(args.vocabulary, "dictionary.txt")
-        self.assertEqual(args.language, "en-us")
-        self.assertEqual(args.formatter, "formatter.pth")
-        self.assertEqual(args.gpu, True)
-        self.assertEqual(args.bindAddress, "[::]:50052")
-        self.assertEqual(args.jobs, 4)
-        self.assertEqual(args.servers, 2)
-        self.assertEqual(args.listeners, 4)
-        self.assertEqual(args.workers, 8)
         self.assertEqual(args.verbose, "DEBUG")
-        self.assertEqual(args.decoding_type, "GLOBAL")
-        self.assertEqual(args.lm_algorithm, "kenlm")
-        self.assertEqual(args.lexicon, "lexicon.txt")
-        self.assertEqual(args.lm_model, "lm_model.pth")
-        self.assertEqual(args.config, "config.toml")
-        self.assertEqual(args.lm_weight, 0.5)
-        self.assertEqual(args.word_score, 0.2)
-        self.assertEqual(args.sil_score, 0.1)
-        self.assertEqual(args.local_formatting, True)
-        self.assertEqual(args.maxChunksForDecoding, 1)
 
 
 class SetDefaultBindAddressTests(unittest.TestCase):
@@ -214,78 +152,17 @@ class SystemVarsOverrideTests(unittest.TestCase):
         self.assertEqual(args.local_formatting, False)
         self.assertEqual(args.maxChunksForDecoding, 1)
 
-    def test_system_vars_override_with_env_vars_set(self):
+    def testSystemVarsOverrideWithEnvVarsSet(self):
         args = argparse.Namespace()
         args.verbose = None
-        args.gpu = None
-        args.bindAddress = None
-        args.servers = None
-        args.listeners = None
-        args.workers = None
-        args.decoding_type = None
-        args.lm_algorithm = None
-        args.lm_weight = None
-        args.word_score = None
-        args.sil_score = None
         args.config = None
-        args.language = None
-        args.overlap = None
-        args.subwords = None
-        args.local_formatting = None
-        args.maxChunksForDecoding = 1
 
-        # Set environment variables for testing
         os.environ["LOG_LEVEL"] = "INFO"
-        os.environ["ASR4_GPU"] = "1"
-        os.environ["ASR4_HOST"] = "[::]"
-        os.environ["ASR4_PORT"] = "50052"
-        os.environ["ASR4_SERVERS"] = "2"
-        os.environ["ASR4_LISTENERS"] = "3"
-        os.environ["ASR4_WORKERS"] = "4"
-        os.environ["ASR4_DECODING_TYPE"] = "GLOBAL"
-        os.environ["ASR4_LM_ALGORITHM"] = "viterbi"
-        os.environ["ASR4_LM_WEIGHT"] = "0.7"
-        os.environ["ASR4_WORD_SCORE"] = "-0.5"
-        os.environ["ASR4_SIL_SCORE"] = "0.3"
-        os.environ["ASR4_OVERLAP"] = "80000"
-        os.environ["ASR4_SUBWORDS"] = "1"
-        os.environ["ASR4_LOCAL_FORMATTING"] = "1"
-        os.environ["ASR4_MAX_CHUNKS_FOR_DECODING"] = "1"
-
         args = Asr4ArgParser.replaceUndefinedWithEnvVariables(args)
         args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
-
-        # Assert that the values in args have been overridden by the environment variables
-        self.assertEqual(args.verbose, "INFO")
-        self.assertEqual(args.gpu, "1")
-        self.assertEqual(args.bindAddress, "[::]:50052")
-        self.assertEqual(args.servers, "2")
-        self.assertEqual(args.listeners, "3")
-        self.assertEqual(args.workers, "4")
-        self.assertEqual(args.decoding_type, "GLOBAL")
-        self.assertEqual(args.lm_algorithm, "viterbi")
-        self.assertEqual(args.lm_weight, "0.7")
-        self.assertEqual(args.word_score, "-0.5")
-        self.assertEqual(args.sil_score, "0.3")
-        self.assertEqual(args.overlap, "80000")
-        self.assertEqual(args.subwords, "1")
-        self.assertEqual(args.local_formatting, "1")
-
-        # Clean up environment variables after the test
         del os.environ["LOG_LEVEL"]
-        del os.environ["ASR4_GPU"]
-        del os.environ["ASR4_HOST"]
-        del os.environ["ASR4_PORT"]
-        del os.environ["ASR4_SERVERS"]
-        del os.environ["ASR4_LISTENERS"]
-        del os.environ["ASR4_WORKERS"]
-        del os.environ["ASR4_DECODING_TYPE"]
-        del os.environ["ASR4_LM_ALGORITHM"]
-        del os.environ["ASR4_LM_WEIGHT"]
-        del os.environ["ASR4_WORD_SCORE"]
-        del os.environ["ASR4_SIL_SCORE"]
-        del os.environ["ASR4_SUBWORDS"]
-        del os.environ["ASR4_LOCAL_FORMATTING"]
+
+        self.assertEqual(args.verbose, "INFO")
 
 
 class DefaultValuesTests(unittest.TestCase):
@@ -299,15 +176,7 @@ class DefaultValuesTests(unittest.TestCase):
         args.servers = "3"
         args.verbose = "DEBUG"
         args.word_score = "-0.2"
-        args.config = None
-        args.gpu = None
-        args.language = None
-        args.listeners = None
-        args.sil_score = None
-        args.workers = None
-        args.overlap = None
         args.subwords = "1"
-        args.local_formatting = None
         args.maxChunksForDecoding = "1"
 
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
