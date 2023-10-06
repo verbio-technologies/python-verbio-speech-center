@@ -307,6 +307,7 @@ def generateTrnFile(
     trnFile = os.path.join(args.output, filename)
     with open(trnFile, "w") as h:
         h.write("\n".join(trnHypothesis))
+        h.write("\n")
     return trnFile
 
 
@@ -329,7 +330,6 @@ def getTrnReferences(references: List[str]) -> List[str]:
             + referenceFile.replace(".txt", "")
             + ")"
         )
-    trnReferences.append("")
     return trnReferences
 
 
