@@ -68,6 +68,11 @@ class Asr4ArgParser:
         args.verbose = args.verbose or os.environ.get(
             "LOG_LEVEL", Logger.getDefaultLevel()
         )
+        if os.environ.get("ASR4_HOST") and os.environ.get("ASR4_PORT"):
+            args.bindAddress = (
+                f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
+            )
+
         return args
 
     def replaceUndefinedWithConfigFile(args: argparse.Namespace) -> argparse.Namespace:
