@@ -145,7 +145,6 @@ class DefaultValuesTests(unittest.TestCase):
         self.assertEqual(args.workers, 2)
 
 
-
 class TestServer(unittest.TestCase):
     def testServerNoSpawn(self):
         # It is not possible to test Server because it has not a stop() function
