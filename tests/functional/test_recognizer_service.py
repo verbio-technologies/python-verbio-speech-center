@@ -1,14 +1,20 @@
+import io
 import os
 import pytest
 import unittest
+from loguru import logger
 from typing import AsyncIterator
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, AsyncMock
 from grpc.aio import ServicerContext, Metadata
 
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer import StreamingRecognizeRequest
-from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
+from asr4_engine.exceptions import ASR4EngineException
+from asr4.engines.wav2vec.wav2vec_engine import (
+    Wav2VecEngine,
+    Wav2VecASR4EngineOnlineHandler,
+)
 
 from tests.unit.test_event_handler import (
     initializeMockEngine,
@@ -18,6 +24,18 @@ from tests.unit.test_event_handler import (
     DEFAULT_SPANISH_MESSAGE,
     DEFAULT_PORTUGUESE_MESSAGE,
 )
+
+
+def initializeErrorMockEngine(mock: Mock):
+    onlineHandlerMock = AsyncMock(Wav2VecASR4EngineOnlineHandler)
+
+    async def mockListenForCompleteAudio():
+        raise ASR4EngineException("Internal error while retrieving timestamps")
+        yield
+
+    onlineHandlerMock.listenForCompleteAudio = mockListenForCompleteAudio
+    mock.getRecognizerHandler.return_value = onlineHandlerMock
+    return mock
 
 
 @pytest.mark.usefixtures("datadir")
@@ -268,6 +286,31 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
         )
 
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
+    async def testInternalError(self, mock):
+        logBuffer = io.StringIO()
+        handlerId = logger.add(logBuffer, level="ERROR")
+        mock.return_value = initializeErrorMockEngine(Mock(Wav2VecEngine))
+        mockContext = initializeMockContext(Mock(ServicerContext))
+        service = RecognizerService(
+            os.path.join(self.datadir, "asr4_streaming_config_en-us.toml")
+        )
+        requestIterator = asyncStreamingRequestIterator(
+            language="en-US",
+            sampleRate=16000,
+            audioEncoding="PCM",
+            topic="GENERIC",
+            audio=[b"0000"],
+        )
+        with self.assertRaises(Exception) as context:
+            await service.StreamingRecognize(requestIterator, mockContext)
+        self.assertEqual(str(context.exception), "Internal Server Error")
+        self.assertIn(
+            "Internal error while retrieving timestamps",
+            logBuffer.getvalue(),
+        )
+        logger.remove(handlerId)
+
+    @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
     async def testRecognitionWithAllSampleRates(self, mock):
         mock.return_value = initializeMockEngine(Mock(Wav2VecEngine), language="en-US")
         mockContext = initializeMockContext(Mock(ServicerContext))
@@ -293,6 +336,7 @@ class TestRecognizerService(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 response.results.alternatives[0].transcript, DEFAULT_ENGLISH_MESSAGE
             )
+            mockContext.reset_mock()
             onlineHandlerMock.reset_mock()
 
     @patch("asr4_streaming.recognizer.RecognizerService._initializeEngine")
