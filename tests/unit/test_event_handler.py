@@ -3,11 +3,15 @@ import random
 import string
 import asyncio
 import unittest
+
 from dataclasses import dataclass
 from unittest.mock import Mock, AsyncMock
 from grpc.aio import ServicerContext, Metadata
 from grpc.beta._metadata import _metadatum, _Metadatum
 from typing import List, Optional, Union, Iterator, AsyncIterator, Tuple
+
+from google.rpc import code_pb2
+from google.rpc.status_pb2 import Status
 
 from asr4_streaming.recognizer import RecognitionConfig
 from asr4_streaming.recognizer import RecognitionParameters
@@ -19,6 +23,7 @@ from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer_v1.handler import EventHandler
 from asr4_streaming.recognizer_v1.handler import TranscriptionResult
 
+from asr4_engine.exceptions import ASR4EngineException
 from asr4_engine.data_classes import Language, Transcription
 from asr4_engine.data_classes.transcription import WordTiming
 from asr4.engines.wav2vec.wav2vec_engine import (
@@ -34,6 +39,18 @@ FORMATTED_SPANISH_MESSAGE: str = (
     "Hola. Estoy levantado y en marcha y he recibido un mensaje tuyo."
 )
 DEFAULT_PORTUGUESE_MESSAGE: str = "ola estou de pe recebi uma mensagem sua"
+
+
+def initializeErrorMockEngine(mock: Mock):
+    onlineHandlerMock = AsyncMock(Wav2VecASR4EngineOnlineHandler)
+
+    async def mockListenForCompleteAudio():
+        raise ASR4EngineException("Internal error while retrieving timestamps")
+        yield
+
+    onlineHandlerMock.listenForCompleteAudio = mockListenForCompleteAudio
+    mock.getRecognizerHandler.return_value = onlineHandlerMock
+    return mock
 
 
 def initializeMockEngine(mock: Mock, language: str):
@@ -332,6 +349,40 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         onlineHandlerMock.sendAudioChunk.assert_not_awaited()
         mockContext.write.assert_not_called()
         mockContext.write.assert_not_awaited()
+
+    async def testInternalError(self):
+        mockContext = initializeMockContext(Mock(ServicerContext))
+        mockEngine = initializeErrorMockEngine(Mock(Wav2VecEngine))
+        handler = EventHandler(Language.EN_US, mockEngine, mockContext)
+        listenerTask = asyncio.create_task(handler.listenForTranscription())
+        requestIterator = asyncStreamingRequestIterator(
+            language="en-US",
+            sampleRate=16000,
+            audioEncoding="PCM",
+            topic="GENERIC",
+            audio=[b"0000"],
+        )
+        async for request in requestIterator:
+            await handler.processStreamingRequest(request)
+        await handler.notifyEndOfAudio()
+        _, _ = await asyncio.wait([listenerTask])
+
+        onlineHandlerMock = mockEngine.getRecognizerHandler()
+        onlineHandlerMock.sendAudioChunk.assert_called_once()
+        onlineHandlerMock.sendAudioChunk.assert_awaited_once()
+        mockContext.write.assert_called_once()
+        mockContext.write.assert_awaited_once()
+        self.assertEqual(str(listenerTask.exception()), "Internal Server Error")
+        response = mockContext.write.call_args.args[0]
+        self.assertEqual(
+            response,
+            StreamingRecognizeResponse(
+                error=Status(
+                    code=code_pb2.INTERNAL,
+                    message="Internal Server Error",
+                )
+            ),
+        )
 
     async def testRecognitionWithAllSampleRates(self):
         mockContext = initializeMockContext(Mock(ServicerContext))

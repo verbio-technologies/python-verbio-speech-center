@@ -4,38 +4,23 @@ import pytest
 import unittest
 from loguru import logger
 from typing import AsyncIterator
-from unittest.mock import patch, Mock, AsyncMock
+from unittest.mock import patch, Mock
 from grpc.aio import ServicerContext, Metadata
 
 from asr4_streaming.recognizer import RecognizerService
 from asr4_streaming.recognizer_v1.types import SampleRate
 from asr4_streaming.recognizer import StreamingRecognizeRequest
-from asr4_engine.exceptions import ASR4EngineException
-from asr4.engines.wav2vec.wav2vec_engine import (
-    Wav2VecEngine,
-    Wav2VecASR4EngineOnlineHandler,
-)
+from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
 
 from tests.unit.test_event_handler import (
     initializeMockEngine,
     initializeMockContext,
+    initializeErrorMockEngine,
     asyncStreamingRequestIterator,
     DEFAULT_ENGLISH_MESSAGE,
     DEFAULT_SPANISH_MESSAGE,
     DEFAULT_PORTUGUESE_MESSAGE,
 )
-
-
-def initializeErrorMockEngine(mock: Mock):
-    onlineHandlerMock = AsyncMock(Wav2VecASR4EngineOnlineHandler)
-
-    async def mockListenForCompleteAudio():
-        raise ASR4EngineException("Internal error while retrieving timestamps")
-        yield
-
-    onlineHandlerMock.listenForCompleteAudio = mockListenForCompleteAudio
-    mock.getRecognizerHandler.return_value = onlineHandlerMock
-    return mock
 
 
 @pytest.mark.usefixtures("datadir")
