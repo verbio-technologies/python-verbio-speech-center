@@ -206,7 +206,7 @@ class EventHandler:
 
     async def __logError(self, message: str, statusCode: grpc.StatusCode):
         logger.error(message)
-        await self.__sendError(statusCode, message)
+        await self.__sendError(message, statusCode)
 
     async def __sendError(self, message: str, statusCode: grpc.StatusCode):
         await self._context.write(
