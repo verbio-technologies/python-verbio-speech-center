@@ -58,7 +58,7 @@ def initializeMockEngine(mock: Mock, language: str):
             yield t
         return
 
-    onlineHandlerMock.listenForCompleteAudio.return_value = mockListenForCompleteAudio()
+    onlineHandlerMock.listenForCompleteAudio = mockListenForCompleteAudio
     mock.getRecognizerHandler.return_value = onlineHandlerMock
     return mock
 
@@ -337,8 +337,8 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
         mockContext = initializeMockContext(Mock(ServicerContext))
         mockEngine = initializeMockEngine(Mock(Wav2VecEngine), language="en-US")
         handler = EventHandler(Language.EN_US, mockEngine, mockContext)
-        listenerTask = asyncio.create_task(handler.listenForTranscription())
         for sampleRate in SampleRate:
+            listenerTask = asyncio.create_task(handler.listenForTranscription())
             requestIterator = asyncStreamingRequestIterator(
                 language="en-US",
                 sampleRate=sampleRate.value,
@@ -360,6 +360,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 response.results.alternatives[0].transcript, DEFAULT_ENGLISH_MESSAGE
             )
+            mockContext.reset_mock()
             onlineHandlerMock.reset_mock()
 
     async def testEnUsRecognition(self):
