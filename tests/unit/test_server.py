@@ -99,12 +99,19 @@ class TestreplaceUndefinedWithConfigFile(unittest.TestCase):
         self.assertEqual(args.verbose, "DEBUG")
         self.assertEqual(args.bindAddress, "localhost:8080")
 
+        args.bindAddress = "myhome:45678"
+        args = Asr4ArgParser.replaceUndefinedWithConfigFile(args)
+        self.assertEqual(args.listeners, 2)
+        self.assertEqual(args.workers, 1)
+        self.assertEqual(args.verbose, "DEBUG")
+        self.assertEqual(args.bindAddress, "myhome:45678")
+
 
 class SystemVarsOverrideTests(unittest.TestCase):
     def test_system_vars_override_with_all_args_set(self):
         args = argparse.Namespace()
         args.verbose = "DEBUG"
-        args.bindAddress = "[::]:50052"
+        args.bindAddress = "[::]:44444"
         args.servers = 3
         args.listeners = 5
         args.workers = 4
@@ -115,7 +122,7 @@ class SystemVarsOverrideTests(unittest.TestCase):
         args = Asr4ArgParser.replaceUndefinedWithDefaultValues(args)
 
         self.assertEqual(args.verbose, "DEBUG")
-        self.assertEqual(args.bindAddress, "[::]:50052")
+        self.assertEqual(args.bindAddress, "[::]:44444")
         self.assertEqual(args.servers, 3)
         self.assertEqual(args.listeners, 5)
         self.assertEqual(args.workers, 4)
