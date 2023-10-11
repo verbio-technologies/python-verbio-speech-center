@@ -6,6 +6,22 @@
 
 ### Removed :no_entry:
 
+## 1.0.4 (2023-10-11)
+
+### Minor (1 change)
+
+- [Update to version 1.4.0 of models](csr/asr4-streaming@7785d15df63de0e402c98c8b4eec4238262edced) ([merge request](csr/asr4-streaming!340))
+
+### Patch (7 changes)
+
+- [[Release 1.0.4] Fix argument processor mechanism in server.py and add test](csr/asr4-streaming@1060f0305ed2ef86954336ec4a2163d31e865187) ([merge request](csr/asr4-streaming!347))
+- [Update asr4-engine to 0.10.2](csr/asr4-streaming@f30bc942e6cf7eedd0fb6ac471b7105a7cebe8c5) ([merge request](csr/asr4-streaming!346))
+- [Changing all models to 1.0.3](csr/asr4-streaming@75e7dc795b9e596698fe4685e8df40a6cd74b740) ([merge request](csr/asr4-streaming!345))
+- [[EEE-1051] Remove configuration that should be in the engine](csr/asr4-streaming@811a8f4338b28331a37ae6806cd8a98992787987) ([merge request](csr/asr4-streaming!343))
+- [[SC2-1052] Refactor/ Close gRPC Channel on Internal Exception](csr/asr4-streaming@89d01899939776f7bddd72ffc7b33e81f388bb2f) ([merge request](csr/asr4-streaming!344))
+- [Fix/ TRN File Generation](csr/asr4-streaming@9081c0286f600851fae00b9003bef7d531dc97d5) ([merge request](csr/asr4-streaming!342))
+- [[EEE-1051] Remove unused arguments in server.py](csr/asr4-streaming@62c0715bd056c49313f5259133e451da45b99569) ([merge request](csr/asr4-streaming!341))
+
 ## 1.0.3 (2023-10-04)
 
 ### Patch (3 changes)
