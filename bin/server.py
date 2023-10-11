@@ -71,7 +71,6 @@ class Asr4ArgParser:
             args.bindAddress = (
                 f"{os.environ.get('ASR4_HOST')}:{os.environ.get('ASR4_PORT')}"
             )
-
         return args
 
     def replaceUndefinedWithConfigFile(args: argparse.Namespace) -> argparse.Namespace:
@@ -83,10 +82,15 @@ class Asr4ArgParser:
         return args
 
     def fillArgsFromTomlFile(args: argparse.Namespace, config):
-        if config["global"].setdefault("host") and config["global"].setdefault("port"):
-            args.bindAddress = f"{config['global']['host']}:{config['global']['port']}"
-            del config["global"]["host"]
-            del config["global"]["port"]
+        if not args.bindAddress:
+            if config["global"].setdefault("host") and config["global"].setdefault(
+                "port"
+            ):
+                args.bindAddress = (
+                    f"{config['global']['host']}:{config['global']['port']}"
+                )
+                del config["global"]["host"]
+                del config["global"]["port"]
         for k, v in config["global"].items():
             setattr(args, k, getattr(args, k, None) or v)
         return args
