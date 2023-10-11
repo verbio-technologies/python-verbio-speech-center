@@ -1,5 +1,6 @@
 import grpc
 import soxr
+import traceback
 import numpy as np
 from loguru import logger
 from asyncio import Event
@@ -135,18 +136,27 @@ class EventHandler:
     async def listenForTranscription(self):
         await self._startListening.wait()
         if self._onlineHandler:
-            async for partialResult in self._onlineHandler.listenForCompleteAudio():
-                logger.debug(f"Partial recognition result: '{partialResult.text}'")
-                partialTranscriptionResult = TranscriptionResult(
-                    transcription=partialResult.text,
-                    duration=partialResult.duration or 0.0,
-                    score=EventHandler.__calculateAverageScore(partialResult.segments),
-                    words=EventHandler.__extractWords(partialResult.segments),
+            try:
+                async for partialResult in self._onlineHandler.listenForCompleteAudio():
+                    logger.debug(f"Partial recognition result: '{partialResult.text}'")
+                    partialTranscriptionResult = TranscriptionResult(
+                        transcription=partialResult.text,
+                        duration=partialResult.duration or 0.0,
+                        score=EventHandler.__calculateAverageScore(
+                            partialResult.segments
+                        ),
+                        words=EventHandler.__extractWords(partialResult.segments),
+                    )
+                    await self._context.write(
+                        self.getStreamingRecognizeResponse(partialTranscriptionResult)
+                    )
+                    self._totalDuration += partialResult.duration
+            except Exception as e:
+                logger.error(traceback.format_exc())
+                logger.error(e)
+                await self.__sendError(
+                    "Internal Server Error", grpc.StatusCode.INTERNAL
                 )
-                await self._context.write(
-                    self.getStreamingRecognizeResponse(partialTranscriptionResult)
-                )
-                self._totalDuration += partialResult.duration
 
     @staticmethod
     def __calculateAverageScore(segments: List[Segment]) -> float:
@@ -196,6 +206,9 @@ class EventHandler:
 
     async def __logError(self, message: str, statusCode: grpc.StatusCode):
         logger.error(message)
+        await self.__sendError(message, statusCode)
+
+    async def __sendError(self, message: str, statusCode: grpc.StatusCode):
         await self._context.write(
             StreamingRecognizeResponse(
                 error=Status(

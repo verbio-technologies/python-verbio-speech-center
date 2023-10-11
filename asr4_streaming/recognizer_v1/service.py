@@ -52,6 +52,8 @@ class RecognizerService(RecognizerServicer):
             listenerTask = asyncio.create_task(handler.listenForTranscription())
             try:
                 async for request in request_iterator:
+                    if listenerTask.done():
+                        break
                     await handler.processStreamingRequest(request)
             except grpc.aio.AbortError as e:
                 raise e
