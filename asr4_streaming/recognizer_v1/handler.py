@@ -50,7 +50,6 @@ class EventHandler:
         self._context = context
         self._language = language
         self._config = RecognitionConfig()
-        self._totalDuration = 0.0
         self._startListening = Event()
         self._onlineHandler: Optional[Wav2VecASR4EngineOnlineHandler] = None
 
@@ -141,7 +140,9 @@ class EventHandler:
                     logger.debug(f"Partial recognition result: '{partialResult.text}'")
                     partialTranscriptionResult = TranscriptionResult(
                         transcription=partialResult.text,
-                        duration=partialResult.duration or 0.0,
+                        duration=partialResult.segments[-1].end
+                        if len(partialResult.segments) > 0
+                        else 0.0,
                         score=EventHandler.__calculateAverageScore(
                             partialResult.segments
                         ),
@@ -150,7 +151,6 @@ class EventHandler:
                     await self._context.write(
                         self.getStreamingRecognizeResponse(partialTranscriptionResult)
                     )
-                    self._totalDuration += partialResult.duration
             except Exception as e:
                 logger.error(traceback.format_exc())
                 logger.error(e)
@@ -172,28 +172,24 @@ class EventHandler:
         self,
         response: TranscriptionResult,
     ) -> StreamingRecognizeResponse:
-        words = [
-            EventHandler.__getWord(word, self._totalDuration) for word in response.words
-        ]
+        words = [EventHandler.__getWord(word) for word in response.words]
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
         return StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=[alternative],
-                end_time=EventHandler.__getDuration(
-                    response.duration + self._totalDuration
-                ),
+                end_time=EventHandler.__getDuration(response.duration),
                 duration=EventHandler.__getDuration(response.duration),
                 is_final=True,
             )
         )
 
     @staticmethod
-    def __getWord(word: WordTiming, timeOffset: float) -> WordInfo:
+    def __getWord(word: WordTiming) -> WordInfo:
         return WordInfo(
-            start_time=EventHandler.__getDuration(word.start + timeOffset),
-            end_time=EventHandler.__getDuration(word.end + timeOffset),
+            start_time=EventHandler.__getDuration(word.start),
+            end_time=EventHandler.__getDuration(word.end),
             word=word.word,
             confidence=word.probability,
         )
