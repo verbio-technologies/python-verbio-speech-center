@@ -24,7 +24,7 @@ Before starting you will need:
 
 ## Endpoints
 
-Speech Center streaming endpoint for CSR (speech recognition) and TTS (speech synthesis):  **us.speechcenter.verbio.com**
+Speech Center streaming endpoint for STT (Speech-To-Text) and TTS (Text-To-Speech):  **us.speechcenter.verbio.com**
 
 ##  Set-up
 The steps needed are very similar to the ones described in the grpc official guide.
@@ -55,7 +55,7 @@ verbio_speech_center_recognizer_pb2_grpc.py
 The CLI clients will use the generated code to connect to the speech center cloud to process your speech file. To run the clients, run either the `recognizer_stream.py` for CSR requests, or the `synthesizer.py` for TTS requests, from the `cli-client` directory. Check the speech recognition or speech synthesis sections of this readme for more information.
 
 
-## Speech Recognition
+## Speech-To-Text
 
 Speech Center allows to easily convert an audio resource into its associated text. Access the `cli-client` directory to run `recognizer_stream.py` located inside to test Speech Center's speech recognition (CSR) capabilities. Before proceeding, the client needs either a valid token for Speech Center or the user's client credentials. Please check the **Customer Credentials** section of this README before proceeding if you haven't got either.
 
@@ -101,7 +101,7 @@ python3 recognizer_stream.py --help
 ```  
 to list all the available options.
 
-### Client flags for speech recognition (CSR)
+### Client flags for Speech-To-Text (STT)
 
 
 #### Audio file
@@ -148,15 +148,15 @@ This option enables diarization.
 -f, --formatting
 ```
 
-This option will enable formatting on the speech transcription. Please check the [Speech Center streaming Soeech-To-Text documentation](https://speechcenter.verbio.com/documentation/index.php/speech-to-text-streaming/) for an updated list of languages that accept formatting.
+This option will enable formatting on the speech transcription. Please check the [Speech Center streaming Speech-To-Text documentation](https://speechcenter.verbio.com/documentation/index.php/speech-to-text-streaming/) for an updated list of languages that accept formatting.
 
-#### ASR version
+#### Speech-To-Text engine version
 
 ```
 -A, --asr-version arg
 ```
 
-This will select the asr version the speech center will use for transcriptions.
+This will select the Speech-To-Text engine version the speech center will use for transcriptions.
 
 > Please follow Verbio's sales department recommendation on which version to use.
 
@@ -181,7 +181,7 @@ Path to the authentication token file. This file needs to have a valid token in 
 In order for the client to work, the token argument is required in the following situations:
 
 - The client will authenticate just by using the available token file. The file provided in this argument **needs to be a valid SpeechCenter JWT token so the transcription service can work**.
-- The client will authenticate by providinf their client credentials through the `--client_id` and `--client_secret` program arguments. In this case **a token file must also be supplied even if it is a blank file**. Client will check file to see if it is a valid token, if it isn't it will refresh automatically the token and fill the file with a valid token. In this case, client_id and client_secret fields are also required.
+- The client will authenticate by providing their client credentials through the `--client_id` and `--client_secret` program arguments. In this case **a token file must also be supplied even if it is a blank file**. Client will check file to see if it is a valid token, if it isn't it will refresh automatically the token and fill the file with a valid token. In this case, client_id and client_secret fields are also required.
 
 
 #### Client id and secret
@@ -219,9 +219,9 @@ This option allows for a one word argument to be sent so that the speech transcr
 - **There is no limit on the amount of projects that can be created.**
 
 
-## Speech synthesizer (TTS)
+## Text-To-Speech
 
-Verbio's Speech Center allows to synthesize text in a whole catalogue of voices. Access the `cli-client` directory to run `synthesizer.py` located inside to test Speech Center's speech synthesis (TTS) capabilities. Before proceeding, the client needs either a valid token for Speech Center or the user's client credentials. Please check the **Customer Credentials** section of this README before proceeding if you haven't got either.
+Verbio's Speech Center allows to synthesize text in a whole catalogue of voices. Access the `cli-client` directory to run `synthesizer.py` located inside to test Speech Center's Text-To-Speech (TTS) capabilities. Before proceeding, the client needs either a valid token for Speech Center or the user's client credentials. Please check the **Customer Credentials** section of this README before proceeding if you haven't got either.
 
 **Example for text to speech**
 Synthesize request using valid token:
@@ -235,7 +235,7 @@ python synthesizer.py --text "Hello my friend!" --voice tommy_en_us --audio-file
 
 Please check out documentation at speechcenter.verbio.com/documentation for current TTS capabilities.
 
-### Client flags
+### Text-To-Speech Client flags
 
 #### Help
 
