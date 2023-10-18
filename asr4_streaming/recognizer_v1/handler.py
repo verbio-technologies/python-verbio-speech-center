@@ -50,6 +50,7 @@ class EventHandler:
         self._context = context
         self._language = language
         self._config = RecognitionConfig()
+        self._totalDuration = 0.0
         self._startListening = Event()
         self._onlineHandler: Optional[Wav2VecASR4EngineOnlineHandler] = None
 
@@ -140,9 +141,7 @@ class EventHandler:
                     logger.debug(f"Partial recognition result: '{partialResult.text}'")
                     partialTranscriptionResult = TranscriptionResult(
                         transcription=partialResult.text,
-                        duration=partialResult.segments[-1].end
-                        if len(partialResult.segments) > 0
-                        else 0.0,
+                        duration=partialResult.duration or 0.0,
                         score=EventHandler.__calculateAverageScore(
                             partialResult.segments
                         ),
@@ -151,6 +150,7 @@ class EventHandler:
                     await self._context.write(
                         self.getStreamingRecognizeResponse(partialTranscriptionResult)
                     )
+                    self._totalDuration = partialResult.duration
             except Exception as e:
                 logger.error(traceback.format_exc())
                 logger.error(e)
