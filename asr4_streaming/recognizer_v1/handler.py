@@ -150,7 +150,7 @@ class EventHandler:
                     await self._context.write(
                         self.getStreamingRecognizeResponse(partialTranscriptionResult)
                     )
-                    self._totalDuration = partialResult.duration
+                    self._totalDuration += partialResult.duration
             except Exception as e:
                 logger.error(traceback.format_exc())
                 logger.error(e)
@@ -179,11 +179,17 @@ class EventHandler:
         return StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=[alternative],
-                end_time=EventHandler.__getDuration(response.duration),
+                end_time=self.getEndTime(response),
                 duration=EventHandler.__getDuration(response.duration),
                 is_final=True,
             )
         )
+
+    def getEndTime(self, response: TranscriptionResult) -> Duration:
+        if response.duration + self._totalDuration <= response.words[-1].end:
+            return EventHandler.__getDuration(response.duration + self._totalDuration)
+        else:
+            return EventHandler.__getDuration(response.words[-1].end)
 
     @staticmethod
     def __getWord(word: WordTiming) -> WordInfo:
