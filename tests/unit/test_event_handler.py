@@ -521,6 +521,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
 
     async def testGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
+        handler._totalDuration = 3.4
         response = TranscriptionResult(
             transcription="Hello World!",
             score=1.0,
@@ -528,7 +529,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                 WordTiming(word="Hello", start=1.0, end=1.5, probability=1.0),
                 WordTiming(word="World!", start=1.8, end=2.6, probability=1.0),
             ],
-            duration=2.6,
+            duration=5,
         )
         result = {
             "results": {
@@ -538,22 +539,22 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                         "confidence": 1.0,
                         "words": [
                             {
-                                "start_time": {"seconds": 1},
-                                "end_time": {"seconds": 1, "nanos": 500000000},
+                                "start_time": {"seconds": 4, "nanos": 400000000},
+                                "end_time": {"seconds": 4, "nanos": 900000000},
                                 "word": "Hello",
                                 "confidence": 1.0,
                             },
                             {
-                                "start_time": {"seconds": 1, "nanos": 800000000},
-                                "end_time": {"seconds": 2, "nanos": 600000000},
+                                "start_time": {"seconds": 5, "nanos": 200000000},
+                                "end_time": {"seconds": 6},
                                 "word": "World!",
                                 "confidence": 1.0,
                             },
                         ],
                     }
                 ],
-                "duration": {"seconds": 2, "nanos": 600000000},
-                "end_time": {"seconds": 2, "nanos": 600000000},
+                "duration": {"seconds": 5},
+                "end_time": {"seconds": 8, "nanos": 400000000},
                 "is_final": True,
             }
         }
