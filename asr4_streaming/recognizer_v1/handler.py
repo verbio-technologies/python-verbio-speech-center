@@ -187,12 +187,12 @@ class EventHandler:
 
     def getEndTime(self, response: TranscriptionResult) -> Duration:
         if len(response.words) > 0:
-            if response.duration + self._totalDuration <= response.words[-1].end:
+            if response.words[-1].end <= response.duration + self._totalDuration:
+                return EventHandler.__getDuration(response.words[-1].end)
+            else:
                 return EventHandler.__getDuration(
                     response.duration + self._totalDuration
                 )
-            else:
-                return EventHandler.__getDuration(response.words[-1].end)
         else:
             return EventHandler.__getDuration(0)
 
