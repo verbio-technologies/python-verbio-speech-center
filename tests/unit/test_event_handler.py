@@ -529,7 +529,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                 WordTiming(word="Hello", start=1.0, end=1.5, probability=1.0),
                 WordTiming(word="World!", start=1.8, end=2.6, probability=1.0),
             ],
-            duration=5,
+            duration=1.6,
         )
         result = {
             "results": {
@@ -539,22 +539,22 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                         "confidence": 1.0,
                         "words": [
                             {
-                                "start_time": {"seconds": 4, "nanos": 400000000},
-                                "end_time": {"seconds": 4, "nanos": 900000000},
+                                "start_time": {"seconds": 1},
+                                "end_time": {"seconds": 1, "nanos": 500000000},
                                 "word": "Hello",
                                 "confidence": 1.0,
                             },
                             {
-                                "start_time": {"seconds": 5, "nanos": 200000000},
-                                "end_time": {"seconds": 6},
+                                "start_time": {"seconds": 1, "nanos": 800000000},
+                                "end_time": {"seconds": 2, "nanos": 600000000},
                                 "word": "World!",
                                 "confidence": 1.0,
                             },
                         ],
                     }
                 ],
-                "duration": {"seconds": 5},
-                "end_time": {"seconds": 8, "nanos": 400000000},
+                "duration": {"seconds": 1, "nanos": 600000000},
+                "end_time": {"seconds": 2, "nanos": 600000000},
                 "is_final": True,
             }
         }
