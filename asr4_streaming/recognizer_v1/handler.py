@@ -109,13 +109,16 @@ class EventHandler:
 
     async def __processRequestAudio(self, audio: bytes):
         await self.__validateAudio(audio)
-        logger.debug(f"Received partial audio [length={len(audio)}]")
+        logger.debug(
+            f"Received partial audio [length={len(audio)/self._config.parameters.sample_rate_hz}]"
+        )
         if self._onlineHandler:
             await self._onlineHandler.sendAudioChunk(
                 self.__convertAudioToSignal(
                     audio=audio, sampleRate=self._config.parameters.sample_rate_hz
                 )
             )
+            self._totalDuration += len(audio) / self._config.parameters.sample_rate_hz
         else:
             await self.__logError(
                 "A request containing RecognitionConfig must be sent first",
@@ -150,7 +153,6 @@ class EventHandler:
                     await self._context.write(
                         self.getStreamingRecognizeResponse(partialTranscriptionResult)
                     )
-                    self._totalDuration += partialResult.duration
             except Exception as e:
                 logger.error(traceback.format_exc())
                 logger.error(e)
@@ -187,12 +189,10 @@ class EventHandler:
 
     def getEndTime(self, response: TranscriptionResult) -> Duration:
         if len(response.words) > 0:
-            if response.words[-1].end <= response.duration + self._totalDuration:
+            if response.words[-1].end <= self._totalDuration:
                 return EventHandler.__getDuration(response.words[-1].end)
             else:
-                return EventHandler.__getDuration(
-                    response.duration + self._totalDuration
-                )
+                return EventHandler.__getDuration(self._totalDuration)
         else:
             return EventHandler.__getDuration(0)
 
