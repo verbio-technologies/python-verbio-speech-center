@@ -51,6 +51,7 @@ class EventHandler:
         self._language = language
         self._config = RecognitionConfig()
         self._totalDuration = 0.0
+        self._endTime = 0.0
         self._startListening = Event()
         self._onlineHandler: Optional[Wav2VecASR4EngineOnlineHandler] = None
 
@@ -177,10 +178,11 @@ class EventHandler:
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
+        self.getEndTime(response)
         return StreamingRecognizeResponse(
             results=StreamingRecognitionResult(
                 alternatives=[alternative],
-                end_time=self.getEndTime(response),
+                end_time=EventHandler.__getDuration(self._endTime),
                 duration=EventHandler.__getDuration(response.duration),
                 is_final=True,
             )
@@ -189,11 +191,11 @@ class EventHandler:
     def getEndTime(self, response: TranscriptionResult) -> Duration:
         if len(response.words) > 0:
             if response.words[-1].end <= self._totalDuration:
-                return EventHandler.__getDuration(response.words[-1].end)
+                self._endTime = response.words[-1].end
             else:
-                return EventHandler.__getDuration(self._totalDuration)
+                self._endTime = self._totalDuration
         else:
-            return EventHandler.__getDuration(0)
+            self._endTime += response.duration
 
     @staticmethod
     def __getWord(word: WordTiming) -> WordInfo:
