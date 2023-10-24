@@ -1,4 +1,4 @@
-FROM docker.registry.verbio.com/csr/devops/asr4-base-gpu:0.1.0
+FROM docker.registry.verbio.com/csr/devops/asr4-base-gpu:0.1.1
 
 RUN apt-get update && apt-get install -y libgomp1 && apt-get clean
 
