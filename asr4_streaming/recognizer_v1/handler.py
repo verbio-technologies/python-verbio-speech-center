@@ -116,10 +116,8 @@ class EventHandler:
                     audio=audio, sampleRate=self._config.parameters.sample_rate_hz
                 )
             )
-            if len(audio) > 0 and self._config.parameters.sample_rate_hz > 0:
-                self._totalDuration += (
-                    len(audio) / self._config.parameters.sample_rate_hz
-                )
+            self._totalDuration += len(audio) / self._config.parameters.sample_rate_hz
+
         else:
             await self.__logError(
                 "A request containing RecognitionConfig must be sent first",
