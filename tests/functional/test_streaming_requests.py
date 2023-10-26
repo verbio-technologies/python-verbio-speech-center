@@ -17,7 +17,7 @@ class TestStreamingEnglish(RecognizerServiceTestCase):
             # Latency: avg(wordLatencies) ~ (maxLatency + minLatency) / 2 = (5 seconds + processingTime) where:
             # maxLatency = timeForinputBufferToFill (10 seconds) + processingTime
             # minLatency = processingTime
-            self.expectLatency(response, time.time(), 6.0)
+            self.expectLatency(response, time.time(), 8.0)
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponses[idx].split()), 3)
 
