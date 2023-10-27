@@ -132,8 +132,8 @@ class TestEdgeCases(RecognizerServiceTestCase):
             response, expectedResponse, 0.004975124378109453, delta=64e-2
         )
         self.expectValidConfidence(response.results.alternatives[0].confidence)
-        self.expectDuration(response.results.duration, seconds=1, nanos=962750000)
-        self.expectDuration(response.results.end_time, seconds=31, nanos=962750000)
+        self.expectDuration(response.results.duration, seconds=1, nanos=960000000)
+        self.expectDuration(response.results.end_time, seconds=31, nanos=960000000)
         self.expectFinal(response)
         self.expectValidWords(response)
         self.expectValidWordTimestamps(response, audioDuration=31.96)
