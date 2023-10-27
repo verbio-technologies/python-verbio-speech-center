@@ -522,6 +522,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
     async def testGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
         handler._totalDuration = 3.4
+        handler._endTime = 1.0
         response = TranscriptionResult(
             transcription="Hello World!",
             score=1.0,
