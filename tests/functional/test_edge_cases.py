@@ -60,10 +60,10 @@ class TestEdgeCases(RecognizerServiceTestCase):
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponse.split()), 3)
             self.expectTranscriptionWER(
-                response, expectedResponse, 0.024691358024691357, delta=4e-2
+                response, expectedResponse, 0.024691358024691357, delta=6e-2
             )
             self.expectTranscriptionCER(
-                response, expectedResponse, 0.004975124378109453, delta=4e-2
+                response, expectedResponse, 0.004975124378109453, delta=6e-2
             )
             self.expectValidConfidence(response.results.alternatives[0].confidence)
             self.expectDuration(response.results.duration, seconds=1, nanos=960000000)

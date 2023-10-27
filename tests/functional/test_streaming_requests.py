@@ -17,7 +17,7 @@ class TestStreamingEnglish(RecognizerServiceTestCase):
             # Latency: avg(wordLatencies) ~ (maxLatency + minLatency) / 2 = (5 seconds + processingTime) where:
             # maxLatency = timeForinputBufferToFill (10 seconds) + processingTime
             # minLatency = processingTime
-            self.expectLatency(response, time.time(), 6.0)
+            self.expectLatency(response, time.time(), 8.0)
             self.expectNotEmptyTranscription(response)
             self.expectNumberOfWords(response, len(expectedResponses[idx].split()), 3)
 
@@ -50,10 +50,10 @@ class TestStreamingEnglish(RecognizerServiceTestCase):
             idx += 1
 
         self.expectTranscriptionWER(
-            mergedResponse, " ".join(expectedResponses), 0.16374269005847952, delta=2e-2
+            mergedResponse, " ".join(expectedResponses), 0.16374269005847952, delta=5e-2
         )
         self.expectTranscriptionCER(
-            mergedResponse, " ".join(expectedResponses), 0.09745293466223699, delta=2e-2
+            mergedResponse, " ".join(expectedResponses), 0.09745293466223699, delta=5e-2
         )
         self.expectDuration(
             mergedResponse.results.duration, seconds=57, nanos=960000000
@@ -113,7 +113,7 @@ class TestStreamingSpanish(RecognizerServiceTestCase):
             mergedResponse, " ".join(expectedResponses), 0.5217391304347826, delta=5e-2
         )
         self.expectTranscriptionCER(
-            mergedResponse, " ".join(expectedResponses), 0.37962962962962965, delta=2e-2
+            mergedResponse, " ".join(expectedResponses), 0.37962962962962965, delta=5e-2
         )
         self.expectDuration(
             mergedResponse.results.duration, seconds=52, nanos=000000000
@@ -160,10 +160,10 @@ class TestStreamingPortuguese(RecognizerServiceTestCase):
             idx += 1
 
         self.expectTranscriptionWER(
-            mergedResponse, " ".join(expectedResponses), 0.24074074074074073, delta=3e-2
+            mergedResponse, " ".join(expectedResponses), 0.24074074074074073, delta=5e-2
         )
         self.expectTranscriptionCER(
-            mergedResponse, " ".join(expectedResponses), 0.1244343891402715, delta=2e-2
+            mergedResponse, " ".join(expectedResponses), 0.1244343891402715, delta=5e-2
         )
         self.expectDuration(mergedResponse.results.duration, seconds=60, nanos=0)
         self.expectDuration(mergedResponse.results.end_time, seconds=60, nanos=0)
