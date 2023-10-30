@@ -175,7 +175,7 @@ class EventHandler:
         self,
         response: TranscriptionResult,
     ) -> StreamingRecognizeResponse:
-        words = self.__getWords(response)
+        words = self.getWords(response)
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
@@ -190,7 +190,7 @@ class EventHandler:
             )
         )
 
-    def __getWords(self, response: TranscriptionResult) -> List[WordInfo]:
+    def getWords(self, response: TranscriptionResult) -> List[WordInfo]:
         words, lastWordEnd = [], 0.0
         segmentStart = min(self._endTime, self._audioDuration)
         segmentEnd = min(response.duration + self._endTime, self._audioDuration)
