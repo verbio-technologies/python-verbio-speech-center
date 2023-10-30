@@ -521,8 +521,8 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
 
     async def testGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
-        handler._totalDuration = 3.4
         handler._endTime = 1.0
+        handler._audioDuration = 3.4
         response = TranscriptionResult(
             transcription="Hello World!",
             score=1.0,
@@ -570,6 +570,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             random.choices(string.ascii_letters + string.digits, k=16)
         )
         words = transcription.split()
+        handler._audioDuration = float(len(words))
         response = handler.getStreamingRecognizeResponse(
             TranscriptionResult(
                 transcription=transcription,
@@ -580,7 +581,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                     )
                     for idx, w in enumerate(words)
                 ],
-                duration=0.0,
+                duration=float(len(words)),
             )
         )
         self.assertEqual(len(response.results.alternatives), 1)
