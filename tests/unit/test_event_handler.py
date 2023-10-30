@@ -521,7 +521,8 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
 
     async def testGetStreamingRecognizeResponse(self):
         handler = EventHandler(Language.EN_US, None, None)
-        handler._totalDuration = 3.4
+        handler._endTime = 1.0
+        handler._audioDuration = 3.4
         response = TranscriptionResult(
             transcription="Hello World!",
             score=1.0,
@@ -529,7 +530,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                 WordTiming(word="Hello", start=1.0, end=1.5, probability=1.0),
                 WordTiming(word="World!", start=1.8, end=2.6, probability=1.0),
             ],
-            duration=5,
+            duration=1.6,
         )
         result = {
             "results": {
@@ -539,22 +540,22 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                         "confidence": 1.0,
                         "words": [
                             {
-                                "start_time": {"seconds": 4, "nanos": 400000000},
-                                "end_time": {"seconds": 4, "nanos": 900000000},
+                                "start_time": {"seconds": 1},
+                                "end_time": {"seconds": 1, "nanos": 500000000},
                                 "word": "Hello",
                                 "confidence": 1.0,
                             },
                             {
-                                "start_time": {"seconds": 5, "nanos": 200000000},
-                                "end_time": {"seconds": 6},
+                                "start_time": {"seconds": 1, "nanos": 800000000},
+                                "end_time": {"seconds": 2, "nanos": 600000000},
                                 "word": "World!",
                                 "confidence": 1.0,
                             },
                         ],
                     }
                 ],
-                "duration": {"seconds": 5},
-                "end_time": {"seconds": 8, "nanos": 400000000},
+                "duration": {"seconds": 1, "nanos": 600000000},
+                "end_time": {"seconds": 2, "nanos": 600000000},
                 "is_final": True,
             }
         }
@@ -569,6 +570,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             random.choices(string.ascii_letters + string.digits, k=16)
         )
         words = transcription.split()
+        handler._audioDuration = float(len(words))
         response = handler.getStreamingRecognizeResponse(
             TranscriptionResult(
                 transcription=transcription,
@@ -579,7 +581,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                     )
                     for idx, w in enumerate(words)
                 ],
-                duration=0.0,
+                duration=float(len(words)),
             )
         )
         self.assertEqual(len(response.results.alternatives), 1)
@@ -590,3 +592,94 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(w.word, words[idx])
             self.assertEqual(w.start_time.seconds, idx)
             self.assertEqual(w.end_time.seconds, idx + 1)
+
+    async def testCheckWordsTimestampsNoCorrections(self):
+        handler = EventHandler(Language.EN_US, None, None)
+        handler._endTime = 1.0
+        handler._audioDuration = 3.0
+        response = TranscriptionResult(
+            transcription="Hello World!",
+            score=1.0,
+            words=[
+                WordTiming(word="Hello", start=1.0, end=1.5, probability=1.0),
+                WordTiming(word="World!", start=1.8, end=2.6, probability=1.0),
+            ],
+            duration=1.6,
+        )
+        words = handler._EventHandler__getWords(response)
+        self.assertEqual(words[0].start_time.seconds, 1)
+        self.assertEqual(words[0].end_time.seconds, 1)
+        self.assertEqual(words[0].end_time.nanos, 500000000)
+        self.assertEqual(words[1].start_time.seconds, 1)
+        self.assertEqual(words[1].start_time.nanos, 800000000)
+        self.assertEqual(words[1].end_time.seconds, 2)
+        self.assertEqual(words[1].end_time.nanos, 600000000)
+
+    async def testCheckWordsTimestampsCorrectStart(self):
+        handler = EventHandler(Language.EN_US, None, None)
+        handler._endTime = 2.0
+        handler._audioDuration = 3.0
+        response = TranscriptionResult(
+            transcription="Hello World!",
+            score=1.0,
+            words=[
+                WordTiming(word="Hello", start=1.0, end=2.5, probability=1.0),
+                WordTiming(word="World!", start=1.8, end=3.0, probability=1.0),
+            ],
+            duration=1.6,
+        )
+        words = handler._EventHandler__getWords(response)
+        self.assertEqual(words[0].start_time.seconds, 2)
+        self.assertEqual(words[0].start_time.nanos, 0)
+        self.assertEqual(words[0].end_time.seconds, 2)
+        self.assertEqual(words[0].end_time.nanos, 500000000)
+        self.assertEqual(words[1].start_time.seconds, 2)
+        self.assertEqual(words[1].start_time.nanos, 500000000)
+        self.assertEqual(words[1].end_time.seconds, 3)
+        self.assertEqual(words[1].end_time.nanos, 0)
+
+    async def testCheckWordsTimestampsCorrectEnd(self):
+        handler = EventHandler(Language.EN_US, None, None)
+        handler._endTime = 1.0
+        handler._audioDuration = 3.0
+        response = TranscriptionResult(
+            transcription="Hello World!",
+            score=1.0,
+            words=[
+                WordTiming(word="Hello", start=1.0, end=2.5, probability=1.0),
+                WordTiming(word="World!", start=1.8, end=4.5, probability=1.0),
+            ],
+            duration=1.6,
+        )
+        words = handler._EventHandler__getWords(response)
+        self.assertEqual(words[0].start_time.seconds, 1)
+        self.assertEqual(words[0].start_time.nanos, 0)
+        self.assertEqual(words[0].end_time.seconds, 2)
+        self.assertEqual(words[0].end_time.nanos, 500000000)
+        self.assertEqual(words[1].start_time.seconds, 2)
+        self.assertEqual(words[1].start_time.nanos, 500000000)
+        self.assertEqual(words[1].end_time.seconds, 2)
+        self.assertEqual(words[1].end_time.nanos, 600000000)
+
+    async def testCheckWordsTimestampsCorrectLastEndAccordingDuration(self):
+        handler = EventHandler(Language.EN_US, None, None)
+        handler._endTime = 1.0
+        handler._audioDuration = 3.0
+        response = TranscriptionResult(
+            transcription="Hello World!",
+            score=1.0,
+            words=[
+                WordTiming(word="Hello", start=1.0, end=2.5, probability=1.0),
+                WordTiming(word="World!", start=1.8, end=2.6, probability=1.0),
+            ],
+            duration=1.5,
+        )
+        words = handler._EventHandler__getWords(response)
+        self.assertEqual(words[0].start_time.seconds, 1)
+        self.assertEqual(words[0].start_time.nanos, 0)
+        self.assertEqual(words[0].end_time.seconds, 2)
+        self.assertEqual(words[0].end_time.nanos, 500000000)
+        self.assertEqual(words[1].start_time.seconds, 2)
+        self.assertEqual(words[1].start_time.nanos, 500000000)
+        self.assertEqual(words[1].end_time.seconds, 2)
+        self.assertEqual(words[1].end_time.nanos, 500000000)

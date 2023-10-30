@@ -50,7 +50,8 @@ class EventHandler:
         self._context = context
         self._language = language
         self._config = RecognitionConfig()
-        self._totalDuration = 0.0
+        self._endTime = 0.0
+        self._audioDuration = 0.0
         self._startListening = Event()
         self._onlineHandler: Optional[Wav2VecASR4EngineOnlineHandler] = None
 
@@ -116,6 +117,8 @@ class EventHandler:
                     audio=audio, sampleRate=self._config.parameters.sample_rate_hz
                 )
             )
+            self._audioDuration += len(audio) / self._config.parameters.sample_rate_hz
+
         else:
             await self.__logError(
                 "A request containing RecognitionConfig must be sent first",
@@ -150,7 +153,7 @@ class EventHandler:
                     await self._context.write(
                         self.getStreamingRecognizeResponse(partialTranscriptionResult)
                     )
-                    self._totalDuration += partialResult.duration
+                    self._endTime += partialResult.duration
             except Exception as e:
                 logger.error(traceback.format_exc())
                 logger.error(e)
@@ -172,9 +175,7 @@ class EventHandler:
         self,
         response: TranscriptionResult,
     ) -> StreamingRecognizeResponse:
-        words = [
-            EventHandler.__getWord(word, self._totalDuration) for word in response.words
-        ]
+        words = self.__getWords(response)
         alternative = RecognitionAlternative(
             transcript=response.transcription, confidence=response.score, words=words
         )
@@ -182,18 +183,28 @@ class EventHandler:
             results=StreamingRecognitionResult(
                 alternatives=[alternative],
                 end_time=EventHandler.__getDuration(
-                    response.duration + self._totalDuration
+                    min(response.duration + self._endTime, self._audioDuration)
                 ),
                 duration=EventHandler.__getDuration(response.duration),
                 is_final=True,
             )
         )
 
-    @staticmethod
-    def __getWord(word: WordTiming, timeOffset: float) -> WordInfo:
+    def __getWords(self, response: TranscriptionResult) -> List[WordInfo]:
+        words, lastWordEnd = [], 0.0
+        segmentStart = min(self._endTime, self._audioDuration)
+        segmentEnd = min(response.duration + self._endTime, self._audioDuration)
+        for word in response.words:
+            word.start = max(max(word.start, segmentStart), lastWordEnd)
+            word.end = max(min(word.end, segmentEnd), word.start)
+            lastWordEnd = word.end
+            words.append(self.__getWord(word))
+        return words
+
+    def __getWord(self, word: WordTiming) -> WordInfo:
         return WordInfo(
-            start_time=EventHandler.__getDuration(word.start + timeOffset),
-            end_time=EventHandler.__getDuration(word.end + timeOffset),
+            start_time=EventHandler.__getDuration(word.start),
+            end_time=EventHandler.__getDuration(word.end),
             word=word.word,
             confidence=word.probability,
         )
