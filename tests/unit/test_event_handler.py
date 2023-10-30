@@ -606,7 +606,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             ],
             duration=1.6,
         )
-        words = handler.getWords(response)
+        words = handler._EventHandler__getWords(response)
         self.assertEqual(words[0].start_time.seconds, 1)
         self.assertEqual(words[0].end_time.seconds, 1)
         self.assertEqual(words[0].end_time.nanos, 500000000)
@@ -628,12 +628,15 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             ],
             duration=1.6,
         )
-        words = handler.getWords(response)
+        words = handler._EventHandler__getWords(response)
         self.assertEqual(words[0].start_time.seconds, 2)
+        self.assertEqual(words[0].start_time.nanos, 0)
         self.assertEqual(words[0].end_time.seconds, 2)
         self.assertEqual(words[0].end_time.nanos, 500000000)
         self.assertEqual(words[1].start_time.seconds, 2)
+        self.assertEqual(words[1].start_time.nanos, 500000000)
         self.assertEqual(words[1].end_time.seconds, 3)
+        self.assertEqual(words[1].end_time.nanos, 0)
 
     async def testCheckWordsTimestampsCorrectEnd(self):
         handler = EventHandler(Language.EN_US, None, None)
@@ -648,11 +651,13 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             ],
             duration=1.6,
         )
-        words = handler.getWords(response)
+        words = handler._EventHandler__getWords(response)
         self.assertEqual(words[0].start_time.seconds, 1)
+        self.assertEqual(words[0].start_time.nanos, 0)
         self.assertEqual(words[0].end_time.seconds, 2)
         self.assertEqual(words[0].end_time.nanos, 500000000)
         self.assertEqual(words[1].start_time.seconds, 2)
+        self.assertEqual(words[1].start_time.nanos, 500000000)
         self.assertEqual(words[1].end_time.seconds, 2)
         self.assertEqual(words[1].end_time.nanos, 600000000)
 
@@ -669,10 +674,12 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             ],
             duration=1.5,
         )
-        words = handler.getWords(response)
+        words = handler._EventHandler__getWords(response)
         self.assertEqual(words[0].start_time.seconds, 1)
+        self.assertEqual(words[0].start_time.nanos, 0)
         self.assertEqual(words[0].end_time.seconds, 2)
         self.assertEqual(words[0].end_time.nanos, 500000000)
         self.assertEqual(words[1].start_time.seconds, 2)
+        self.assertEqual(words[1].start_time.nanos, 500000000)
         self.assertEqual(words[1].end_time.seconds, 2)
         self.assertEqual(words[1].end_time.nanos, 500000000)
