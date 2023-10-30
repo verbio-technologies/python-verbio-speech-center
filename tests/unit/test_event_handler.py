@@ -570,6 +570,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
             random.choices(string.ascii_letters + string.digits, k=16)
         )
         words = transcription.split()
+        handler._audioDuration = float(len(words))
         response = handler.getStreamingRecognizeResponse(
             TranscriptionResult(
                 transcription=transcription,
@@ -580,7 +581,7 @@ class TestEventHandler(unittest.IsolatedAsyncioTestCase):
                     )
                     for idx, w in enumerate(words)
                 ],
-                duration=0.0,
+                duration=float(len(words)),
             )
         )
         self.assertEqual(len(response.results.alternatives), 1)
