@@ -20,7 +20,6 @@ class TestMultipleGBEnglishLanguageTags(RecognizerServiceTestCase):
         self.expectNumberOfWords(response, 12, 4)
 
 
-
 class TestMultipleSpanishLanguageTags(RecognizerServiceTestCase):
     _language = "es"
 
