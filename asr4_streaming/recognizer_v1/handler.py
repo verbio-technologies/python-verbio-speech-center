@@ -7,6 +7,7 @@ from asyncio import Event
 from datetime import timedelta
 from dataclasses import dataclass
 from typing import List, Optional
+import re
 
 from google.rpc import code_pb2
 from google.rpc.status_pb2 import Status
@@ -89,17 +90,25 @@ class EventHandler:
         await self.__validateResource(config.resource)
 
     async def __validateParameters(self, parameters: RecognitionParameters):
+        language = self.__getWav2VecLanguageFormat(parameters.language)
         message = ""
-        if not Language.check(parameters.language):
-            message = f"Invalid value '{parameters.language}' for language parameter"
-        elif Language.parse(parameters.language) != self._language:
-            message = f"Invalid language '{parameters.language}'. Only '{self._language.value}' is supported."
+        if not Language.check(language):
+            message = f"Invalid value '{language}' for language parameter"
+        elif Language.parse(language) != self._language:
+            message = f"Invalid language '{language}'. Only '{self._language.value}' is supported."
         if not SampleRate.check(parameters.sample_rate_hz):
             message = f"Invalid value '{parameters.sample_rate_hz}' for sample_rate_hz parameter"
         if not AudioEncoding.check(parameters.audio_encoding):
             message = f"Invalid value '{parameters.audio_encoding}' for audio_encoding parameter"
         if message:
             await self.__logError(message, grpc.StatusCode.INVALID_ARGUMENT)
+
+    def __getWav2VecLanguageFormat(self, languageCode: str) -> str:
+        if re.match(r"es-?(\w\w)?", languageCode):
+            return "es"
+        elif re.match(r"en-?(\w\w)?", languageCode):
+            return "en-US"
+        return languageCode
 
     async def __validateResource(self, resource: RecognitionResource):
         try:
