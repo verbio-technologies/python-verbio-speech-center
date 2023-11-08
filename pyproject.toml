@@ -54,6 +54,7 @@ version = {file = ["VERSION"]}
 client = [
     "numpy >= 1.21.4",
     "pause >= 0.3",
+    "toml",
     "grpcio-status == 1.59.0",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/f8d8063889d24bdd07edfae5e5c189f5dbb26c38f3c8ab2d76c4268d149f6cc7/csr_evaluation_tools-0.0.22-py37-none-linux_x86_64.whl ; python_version=='3.7' and platform_system=='Linux'",
     "csr-evaluation-tools @ https://asr4:glpat-VkJr-mymfHB2P8GrLzvb@gitlab.lan.verbio.com/api/v4/projects/1420/packages/pypi/files/734c88c08f37f4bcc0d85121fd6bbb1badc2bcd54b24f5d7d9ffe8dbecffa1bd/csr_evaluation_tools-0.0.22-py38-none-linux_x86_64.whl ; python_version=='3.8' and platform_system=='Linux'",
