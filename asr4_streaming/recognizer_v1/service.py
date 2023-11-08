@@ -10,8 +10,7 @@ from .types import RecognizerServicer
 from .types import StreamingRecognizeRequest
 from .types import StreamingRecognizeResponse
 
-from asr4.engines.wav2vec import Wav2VecEngineFactory
-from asr4.engines.wav2vec.wav2vec_engine import Wav2VecEngine
+from asr4_engine import ASR4EngineFactory, ASR4Engine
 from asr4_engine.data_classes import Language
 
 _DEFAULT_ID = "unknown"
@@ -28,11 +27,15 @@ class RecognizerService(RecognizerServicer):
 
     def _initializeEngine(
         self,
-        tomlConfiguration: Dict[str, Dict[str, Union[str, float]]],
+        configuration: Dict[str, Dict[str, Union[str, float]]],
         languageCode: str,
-    ) -> Wav2VecEngine:
-        engine = Wav2VecEngineFactory().create_engine()
-        engine.initialize(config=toml.dumps(tomlConfiguration), language=languageCode)
+    ) -> ASR4Engine:
+        configuration["global"]["engine"] = configuration.get("global", {}).get(
+            "engine", "w2v"
+        )
+        engine = ASR4EngineFactory().createEngine(
+            config=toml.dumps(configuration), language=languageCode
+        )
         return engine
 
     async def StreamingRecognize(
