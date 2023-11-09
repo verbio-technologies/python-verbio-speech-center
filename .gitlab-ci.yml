@@ -164,8 +164,8 @@ integration-testing:gpu:
   tags:
     - gpu
   before_script:
-    - !reference [.install-python, before_script]
     - . /opt/intel/oneapi/setvars.sh
+    - !reference [.install-python, before_script]
     - CUDACXX=/usr/local/cuda/bin/nvcc LDFLAGS="-L/intelpython/python3.9/lib/ -liomp5" pip install .[client,server,gpu,test]
     - bash tests/integration/launch_server.sh tests/integration/data/asr4_streaming_config_${LANGUAGE}.toml 1
     - wget -O - https://pkg-repos.lan.verbio.com/gpg/internal/deb/F2EACE0B.gpg.key | apt-key add -
