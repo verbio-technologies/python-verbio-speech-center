@@ -6,6 +6,16 @@
 
 ### Removed :no_entry:
 
+## 1.0.6 (2023-11-13)
+
+### Patch (5 changes)
+
+- [Update w2v-engine versions to avoid conflicts with asr4-engine core](csr/asr4-streaming@e3b52a9827c8a1312d42a831bca926c416955666) ([merge request](csr/asr4-streaming!356))
+- [[SC2-1152] Update W2V engine version to fix bugs](csr/asr4-streaming@54210b09a51801cf6f619a9a77a901a55353d1d5) ([merge request](csr/asr4-streaming!354))
+- [Fix/Convert en-XX and es-XX language codes into w2v accepted language codes](csr/asr4-streaming@54d7c4344fb7afbf9fc26193d1530ef441aabfe9) ([merge request](csr/asr4-streaming!352))
+- [[EEE-1141] Refactor/ Adjust timestamps and partial durations to total audio duration](csr/asr4-streaming@aa77d4a9db91ad4aeffed4e66a9c0e1d6aae3a3c) ([merge request](csr/asr4-streaming!348))
+- [upgraded base image to 0.1.1](csr/asr4-streaming@e919739bee0ebc739cc48b11754d6a559b4158a0) ([merge request](csr/asr4-streaming!349))
+
 ## 1.0.5 (2023-11-09)
 
 ### Patch (4 changes)
