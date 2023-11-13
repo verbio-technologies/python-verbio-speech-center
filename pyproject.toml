@@ -73,7 +73,7 @@ cpu = [
     "asr4-engine-wav2vec[cpu,decoder,formatter] == 1.0.*"
 ]
 gpu = [
-    "asr4-engine-wav2vec[gpu,decoder,formatter] == 1.0.1"
+    "asr4-engine-wav2vec[gpu,decoder,formatter] == 1.0.*"
 ]
 test = [
     "pytest >= 6.2.5",
