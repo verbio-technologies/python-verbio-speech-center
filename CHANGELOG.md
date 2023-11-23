@@ -6,6 +6,12 @@
 
 ### Removed :no_entry:
 
+## 1.1.2 (2023-11-23)
+
+### Patch (1 change)
+
+- [Update version](csr/asr4-streaming@ebf1c88132d7f19b49507460f24dce9f7e87f651) ([merge request](csr/asr4-streaming!362))
+
 ## 1.0.6 (2023-11-13)
 
 ### Patch (5 changes)
