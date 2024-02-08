@@ -43,6 +43,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
         choices=[
             'tommy_en_us',
             'miguel_es_pe',
+            'luz_es_pe',
             'bel_pt_br',
             'david_es_es',
             'anna_ca'],
