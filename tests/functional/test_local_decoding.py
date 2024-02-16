@@ -6,7 +6,7 @@ class TestMultipleEnglishLanguageTagsWithLocalDecoding(RecognizerServiceTestCase
     _kwargs = {
         "decoding_type": "LOCAL",
         "local_formatting": True,
-        "formatter": "/mnt/shared/squad2/projects/asr4models/formatter/format-model.en-us-1.0.1.fm",
+        "formatter": "/mnt/shared/squad2/projects/asr4models/formatter/format-model.en-us-1.1.3.fm",
     }
 
     def testEnglish(self):
