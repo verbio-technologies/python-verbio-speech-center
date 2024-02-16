@@ -50,8 +50,8 @@
             "oov": -0.46,
             "accuracy": 71.50,
             "domains": {
-                "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 67.82},
-                "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 68.79},
+                "multidomain_extended-defined-ai_cut-hh-insurance": {"accuracy": 69.16},
+                "multidomain_extended-defined-ai_cut-hh-retail": {"accuracy": 67.82},
                 "multidomain_extended-defined-ai_cut-hh-telco": {"accuracy": 54.73},
                 "multidomain_extended-defined-ai_cut-hh-banking": {"accuracy": 74.38}
             },
