@@ -6,6 +6,7 @@ service TextToSpeech
 {
   rpc ListVoices(ListVoicesRequest) returns (ListVoicesResponse) {}
   rpc SynthesizeSpeech(SynthesisRequest) returns (SynthesisResponse) {}
+  rpc StreamingSynthesizeSpeech(stream StreamingSynthesisRequest) returns (stream SynthesisResponse) {}
 }
 
 message ListVoicesRequest
@@ -16,6 +17,18 @@ message ListVoicesRequest
 message ListVoicesResponse
 {
   repeated string voices = 1;
+}
+
+message StreamingSynthesisRequest {
+  oneof synthesis_request {
+    SynthesisConfig config = 1;
+    string text = 2;
+  }
+}
+
+message SynthesisConfig {
+  string voice = 1;
+  VoiceSamplingRate sampling_rate = 2;
 }
 
 message SynthesisRequest
