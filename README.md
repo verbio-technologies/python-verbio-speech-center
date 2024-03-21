@@ -221,16 +221,20 @@ This option allows for a one word argument to be sent so that the speech transcr
 
 ## Text-To-Speech
 
-Verbio's Speech Center allows to synthesize text in a whole catalogue of voices. Access the `cli-client` directory to run `synthesizer.py` located inside to test Speech Center's Text-To-Speech (TTS) capabilities. Before proceeding, the client needs either a valid token for Speech Center or the user's client credentials. Please check the **Customer Credentials** section of this README before proceeding if you haven't got either.
+Verbio's Speech Center allows to synthesize text in a whole catalogue of voices. Access the `cli-client` directory to run `synthesizer_stream.py` located inside to test Speech Center's Text-To-Speech (TTS) capabilities. Before proceeding, the client needs either a valid token for Speech Center or the user's client credentials. Please check the **Customer Credentials** section of this README before proceeding if you haven't got either.
 
 **Example for text to speech**
 Synthesize request using valid token:
 ```
-python3 synthesizer.py --text "Hello, my friend!" --voice tommy_en_us --audio-file out.wav --host your_speechcenter_hostname --token ./my.token
+python3 synthesizer_stream.py --text "Hello, my friend!" --voice tommy_en_us --audio-file out.wav --host your_speechcenter_hostname --token ./my.token
 ```
 Using client credentials for automated token refreshal:
 ```
-python synthesizer.py --text "Hello my friend!" --voice tommy_en_us --audio-file out.waw --host your_speechcenter_ hostname --client-id your_client_id --client-secret your_client_secret --token token.file
+python synthesizer_stream.py --text "Hello my friend!" --voice tommy_en_us --audio-file out.waw --host your_speechcenter_ hostname --client-id your_client_id --client-secret your_client_secret --token token.file
+```
+Synthesize multiple requests using a text file:
+```
+python3 synthesizer_stream.py --text-file your_file.txt --voice tommy_en_us --audio-file out.wav --host your_speechcenter_hostname --token ./my.token
 ```
 
 Please check out documentation at speechcenter.verbio.com/documentation for current TTS capabilities.
@@ -252,6 +256,16 @@ Help menu detailing the client's options and a list of all available voices.
 ```
 
 String of text to convert into speech.
+
+
+#### Text File
+
+```
+--text-file my_file.txt
+```
+
+Newline delimited file of string of text to convert into speech.
+Instead of sending a single string of text to convert into speech, you can send multiple ones through streaming.
 
 
 #### Voice
