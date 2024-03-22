@@ -93,6 +93,7 @@ class RecognizerOptions:
         self.host = ""
         self.audio_file = None
         self.topic = None
+        self.grammar = None
         self.language = 'en-US'
         self.secure_channel = True
         self.diarization = False
@@ -104,9 +105,10 @@ class RecognizerOptions:
         self.client_secret = None
 
     def check(self):
-        if self.topic is None:
-            raise Exception("You must provide a least a topic")
-
+        if self.topic is None and self.grammar is None:
+            raise Exception("You must provide a least a topic or a grammar")
+        if self.topic is not None and self.grammar is not None:
+            raise Exception("You must provide either a topic or a grammar only, not both")
 
 
 def parse_csr_commandline() -> RecognizerOptions:
@@ -115,6 +117,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     topicGroup = parser.add_mutually_exclusive_group(required=True)
     topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
+    topicGroup.add_argument('--grammar', '-G', help='Grammar for the recognition')
     parser.add_argument(
         '--language',
         '-l',
@@ -141,7 +144,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
-    parser.add_argument('--label', help='"Label for the request', required=False, default="")
+    parser.add_argument('--label', help='Label for the request', required=False, default="")
 
     credentialGroup = parser.add_argument_group(
         'credentials',
@@ -157,6 +160,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.host = args.host
     options.audio_file = args.audio_file
     options.topic = args.topic
+    options.grammar = args.grammar
     options.language = args.language
     options.secure_channel = args.secure
     options.formatting = args.formatting
