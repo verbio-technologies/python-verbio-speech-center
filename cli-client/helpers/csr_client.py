@@ -4,7 +4,7 @@ sys.path.insert(1, '../proto/generated')
 import logging
 import threading
 from threading import Timer
-from helpers.common import RecognizerOptions
+from helpers.common import VerbioGrammar, RecognizerOptions
 from concurrent.futures import ThreadPoolExecutor
 from google.protobuf.json_format import MessageToJson
 from helpers.common import split_audio
@@ -106,12 +106,14 @@ class CSRClient:
         resource = None
         if grammar:
             grammar_resource = None
-            if grammar.startswith("builtin"):
-                grammar_resource = recognition_streaming_request_pb2.GrammarResource(inline_grammar=grammar)
-            elif grammar.startswith("http"):
-                grammar_resource = recognition_streaming_request_pb2.GrammarResource(grammar_uri=grammar)
+            if grammar.type == VerbioGrammar.INLINE:
+                grammar_resource = recognition_streaming_request_pb2.GrammarResource(inline_grammar=grammar.content)
+            elif grammar.type == VerbioGrammar.URI:
+                grammar_resource = recognition_streaming_request_pb2.GrammarResource(grammar_uri=grammar.content)
             else:  # Assuming compiled grammar
-                grammar_resource = recognition_streaming_request_pb2.GrammarResource(compiled_grammar=grammar)
+                with open(grammar.content, "rb") as grammar_file:
+                    compiled_grammar = grammar_file.read()
+                grammar_resource = recognition_streaming_request_pb2.GrammarResource(compiled_grammar=compiled_grammar)
             resource = recognition_streaming_request_pb2.RecognitionResource(grammar=grammar_resource)
         else:
             resource = recognition_streaming_request_pb2.RecognitionResource(topic=topic)

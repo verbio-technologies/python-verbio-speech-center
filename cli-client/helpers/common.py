@@ -87,6 +87,16 @@ def retrieve_token(options: SynthesizerOptions) -> str:
         return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
 
+class VerbioGrammar:
+    INLINE = 0
+    URI = 1
+    COMPILED = 2
+
+    def __init__(self, grammar_type, content=None):
+        self.type = grammar_type
+        self.content = content
+
+
 class RecognizerOptions:
     def __init__(self):
         self.token_file = None
@@ -117,7 +127,9 @@ def parse_csr_commandline() -> RecognizerOptions:
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     topicGroup = parser.add_mutually_exclusive_group(required=True)
     topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
-    topicGroup.add_argument('--grammar', '-G', help='Grammar for the recognition')
+    topicGroup.add_argument('--inline-grammar', '-I', help='Grammar inline as a string')
+    topicGroup.add_argument('--grammar-uri', '-G', help='Grammar URI for the recognition (builtin or served externally)')
+    topicGroup.add_argument('--compiled-grammar', '-C', help='Compiled grammar binary for the recognition')
     parser.add_argument(
         '--language',
         '-l',
@@ -159,8 +171,6 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.token_file = args.token
     options.host = args.host
     options.audio_file = args.audio_file
-    options.topic = args.topic
-    options.grammar = args.grammar
     options.language = args.language
     options.secure_channel = args.secure
     options.formatting = args.formatting
@@ -168,6 +178,15 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     options.label = args.label
+
+    if args.inline_grammar:
+        options.grammar = VerbioGrammar(VerbioGrammar.INLINE, args.inline_grammar)
+    elif args.compiled_grammar:
+        options.grammar = VerbioGrammar(VerbioGrammar.COMPILED, args.compiled_grammar)
+    elif args.grammar_uri:
+        options.grammar = VerbioGrammar(VerbioGrammar.URI, args.grammar_uri)
+    else:  # No grammars
+        options.topic = args.topic
 
     return options
 
