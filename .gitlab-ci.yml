@@ -11,10 +11,10 @@ stages:
   - integration-tests-with-docker
   - promote-to-staging
   - end2end-testing
-  - update-changelog
-  - promote-to-stable
+  # - update-changelog
+  # - promote-to-stable
   - cleanup
-  - speech-center-integration-testing
+  # - speech-center-integration-testing
 
 image: docker.registry.verbio.com/engineering/devops/debian10-citbx-cpp-rust:1.11.7
 
@@ -63,8 +63,11 @@ lint:python:
 
 unit-testing:
   stage: unit-tests
-  rules:
-    - when: always
+  # rules:
+  #   - when: always
+  only:
+    - merge_requests
+    - web
   before_script:
     - !reference [.install-python, before_script]
     - pip install .[client,server,cpu,test]
@@ -84,9 +87,9 @@ functional-testing:
   stage: functional-tests
   needs: ["unit-testing"]
   only:
-    - tags
+    # - tags
     - merge_requests
-    - master
+    # - master
     - web
   before_script:
     - !reference [.install-python, before_script]
@@ -102,9 +105,9 @@ functional-testing:long-audios:
   tags:
     - gpu
   only:
-    - tags
+    # - tags
     - merge_requests
-    - master
+    # - master
     - web
   before_script:
     - !reference [.install-python, before_script]
@@ -119,9 +122,9 @@ functional-testing:e2e:
   stage: functional-tests
   needs: ["unit-testing"]
   only:
-    - tags
+    # - tags
     - merge_requests
-    - master
+    # - master
     - web
   before_script:
     - python -m venv venv-server
@@ -142,10 +145,10 @@ integration-testing:cpu:
   stage: integration-tests
   needs: ["unit-testing"]
   only:
-    - tags
+    # - tags
     - merge_requests
     - web
-    - master
+    # - master
   parallel:
     matrix:
       - LANGUAGE: [en-us, es, pt-br]
@@ -380,65 +383,65 @@ asr4:benchmark:
     strategy: depend
 
 
-update-changelog:
-  stage: update-changelog
-  image: docker.registry.verbio.com/engineering/devops/debian10-citbx:latest
-  only:
-    - tags
-  except:
-    - branches
-  script:
-    - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review --manual-version ${CI_COMMIT_TAG}
+# update-changelog:
+#   stage: update-changelog
+#   image: docker.registry.verbio.com/engineering/devops/debian10-citbx:latest
+#   only:
+#     - tags
+#   except:
+#     - branches
+#   script:
+#     - citbx create release --private-token ${PRIVATE_TOKEN} --project-id ${CI_PROJECT_ID} --branch ${CI_DEFAULT_BRANCH} --no-manual-review --manual-version ${CI_COMMIT_TAG}
 
 
-stable:promote:
-  stage: promote-to-stable
-  image: docker:24
-  only:
-    - tags
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_CPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $OLD_NAME $NEW_CPU_NAME
-    - docker push $NEW_CPU_NAME
-    - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_GPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $OLD_NAME $NEW_GPU_NAME
-    - docker push $NEW_GPU_NAME
+# stable:promote:
+#   stage: promote-to-stable
+#   image: docker:24
+#   only:
+#     - tags
+#   parallel:
+#     matrix:
+#       - LANGUAGE: [en-us, es, pt-br]
+#   script:
+#     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - NEW_CPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - docker tag $OLD_NAME $NEW_CPU_NAME
+#     - docker push $NEW_CPU_NAME
+#     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - NEW_GPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STABLE_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - docker tag $OLD_NAME $NEW_GPU_NAME
+#     - docker push $NEW_GPU_NAME
 
 
-speech-center:promote:
-  stage: promote-to-stable
-  image: docker:24
-  only:
-    - tags
-  parallel:
-    matrix:
-      - LANGUAGE: [en-us, es, pt-br]
-  script:
-    - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_CPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_LATEST_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
-    - docker tag $OLD_NAME $NEW_CPU_NAME
-    - docker tag $OLD_NAME $NEW_LATEST_NAME
-    - docker push $NEW_CPU_NAME
-    - docker push $NEW_LATEST_NAME
-    - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_GPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - NEW_LATEST_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
-    - docker tag $OLD_NAME $NEW_GPU_NAME
-    - docker tag $OLD_NAME $NEW_LATEST_NAME
-    - docker push $NEW_GPU_NAME
-    - docker push $NEW_LATEST_NAME
-    - echo "Push to Amazon"
-    - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_SC_REGION}" "${SPEECH_CENTER_AWS_ECR_URL}" "${DOCKER_SPEECH_CENTER_IMAGE_NAME}" "${LANGUAGE}"
-    - docker tag $NEW_CPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker tag $NEW_GPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
-    - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+# speech-center:promote:
+#   stage: promote-to-stable
+#   image: docker:24
+#   only:
+#     - tags
+#   parallel:
+#     matrix:
+#       - LANGUAGE: [en-us, es, pt-br]
+#   script:
+#     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - NEW_CPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - NEW_LATEST_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:latest"
+#     - docker tag $OLD_NAME $NEW_CPU_NAME
+#     - docker tag $OLD_NAME $NEW_LATEST_NAME
+#     - docker push $NEW_CPU_NAME
+#     - docker push $NEW_LATEST_NAME
+#     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - NEW_GPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - NEW_LATEST_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:latest"
+#     - docker tag $OLD_NAME $NEW_GPU_NAME
+#     - docker tag $OLD_NAME $NEW_LATEST_NAME
+#     - docker push $NEW_GPU_NAME
+#     - docker push $NEW_LATEST_NAME
+#     - echo "Push to Amazon"
+#     - sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_SC_REGION}" "${SPEECH_CENTER_AWS_ECR_URL}" "${DOCKER_SPEECH_CENTER_IMAGE_NAME}" "${LANGUAGE}"
+#     - docker tag $NEW_CPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - docker tag $NEW_GPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+#     - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
 
 
 cleanup:
@@ -452,52 +455,52 @@ cleanup:
     - docker images --filter "label=service=asr4-batch" --filter "label=pipeline=${CI_PIPELINE_IID}" -q | xargs -r docker image rm --force
 
 
-speech-center-integration-testing:en-us:cpu:
-  variables:
-    TEST_SERVICE_NAME: "asr4-en-us"
-    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
-    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
-  extends: .template:speech-center-integration-testing
+# speech-center-integration-testing:en-us:cpu:
+#   variables:
+#     TEST_SERVICE_NAME: "asr4-en-us"
+#     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+#     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+#   extends: .template:speech-center-integration-testing
 
-speech-center-integration-testing:es:cpu:
-  variables:
-    TEST_SERVICE_NAME: "asr4-es"
-    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
-    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
-  extends: .template:speech-center-integration-testing
+# speech-center-integration-testing:es:cpu:
+#   variables:
+#     TEST_SERVICE_NAME: "asr4-es"
+#     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+#     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+#   extends: .template:speech-center-integration-testing
 
-speech-center-integration-testing:pt-br:cpu:
-  variables:
-    TEST_SERVICE_NAME: "asr4-pt-br"
-    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
-    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
-  extends: .template:speech-center-integration-testing
+# speech-center-integration-testing:pt-br:cpu:
+#   variables:
+#     TEST_SERVICE_NAME: "asr4-pt-br"
+#     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+#     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+#   extends: .template:speech-center-integration-testing
 
-speech-center-integration-testing:en-us:gpu:
-  variables:
-    TEST_SERVICE_NAME: "asr4-gpu-en-us"
-    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
-    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
-  extends: .template:speech-center-integration-testing
+# speech-center-integration-testing:en-us:gpu:
+#   variables:
+#     TEST_SERVICE_NAME: "asr4-gpu-en-us"
+#     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+#     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+#   extends: .template:speech-center-integration-testing
 
-speech-center-integration-testing:es:gpu:
-  variables:
-    TEST_SERVICE_NAME: "asr4-gpu-es"
-    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
-    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
-  extends: .template:speech-center-integration-testing
+# speech-center-integration-testing:es:gpu:
+#   variables:
+#     TEST_SERVICE_NAME: "asr4-gpu-es"
+#     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+#     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+#   extends: .template:speech-center-integration-testing
 
-speech-center-integration-testing:pt-br:gpu:
-  variables:
-    TEST_SERVICE_NAME: "asr4-gpu-pt-br"
-    # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
-    TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
-  extends: .template:speech-center-integration-testing
+# speech-center-integration-testing:pt-br:gpu:
+#   variables:
+#     TEST_SERVICE_NAME: "asr4-gpu-pt-br"
+#     # A Gitlab bug requires this variable to be CI_COMMIT_TAG instead of DOCKER_IMAGE_VERSION
+#     TEST_SERVICE_COMMIT_TAG: ${CI_COMMIT_TAG}
+#   extends: .template:speech-center-integration-testing
 
-.template:speech-center-integration-testing:
-  stage: speech-center-integration-testing
-  only:
-    - tags
-  trigger:
-    project: voice-center/operations/integration/integration-tests
-    strategy: depend
+# .template:speech-center-integration-testing:
+#   stage: speech-center-integration-testing
+#   only:
+#     - tags
+#   trigger:
+#     project: voice-center/operations/integration/integration-tests
+#     strategy: depend
