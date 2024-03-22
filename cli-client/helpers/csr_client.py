@@ -92,6 +92,25 @@ class CSRClient:
             yield message
         logging.info("All audio messages sent")
 
+    def __generate_grammar_resource(self, grammar):
+        if grammar.type == VerbioGrammar.INLINE:
+            return recognition_streaming_request_pb2.GrammarResource(inline_grammar=grammar.content)
+        elif grammar.type == VerbioGrammar.URI:
+            return recognition_streaming_request_pb2.GrammarResource(grammar_uri=grammar.content)
+        elif grammar.type == VerbioGrammar.COMPILED:
+            with open(grammar.content, "rb") as grammar_file:
+                compiled_grammar = grammar_file.read()
+                return recognition_streaming_request_pb2.GrammarResource(compiled_grammar=compiled_grammar)
+
+        raise Exception("Type of grammar not recognized.")
+
+    def __generate_recognition_resource(self, topic, grammar):
+        if grammar:
+            grammar_resource = self.__generate_grammar_resource(grammar)
+            return recognition_streaming_request_pb2.RecognitionResource(grammar=grammar_resource)
+        else:
+            return recognition_streaming_request_pb2.RecognitionResource(topic=topic)
+
     def __generate_messages(self,
                             wav_audio: bytes,
                             asr_version: str,
@@ -103,20 +122,7 @@ class CSRClient:
                             formatting=False,
                             label: str = ""):
 
-        resource = None
-        if grammar:
-            grammar_resource = None
-            if grammar.type == VerbioGrammar.INLINE:
-                grammar_resource = recognition_streaming_request_pb2.GrammarResource(inline_grammar=grammar.content)
-            elif grammar.type == VerbioGrammar.URI:
-                grammar_resource = recognition_streaming_request_pb2.GrammarResource(grammar_uri=grammar.content)
-            else:  # Assuming compiled grammar
-                with open(grammar.content, "rb") as grammar_file:
-                    compiled_grammar = grammar_file.read()
-                grammar_resource = recognition_streaming_request_pb2.GrammarResource(compiled_grammar=compiled_grammar)
-            resource = recognition_streaming_request_pb2.RecognitionResource(grammar=grammar_resource)
-        else:
-            resource = recognition_streaming_request_pb2.RecognitionResource(topic=topic)
+        resource = self.__generate_recognition_resource(topic, grammar)
         asr_versions = {"V1": 0, "V2": 1}
         selected_asr_version = asr_versions[asr_version]
 
