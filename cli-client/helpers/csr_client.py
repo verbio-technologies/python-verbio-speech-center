@@ -4,7 +4,7 @@ sys.path.insert(1, '../proto/generated')
 import logging
 import threading
 from threading import Timer
-from helpers.common import RecognizerOptions
+from helpers.common import VerbioGrammar, RecognizerOptions
 from concurrent.futures import ThreadPoolExecutor
 from google.protobuf.json_format import MessageToJson
 from helpers.common import split_audio
@@ -18,6 +18,7 @@ class CSRClient:
         self._resources = audio_resource
         self._host = options.host
         self._topic = options.topic
+        self._grammar = options.grammar
         self._language = options.language
         self._peer_responded = threading.Event()
         self._token = token
@@ -69,13 +70,14 @@ class CSRClient:
         metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
         self.__generate_messages(
                 topic=self._topic,
+                grammar=self._grammar,
                 asr_version=self._asr_version,
                 wav_audio=self._resources.audio,
                 language=self._language,
                 sample_rate=self._resources.sample_rate,
                 formatting=self._formatting,
                 diarization=self._diarization,
-                label=self._label),
+                label=self._label)
         response_iterator = self._stub.StreamingRecognize(self.__message_iterator(), metadata=metadata)
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
 
@@ -93,18 +95,37 @@ class CSRClient:
             yield message
         logging.info("All audio messages sent")
 
-    def __generate_messages(
-        self,
-        wav_audio: bytes,
-        asr_version: str,
-        topic: str = "",
-        language: str = "",
-        sample_rate: int = 16000,
-        diarization=False,
-        formatting=False,
-        label: str = ""):
+    def __generate_grammar_resource(self, grammar):
+        if grammar.type == VerbioGrammar.INLINE:
+            return recognition_streaming_request_pb2.GrammarResource(inline_grammar=grammar.content)
+        elif grammar.type == VerbioGrammar.URI:
+            return recognition_streaming_request_pb2.GrammarResource(grammar_uri=grammar.content)
+        elif grammar.type == VerbioGrammar.COMPILED:
+            with open(grammar.content, "rb") as grammar_file:
+                compiled_grammar = grammar_file.read()
+                return recognition_streaming_request_pb2.GrammarResource(compiled_grammar=compiled_grammar)
 
-        resource = recognition_streaming_request_pb2.RecognitionResource(topic=topic)
+        raise Exception("Type of grammar not recognized.")
+
+    def __generate_recognition_resource(self, topic, grammar):
+        if grammar:
+            grammar_resource = self.__generate_grammar_resource(grammar)
+            return recognition_streaming_request_pb2.RecognitionResource(grammar=grammar_resource)
+        else:
+            return recognition_streaming_request_pb2.RecognitionResource(topic=topic)
+
+    def __generate_messages(self,
+                            wav_audio: bytes,
+                            asr_version: str,
+                            topic: str = "",
+                            grammar: str = "",
+                            language: str = "",
+                            sample_rate: int = 16000,
+                            diarization=False,
+                            formatting=False,
+                            label: str = ""):
+
+        resource = self.__generate_recognition_resource(topic, grammar)
         asr_versions = {"V1": 0, "V2": 1}
         selected_asr_version = asr_versions[asr_version]
 

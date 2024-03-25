@@ -87,12 +87,23 @@ def retrieve_token(options: SynthesizerOptions) -> str:
         return SpeechCenterCredentials.read_token(token_file=options.token_file)
 
 
+class VerbioGrammar:
+    INLINE = 0
+    URI = 1
+    COMPILED = 2
+
+    def __init__(self, grammar_type, content=None):
+        self.type = grammar_type
+        self.content = content
+
+
 class RecognizerOptions:
     def __init__(self):
         self.token_file = None
         self.host = ""
         self.audio_file = None
         self.topic = None
+        self.grammar = None
         self.language = 'en-US'
         self.secure_channel = True
         self.diarization = False
@@ -104,9 +115,10 @@ class RecognizerOptions:
         self.client_secret = None
 
     def check(self):
-        if self.topic is None:
-            raise Exception("You must provide a least a topic")
-
+        if self.topic is None and self.grammar is None:
+            raise Exception("You must provide a least a topic or a grammar")
+        if self.topic is not None and self.grammar is not None:
+            raise Exception("You must provide either a topic or a grammar only, not both")
 
 
 def parse_csr_commandline() -> RecognizerOptions:
@@ -115,6 +127,9 @@ def parse_csr_commandline() -> RecognizerOptions:
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
     topicGroup = parser.add_mutually_exclusive_group(required=True)
     topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
+    topicGroup.add_argument('--inline-grammar', '-I', help='Grammar inline as a string')
+    topicGroup.add_argument('--grammar-uri', '-G', help='Grammar URI for the recognition (builtin or served externally)')
+    topicGroup.add_argument('--compiled-grammar', '-C', help='Compiled grammar binary for the recognition')
     parser.add_argument(
         '--language',
         '-l',
@@ -141,7 +156,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
-    parser.add_argument('--label', help='"Label for the request', required=False, default="")
+    parser.add_argument('--label', help='Label for the request', required=False, default="")
 
     credentialGroup = parser.add_argument_group(
         'credentials',
@@ -156,7 +171,6 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.token_file = args.token
     options.host = args.host
     options.audio_file = args.audio_file
-    options.topic = args.topic
     options.language = args.language
     options.secure_channel = args.secure
     options.formatting = args.formatting
@@ -164,6 +178,15 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     options.label = args.label
+
+    if args.inline_grammar:
+        options.grammar = VerbioGrammar(VerbioGrammar.INLINE, args.inline_grammar)
+    elif args.compiled_grammar:
+        options.grammar = VerbioGrammar(VerbioGrammar.COMPILED, args.compiled_grammar)
+    elif args.grammar_uri:
+        options.grammar = VerbioGrammar(VerbioGrammar.URI, args.grammar_uri)
+    else:  # No grammars
+        options.topic = args.topic
 
     return options
 

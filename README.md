@@ -119,9 +119,25 @@ This argument is required, stating a path to a .wav audio in 8kHz or 16kHz sampl
 -T, --topic arg
 ```
 
- Topic to use for the recognition when a grammar is not provided. Must be `GENERIC` | `BANKING` | `TELCO` | `INSURANCE` (default: `GENERIC`).
+Topic to use for the recognition when a grammar is not provided. Must be `GENERIC` | `BANKING` | `TELCO` | `INSURANCE` (default: `GENERIC`).
  
 > **THIS FEATURE IS STILL IN DEVELOPMENT, PLEASE USE THE GENERIC TOPIC FOR ALL REQUESTS OR AN ERROR WILL BE GIVEN.**
+
+#### Grammar
+
+There are three options available to provide a grammar:
+
+```
+-I, --inline-grammar arg
+-G, --grammar-uri arg
+-C, --compiled-grammar arg
+```
+
+- The inline grammar option expects a grammar passed inline as a string.
+- The grammar URI option expects a URI, either pointing to a built-in grammar or to a grammar that is being hosted externally.
+- The compiled grammar expects a filename of the compiled grammar binary.
+
+> **THIS FEATURE IS STILL IN DEVELOPMENT, PLEASE ONLY USE THE GRAMMAR URI OPTION WITH BUILTIN GRAMMARS, OR AN ERROR WILL BE GIVEN.**
 
 #### Language
 
