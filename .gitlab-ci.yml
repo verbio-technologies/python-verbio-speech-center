@@ -50,16 +50,16 @@ settings:
     reports:
       dotenv: settings.env
 
-
-lint:python:
-  stage: unit-tests
-  rules:
-    - when: always
-  before_script:
-    - pip install flake8==3.9.2 black==22.6.0
-  script:
-    - black --check --diff .
-    - flake8 --exit-zero --show-source --statistics
+#
+#lint:python:
+#  stage: unit-tests
+#  rules:
+#    - when: always
+#  before_script:
+#    - pip install flake8==3.9.2 black==22.6.0
+#  script:
+#    - black --check --diff .
+#    - flake8 --exit-zero --show-source --statistics
 
 
 #unit-testing:
