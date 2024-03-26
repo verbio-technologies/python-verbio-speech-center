@@ -450,8 +450,8 @@ speech-center:promote:
     - docker push $NEW_LATEST_NAME
     - echo "Push to Amazon"
     - export AWS_REGION="${AWS_SC_REGION}"
-    - sh create_ecr_repository.sh "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}" ECS-AssumeRole-Squad2
-    - sh create_ecr_repository.sh "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}" ECS-AssumeRole-Squad2
+    - sh create_ecr_repository.sh "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-gpu-${LANGUAGE}"
+    - sh create_ecr_repository.sh "${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}"
     #- sh deploy/docker/amazon_login.sh "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_SC_REGION}" "${SPEECH_CENTER_AWS_ECR_URL}" "${DOCKER_SPEECH_CENTER_IMAGE_NAME}" "${LANGUAGE}"
     - docker tag $NEW_CPU_NAME "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - docker push "${SPEECH_CENTER_AWS_ECR_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
