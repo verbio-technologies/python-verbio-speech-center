@@ -18,7 +18,7 @@ Before starting you will need:
 1. Dashboard user account (provided to you by Verbio Technologies), please contact our sales team at info@verbio.com to get one.
 2. Speech center streaming endpoint valid for speech recognition and speech synthesis. Please check the endpoints section.
 3. Speech Center proto files (provided under proto directory in this repository).
-4. Python 3.6+
+4. Python 3.6+, <=3.9
 5. Protobuf package 3.20.x or lower (or set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python but this will use pure-Python parsing and will be much slower).
 6. Pip
 
