@@ -356,7 +356,7 @@ staging:promote:
     - export SCRIPTS_DIR=$(mktemp -d)
     - git clone -q "$SCRIPTS_REPO" "$SCRIPTS_DIR"
     - cd "$SCRIPTS_DIR"
-    - checkout chore/update-upload-script
+    - git checkout chore/update-upload-script
   script:
     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_CPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
@@ -431,6 +431,7 @@ speech-center:promote:
     - export SCRIPTS_DIR=$(mktemp -d)
     - git clone -q "$SCRIPTS_REPO" "$SCRIPTS_DIR"
     - cd "$SCRIPTS_DIR"
+    - git checkout chore/update-upload-script
   script:
     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_CPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_SPEECH_CENTER_IMAGE_NAME}-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
