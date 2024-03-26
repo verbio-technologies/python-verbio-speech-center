@@ -364,6 +364,7 @@ staging:promote:
     - docker push $NEW_CPU_NAME
     - OLD_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_TESTING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
     - NEW_GPU_NAME="${VERBIO_REGISTRY_URL}/${DOCKER_STAGING_IMAGE_NAME}-gpu-${LANGUAGE}:${DOCKER_IMAGE_VERSION}"
+    - echo $OLD_NAME $NEW_GPU_NAME
     - docker tag $OLD_NAME $NEW_GPU_NAME
     - docker push $NEW_GPU_NAME
     - echo "Push to Amazon"
