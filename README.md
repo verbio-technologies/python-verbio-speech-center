@@ -145,7 +145,7 @@ There are three options available to provide a grammar:
 -l, --language arg
 ```
 
-Language to use for the recognition: `en-US`, `en-GB`, `pt-BR`, `es`, `es-419`, `tr`, `ja`, `fr`, `fr-CA`, `de`, `it` (default: `en-US`). Please check the [Speech Center streaming Soeech-To-Text documentation](https://speechcenter.verbio.com/documentation/index.php/speech-to-text-streaming/) for an updated list of language codes.
+Language to use for the recognition: `en-US`, `en-GB`, `pt-BR`, `es`, `ca-ES`, `es-419`, `tr`, `ja`, `fr`, `fr-CA`, `de`, `it` (default: `en-US`). Please check the [Speech Center streaming Soeech-To-Text documentation](https://speechcenter.verbio.com/documentation/index.php/speech-to-text-streaming/) for an updated list of language codes.
 
 #### Diarization
 
