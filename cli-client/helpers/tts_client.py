@@ -73,8 +73,14 @@ class TTSClient:
             audio = bytearray()
             logging.info("Running response watcher")
             for response in response_iterator:
-                logging.info("New incoming response: %s bytes of audio data", len(response.audio_samples))
-                audio.extend(response.audio_samples)
+                logging.debug("New incoming response of type: %s", type(response))
+                
+                if response.streaming_audio.audio_samples:
+                    logging.info("StreamingAudio response received: %s bytes of audio data", len(response.streaming_audio.audio_samples))
+                    audio.extend(response.streaming_audio.audio_samples)
+                
+                if response.end_of_utterance.data:
+                    logging.info("EndOfUtterance response received. Signaling end of stream with data: %s", response.end_of_utterance.data)
 
                 if self._inactivity_timer:
                     self._inactivity_timer.cancel()
@@ -131,3 +137,7 @@ class TTSClient:
 
         for line in split_text(text_file):
             self._messages.append(("text", verbio_speech_center_synthesizer_pb2.StreamingSynthesisRequest(text=line)))
+
+        end_of_utterance = verbio_speech_center_synthesizer_pb2.EndOfUtterance(data="EndOfUtterance")
+
+        self._messages.append(("end_of_utterance", verbio_speech_center_synthesizer_pb2.StreamingSynthesisRequest(end_of_utterance=end_of_utterance)))

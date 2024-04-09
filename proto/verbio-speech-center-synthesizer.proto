@@ -2,20 +2,17 @@ syntax = "proto3";
 
 package tts_grpc_gateway.v1;
 
-service TextToSpeech
-{
+service TextToSpeech {
   rpc ListVoices(ListVoicesRequest) returns (ListVoicesResponse) {}
   rpc SynthesizeSpeech(SynthesisRequest) returns (SynthesisResponse) {}
-  rpc StreamingSynthesizeSpeech(stream StreamingSynthesisRequest) returns (stream SynthesisResponse) {}
+  rpc StreamingSynthesizeSpeech(stream StreamingSynthesisRequest) returns (stream StreamingSynthesisResponse) {}
 }
 
-message ListVoicesRequest
-{
+message ListVoicesRequest {
   optional string language = 1;
 }
 
-message ListVoicesResponse
-{
+message ListVoicesResponse {
   repeated string voices = 1;
 }
 
@@ -23,6 +20,7 @@ message StreamingSynthesisRequest {
   oneof synthesis_request {
     SynthesisConfig config = 1;
     string text = 2;
+    EndOfUtterance end_of_utterance = 3;
   }
 }
 
@@ -31,17 +29,30 @@ message SynthesisConfig {
   VoiceSamplingRate sampling_rate = 2;
 }
 
-message SynthesisRequest
-{
+message SynthesisRequest {
   string text = 1;
   string voice = 2;
   VoiceSamplingRate sampling_rate = 3;
   AudioFormat format = 4;
 }
 
-message SynthesisResponse
-{
+message SynthesisResponse {
   bytes audio_samples = 1;
+}
+
+message StreamingSynthesisResponse {
+  oneof synthesis_response {
+    StreamingAudio streaming_audio = 1; // This field returns the synthesized text in audio format.
+    EndOfUtterance end_of_utterance = 2; // This field signals a end of stream for a StreamingSynthesisRequest text syntesis request.
+  }
+}
+
+message StreamingAudio {
+  bytes audio_samples = 1;
+}
+
+message EndOfUtterance {
+  string data = 1;
 }
 
 enum AudioFormat {
