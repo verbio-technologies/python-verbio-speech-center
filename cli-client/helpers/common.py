@@ -125,6 +125,8 @@ def parse_csr_commandline() -> RecognizerOptions:
     options = RecognizerOptions()
     parser = argparse.ArgumentParser(description='Perform speech recognition on an audio file')
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
+    parser.add_argument('--convert-audio', '-c', help='Convert audio file to from A-LAW to PCM using sox software. Used for internal testing.',
+                        required=False, default=False, dest='convert_audio', action='store_true')
     topicGroup = parser.add_mutually_exclusive_group(required=True)
     topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
     topicGroup.add_argument('--inline-grammar', '-I', help='Grammar inline as a string')
@@ -172,6 +174,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.token_file = args.token
     options.host = args.host
     options.audio_file = args.audio_file
+    options.convert_audio = args.convert_audio
     options.language = args.language
     options.secure_channel = args.secure
     options.formatting = args.formatting

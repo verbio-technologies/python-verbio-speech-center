@@ -12,7 +12,7 @@ from helpers.common import retrieve_token, parse_csr_commandline, RecognizerOpti
 
 
 def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, options: RecognizerOptions, access_token: str):
-    audio_resource = AudioImporter(options.audio_file)
+    audio_resource = AudioImporter(options.audio_file, options.convert_audio)
     stub = recognition_pb2_grpc.RecognizerStub(channel)
     client = CSRClient(executor, stub, options, audio_resource, access_token)
     client.send_audio()
