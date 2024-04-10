@@ -139,6 +139,7 @@ def parse_csr_commandline() -> RecognizerOptions:
             'en-GB',
             'pt-BR',
             'es',
+            'ca-ES',
             'es-419',
             'tr',
             'ja',
