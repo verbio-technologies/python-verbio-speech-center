@@ -155,8 +155,8 @@ def parse_csr_commandline() -> RecognizerOptions:
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')', required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.',
                         required=False, default=True, dest='secure', action='store_false')
-    parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_false')
-    parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_false')
+    parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_true')
+    parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_true')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--label', help='Label for the request', required=False, default="")
