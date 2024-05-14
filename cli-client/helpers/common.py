@@ -50,7 +50,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'anna_ca'],
         help='Voice to use for the synthesis',
         required=True)
-    parser.add_argument('--sample-rate', '-s', type=int, choices=[16000], help='Output audio sample rate in Hz', default=16000)
+    parser.add_argument('--sample-rate', '-s', type=int, choices=[8000, 16000], help='Output audio sample rate in Hz', default=16000)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio format', default='wav')
     parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
