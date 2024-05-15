@@ -122,7 +122,8 @@ class TTSClient:
         voice: str,
         sample_rate: int, 
     ):
-        supported_sample_rates = {8000: 0, 16000: 1}
+        supported_sample_rates = {8000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_8KHZ, 
+            16000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_16KHZ}
         synthesis_config = verbio_speech_center_synthesizer_pb2.SynthesisConfig(
             voice=voice,
             sampling_rate=supported_sample_rates[sample_rate],
