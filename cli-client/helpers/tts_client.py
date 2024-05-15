@@ -26,7 +26,9 @@ class TTSClient:
         self._secure_channel = options.secure_channel
         self._inactivity_timer = None
         self._inactivity_timer_timeout = options.inactivity_timeout
-
+        self._supported_sample_rates = {8000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_8KHZ, 
+            16000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_16KHZ}
+ 
     def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int):
         message = verbio_speech_center_synthesizer_pb2.SynthesisRequest(
             text=text,
@@ -47,11 +49,12 @@ class TTSClient:
         selected_audio_format = AudioExporter.SUPPORTED_FORMATS[self._audio_format]
 
         metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
+        logging.error("Audio sampling rate: %s", self._audio_sample_rate)
         response, call = self._stub.SynthesizeSpeech.with_call(
             self._compose_synthesis_request(
                 text=self._text,
                 voice=self._voice,
-                sampling_rate=self._audio_sample_rate,
+                sampling_rate=self._supported_sample_rates[self._audio_sample_rate],
                 audio_format=selected_audio_format
             ), metadata=metadata
         )
@@ -122,11 +125,9 @@ class TTSClient:
         voice: str,
         sample_rate: int, 
     ):
-        supported_sample_rates = {8000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_8KHZ, 
-            16000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_16KHZ}
         synthesis_config = verbio_speech_center_synthesizer_pb2.SynthesisConfig(
             voice=voice,
-            sampling_rate=supported_sample_rates[sample_rate],
+            sampling_rate=self._supported_sample_rates[sample_rate],
         )
 
         self._messages = [
