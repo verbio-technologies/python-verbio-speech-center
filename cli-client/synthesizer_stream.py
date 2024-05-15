@@ -14,7 +14,8 @@ def process_synthesis(executor: ThreadPoolExecutor, channel: grpc.Channel, optio
     stub = verbio_speech_center_synthesizer_pb2_grpc.TextToSpeechStub(channel)
     client = TTSClient(executor, stub, options, access_token)
     if options.text:
-        client.synthesize()
+        audio_samples = client.synthesize()
+        client.save_audio_result(audio_samples)
     elif options.text_file:
         client.send_text()
         client.wait_for_response()

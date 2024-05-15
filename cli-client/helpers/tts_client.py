@@ -39,17 +39,16 @@ class TTSClient:
 
         return message
     
-    def _save_audio_result(self, audio_samples: bytes):
+    def save_audio_result(self, audio_samples: bytes):
         audio_exporter = AudioExporter(self._audio_sample_rate)
         audio_exporter.save_audio(self._audio_format, audio_samples, self._audio_file)
         logging.info("Stored synthesis audio at -%s-", self._audio_file)
 
-    def synthesize(self):
+    def synthesize(self) -> bytes:
         logging.info("Sending synthesis request for voice: -%s-, sampling_rate: %i and text: -%s-", self._voice, self._audio_sample_rate, self._text)
         selected_audio_format = AudioExporter.SUPPORTED_FORMATS[self._audio_format]
 
         metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
-        logging.error("Audio sampling rate: %s", self._audio_sample_rate)
         response, call = self._stub.SynthesizeSpeech.with_call(
             self._compose_synthesis_request(
                 text=self._text,
@@ -61,7 +60,8 @@ class TTSClient:
 
         logging.info("Synthesis response [status=%s]", str(call.code()))
         logging.info("Received response with %s bytes of audio data", len(response.audio_samples))
-        self._save_audio_result(response.audio_samples)
+        
+        return response.audio_samples
 
     def _close_stream_by_inactivity(self):
         logging.info("Stream inactivity detected, closing stream...")
@@ -89,7 +89,7 @@ class TTSClient:
                     self._inactivity_timer.cancel()
                 self._start_inactivity_timer(self._inactivity_timer_timeout)
                 
-            self._save_audio_result(audio)
+            self.save_audio_result(audio)
 
         except Exception as e:
             logging.error("Error running response watcher: %s", str(e))
