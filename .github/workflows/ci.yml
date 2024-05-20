@@ -43,4 +43,4 @@ jobs:
           ./generate_grpc_code.sh
           cd ../cli-client
           ./recognizer_stream.py --help
-          ./synthesizer.py --help
+          ./synthesizer_stream.py --help

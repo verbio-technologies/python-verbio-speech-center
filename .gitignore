@@ -151,3 +151,4 @@ resources
 *.wav
 
 cli-client/token.file
+cli-client/streaming.text

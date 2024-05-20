@@ -13,7 +13,9 @@ class SynthesizerOptions:
         self.audio_format = ''
         self.sample_rate: int = 0
         self.voice: str = None
-        self.text: str = None
+        self.text: str = ''
+        self.text_file: str = ''
+        self.inactivity_timeout = False
         self.client_id = None
         self.client_secret = None
 
@@ -28,15 +30,14 @@ def parse_credential_args(args, options):
 
 
 def check_commandline_values(args):
-    if not args.text:
-        logging.error("Synthesis text field needs to be non empty")
-        raise ValueError("Synthesis text field needs to be non empty")
+    if not args.text and not args.text_file:
+        logging.error("Synthesis text and text-file field cannot both be empty")
+        raise ValueError("Synthesis text and text-file field cannot both be empty")
 
 
 def parse_tts_command_line() -> SynthesizerOptions:
     options = SynthesizerOptions()
     parser = argparse.ArgumentParser(description='Perform speech synthesis on a given text')
-    parser.add_argument('--text', '-T', help='Text to synthesize to audio', required=True)
     parser.add_argument(
         '--voice',
         '-v',
@@ -49,13 +50,18 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'anna_ca'],
         help='Voice to use for the synthesis',
         required=True)
-    parser.add_argument('--sample-rate', '-s', type=int, choices=[16000], help='Output audio sample rate in Hz', default=16000)
+    parser.add_argument('--sample-rate', '-s', type=int, choices=[8000, 16000], help='Output audio sample rate in Hz', default=16000)
     parser.add_argument('--format', '-f', choices=['wav', 'raw'], help='Output audio format', default='wav')
     parser.add_argument('--audio-file', '-a', help='Path to store the resulting audio', required=True)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
     parser.add_argument('--host', '-H', help='The URL of the host trying to reach', required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.',
                         required=False, default=True, dest='secure', action='store_false')
+    parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--text', '-T', help='Text to synthesize to audio')
+    group.add_argument('--text-file', '-F', help='File with newline delimited text to synthesize to audio')
 
     credentialGroup = parser.add_argument_group(
         'credentials',
@@ -74,8 +80,10 @@ def parse_tts_command_line() -> SynthesizerOptions:
     options.secure_channel = args.secure
     options.audio_format = args.format
     options.text = args.text
+    options.text_file = args.text_file
     options.voice = args.voice
     options.sample_rate = args.sample_rate
+    options.inactivity_timeout = float(args.inactivity_timeout)
 
     return options
 
@@ -207,3 +215,11 @@ def split_audio(audio: bytes, chunk_size: int = 20000):
             yield audio[start:end]
     else:
         yield audio
+
+
+def split_text(text_file: str):
+    with open(text_file) as f:
+        for (i, line) in enumerate(f):
+            text = line.rstrip()
+            logging.info("Text slice #" + str(i) + ": " + text)
+            yield text
