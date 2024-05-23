@@ -5,6 +5,7 @@ import logging
 import threading
 from threading import Timer
 from helpers.common import VerbioGrammar, RecognizerOptions
+from helpers.compiled_grammar_processing import get_compiled_grammar
 from concurrent.futures import ThreadPoolExecutor
 from google.protobuf.json_format import MessageToJson
 from helpers.common import split_audio
@@ -101,9 +102,8 @@ class CSRClient:
         elif grammar.type == VerbioGrammar.URI:
             return recognition_streaming_request_pb2.GrammarResource(grammar_uri=grammar.content)
         elif grammar.type == VerbioGrammar.COMPILED:
-            with open(grammar.content, "rb") as grammar_file:
-                compiled_grammar = grammar_file.read()
-                return recognition_streaming_request_pb2.GrammarResource(compiled_grammar=compiled_grammar)
+                return recognition_streaming_request_pb2.GrammarResource(
+                    compiled_grammar=get_compiled_grammar(grammar.content))
 
         raise Exception("Type of grammar not recognized.")
 

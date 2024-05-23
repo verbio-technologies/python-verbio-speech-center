@@ -133,13 +133,15 @@ def parse_csr_commandline() -> RecognizerOptions:
     options = RecognizerOptions()
     parser = argparse.ArgumentParser(description='Perform speech recognition on an audio file')
     parser.add_argument('--audio-file', '-a', help='Path to a .wav audio in 8kHz and PCM16 encoding', required=True)
-    parser.add_argument('--convert-audio', '-c', help='Convert audio file to from A-LAW to PCM using sox software. Used for internal testing.',
+    parser.add_argument('--convert-audio', '-c', help='Convert audio file to from A-LAW to PCM using sox software. '
+                                                      'Used for internal testing.',
                         required=False, default=False, dest='convert_audio', action='store_true')
-    topicGroup = parser.add_mutually_exclusive_group(required=True)
-    topicGroup.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'], help='A valid topic')
-    topicGroup.add_argument('--inline-grammar', '-I', help='Grammar inline as a string')
-    topicGroup.add_argument('--grammar-uri', '-G', help='Grammar URI for the recognition (builtin or served externally)')
-    topicGroup.add_argument('--compiled-grammar', '-C', help='Compiled grammar binary for the recognition')
+    topic_group = parser.add_mutually_exclusive_group(required=True)
+    topic_group.add_argument('--topic', '-T', choices=['GENERIC', 'TELCO', 'BANKING', 'INSURANCE'],
+                             help='A valid topic.')
+    topic_group.add_argument('--inline-grammar', '-I', help='Grammar inline as a string.')
+    topic_group.add_argument('--grammar-uri', '-G', help='Builtin grammar URI for the recognition.')
+    topic_group.add_argument('--compiled-grammar', '-C', help='The compiled grammar file path (an .tar.xz) for the recognition.')
     parser.add_argument(
         '--language',
         '-l',
@@ -160,21 +162,25 @@ def parse_csr_commandline() -> RecognizerOptions:
         help='A Language ID (default: ' + options.language + ')',
         default=options.language)
     parser.add_argument('--token', '-t', help='File with the authentication token', required=True)
-    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')', required=True)
+    parser.add_argument('--host', '-H', help='The URL of the host trying to reach (default: ' + options.host + ')',
+                        required=True)
     parser.add_argument('--not-secure', '-S', help='Do not use a secure channel. Used for internal testing.',
                         required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_true')
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_true')
-    parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
+    parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response',
+                        required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--label', help='Label for the request', required=False, default="")
 
-    credentialGroup = parser.add_argument_group(
+    credential_group = parser.add_argument_group(
         'credentials',
         '''[OPTIONAL] Client authentication credentials used to refresh the token.
         You can find your credentials on the dashboard at https://dashboard.speechcenter.verbio.com/access-token''')
-    credentialGroup.add_argument('--client-id', help='Client id for authentication. MUST be written as --client-id=CLIENT_ID')
-    credentialGroup.add_argument('--client-secret', help='Client secret for authentication. MUST be written as --client-secret=CLIENT_SECRET')
+    credential_group.add_argument('--client-id',
+                                  help='Client id for authentication. MUST be written as --client-id=CLIENT_ID')
+    credential_group.add_argument('--client-secret',
+                                  help='Client secret for authentication. MUST be written as --client-secret=CLIENT_SECRET')
 
     args = parser.parse_args()
     parse_credential_args(args, options)
