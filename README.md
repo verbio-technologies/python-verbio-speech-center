@@ -135,7 +135,7 @@ There are three options available to provide a grammar:
 
 - The inline grammar option expects a grammar passed inline as a string.
 - The grammar URI option expects a URI, either pointing to a built-in grammar or to a grammar that is being hosted externally.
-- The compiled grammar expects a filename of the compiled grammar binary.
+- The compiled grammar expects a filename (a .tar.xz file) of the previously compiled grammar.
 
 > **THIS FEATURE IS STILL IN DEVELOPMENT, PLEASE ONLY USE THE GRAMMAR URI OPTION WITH BUILTIN GRAMMARS, OR AN ERROR WILL BE GIVEN.**
 
