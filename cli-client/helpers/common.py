@@ -47,7 +47,16 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'luz_es_pe',
             'bel_pt_br',
             'david_es_es',
-            'anna_ca'],
+            'anna_ca',
+            'arthur_en_us',
+            'fiona_en_us',
+            'tricia_en_us',
+            'marvin_en_us',
+            'pablo_es_es',
+            'helena_es_es',
+            'pedro_pt_br',
+            'marcia_pt_br'
+        ],
         help='Voice to use for the synthesis',
         required=True)
     parser.add_argument('--sample-rate', '-s', type=int, choices=[8000, 16000], help='Output audio sample rate in Hz', default=16000)
