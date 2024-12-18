@@ -23,6 +23,12 @@ message RecognitionResult {
 
     // Indicates whether a result represents an interim result that may change or not.
     bool is_final = 3;
+
+    // Time offset relative to the beginning of the audio corresponding to the start of the audio segment.
+    float start_time = 4;
+  
+    // Indicates whether a result ends on an endpoint or not.
+    bool is_endpoint = 5;
 }
 
 // Hypothesis-specific information.
