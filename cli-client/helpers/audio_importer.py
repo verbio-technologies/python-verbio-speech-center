@@ -19,9 +19,10 @@ class AudioImporter:
         if convert_audio:
             tmp_audio_file = preprocess_audio_file_to_pcm(audio_file)
         with open(tmp_audio_file, "rb") as wav_file:
-            wav_data = wave.open(wav_file)
-            self.sample_rate = wav_data.getframerate()
-            self.audio = wav_data.readframes(wav_data.getnframes())
-            wav_data.close()
+            with wave.open(wav_file) as wav_data:
+                self.sample_rate = wav_data.getframerate()
+                self.n_samples = wav_data.getnframes()
+                self.sample_width = wav_data.getsampwidth()
+                self.audio = wav_data.readframes(self.n_samples)
         if convert_audio:
             remove_pcm_audio_file(tmp_audio_file)
