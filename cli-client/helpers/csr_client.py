@@ -1,5 +1,7 @@
 import sys
+import pause
 import logging
+import datetime
 sys.path.insert(1, '../proto/generated')
 
 import threading
@@ -96,7 +98,13 @@ class CSRClient:
     def __message_iterator(self):
         for message_type, message in self._messages:
             logging.info("Sending streaming message " + message_type)
+            get_up_time = datetime.datetime.now()
+            if message_type == "audio":
+                sent_audio_samples = len(message.audio) // self._resources.sample_width
+                sent_audio_duration = sent_audio_samples / self._resources.sample_rate
+                get_up_time += datetime.timedelta(seconds=sent_audio_duration)
             yield message
+            pause.until(get_up_time)
         logging.info("All audio messages sent")
 
     def __generate_grammar_resource(self, grammar):
