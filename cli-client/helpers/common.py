@@ -125,6 +125,7 @@ class RecognizerOptions:
         self.secure_channel = True
         self.diarization = False
         self.formatting = False
+        self.hide_partial_results = False
         self.inactivity_timeout = False
         self.asr_version = None
         self.label = None
@@ -177,6 +178,8 @@ def parse_csr_commandline() -> RecognizerOptions:
                         required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_true')
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_true')
+    parser.add_argument('--hide-partial-results', help='If set, do not show partial or incomplete transcriptions',
+                        required=False, default=False, action='store_true')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response',
                         required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
@@ -202,6 +205,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.secure_channel = args.secure
     options.formatting = args.formatting
     options.diarization = args.diarization
+    options.hide_partial_results = args.hide_partial_results
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     options.label = args.label

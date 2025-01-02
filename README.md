@@ -145,7 +145,7 @@ There are three options available to provide a grammar:
 -l, --language arg
 ```
 
-Language to use for the recognition: `en-US`, `en-GB`, `pt-BR`, `es`, `ca-ES`, `es-419`, `tr`, `ja`, `fr`, `fr-CA`, `de`, `it` (default: `en-US`). Please check the [Speech Center streaming Soeech-To-Text documentation](https://speechcenter.verbio.com/documentation/index.php/speech-to-text-streaming/) for an updated list of language codes.
+Language to use for the recognition: `en-US`, `en-GB`, `pt-BR`, `es`, `ca-ES`, `es-419`, `tr`, `ja`, `fr`, `fr-CA`, `de`, `it` (default: `en-US`). Please check the [Speech Center streaming Speech-To-Text documentation](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text-Streaming/Available-languages-and-features) for an updated list of language codes.
 
 #### Diarization
 
@@ -157,14 +157,21 @@ This option enables diarization.
 
 > This option is oriented towards batch transcription only and its use for streaming and call automation is not recommended.
 
-
 #### Formatting
 
 ```
 -f, --formatting
 ```
 
-This option will enable formatting on the speech transcription. Please check the [Speech Center streaming Speech-To-Text documentation](https://speechcenter.verbio.com/documentation/index.php/speech-to-text-streaming/) for an updated list of languages that accept formatting.
+This option will enable formatting on the speech transcription. Please check the [Speech Center streaming Speech-To-Text documentation](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text-Streaming/Available-languages-and-features) for an updated list of languages that accept formatting.
+
+#### Hide Partial Results
+
+```
+--hide-partial-results
+```
+
+By default, incomplete partial results are shown as soon as they arrive. They contain speech transcription segments which are subject to change. This option makes partial results not show anymore.
 
 #### Speech-To-Text engine version
 
@@ -290,7 +297,7 @@ Instead of sending a single string of text to convert into speech, you can send 
 -v, --voice arg
 ```
 
-Voice to use for the text to speech generation. Please bear in mind that each voice has also the language code encoded in it. Some of the available voices are `tommy_en_us` (US English),`miguel_es_pe` (Peruvian Spanish),`bel_pt_br` (Brazilian Portuguese),`david_es_es` (Castillian Spanish),`anna_ca` (Catalan). Please check the [Speech Center documentation](https://speechcenter.verbio.com/documentation) for an updated list of voices.
+Voice to use for the text to speech generation. Please bear in mind that each voice has also the language code encoded in it. Some of the available voices are `tommy_en_us` (US English),`miguel_es_pe` (Peruvian Spanish),`bel_pt_br` (Brazilian Portuguese),`david_es_es` (Castillian Spanish),`anna_ca` (Catalan). Please check the [Speech Center documentation](https://doc.speechcenter.verbio.com/#tag/Text-To-Speech-gRPC/Available-voices) for an updated list of voices.
 
 
 #### Sample rate
@@ -353,7 +360,7 @@ Your customer credentials can be retrieved through the [Speech Center Dashboard]
 ### Authentication flow
 
 
-To acquire a valid token submit an HTTP POST request to the authentication service at `https://auth.speechcenter.verbio.com:444`.
+To acquire a valid token submit an HTTP POST request to the authentication service at `https://auth.speechcenter.verbio.com`.
 
 **Token expiration management**
 
@@ -406,7 +413,7 @@ HTTP 5XX: KO - There was a problem with the server.
 
 **Example request**
 ```
-curl --header "Content-Type: application/json"   --request POST   --data '{"client_id":"YOUR_CLIENT_ID","client_secret":"YOUR_CLIENT_SECRET"}'   'https://auth.speechcenter.verbio.com:444/api/v1/token'
+curl --header "Content-Type: application/json"   --request POST   --data '{"client_id":"YOUR_CLIENT_ID","client_secret":"YOUR_CLIENT_SECRET"}'   'https://auth.speechcenter.verbio.com/api/v1/token'
 ```
 
 **Example response**
