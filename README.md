@@ -74,23 +74,24 @@ You can use the `--help`command for more options.
 This code will generate the following terminal output on success:
 ```text
 [2023-04-04 12:28:29,078][INFO]:Running speechcenter streaming channel...
-[2023-04-04 12:28:29,080][INFO]:Connecting to us.speechcenter.verbio.com
-[2023-04-04 12:28:29,082][INFO]:Running executor...
+[2023-04-04 12:28:29,079][INFO]:Reading Speech Center JWT token from token.file...
+[2023-04-04 12:28:29,080][INFO]:Connecting to pre.us.verbiospeechcenter.com using a secure channel...
+[2023-04-04 12:28:29,082][INFO]:Dividing audio of length 1022720 into 52 chunks of 20000 samples...
 [2023-04-04 12:28:29,083][INFO]:Sending streaming message config
 [2023-04-04 12:28:29,083][INFO]:Running response watcher
 [2023-04-04 12:28:29,083][INFO]:Waiting for server to respond...
 [2023-04-04 12:28:29,084][INFO]:Sending streaming message audio
-[2023-04-04 12:28:29,084][INFO]:All audio messages sent
-[2023-04-04 12:31:27,109][INFO]:New incoming response: '{  "result": {    "alternatives": [      {     ...'
+[2023-04-04 12:28:29,710][INFO]:Sending streaming message audio
+[2023-04-04 12:28:30,123][INFO]:New incoming PARTIAL response: "hi my name"
+[2023-04-04 12:28:30,335][INFO]:Sending streaming message audio
+[2023-04-04 12:28:30,412][INFO]:All audio messages sent
+[2023-04-04 12:28:30,787][INFO]:New incoming FINAL response:
 	"transcript": "Hi. My name is John Doe.",
-	"confidence": "0.899752",
-	"duration": "4.460000"
-[2023-04-04 12:31:27,110][INFO]:New incoming response: '{  "result": {    "alternatives": [      {     ...'
-	"transcript": "I'd like to check my account balance, please.",
-	"confidence": "0.994662",
-	"duration": "7.000000"
-[2023-04-04 12:31:32,111][INFO]:Stream inactivity detected, closing stream...
-[2023-04-04 12:31:32,112][INFO]:Recognition finished
+	"confidence": 0.899752,
+	"start_time": 0.0,
+	"duration": 4.460000
+[2023-04-04 12:28:35,412][INFO]:Stream inactivity detected, closing stream...
+[2023-04-04 12:28:35,413][INFO]:Recognition finished
 
 
 ```
