@@ -98,7 +98,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
 
 
 def retrieve_token(options: SynthesizerOptions) -> str:
-    logging.info("Reading Speech Center JWT token from %s ...", options.token_file)
+    logging.info("Reading Speech Center JWT token from %s...", options.token_file)
     if options.client_id:
         return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
     else:
@@ -130,6 +130,7 @@ class RecognizerOptions:
         self.inactivity_timeout = False
         self.asr_version = None
         self.label = None
+        self.gui = False
         self.client_id = None
         self.client_secret = None
 
@@ -185,6 +186,7 @@ def parse_csr_commandline() -> RecognizerOptions:
                         required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--label', help='Label for the request', required=False, default="")
+    parser.add_argument('--gui', help='Enables GUI mode', required=False, default=False, action='store_true')
 
     credential_group = parser.add_argument_group(
         'credentials',
@@ -210,6 +212,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     options.label = args.label
+    options.gui = args.gui
 
     if args.inline_grammar:
         options.grammar = VerbioGrammar(VerbioGrammar.INLINE, args.inline_grammar)
