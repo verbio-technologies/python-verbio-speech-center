@@ -82,10 +82,10 @@ This code will generate the following terminal output on success:
 [2023-04-04 12:28:29,083][INFO]:Waiting for server to respond...
 [2023-04-04 12:28:29,084][INFO]:Sending streaming message audio
 [2023-04-04 12:28:29,710][INFO]:Sending streaming message audio
-[2023-04-04 12:28:30,123][INFO]:New incoming PARTIAL response: "hi my name"
+[2023-04-04 12:28:30,123][INFO]:Partial transcript: "hi my name"
 [2023-04-04 12:28:30,335][INFO]:Sending streaming message audio
 [2023-04-04 12:28:30,412][INFO]:All audio messages sent
-[2023-04-04 12:28:30,787][INFO]:New incoming FINAL response:
+[2023-04-04 12:28:30,787][INFO]:Final result:
 	"transcript": "Hi. My name is John Doe.",
 	"confidence": 0.899752,
 	"start_time": 0.0,

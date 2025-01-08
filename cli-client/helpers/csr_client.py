@@ -62,14 +62,14 @@ class CSRClient:
 
     def _print_result_in_logs(self, response):
         if response.result.is_final:
-            transcript = "New incoming FINAL response:\n" \
+            transcript = "Final result:\n" \
                 f'\t"transcript": "{response.result.alternatives[0].transcript}",\n' \
                 f'\t"confidence": {response.result.alternatives[0].confidence},\n' \
                 f'\t"start_time": {response.result.start_time},\n' \
                 f'\t"duration": {response.result.duration}'
             logging.info(transcript)
         elif not self._hide_partial_results:
-            logging.info(f'New incoming PARTIAL response: "{response.result.alternatives[0].transcript}"')
+            logging.info(f'Partial transcript: "{response.result.alternatives[0].transcript}"')
 
     def _response_watcher(self, response_iterator):
         try:
