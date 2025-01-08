@@ -62,11 +62,11 @@ Speech Center allows to easily convert an audio resource into its associated tex
 Speech recognition CLI will retrieve an audio file stored locally and send it through streaming to Speech Center's GRPC interface. To run the client please run the `recognizer_stream.py` from the `cli-client` directory. An example transcription request is shown below, all the flags are then detailed.
 
 
-**Example for streaming**
+**Example for CLI**
 
 ```shell
 cd cli-client/
-python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V1 --label project1
+python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V2 --label project1 --formatting
 ```
 
 You can use the `--help`command for more options.
@@ -92,9 +92,20 @@ This code will generate the following terminal output on success:
 	"duration": 4.460000
 [2023-04-04 12:28:35,412][INFO]:Stream inactivity detected, closing stream...
 [2023-04-04 12:28:35,413][INFO]:Recognition finished
-
-
 ```
+
+**Example for CLI with GUI**
+
+Alternatively, you can use the `--gui` parameter to active the GUI mode:
+
+```shell
+cd cli-client/
+python3 recognizer_stream.py --audio-file file.wav --topic GENERIC --language en-US --host us.speechcenter.verbio.com --token token.file --asr-version V2 --label project1 --formatting --gui
+```
+
+This code will generate the following terminal output on success:
+
+![Real-Time Speech-to-Text GUI](img/STT_gui.png)
 
 You can also run:
 ```shell
@@ -241,6 +252,14 @@ This option allows for a one word argument to be sent so that the speech transcr
 - **Project name must only consist of one word.**
 - **Argument must be the same each time for the same project. If there is a typo another project will be created.**
 - **There is no limit on the amount of projects that can be created.**
+
+#### GUI Mode
+
+```
+--gui
+```
+
+This option enables GUI mode. Check out the **Example for CLI with GUI** above to understand the differences between the standard and the GUI modes.
 
 
 ## Text-To-Speech

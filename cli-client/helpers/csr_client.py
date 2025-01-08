@@ -2,6 +2,7 @@ import sys
 import pause
 import logging
 import datetime
+from typing import Optional
 sys.path.insert(1, '../proto/generated')
 
 import threading
@@ -9,6 +10,7 @@ from threading import Timer
 from concurrent.futures import ThreadPoolExecutor
 import recognition_streaming_request_pb2
 
+from helpers.csr_gui import CsrGUI
 from helpers.common import split_audio
 from helpers.audio_importer import AudioImporter
 from helpers.common import VerbioGrammar, RecognizerOptions
@@ -16,7 +18,7 @@ from helpers.compiled_grammar_processing import get_compiled_grammar
 
 
 class CSRClient:
-    def __init__(self, executor: ThreadPoolExecutor, stub, options: RecognizerOptions, audio_resource: AudioImporter, token: str):
+    def __init__(self, executor: ThreadPoolExecutor, stub, options: RecognizerOptions, audio_resource: AudioImporter, token: str, gui: Optional[CsrGUI]):
         self._executor = executor
         self._stub = stub
         self._resources = audio_resource
@@ -34,6 +36,7 @@ class CSRClient:
         self._diarization = options.diarization
         self._hide_partial_results = options.hide_partial_results
         self._label = options.label
+        self._gui = gui
         self._messages = None
 
     def _close_stream_by_inactivity(self):
@@ -45,6 +48,19 @@ class CSRClient:
         self._inactivity_timer.start()
 
     def _print_result(self, response):
+        if self._gui:
+            self._print_result_in_gui(response)
+        else:
+            self._print_result_in_logs(response)
+
+    def _print_result_in_gui(self, response):
+        transcript = response.result.alternatives[0].transcript
+        if response.result.is_final:
+            self._gui.add_final_transcript(transcript)
+        elif not self._hide_partial_results:
+            self._gui.add_partial_transcript(transcript)
+
+    def _print_result_in_logs(self, response):
         if response.result.is_final:
             transcript = "Final result:\n" \
                 f'\t"transcript": "{response.result.alternatives[0].transcript}",\n' \
@@ -96,6 +112,8 @@ class CSRClient:
         return True
 
     def __message_iterator(self):
+        if self._gui:
+            self._gui.start_progress_bar_task(total_audio_samples=self._resources.n_samples)
         for message_type, message in self._messages:
             logging.info("Sending streaming message " + message_type)
             get_up_time = datetime.datetime.now()
@@ -103,6 +121,8 @@ class CSRClient:
                 sent_audio_samples = len(message.audio) // self._resources.sample_width
                 sent_audio_duration = sent_audio_samples / self._resources.sample_rate
                 get_up_time += datetime.timedelta(seconds=sent_audio_duration)
+                if self._gui:
+                    self._gui.advance_progress_bar(advance=sent_audio_samples)
             yield message
             pause.until(get_up_time)
         logging.info("All audio messages sent")

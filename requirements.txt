@@ -3,3 +3,4 @@ grpcio-tools==1.57.0
 requests==2.31.0
 pyjwt==2.8.0
 pause==0.3
+rich==13.9.4
