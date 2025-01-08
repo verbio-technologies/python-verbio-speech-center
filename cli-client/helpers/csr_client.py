@@ -1,19 +1,22 @@
 import sys
+import pause
+import logging
+import datetime
 sys.path.insert(1, '../proto/generated')
 
-import logging
 import threading
 from threading import Timer
+from concurrent.futures import ThreadPoolExecutor
+import recognition_streaming_request_pb2
+
+from helpers.common import split_audio
+from helpers.audio_importer import AudioImporter
 from helpers.common import VerbioGrammar, RecognizerOptions
 from helpers.compiled_grammar_processing import get_compiled_grammar
-from concurrent.futures import ThreadPoolExecutor
-from google.protobuf.json_format import MessageToJson
-from helpers.common import split_audio
-import recognition_streaming_request_pb2
 
 
 class CSRClient:
-    def __init__(self, executor: ThreadPoolExecutor, stub, options: RecognizerOptions, audio_resource, token: str):
+    def __init__(self, executor: ThreadPoolExecutor, stub, options: RecognizerOptions, audio_resource: AudioImporter, token: str):
         self._executor = executor
         self._stub = stub
         self._resources = audio_resource
@@ -29,6 +32,7 @@ class CSRClient:
         self._asr_version = options.asr_version
         self._formatting = options.formatting
         self._diarization = options.diarization
+        self._hide_partial_results = options.hide_partial_results
         self._label = options.label
         self._messages = None
 
@@ -41,23 +45,24 @@ class CSRClient:
         self._inactivity_timer.start()
 
     def _print_result(self, response):
-        duration = response.result.duration
-        for alternative in response.result.alternatives:
-            if alternative.transcript:
-                print('\t"transcript": "%s",\n\t"confidence": "%f",\n\t"duration": "%f"' % (alternative.transcript, alternative.confidence, duration))
+        if response.result.is_final:
+            transcript = "Final result:\n" \
+                f'\t"transcript": "{response.result.alternatives[0].transcript}",\n' \
+                f'\t"confidence": {response.result.alternatives[0].confidence},\n' \
+                f'\t"start_time": {response.result.start_time},\n' \
+                f'\t"duration": {response.result.duration}'
+            logging.info(transcript)
+        elif not self._hide_partial_results:
+            logging.info(f'Partial transcript: "{response.result.alternatives[0].transcript}"')
 
     def _response_watcher(self, response_iterator):
         try:
             logging.info("Running response watcher")
             for response in response_iterator:
-                json = MessageToJson(response)
-                logging.info("New incoming response: '%s ...'", json[0:50].replace('\n', ''))
                 self._print_result(response)
-
-                if response.result and response.result.is_final:
-                    if self._inactivity_timer:
-                        self._inactivity_timer.cancel()
-                    self._start_inactivity_timer(self._inactivity_timer_timeout)
+                if self._inactivity_timer:
+                    self._inactivity_timer.cancel()
+                self._start_inactivity_timer(self._inactivity_timer_timeout)
 
             self._inactivity_timer.cancel()
             self._peer_responded.set()
@@ -93,7 +98,13 @@ class CSRClient:
     def __message_iterator(self):
         for message_type, message in self._messages:
             logging.info("Sending streaming message " + message_type)
+            get_up_time = datetime.datetime.now()
+            if message_type == "audio":
+                sent_audio_samples = len(message.audio) // self._resources.sample_width
+                sent_audio_duration = sent_audio_samples / self._resources.sample_rate
+                get_up_time += datetime.timedelta(seconds=sent_audio_duration)
             yield message
+            pause.until(get_up_time)
         logging.info("All audio messages sent")
 
     def __generate_grammar_resource(self, grammar):

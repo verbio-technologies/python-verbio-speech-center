@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(1, '../proto/generated')
-import grpc
 import logging
+sys.path.insert(1, '../proto/generated')
+
+import grpc
 import recognition_pb2_grpc
+from concurrent.futures import ThreadPoolExecutor
+
 from helpers.csr_client import CSRClient
 from helpers.audio_importer import AudioImporter
-from concurrent.futures import ThreadPoolExecutor
 from helpers.grpc_connection import GrpcConnection
 from helpers.common import retrieve_token, parse_csr_commandline, RecognizerOptions
 
@@ -20,7 +22,7 @@ def process_recognition(executor: ThreadPoolExecutor, channel: grpc.Channel, opt
     logging.info("Recognition finished")
 
 
-def run(options):
+def run(options: RecognizerOptions):
     logging.info("Connecting to %s", command_line_options.host)
     access_token = retrieve_token(command_line_options)
     grpc_connection = GrpcConnection(options.secure_channel, options.client_id, options.client_secret, access_token)

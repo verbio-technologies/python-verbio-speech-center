@@ -98,6 +98,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
 
 
 def retrieve_token(options: SynthesizerOptions) -> str:
+    logging.info("Reading Speech Center JWT token from %s ...", options.token_file)
     if options.client_id:
         return SpeechCenterCredentials.get_refreshed_token(options.client_id, options.client_secret, options.token_file)
     else:
@@ -125,6 +126,7 @@ class RecognizerOptions:
         self.secure_channel = True
         self.diarization = False
         self.formatting = False
+        self.hide_partial_results = False
         self.inactivity_timeout = False
         self.asr_version = None
         self.label = None
@@ -177,6 +179,8 @@ def parse_csr_commandline() -> RecognizerOptions:
                         required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--diarization', '-d', help='', required=False, default=False, action='store_true')
     parser.add_argument('--formatting', '-f', help='', required=False, default=False, action='store_true')
+    parser.add_argument('--hide-partial-results', help='If set, do not show partial or incomplete transcriptions',
+                        required=False, default=False, action='store_true')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response',
                         required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
@@ -202,6 +206,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.secure_channel = args.secure
     options.formatting = args.formatting
     options.diarization = args.diarization
+    options.hide_partial_results = args.hide_partial_results
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     options.label = args.label
@@ -221,12 +226,11 @@ def parse_csr_commandline() -> RecognizerOptions:
 def split_audio(audio: bytes, chunk_size: int = 20000):
     audio_length = len(audio)
     chunk_count = math.ceil(audio_length / chunk_size)
-    logging.info("Dividing audio of length " + str(audio_length) + " into " + str(chunk_count) + " of size " + str(chunk_size) + "...")
+    logging.info("Dividing audio of length " + str(audio_length) + " into " + str(chunk_count) + " chunks of " + str(chunk_size) + " samples...")
     if chunk_count > 1:
         for i in range(chunk_count):
             start = i * chunk_size
             end = min((i + 1) * chunk_size, audio_length)
-            logging.info("Audio chunk #" + str(i) + " sliced as " + str(start) + ":" + str(end))
             yield audio[start:end]
     else:
         yield audio
