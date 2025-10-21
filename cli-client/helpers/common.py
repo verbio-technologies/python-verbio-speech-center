@@ -44,6 +44,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
         choices=[
             'tommy_en_us',
             'miguel_es_pe',
+            'rosa_es_mx',
             'luz_es_pe',
             'bel_pt_br',
             'david_es_es',
@@ -55,7 +56,8 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'pablo_es_es',
             'helena_es_es',
             'pedro_pt_br',
-            'marcia_pt_br'
+            'marcia_pt_br',
+            'emma_ca',
         ],
         help='Voice to use for the synthesis',
         required=True)
