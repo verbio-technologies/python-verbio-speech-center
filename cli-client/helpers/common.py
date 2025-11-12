@@ -58,6 +58,8 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'pedro_pt_br',
             'marcia_pt_br',
             'emma_ca',
+            'xela_gl_es',
+            'marta_va_es'
         ],
         help='Voice to use for the synthesis',
         required=True)
