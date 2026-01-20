@@ -45,15 +45,25 @@ class CSRClient:
         self._inactivity_timer.start()
 
     def _print_result(self, response):
+        if not response.HasField("result"):
+            return
+        
+        if len(response.result.alternatives) > 0:
+            transcript = response.result.alternatives[0].transcript
+            confidence = response.result.alternatives[0].confidence
+        else:
+            transcript = ""
+            confidence = 0.0
+
         if response.result.is_final:
             transcript = "Final result:\n" \
-                f'\t"transcript": "{response.result.alternatives[0].transcript}",\n' \
-                f'\t"confidence": {response.result.alternatives[0].confidence},\n' \
+                f'\t"transcript": "{transcript}",\n' \
+                f'\t"confidence": {confidence},\n' \
                 f'\t"start_time": {response.result.start_time},\n' \
                 f'\t"duration": {response.result.duration}'
             logging.info(transcript)
         elif not self._hide_partial_results:
-            logging.info(f'Partial transcript: "{response.result.alternatives[0].transcript}"')
+            logging.info(f'Partial transcript: "{transcript}" -> start_time: {response.result.start_time}, duration: {response.result.duration}')
 
     def _response_watcher(self, response_iterator):
         try:
