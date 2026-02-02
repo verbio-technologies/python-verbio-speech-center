@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from helpers.csr_client import CSRClient
 from helpers.common import VerbioGrammar, RecognizerOptions
 from concurrent.futures import ThreadPoolExecutor
-import recognition_streaming_response_pb2 as response
+import speechcenter.stt.recognition_streaming_response_pb2 as response
 
 
 def test_recognition_full_flow():

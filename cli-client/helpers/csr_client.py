@@ -7,7 +7,7 @@ sys.path.insert(1, '../proto/generated')
 import threading
 from threading import Timer
 from concurrent.futures import ThreadPoolExecutor
-import recognition_streaming_request_pb2
+import speechcenter.stt.recognition_streaming_request_pb2 as recognition_streaming_request_pb2
 
 from helpers.common import split_audio
 from helpers.audio_importer import AudioImporter
