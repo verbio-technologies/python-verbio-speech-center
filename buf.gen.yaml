@@ -1,0 +1,14 @@
+version: v2
+clean: true
+managed:
+  enabled: true
+plugins:
+  - remote: buf.build/protocolbuffers/python:v25.6
+    out: proto/generated
+  - remote: buf.build/grpc/python:v1.57.0
+    out: proto/generated
+  - remote: buf.build/protocolbuffers/pyi:v25.6
+    out: proto/generated
+inputs:
+  - git_repo: https://github.com/verbio-technologies/public-grpc-protos.git
+    branch: 1.0.1

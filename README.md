@@ -27,7 +27,23 @@ Before starting you will need:
 Speech Center streaming endpoint for STT (Speech-To-Text) and TTS (Text-To-Speech):  **us.speechcenter.verbio.com**
 
 ##  Set-up
+
 The steps needed are very similar to the ones described in the grpc official guide.
+
+### Install buf
+
+To compile the necessary proto definitions you will need buf. To do so, run the following:
+
+```shell
+BIN="/usr/local/bin" && \
+VERSION="1.64.0" && \
+curl -sSL \
+"https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-$(uname -s)-$(uname -m)" \
+-o "${BIN}/buf" && \
+chmod +x "${BIN}/buf"
+```
+
+For more information, please check out https://buf.build/docs/cli/installation/.
 
 ### Install dependencies
 You can use the standard pip call to install all the necessary dependencies, from the root of the repo run:
@@ -35,20 +51,15 @@ You can use the standard pip call to install all the necessary dependencies, fro
 pip install -r requirements.txt
 ```
 
-### Generate grpc code with python
-In scripts directory there is a `generate_grpc_code.sh` script that will generate the gRPC and Protobuf code for you.
+### Compile gRPC proto definitions
+
+To compile the necessary gRPC proto definitions you only need to run the following command:
+
 ```shell
-cd scripts/
-./generate_grpc_code.sh
+buf generate
 ```
 
-The script must be called from inside the `scripts` directory. It will generate all needed grpc files on the project root directory `proto/generated` like:
-
-```text
-verbio_speech_center_recognizer_pb2.py
-verbio_speech_center_recognizer_pb2_grpc.py
-...
-```
+It will python protoc plugins to generate python-compatible gRPC types under the `proto/generated` folder.
 
 ### Run a client
 

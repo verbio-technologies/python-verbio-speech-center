@@ -8,7 +8,7 @@ from helpers.common import SynthesizerOptions
 from concurrent.futures import ThreadPoolExecutor
 from helpers.audio_exporter import AudioExporter
 from helpers.common import split_text
-import verbio_speech_center_synthesizer_pb2
+import speechcenter.tts.text_to_speech_pb2 as text_to_speech_pb2
 
 
 class TTSClient:
@@ -26,11 +26,11 @@ class TTSClient:
         self._secure_channel = options.secure_channel
         self._inactivity_timer = None
         self._inactivity_timer_timeout = options.inactivity_timeout
-        self._supported_sample_rates = {8000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_8KHZ, 
-            16000: verbio_speech_center_synthesizer_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_16KHZ}
+        self._supported_sample_rates = {8000: text_to_speech_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_8KHZ, 
+            16000: text_to_speech_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_16KHZ}
  
     def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int):
-        message = verbio_speech_center_synthesizer_pb2.SynthesisRequest(
+        message = text_to_speech_pb2.SynthesisRequest(
             text=text,
             voice=voice,
             sampling_rate=sampling_rate,
@@ -125,22 +125,22 @@ class TTSClient:
         voice: str,
         sample_rate: int, 
     ):
-        synthesis_config = verbio_speech_center_synthesizer_pb2.SynthesisConfig(
+        synthesis_config = text_to_speech_pb2.SynthesisConfig(
             voice=voice,
             sampling_rate=self._supported_sample_rates[sample_rate],
         )
 
         self._messages = [
             ("config",
-                verbio_speech_center_synthesizer_pb2.StreamingSynthesisRequest(
+                text_to_speech_pb2.StreamingSynthesisRequest(
                     config=synthesis_config
                 )
              ),
         ]
 
         for line in split_text(text_file):
-            self._messages.append(("text", verbio_speech_center_synthesizer_pb2.StreamingSynthesisRequest(text=line)))
+            self._messages.append(("text", text_to_speech_pb2.StreamingSynthesisRequest(text=line)))
 
-        end_of_utterance = verbio_speech_center_synthesizer_pb2.EndOfUtterance(data="EndOfUtterance")
+        end_of_utterance = text_to_speech_pb2.EndOfUtterance(data="EndOfUtterance")
 
-        self._messages.append(("end_of_utterance", verbio_speech_center_synthesizer_pb2.StreamingSynthesisRequest(end_of_utterance=end_of_utterance)))
+        self._messages.append(("end_of_utterance", text_to_speech_pb2.StreamingSynthesisRequest(end_of_utterance=end_of_utterance)))

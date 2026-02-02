@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import sys
 import logging
-sys.path.insert(1, '../proto/generated')
+sys.path.insert(1, '../proto/generated/')
 
 import grpc
-import recognition_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor
+import speechcenter.stt.recognition_pb2_grpc as recognition_pb2_grpc
 
 from helpers.csr_client import CSRClient
 from helpers.audio_importer import AudioImporter

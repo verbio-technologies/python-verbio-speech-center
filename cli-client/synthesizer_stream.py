@@ -4,14 +4,14 @@ sys.path.insert(1, '../proto/generated')
 import grpc
 import logging
 from helpers.tts_client import TTSClient
-import verbio_speech_center_synthesizer_pb2_grpc
+import speechcenter.tts.text_to_speech_pb2_grpc as text_to_speech_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor
 from helpers.grpc_connection import GrpcConnection
 from helpers.common import SynthesizerOptions, parse_tts_command_line, retrieve_token
 
 
 def process_synthesis(executor: ThreadPoolExecutor, channel: grpc.Channel, options: SynthesizerOptions, access_token: str):
-    stub = verbio_speech_center_synthesizer_pb2_grpc.TextToSpeechStub(channel)
+    stub = text_to_speech_pb2_grpc.TextToSpeechStub(channel)
     client = TTSClient(executor, stub, options, access_token)
     if options.text:
         audio_samples = client.synthesize()
