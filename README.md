@@ -2,6 +2,7 @@
 
 This repository contains a python example of how to use the Verbio Technologies Speech Center cloud both for speech recognition and speech synthesis, allowing users to test the streaming capabilities of Speech Center. 
 
+
 ## Index
 
 1. Pre-Requirements
@@ -13,6 +14,7 @@ This repository contains a python example of how to use the Verbio Technologies 
 
 
 ## Pre-Requirements
+
 Before starting you will need:
 
 1. Dashboard user account (provided to you by Verbio Technologies), please contact our sales team at info@verbio.com to get one.
@@ -22,9 +24,11 @@ Before starting you will need:
 5. Protobuf package 3.20.x or lower (or set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python but this will use pure-Python parsing and will be much slower).
 6. Pip
 
+
 ## Endpoints
 
 Speech Center streaming endpoint for STT (Speech-To-Text) and TTS (Text-To-Speech):  **us.speechcenter.verbio.com**
+
 
 ##  Set-up
 
@@ -115,7 +119,6 @@ to list all the available options.
 
 ### Client flags for Speech-To-Text (STT)
 
-
 #### Audio file
 
 Argument: 
@@ -157,7 +160,7 @@ There are three options available to provide a grammar:
 -l, --language arg
 ```
 
-Language to use for the recognition: `en-US`, `en-GB`, `pt-BR`, `es`, `ca-ES`, `es-419`, `tr`, `ja`, `fr`, `fr-CA`, `de`, `it` (default: `en-US`). Please check the [Speech Center streaming Speech-To-Text documentation](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text-Streaming/Available-languages-and-features) for an updated list of language codes.
+Language to use for the recognition: `en-US`, `en-GB`, `es-ES`, `es-419`, `ca-ES`, `va-ES`, `gl-ES`, `pt-BR`, `fr`, `fr-CA`, `de`, `it`, `tr`, `ja` (default: `en-US`). Please check the [Speech Center streaming Speech-To-Text documentation](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text-Streaming/Available-languages-and-features) for an updated list of language codes.
 
 #### Diarization
 
@@ -197,7 +200,6 @@ This will select the Speech-To-Text engine version the speech center will use fo
 
 #### Sample rate
 
-
 ```
 -s, --sample-rate arg
 ```
@@ -205,7 +207,6 @@ This will select the Speech-To-Text engine version the speech center will use fo
 Sampling rate for the audio generation: 8000 or 16000.
 
 #### Token
-
 
 ```
 -t, --token arg 
@@ -218,9 +219,7 @@ In order for the client to work, the token argument is required in the following
 - The client will authenticate just by using the available token file. The file provided in this argument **needs to be a valid SpeechCenter JWT token so the transcription service can work**.
 - The client will authenticate by providing their client credentials through the `--client_id` and `--client_secret` program arguments. In this case **a token file must also be supplied even if it is a blank file**. Client will check file to see if it is a valid token, if it isn't it will refresh automatically the token and fill the file with a valid token. In this case, client_id and client_secret fields are also required.
 
-
 #### Client id and secret
-
 
 ```
 --client-id arg      Client id for token refresh (default: "")
@@ -233,7 +232,6 @@ In order for the client to work, the token argument is required in the following
 `client-id` and `client-secret` fields are required for automatic token refreshal. The arguments need to be written inline with no quotes for each field. Please see the '**Automatically Refresh Service Token**' section above for specific details.
 
 #### Host
-
 
 ```
 -H, --host arg
@@ -260,16 +258,21 @@ Verbio's Speech Center allows to synthesize text in a whole catalogue of voices.
 
 **Example for text to speech**
 Synthesize request using valid token:
+
 ```
-python3 synthesizer_stream.py --text "Hello, my friend!" --voice tommy_en_us --audio-file out.wav --host your_speechcenter_hostname --token ./my.token
+python3 synthesizer_stream.py --text "Hello, my friend!" --voice marvin_en_us --audio-file out.wav --host us.speechcenter.verbio.com --token ./my.token
 ```
+
 Using client credentials for automated token refreshal:
+
 ```
-python synthesizer_stream.py --text "Hello my friend!" --voice tommy_en_us --audio-file out.waw --host your_speechcenter_ hostname --client-id your_client_id --client-secret your_client_secret --token token.file
+python synthesizer_stream.py --text "Hello my friend!" --voice marvin_en_us --audio-file out.waw --host us.speechcenter.verbio.com --client-id your_client_id --client-secret your_client_secret --token token.file
 ```
+
 Synthesize multiple requests using a text file:
+
 ```
-python3 synthesizer_stream.py --text-file your_file.txt --voice tommy_en_us --audio-file out.wav --host your_speechcenter_hostname --token ./my.token
+python3 synthesizer_stream.py --text-file your_file.txt --voice marvin_en_us --audio-file out.wav --host us.speechcenter.verbio.com --token ./my.token
 ```
 
 Please check out documentation at speechcenter.verbio.com/documentation for current TTS capabilities.
@@ -292,7 +295,6 @@ Help menu detailing the client's options and a list of all available voices.
 
 String of text to convert into speech.
 
-
 #### Text File
 
 ```
@@ -302,18 +304,15 @@ String of text to convert into speech.
 Newline delimited file of string of text to convert into speech.
 Instead of sending a single string of text to convert into speech, you can send multiple ones through streaming.
 
-
 #### Voice
 
 ```
 -v, --voice arg
 ```
 
-Voice to use for the text to speech generation. Please bear in mind that each voice has also the language code encoded in it. Some of the available voices are `tommy_en_us` (US English),`miguel_es_pe` (Peruvian Spanish),`bel_pt_br` (Brazilian Portuguese),`david_es_es` (Castillian Spanish),`anna_ca` (Catalan). Please check the [Speech Center documentation](https://doc.speechcenter.verbio.com/#tag/Text-To-Speech-gRPC/Available-voices) for an updated list of voices.
-
+Voice to use for the text to speech generation. Please bear in mind that each voice has also the language code encoded in it. Some of the available voices are `marvin_en_us` (US English), `miguel_es_pe` (Peruvian Spanish), `bel_pt_br` (Brazilian Portuguese), `david_es_es` (Castillian Spanish) or `anna_ca_es` (Catalan). Please check the [Speech Center documentation](https://doc.speechcenter.verbio.com/#tag/Text-To-Speech-Common-Features/Available-voices) for an updated list of voices.
 
 #### Sample rate
-
 
 ```
 -s, --sample-rate arg
@@ -322,7 +321,6 @@ Voice to use for the text to speech generation. Please bear in mind that each vo
 Sampling rate for the audio generation: 16000 (default: 16000).
 
 #### Token
-
 
 ```
 -t, --token arg 
@@ -335,9 +333,7 @@ In order for the client to work, the token argument is required in the following
 - The client will authenticate just by using the available token file. The file provided in this argument **needs to be a valid SpeechCenter JWT token so the transcription service can work**.
 - The client will authenticate by providinf their client credentials through the `--client_id` and `--client_secret` program arguments. In this case **a token file must also be supplied even if it is a blank file**. Client will check file to see if it is a valid token, if it isn't it will refresh automatically the token and fill the file with a valid token. In this case, client_id and client_secret fields are also required.
 
-
 #### Client id and secret
-
 
 ```
 --client-id arg      Client id for token refresh (default: "")
@@ -351,16 +347,11 @@ In order for the client to work, the token argument is required in the following
 
 #### Host
 
-
 ```
 -H, --host arg
 ```
 
 URL of the host where the request will be sent. Main endpoints will be expanded as the product is deployed in different regions. Please use **us.speechcenter.verbio.com** as the host for CSR requests.
-
-
-
-
 
 
 ## Customer Credentials
@@ -371,7 +362,6 @@ Your customer credentials can be retrieved through the [Speech Center Dashboard]
 
 ### Authentication flow
 
-
 To acquire a valid token submit an HTTP POST request to the authentication service at `https://auth.speechcenter.verbio.com`.
 
 **Token expiration management**
@@ -381,7 +371,6 @@ To acquire a valid token submit an HTTP POST request to the authentication servi
 As part of the JWT specification, we fully support the token expiration claim, so generated tokens will be valid for only a finite period of time of 1 hour to up to 1 day. It is the responsibility of the calling client to manage this token expiration time and, in a best case scenario, anticipate the refresh by a couple of minutes so the streaming session attempt never fails because of token expiration.
 
 In order to refresh the token, the token refresh endpoint can be called with the same client_id and client_secret, and it will respond with a new JWT token with a renewed expiration time.
-
 
 ### Authentication API
 
@@ -459,6 +448,7 @@ Please note that due to a limitation of the command line argument parser, the `c
 > Note the usage of the `=` sign
 
 Not defining the arguments like this will yield an error.
+
 
 ## Dashboard 
 
