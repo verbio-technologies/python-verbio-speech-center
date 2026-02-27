@@ -8,6 +8,7 @@ import threading
 from threading import Timer
 from concurrent.futures import ThreadPoolExecutor
 import speechcenter.stt.recognition_streaming_request_pb2 as recognition_streaming_request_pb2
+import speechcenter.stt.recognition_streaming_response_pb2 as recognition_streaming_response_pb2
 
 from helpers.common import split_audio
 from helpers.audio_importer import AudioImporter
@@ -45,6 +46,12 @@ class CSRClient:
         self._inactivity_timer.start()
 
     def _print_result(self, response):
+        if response.HasField("speech_event"):
+            event = response.speech_event
+            if event.type == recognition_streaming_response_pb2.SpeechEvent.Event.SPEECH_START:
+                logging.info(f"New SPEECH_START event on {event.time_offset}")
+            return
+
         if not response.HasField("result"):
             return
         
