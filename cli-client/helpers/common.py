@@ -140,6 +140,7 @@ class RecognizerOptions:
         self.inactivity_timeout = False
         self.asr_version = None
         self.label = None
+        self.word_boosting = []
         self.client_id = None
         self.client_secret = None
 
@@ -198,6 +199,8 @@ def parse_csr_commandline() -> RecognizerOptions:
                         required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--label', help='Label for the request', required=False, default="")
+    parser.add_argument('--word-boosting', '-w', help='Word to boost during recognition (can be specified multiple times)',
+                        nargs='+', required=False, default=[], metavar='WORD')
 
     credential_group = parser.add_argument_group(
         'credentials',
@@ -223,6 +226,7 @@ def parse_csr_commandline() -> RecognizerOptions:
     options.inactivity_timeout = float(args.inactivity_timeout)
     options.asr_version = args.asr_version
     options.label = args.label
+    options.word_boosting = args.word_boosting
 
     if args.inline_grammar:
         options.grammar = VerbioGrammar(VerbioGrammar.INLINE, args.inline_grammar)

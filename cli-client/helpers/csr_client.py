@@ -35,6 +35,7 @@ class CSRClient:
         self._diarization = options.diarization
         self._hide_partial_results = options.hide_partial_results
         self._label = options.label
+        self._word_boosting = options.word_boosting
         self._messages = None
 
     def _close_stream_by_inactivity(self):
@@ -100,7 +101,8 @@ class CSRClient:
                 sample_rate=self._resources.sample_rate,
                 formatting=self._formatting,
                 diarization=self._diarization,
-                label=self._label)
+                label=self._label,
+                word_boosting=self._word_boosting)
         response_iterator = self._stub.StreamingRecognize(self.__message_iterator(), metadata=metadata)
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
 
@@ -151,18 +153,21 @@ class CSRClient:
                             sample_rate: int = 16000,
                             diarization=False,
                             formatting=False,
-                            label: str = ""):
+                            label: str = "",
+                            word_boosting: list = None):
 
         resource = self.__generate_recognition_resource(topic, grammar)
         asr_versions = {"V1": 0, "V2": 1}
         selected_asr_version = asr_versions[asr_version]
+        boosted_words = word_boosting or []
 
         recognition_config = recognition_streaming_request_pb2.RecognitionConfig(
                         parameters=recognition_streaming_request_pb2.RecognitionParameters(
                             language=language,
                             pcm=recognition_streaming_request_pb2.PCM(sample_rate_hz=sample_rate),
                             enable_formatting=formatting,
-                            enable_diarization=diarization
+                            enable_diarization=diarization,
+                            word_boosting=boosted_words
                         ),
                         resource=resource,
                         label=[label],

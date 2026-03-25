@@ -162,6 +162,15 @@ There are three options available to provide a grammar:
 
 Language to use for the recognition: `en-US`, `en-GB`, `es-ES`, `es-419`, `ca-ES`, `va-ES`, `gl-ES`, `pt-BR`, `fr`, `fr-CA`, `de`, `it`, `tr`, `ja` (default: `en-US`). Please check the [Speech Center streaming Speech-To-Text documentation](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text-Streaming/Available-languages-and-features) for an updated list of language codes.
 
+
+#### Word Boosting
+
+```
+-w, --word-boosting arg
+```
+
+Use this option to boost specialized terminology. The option can repeated many times to define several terms.
+
 #### Diarization
 
 ```
