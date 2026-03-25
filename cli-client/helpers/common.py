@@ -199,7 +199,7 @@ def parse_csr_commandline() -> RecognizerOptions:
                         required=False, default=5.0)
     parser.add_argument('--asr-version', choices=['V1', 'V2'], help='Selectable asr version', required=True)
     parser.add_argument('--label', help='Label for the request', required=False, default="")
-    parser.add_argument('--word-boosting', '-w', help='Space-separated list of words or phrases to boost during recognition',
+    parser.add_argument('--word-boosting', '-w', help='Word to boost during recognition (can be specified multiple times)',
                         nargs='+', required=False, default=[], metavar='WORD')
 
     credential_group = parser.add_argument_group(
