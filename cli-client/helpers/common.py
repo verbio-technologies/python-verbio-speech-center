@@ -67,7 +67,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'xela_gl_es',
             'marta_va_es',
             'cristina_es_es',
-            'paloma_es_419',
+            'melisa_es_419',
             'david_es_419',
             'marcos_es_es'
         ],
