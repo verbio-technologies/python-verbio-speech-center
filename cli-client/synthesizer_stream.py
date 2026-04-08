@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(1, '../proto/generated')
+sys.path.insert(1, './proto/generated')
+
 import grpc
 import logging
 from helpers.tts_client import TTSClient
