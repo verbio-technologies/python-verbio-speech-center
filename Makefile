@@ -40,14 +40,18 @@ export
 ## Why?
 # Because helps to find the correct targets using the Shell AutoCompletion.
 
-.PHONY: install
+.PHONY: install proto help help-stt help-tts stt tts guard-% check-cmd-%
+
+check-cmd-%:
+	@which $* > /dev/null 2>&1 || (echo "ERROR: '$*' is not installed." && exit 1)
+
 install: | $(VENV_DIR) proto
 	$(PIP) install -r requirements-dev.txt
 
-proto:
+proto: check-cmd-buf
 	buf generate
 
-$(VENV_DIR):
+$(VENV_DIR): check-cmd-python3
 	python3 -mvenv $(VENV_DIR)
 
 $(TOKEN_FILE):
@@ -96,7 +100,6 @@ help-tts:
 	@echo "  Example:"
 	@echo "    make tts VOICE=david_es_es TEXT='Hola mundo'"
 
-.PHONY: help
 help:
 	@echo "Usage: make <target> [VARIABLE=value ...]"
 	@echo ""
