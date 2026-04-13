@@ -14,6 +14,7 @@ VERBIO_CREDENTIALS ?= ${HOME}/.verbio/credentials
 SOURCE_DIR = $(PWD)cli-client/
 STT = $(PYTHON) $(SOURCE_DIR)recognizer_stream.py
 TTS = $(PYTHON) $(SOURCE_DIR)synthesizer_stream.py
+LIST_VOICES = $(PYTHON) $(SOURCE_DIR)list_voices.py
 
 
 VERBIO_URL ?= us.speechcenter.verbio.com
@@ -42,7 +43,7 @@ export
 ## Why?
 # Because helps to find the correct targets using the Shell AutoCompletion.
 
-.PHONY: install proto help help-stt help-tts help-record-stt stt tts record-stt guard-% check-cmd-%
+.PHONY: install proto help help-stt help-tts help-record-stt help-list-voices stt tts record-stt list-voices guard-% check-cmd-%
 
 check-cmd-%:
 	@which $* > /dev/null 2>&1 || (echo "ERROR: '$*' is not installed." && exit 1)
@@ -102,6 +103,17 @@ help-tts:
 	@echo "  Example:"
 	@echo "    make tts VOICE=david_es_es TEXT='Hola mundo'"
 
+help-list-voices:
+	@echo "Target: list-voices — List available TTS voices"
+	@echo ""
+	@echo "  Optional:"
+	@echo "    LANGUAGE=<lang>              Filter voices by language (e.g. en-US, es-ES)"
+	@echo "    NOT_SECURE=1                 Disable secure channel"
+	@echo ""
+	@echo "  Example:"
+	@echo "    make list-voices"
+	@echo "    make list-voices LANGUAGE=es-ES"
+
 help:
 	@echo "Usage: make <target> [VARIABLE=value ...]"
 	@echo ""
@@ -111,9 +123,11 @@ help:
 	@echo "  stt          Speech-to-text recognition"
 	@echo "  tts          Text-to-speech synthesis"
 	@echo "  record-stt   Record from microphone and run speech-to-text"
+	@echo "  list-voices  List available TTS voices"
 	@echo "  help-stt        Show STT usage and variables"
 	@echo "  help-tts        Show TTS usage and variables"
 	@echo "  help-record-stt Show record-stt usage and variables"
+	@echo "  help-list-voices Show list-voices usage and variables"
 	@echo ""
 	@echo "Common variables:"
 	@echo "  VERBIO_URL=<url>    Service URL (default: $(VERBIO_URL))"
@@ -123,6 +137,8 @@ help:
 	@$(MAKE) --no-print-directory help-tts
 	@echo ""
 	@$(MAKE) --no-print-directory help-record-stt
+	@echo ""
+	@$(MAKE) --no-print-directory help-list-voices
 
 guard-%:
 	@[ -n "${$*}" ] || (echo "ERROR: $* is required. Usage: make stt LANGUAGE=es AUDIO_FILE=./audio.wav" && exit 1)
@@ -157,6 +173,12 @@ tts: $(TOKEN_FILE) guard-VOICE
 		$(if $(FORMAT),--format $(FORMAT)) \
 		$(if $(NOT_SECURE),--not-secure) \
 		$(if $(INACTIVITY_TIMEOUT),--inactivity-timeout $(INACTIVITY_TIMEOUT))
+
+list-voices: $(TOKEN_FILE)
+	@$(LIST_VOICES) --token $(TOKEN_FILE) --client-id $(CLIENT_ID) --client-secret $(CLIENT_SECRET) \
+		--host $(VERBIO_URL) \
+		$(if $(LANGUAGE),--language $(LANGUAGE)) \
+		$(if $(NOT_SECURE),--not-secure)
 
 help-record-stt:
 	@echo "Target: record-stt — Record from microphone and run speech-to-text"

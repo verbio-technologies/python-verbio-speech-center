@@ -44,6 +44,19 @@ class TTSClient:
         audio_exporter.save_audio(self._audio_format, audio_samples, self._audio_file)
         logging.info("Stored synthesis audio at -%s-", self._audio_file)
 
+    def list_voices(self, language: str = None) -> list:
+        logging.info("Requesting available voices%s", f" for language: {language}" if language else "")
+        request_kwargs = {'language': language} if language else {}
+        request = text_to_speech_pb2.ListVoicesRequest(**request_kwargs)
+
+        metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
+        response, call = self._stub.ListVoices.with_call(request, metadata=metadata)
+
+        logging.info("ListVoices response [status=%s]", str(call.code()))
+        logging.info("Received %d voice(s)", len(response.voices))
+
+        return list(response.voices)
+
     def synthesize(self) -> bytes:
         logging.info("Sending synthesis request for voice: -%s-, sampling_rate: %i and text: -%s-", self._voice, self._audio_sample_rate, self._text)
         selected_audio_format = AudioExporter.SUPPORTED_FORMATS[self._audio_format]
