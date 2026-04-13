@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
 import logging
-sys.path.insert(1, '../proto/generated/')
+from pathlib import Path
+sys.path.insert(1, str(Path(__file__).resolve().parent.parent / 'proto' / 'generated'))
 
 import grpc
 from concurrent.futures import ThreadPoolExecutor

@@ -41,6 +41,5 @@ jobs:
           cd ..
       - name: Execute client help
         run: |
-          cd cli-client
-          python recognizer_stream.py --help
-          python synthesizer_stream.py --help
+          python cli-client/recognizer_stream.py --help
+          python cli-client/synthesizer_stream.py --help

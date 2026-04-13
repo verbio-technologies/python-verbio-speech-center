@@ -2,7 +2,8 @@ import sys
 import pause
 import logging
 import datetime
-sys.path.insert(1, '../proto/generated')
+from pathlib import Path
+sys.path.insert(1, str(Path(__file__).resolve().parent.parent.parent / 'proto' / 'generated'))
 
 import threading
 from threading import Timer
