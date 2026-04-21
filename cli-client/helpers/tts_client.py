@@ -22,6 +22,7 @@ class TTSClient:
         self._audio_format = options.audio_format
         self._audio_file = options.audio_file
         self._audio_sample_rate = options.sample_rate
+        self._pronunciation_dictionary = options.pronunciation_dictionary
         self._peer_responded = threading.Event()
         self._token = token
         self._secure_channel = options.secure_channel
@@ -30,12 +31,22 @@ class TTSClient:
         self._supported_sample_rates = {8000: text_to_speech_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_8KHZ, 
             16000: text_to_speech_pb2.VoiceSamplingRate.VOICE_SAMPLING_RATE_16KHZ}
  
-    def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int):
+    @staticmethod
+    def _build_pronunciation_entries(pronunciation_dict: dict) -> list:
+        return [
+            text_to_speech_pb2.PronunciationEntry(term=term, ipa=ipa)
+            for term, ipa in pronunciation_dict.items()
+        ]
+
+    def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int,
+                                   pronunciation_dictionary: dict = None):
+        entries = self._build_pronunciation_entries(pronunciation_dictionary or {})
         message = text_to_speech_pb2.SynthesisRequest(
             text=text,
             voice=voice,
             sampling_rate=sampling_rate,
-            format=audio_format
+            format=audio_format,
+            pronunciation_dictionary=entries
         )
 
         return message
@@ -68,7 +79,8 @@ class TTSClient:
                 text=self._text,
                 voice=self._voice,
                 sampling_rate=self._supported_sample_rates[self._audio_sample_rate],
-                audio_format=selected_audio_format
+                audio_format=selected_audio_format,
+                pronunciation_dictionary=self._pronunciation_dictionary
             ), metadata=metadata
         )
 
@@ -115,7 +127,8 @@ class TTSClient:
         self.__generate_messages(
                 text_file=self._text_file,
                 voice=self._voice,
-                sample_rate=self._audio_sample_rate),
+                sample_rate=self._audio_sample_rate,
+                pronunciation_dictionary=self._pronunciation_dictionary),
         response_iterator = self._stub.StreamingSynthesizeSpeech(self.__message_iterator(), metadata=metadata)
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
 
@@ -137,11 +150,14 @@ class TTSClient:
         self, 
         text_file: str, 
         voice: str,
-        sample_rate: int, 
+        sample_rate: int,
+        pronunciation_dictionary: dict = None,
     ):
+        entries = self._build_pronunciation_entries(pronunciation_dictionary or {})
         synthesis_config = text_to_speech_pb2.SynthesisConfig(
             voice=voice,
             sampling_rate=self._supported_sample_rates[sample_rate],
+            pronunciation_dictionary=entries,
         )
 
         self._messages = [
