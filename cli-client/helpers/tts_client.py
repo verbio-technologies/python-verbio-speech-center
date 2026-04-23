@@ -38,15 +38,12 @@ class TTSClient:
             for term, ipa in pronunciation_dict.items()
         ]
 
-    def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int,
-                                   pronunciation_dictionary: dict = None):
-        entries = self._build_pronunciation_entries(pronunciation_dictionary or {})
+    def _compose_synthesis_request(self, text: str, voice: str, audio_format: str, sampling_rate: int):
         message = text_to_speech_pb2.SynthesisRequest(
             text=text,
             voice=voice,
             sampling_rate=sampling_rate,
             format=audio_format,
-            pronunciation_dictionary=entries
         )
 
         return message
@@ -80,7 +77,6 @@ class TTSClient:
                 voice=self._voice,
                 sampling_rate=self._supported_sample_rates[self._audio_sample_rate],
                 audio_format=selected_audio_format,
-                pronunciation_dictionary=self._pronunciation_dictionary
             ), metadata=metadata
         )
 
