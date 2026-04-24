@@ -95,7 +95,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
                         required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
 
-    parser.add_argument('--pronunciation', '-P',
+    parser.add_argument('--pronunciation', '-p',
                         help='Pronunciation dictionary as a JSON string (e.g. \'{"word": "IPA"}\') or path to a JSON file',
                         required=False, default=None)
 
