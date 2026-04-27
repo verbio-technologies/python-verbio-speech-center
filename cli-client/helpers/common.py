@@ -69,7 +69,11 @@ def parse_tts_command_line() -> SynthesizerOptions:
             'cristina_es_es',
             'melisa_es_419',
             'david_es_419',
-            'marcos_es_es'
+            'marcos_es_es',
+            'mariana_pt_br',
+            'caio_pt_br',
+            'gustavo_pt_br',
+            'juno_pt_br',
         ],
         help='Voice to use for the synthesis',
         required=True)
