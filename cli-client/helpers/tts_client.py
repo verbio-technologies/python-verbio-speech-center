@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(1, str(Path(__file__).resolve().parent.parent.parent / 'proto' / 'generated'))
 
 import logging
+from typing import Optional
 import threading
 from threading import Timer
 from helpers.common import SynthesizerOptions
@@ -118,15 +119,19 @@ class TTSClient:
             self._peer_responded.set()
             raise
     
-    def send_text(self) -> None:
+    def _stream_synthesis(self) -> None:
         metadata = None if self._secure_channel else [('authorization', "Bearer " + self._token)]
         self.__generate_messages(
+                text=self._text,
                 text_file=self._text_file,
                 voice=self._voice,
                 sample_rate=self._audio_sample_rate,
-                pronunciation_dictionary=self._pronunciation_dictionary),
+                pronunciation_dictionary=self._pronunciation_dictionary)
         response_iterator = self._stub.StreamingSynthesizeSpeech(self.__message_iterator(), metadata=metadata)
         self._consumer_future = self._executor.submit(self._response_watcher, response_iterator)
+
+    def send_text(self) -> None:
+        self._stream_synthesis()
 
     def wait_for_response(self) -> bool:
         logging.info("Waiting for server to respond...")
@@ -143,11 +148,12 @@ class TTSClient:
         logging.info("All audio messages sent")
 
     def __generate_messages(
-        self, 
-        text_file: str, 
+        self,
         voice: str,
         sample_rate: int,
-        pronunciation_dictionary: dict = None,
+        pronunciation_dictionary: Optional[dict[str, str]] = None,
+        text: Optional[str] = None,
+        text_file: Optional[str] = None,
     ):
         entries = self._build_pronunciation_entries(pronunciation_dictionary or {})
         synthesis_config = text_to_speech_pb2.SynthesisConfig(
@@ -157,16 +163,15 @@ class TTSClient:
         )
 
         self._messages = [
-            ("config",
-                text_to_speech_pb2.StreamingSynthesisRequest(
-                    config=synthesis_config
-                )
-             ),
+            ("config", text_to_speech_pb2.StreamingSynthesisRequest(config=synthesis_config)),
         ]
 
-        for line in split_text(text_file):
-            self._messages.append(("text", text_to_speech_pb2.StreamingSynthesisRequest(text=line)))
+        if text:
+            self._messages.append(("text", text_to_speech_pb2.StreamingSynthesisRequest(text=text)))
+        elif text_file:
+            for line in split_text(text_file):
+                self._messages.append(("text", text_to_speech_pb2.StreamingSynthesisRequest(text=line)))
 
-        end_of_utterance = text_to_speech_pb2.EndOfUtterance(data="EndOfUtterance")
-
-        self._messages.append(("end_of_utterance", text_to_speech_pb2.StreamingSynthesisRequest(end_of_utterance=end_of_utterance)))
+        self._messages.append(("end_of_utterance", text_to_speech_pb2.StreamingSynthesisRequest(
+            end_of_utterance=text_to_speech_pb2.EndOfUtterance(data="EndOfUtterance")
+        )))

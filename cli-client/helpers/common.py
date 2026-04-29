@@ -2,6 +2,7 @@ import json
 import math
 import argparse
 import logging
+from typing import Optional
 from helpers.speechcenterauth import SpeechCenterCredentials
 
 
@@ -22,15 +23,23 @@ class SynthesizerOptions:
         self.pronunciation_dictionary: dict = {}
 
 
-def parse_pronunciation_dict(raw: str) -> dict:
+def parse_pronunciation_dict(raw: Optional[str]) -> dict:
     """Parse a JSON string or a path to a JSON file into a term→IPA dict."""
-    if raw is None:
+    if not raw or not raw.strip():
         return {}
+    raw = raw.strip()
+    if raw.startswith("{"):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"pronunciation: invalid JSON: {e}")
     try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        with open(raw) as f:
+        with open(raw, encoding="utf-8") as f:
             return json.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"pronunciation: cannot read file {raw!r}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"pronunciation: file {raw!r} contains invalid JSON: {e}")
 
 
 def parse_credential_args(args, options):
