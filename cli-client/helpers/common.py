@@ -1,6 +1,8 @@
+import json
 import math
 import argparse
 import logging
+from typing import Optional
 from helpers.speechcenterauth import SpeechCenterCredentials
 
 
@@ -18,6 +20,26 @@ class SynthesizerOptions:
         self.inactivity_timeout = False
         self.client_id = None
         self.client_secret = None
+        self.pronunciation_dictionary: dict = {}
+
+
+def parse_pronunciation_dict(raw: Optional[str]) -> dict:
+    """Parse a JSON string or a path to a JSON file into a term→IPA dict."""
+    if not raw or not raw.strip():
+        return {}
+    raw = raw.strip()
+    if raw.startswith("{"):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"pronunciation: invalid JSON: {e}")
+    try:
+        with open(raw, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"pronunciation: cannot read file {raw!r}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"pronunciation: file {raw!r} contains invalid JSON: {e}")
 
 
 def parse_credential_args(args, options):
@@ -86,6 +108,10 @@ def parse_tts_command_line() -> SynthesizerOptions:
                         required=False, default=True, dest='secure', action='store_false')
     parser.add_argument('--inactivity-timeout', '-i', help='Time for stream inactivity after the first valid response', required=False, default=5.0)
 
+    parser.add_argument('--pronunciation', '-p',
+                        help='Pronunciation dictionary as a JSON string (e.g. \'{"word": "IPA"}\') or path to a JSON file',
+                        required=False, default=None)
+
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--text', '-T', help='Text to synthesize to audio')
     group.add_argument('--text-file', '-F', help='File with newline delimited text to synthesize to audio')
@@ -111,6 +137,7 @@ def parse_tts_command_line() -> SynthesizerOptions:
     options.voice = args.voice
     options.sample_rate = args.sample_rate
     options.inactivity_timeout = float(args.inactivity_timeout)
+    options.pronunciation_dictionary = parse_pronunciation_dict(args.pronunciation)
 
     return options
 
